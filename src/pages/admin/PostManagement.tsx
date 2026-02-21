@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAdminStore } from "../../store/adminStore";
+import { useAdminStore } from "@store/adminStore";
 import { AdminSearchBar } from "@components/admin/common/AdminSearchBar";
 import { PostItem } from "@components/admin/board/PostItem";
 import { DeleteConfirmModal } from "@components/admin/board/DeleteConfirmModal";
