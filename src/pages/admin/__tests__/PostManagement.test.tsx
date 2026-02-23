@@ -2,7 +2,6 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import PostManagement from '../PostManagement';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { EXERCISE_TEXT } from '@constant/exercise';
 
 // 모킹
 const mockFetchPosts = vi.fn();
