@@ -48,6 +48,7 @@ export const PhotoUploader = ({
                     ref={fileInputRef}
                     onChange={onFileChange}
                     className="hidden"
+                    data-testid="photo-input"
                 />
 
                 {previewUrl ? (
