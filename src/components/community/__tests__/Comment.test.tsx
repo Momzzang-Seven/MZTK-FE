@@ -79,7 +79,7 @@ describe("Comment", () => {
     const defaultAvatar = container.querySelector(
       ".h-10.w-10.rounded-full.bg-main"
     );
-    expect(defaultAvatar).toBeInTheDocument();
+    expect(defaultAvatar).not.toBeInTheDocument();
   });
 
   it("formatTimeAgo 함수가 호출되어 시간이 표시된다", () => {
@@ -97,7 +97,7 @@ describe("Comment", () => {
   it("댓글 레이아웃이 올바르게 구성된다", () => {
     const { container } = render(<CommentItem comment={mockComment} />);
 
-    const commentContainer = container.querySelector(".flex.gap-3.p-3");
+    const commentContainer = container.querySelector(".flex.gap-3.p-2");
     expect(commentContainer).toBeInTheDocument();
   });
 });

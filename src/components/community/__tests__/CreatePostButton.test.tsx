@@ -1,24 +1,24 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import CreatePostButton from '../CreatePostButton';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import CreatePostButton from "../CreatePostButton";
 
 const mockNavigate = vi.fn();
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
 
-describe('CreatePostButton', () => {
+describe("CreatePostButton", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
   });
 
-  const renderWithRouter = (initialPath = '/community/free') => {
+  const renderWithRouter = (initialPath = "/community/free") => {
     return render(
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
@@ -28,51 +28,51 @@ describe('CreatePostButton', () => {
     );
   };
 
-  it('버튼이 렌더링된다', () => {
+  it("버튼이 렌더링된다", () => {
     renderWithRouter();
-    
-    const button = screen.getByRole('button', { name: '十' });
+
+    const button = screen.getByRole("button", { name: "十" });
     expect(button).toBeInTheDocument();
   });
 
-  it('자유게시판 경로에서 클릭 시 새 글 작성 페이지로 이동한다', () => {
-    renderWithRouter('/community/free');
-    
-    const button = screen.getByRole('button');
+  it("자유게시판 경로에서 클릭 시 새 글 작성 페이지로 이동한다", () => {
+    renderWithRouter("/community/free");
+
+    const button = screen.getByRole("button");
     fireEvent.click(button);
-    
-    expect(mockNavigate).toHaveBeenCalledWith('/community/new/free');
+
+    expect(mockNavigate).toHaveBeenCalledWith("/community/new/free");
   });
 
-  it('질문게시판 경로에서 클릭 시 새 질문 작성 페이지로 이동한다', () => {
-    renderWithRouter('/community/question');
-    
-    const button = screen.getByRole('button');
+  it("질문게시판 경로에서 클릭 시 새 질문 작성 페이지로 이동한다", () => {
+    renderWithRouter("/community/question");
+
+    const button = screen.getByRole("button");
     fireEvent.click(button);
-    
-    expect(mockNavigate).toHaveBeenCalledWith('/community/new/question');
+
+    expect(mockNavigate).toHaveBeenCalledWith("/community/new/question");
   });
 
-  it('버튼이 고정 위치에 있다', () => {
+  it("버튼이 고정 위치에 있다", () => {
     const { container } = renderWithRouter();
-    
-    const wrapper = container.querySelector('.fixed.bottom-\\[100px\\]');
+
+    const wrapper = container.querySelector(".fixed.bottom-\\[100px\\]");
     expect(wrapper).toBeInTheDocument();
   });
 
-  it('버튼이 원형이고 shadow를 가진다', () => {
+  it("버튼이 원형이고 shadow를 가진다", () => {
     renderWithRouter();
-    
-    const button = screen.getByRole('button');
-    expect(button).toHaveClass('!rounded-full');
-    expect(button).toHaveClass('shadow-xl');
+
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("!rounded-full");
+    expect(button).toHaveClass("shadow-xl");
   });
 
-  it('버튼 크기가 60x60이다', () => {
+  it("버튼 크기가 60x60이다", () => {
     renderWithRouter();
-    
-    const button = screen.getByRole('button');
-    expect(button).toHaveClass('w-[60px]');
-    expect(button).toHaveClass('h-[60px]');
+
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("w-[60px]");
+    expect(button).toHaveClass("h-[60px]");
   });
 });

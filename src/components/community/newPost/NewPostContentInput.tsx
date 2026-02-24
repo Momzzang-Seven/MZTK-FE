@@ -1,4 +1,3 @@
-// NewPostContentInput.tsx
 import { useState, useRef, useEffect } from "react";
 
 interface NewPostContentInputProps {

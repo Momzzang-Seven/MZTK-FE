@@ -15,7 +15,6 @@ const CreatePost = () => {
 
   const { type } = useParams();
   const isQuestion = type === "question";
-  const isAnswer = type === "answer";
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -24,7 +23,8 @@ const CreatePost = () => {
   const [rewardModalOpen, setRewardModalOpen] = useState(false);
 
   const isSubmitActive =
-    content.trim() !== "" && (isQuestion ? reward >= 1 : true);
+    content.trim() !== "" &&
+    (isQuestion ? title.trim() !== "" && reward >= 1 : true);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -65,7 +65,7 @@ const CreatePost = () => {
         <NewPostContentInput onChange={setContent} />
       </div>
 
-      {isQuestion && !isAnswer && (
+      {isQuestion && (
         <div className="fixed bottom-10 w-full max-w-[420px] px-6">
           <RewardToken
             rewardToken={reward}
@@ -74,7 +74,7 @@ const CreatePost = () => {
         </div>
       )}
 
-      {isQuestion && !isAnswer && rewardModalOpen && (
+      {isQuestion && rewardModalOpen && (
         <CommonModal
           title="보상 토큰 지급"
           desc={`채택된 답변의 사용자에게 <b>${reward} MZTK</b>을 지급합니다.`}
