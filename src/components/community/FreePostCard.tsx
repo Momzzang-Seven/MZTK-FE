@@ -14,8 +14,10 @@ const FreePostCard = ({ post }: Props) => {
   const [likeCount, setLikeCount] = useState(post.likeCount);
 
   const handleLikeClick = () => {
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+    setLiked((prevLiked) => {
+      setLikeCount((prevCount) => (prevLiked ? prevCount - 1 : prevCount + 1));
+      return !prevLiked;
+    });
   };
 
   const handleCommentClick = () => {
@@ -52,13 +54,15 @@ const FreePostCard = ({ post }: Props) => {
       </div>
 
       {/* 게시물 이미지 */}
-      <div className="mt-3 w-full">
-        <img
-          src={post.imageUrls}
-          alt="post"
-          className="w-full h-auto object-cover"
-        />
-      </div>
+      {post.imageUrls && (
+        <div className="mt-3 w-full">
+          <img
+            src={post.imageUrls}
+            alt="post"
+            className="w-full h-auto object-cover"
+          />
+        </div>
+      )}
 
       {/* 액션 영역 */}
       <div className="flex items-center gap-4 px-4 py-1">
