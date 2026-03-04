@@ -19,30 +19,30 @@ export const LevelProgress = () => {
         }
     };
 
-    const radius = 130; // Adjusted for larger size
+    const radius = 95; // Adjusted for smaller size
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
     return (
-        <div className="relative w-[344px] h-[326px] flex items-center justify-center">
+        <div className="relative w-[230px] h-[230px] flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90">
                 {/* Background Circle */}
                 <circle
-                    cx="172"
-                    cy="163"
+                    cx="115"
+                    cy="115"
                     r={radius}
                     stroke="#f3f4f6"
-                    strokeWidth="20"
+                    strokeWidth="14"
                     fill="transparent"
                     strokeLinecap="round"
                 />
                 {/* Progress Circle */}
                 <circle
-                    cx="172"
-                    cy="163"
+                    cx="115"
+                    cy="115"
                     r={radius}
                     stroke="#FAB12F"
-                    strokeWidth="20"
+                    strokeWidth="14"
                     fill="transparent"
                     strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}
@@ -55,15 +55,15 @@ export const LevelProgress = () => {
                 {isLevelUpAvailable ? (
                     <button
                         onClick={handleLevelUp}
-                        className="animate-bounce bg-[#FAB12F] text-white font-bold leading-none px-8 py-5 rounded-full shadow-xl hover:bg-[#E59E20] transition-colors text-4xl"
+                        className="animate-bounce bg-[#FAB12F] text-white font-bold leading-none px-6 py-4 rounded-full shadow-xl hover:bg-[#E59E20] transition-colors text-2xl"
                     >
                         레벨업!
                     </button>
                 ) : (
                     <>
-                        <div className="text-gray-400 text-sm font-medium mb-1">현재 레벨</div>
+                        <div className="text-gray-400 text-xs font-medium mb-1">현재 레벨</div>
                         <div className="text-[#FAB12F] text-5xl font-bold font-gmarket">Lv.{level}</div>
-                        <div className="text-gray-300 text-xs mt-2 font-medium">{xp} / {maxXp} XP</div>
+                        <div className="text-gray-300 text-[11px] mt-2 font-medium">{xp} / {maxXp} XP</div>
                     </>
                 )}
             </div>

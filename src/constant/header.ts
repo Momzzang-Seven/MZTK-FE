@@ -41,6 +41,14 @@ export const headerByPath: HeaderByPathType[] = [
     label: "답변 수정",
     path: "/community/edit/answer",
   },
+  {
+    label: "예약/수강 내역",
+    path: "/market/reservations",
+  },
+  {
+    label: "운동 클래스 찾기",
+    path: "/market",
+  }
 ];
 
 export const adminHeaderByPath: HeaderByPathType[] = [

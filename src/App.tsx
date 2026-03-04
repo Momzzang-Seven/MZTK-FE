@@ -28,6 +28,15 @@ import {
   TrainerDashboard,
   CreateTicket,
   EditTicket,
+  TrainerList,
+  TrainerReservations,
+  TrainerReviews,
+  TrainerStoreRegister,
+  Market,
+  MarketDetail,
+  MarketPurchase,
+  MarketPurchaseFail,
+  MarketReservation,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -128,6 +137,15 @@ function App() {
                     <Route path="/trainer" element={<TrainerDashboard />} />
                     <Route path="/trainer/create" element={<CreateTicket />} />
                     <Route path="/trainer/edit/:id" element={<EditTicket />} />
+                    <Route path="/trainer/list" element={<TrainerList />} />
+                    <Route path="/trainer/reservations" element={<TrainerReservations />} />
+                    <Route path="/trainer/reviews" element={<TrainerReviews />} />
+                    <Route path="/trainer/store-register" element={<TrainerStoreRegister />} />
+                    <Route path="/market" element={<Market />} />
+                    <Route path="/market/reservations" element={<MarketReservation />} />
+                    <Route path="/market/:id" element={<MarketDetail />} />
+                    <Route path="/market/purchase/:id" element={<MarketPurchase />} />
+                    <Route path="/market/purchase-fail" element={<MarketPurchaseFail />} />
                   </Route>
 
                   <Route path="/404" element={<Err404 />} />

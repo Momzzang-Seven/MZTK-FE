@@ -17,7 +17,7 @@ const TrainerTicketList = ({ tickets }: TrainerTicketListProps) => {
 
     return (
         <div className="flex flex-col gap-4 px-5">
-            <h2 className="font-bold text-lg text-gray-800">내 체험권 목록</h2>
+            <h2 className="font-bold text-lg text-gray-800">내 클래스 목록</h2>
             {tickets.length > 0 ? (
                 tickets.map((ticket) => (
                     <div key={ticket.id} className="bg-white rounded-2xl p-4 flex gap-4 border border-gray-100 shadow-sm">
@@ -41,7 +41,7 @@ const TrainerTicketList = ({ tickets }: TrainerTicketListProps) => {
                 ))
             ) : (
                 <div className="bg-gray-50 rounded-2xl py-12 flex flex-col items-center justify-center text-gray-400">
-                    <p>등록된 체험권이 없습니다.</p>
+                    <p>등록된 클래스가 없습니다.</p>
                 </div>
             )}
         </div>
