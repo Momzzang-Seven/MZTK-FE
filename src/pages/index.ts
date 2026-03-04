@@ -22,6 +22,15 @@ export { default as Register } from "./Register";
 export { default as TrainerDashboard } from "./trainer/TrainerDashboard";
 export { default as CreateTicket } from "./trainer/CreateTicket";
 export { default as EditTicket } from "./trainer/EditTicket";
+export { default as TrainerList } from "./trainer/TrainerList";
+export { default as TrainerReservations } from "./trainer/TrainerReservations";
+export { default as TrainerReviews } from "./trainer/TrainerReviews";
+export { default as TrainerStoreRegister } from "./trainer/TrainerStoreRegister";
+export { default as Market } from "./market/Market";
+export { default as MarketDetail } from "./market/MarketDetail";
+export { default as MarketPurchase } from "./market/MarketPurchase";
+export { default as MarketPurchaseFail } from "./market/MarketPurchaseFail";
+export { default as MarketReservation } from "./market/MarketReservation";
 
 // admin page
 export { default as AdminDashboard } from "./admin/Dashboard";

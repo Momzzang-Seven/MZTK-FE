@@ -36,26 +36,26 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
             {/* Attendance Button */}
             <CommonButton
                 onClick={isAttended ? undefined : handleAttendance}
-                className={`w-full !justify-start gap-5 p-6 rounded-3xl transition-all text-left ${isAttended ? inactiveStyle : activeStyle}`}
+                className={`w-full !justify-start gap-4 p-5 rounded-[20px] transition-all text-left ${isAttended ? inactiveStyle : activeStyle}`}
                 bgColor=" " // Override default
                 textColor=" " // Override default
-                padding="p-6"
+                padding="p-5"
                 label={
-                    <div className="flex flex-col items-start gap-1">
-                        <div className="font-bold text-xl">
+                    <div className="flex flex-col items-start gap-0.5">
+                        <div className="font-bold text-[17px]">
                             {isAttended ? HOME_TEXT.ATTENDANCE.DONE_TITLE : HOME_TEXT.ATTENDANCE.YET_TITLE}
                         </div>
-                        <div className={`text-sm font-medium ${isAttended ? "opacity-70" : "opacity-90"}`}>
+                        <div className={`text-[12px] font-medium ${isAttended ? "opacity-70" : "opacity-90"}`}>
                             {isAttended ? HOME_TEXT.ATTENDANCE.DONE_DESC : HOME_TEXT.ATTENDANCE.YET_DESC}
                         </div>
                     </div>
                 }
                 icon={
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${isAttended ? "bg-transparent" : "bg-white/25"}`}>
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${isAttended ? "bg-transparent" : "bg-white/25"}`}>
                         <img
                             src="/icon/clock.svg"
                             alt="clock"
-                            className={`w-8 h-8 ${isAttended ? "brightness-0 opacity-40" : "brightness-0 invert"}`}
+                            className={`w-6 h-6 ${isAttended ? "brightness-0 opacity-40" : "brightness-0 invert"}`}
                         />
                     </div>
                 }
@@ -64,26 +64,26 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
             {/* Exercise Button */}
             <CommonButton
                 onClick={isExerciseDone ? undefined : onExerciseClick}
-                className={`w-full !justify-start gap-5 p-6 rounded-3xl transition-all text-left ${isExerciseDone ? inactiveStyle : activeStyle}`}
+                className={`w-full !justify-start gap-4 p-5 rounded-[20px] transition-all text-left ${isExerciseDone ? inactiveStyle : activeStyle}`}
                 bgColor=" " // Override default
                 textColor=" " // Override default
-                padding="p-6"
+                padding="p-5"
                 label={
-                    <div className="flex flex-col items-start gap-1">
-                        <div className="font-bold text-xl">
+                    <div className="flex flex-col items-start gap-0.5">
+                        <div className="font-bold text-[17px]">
                             {isExerciseDone ? HOME_TEXT.EXERCISE.DONE_TITLE : HOME_TEXT.EXERCISE.YET_TITLE}
                         </div>
-                        <div className={`text-sm font-medium ${isExerciseDone ? "opacity-70" : "text-white/90"}`}>
+                        <div className={`text-[12px] font-medium ${isExerciseDone ? "opacity-70" : "text-white/90"}`}>
                             {isExerciseDone ? HOME_TEXT.EXERCISE.DONE_DESC : HOME_TEXT.EXERCISE.YET_DESC}
                         </div>
                     </div>
                 }
                 icon={
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${isExerciseDone ? "bg-transparent" : "bg-white/25"}`}>
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${isExerciseDone ? "bg-transparent" : "bg-white/25"}`}>
                         <img
                             src="/icon/dumbell.svg"
                             alt="dumbell"
-                            className={`w-8 h-8 ${isExerciseDone ? "brightness-0 opacity-40" : "brightness-0 invert"}`}
+                            className={`w-6 h-6 ${isExerciseDone ? "brightness-0 opacity-40" : "brightness-0 invert"}`}
                         />
                     </div>
                 }

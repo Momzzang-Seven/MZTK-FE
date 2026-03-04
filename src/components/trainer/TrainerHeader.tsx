@@ -21,9 +21,7 @@ const TrainerHeader = ({ title, showBack = false }: TrainerHeaderProps) => {
                 )}
                 <h1 className="text-xl font-bold text-gray-900">{title}</h1>
             </div>
-            <div className="w-10 h-10 rounded-full bg-main/10 flex items-center justify-center">
-                <img src="/icon/userActive.svg" alt="profile" className="w-6 h-6" />
-            </div>
+
         </div>
     );
 };

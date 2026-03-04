@@ -8,7 +8,7 @@ export const Footer = () => {
   return (
     <div className="z-[998] w-full fixed max-w-[420px] rounded-t-[20px] bg-white bottom-0 flex flex-row justify-between items-center h-[82px] px-[20px] py-[10px] shadow-[0_-4px_8px_rgba(0,0,0,0.05)]">
       {/* footer item map */}
-      <div className="w-full grid grid-cols-4 col-span-4">
+      <div className="w-full grid" style={{ gridTemplateColumns: `repeat(${footerItem.length}, minmax(0, 1fr))` }}>
         {footerItem.map((item) => {
           const path = location.pathname;
           // Home ('/') should be exact match, others can be prefix matches
@@ -28,9 +28,8 @@ export const Footer = () => {
                 height="32px"
               />
               <div
-                className={`${
-                  isActive ? "text-main body-bold" : "text-grey-main body"
-                }`}
+                className={`${isActive ? "text-main body-bold" : "text-grey-main body"
+                  }`}
               >
                 {item.label}
               </div>
