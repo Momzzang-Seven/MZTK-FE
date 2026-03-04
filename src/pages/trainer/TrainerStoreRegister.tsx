@@ -51,7 +51,7 @@ const TrainerStoreRegister = () => {
     useEffect(() => {
         if (isMapLoaded && address && mapRef.current) {
             try {
-                window.naver.maps.Service.geocode({ query: address }, (status, response) => {
+                window.naver.maps.Service.geocode({ query: address }, (status: any, response: any) => {
                     if (status !== window.naver.maps.Service.Status.OK) return;
 
                     if (response.v2.meta.totalCount > 0) {

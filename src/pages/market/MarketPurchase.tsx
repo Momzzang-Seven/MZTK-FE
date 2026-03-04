@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CommonButton } from "@components/common";
 import { SimpleHeader } from "@components/layout";
-import { calculateEndTime } from "@utils";
+// import { calculateEndTime } from "@utils";
 
 // 실제 앱에서는 API로 호출하거나 상태관리 도구를 사용하므로 여기선 임시로 재정의합니다.
 const MOCK_DATA: Record<string, any> = {
@@ -166,19 +166,19 @@ const MarketPurchase = () => {
                             disabled={!isAvailable}
                             onClick={() => setSelectedTime(time)}
                             className={`flex flex-col items-center justify-center py-[7px] min-h-[50px] rounded-lg transition-all ${!isAvailable
-                                    ? "bg-[#EFEFEF] text-[#D1D1D1] border border-transparent cursor-not-allowed" // 불가능한 시간 (회색 박스)
-                                    : isSelected
-                                        ? "bg-main text-white shadow-md border border-main" // 선택됨 (주황 바탕)
-                                        : "bg-[#FFF9EE] text-main border border-[#FAD390] hover:bg-main/10" // 예약 가능 (연한 주황 바탕 + 주황 테두리)
+                                ? "bg-[#EFEFEF] text-[#D1D1D1] border border-transparent cursor-not-allowed" // 불가능한 시간 (회색 박스)
+                                : isSelected
+                                    ? "bg-main text-white shadow-md border border-main" // 선택됨 (주황 바탕)
+                                    : "bg-[#FFF9EE] text-main border border-[#FAD390] hover:bg-main/10" // 예약 가능 (연한 주황 바탕 + 주황 테두리)
                                 }`}
                         >
                             <span className={`text-[12px] sm:text-[14px] font-bold ${!isAvailable ? "opacity-80 font-medium" : ""}`}>{time}</span>
                             {/* 인원수 표기 */}
                             <span className={`text-[9px] sm:text-[10px] mt-0.5 leading-none ${!isAvailable
-                                    ? "text-transparent" // 불가능할 땐 숨김
-                                    : isSelected
-                                        ? "text-white/90"
-                                        : "text-main/80"
+                                ? "text-transparent" // 불가능할 땐 숨김
+                                : isSelected
+                                    ? "text-white/90"
+                                    : "text-main/80"
                                 }`}>
                                 잔여 {remain}명
                             </span>
