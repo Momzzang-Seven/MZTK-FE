@@ -15,6 +15,11 @@ export const AdminSidebar = () => {
       icon: "/icon/adminUser.svg",
     },
     {
+      label: "문의 내역 관리",
+      path: "/admin/inquiries",
+      icon: "/icon/adminInquiry.svg",
+    },
+    {
       label: "게시판",
       path: "/admin/posts",
       icon: "/icon/adminBoard.svg",
@@ -36,14 +41,14 @@ export const AdminSidebar = () => {
               key={item.path}
               to={item.path}
               className={`flex items-center gap-4 px-6 py-4 rounded-xl transition-all relative ${isActive
-                  ? "bg-main/15 text-main font-bold"
-                  : "text-gray-500 hover:bg-gray-50"
+                ? "bg-main/15 text-main font-bold"
+                : "text-gray-500 hover:bg-gray-50"
                 }`}
             >
               {isActive && (
                 <div className="absolute right-0 top-1/4 bottom-1/4 w-1 bg-main rounded-r-full" />
               )}
-              <img src={item.icon} alt={item.label} className={`w-6 h-6`} />
+              <img src={item.icon} alt={item.label} className="w-6 h-6" />
               <span className="text-lg">{item.label}</span>
             </Link>
           );

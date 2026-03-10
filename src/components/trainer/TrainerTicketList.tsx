@@ -25,7 +25,7 @@ const TrainerTicketList = ({ tickets }: TrainerTicketListProps) => {
                         <div className="flex-1 flex flex-col justify-between py-0.5">
                             <div>
                                 <h3 className="font-bold text-gray-900 line-clamp-1">{ticket.title}</h3>
-                                <p className="text-main font-bold text-sm mt-1">{ticket.price} MZT</p>
+                                <p className="text-main font-bold text-sm mt-1">{ticket.price} MZTK</p>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-xs text-gray-400">판매수: {ticket.sales}건</span>

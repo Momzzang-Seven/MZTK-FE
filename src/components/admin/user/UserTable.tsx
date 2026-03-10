@@ -40,7 +40,17 @@ const UserTable = () => {
                                     {/* Using first char of nickname if no image */}
                                     {user.nickname.charAt(0)}
                                 </div>
-                                <span className="font-bold text-gray-800">{user.nickname}</span>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-gray-800">{user.nickname}</span>
+                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${user.role === 'TRAINER'
+                                            ? 'bg-blue-100 text-blue-600'
+                                            : 'bg-orange-100 text-main'
+                                            }`}>
+                                            {user.role === 'TRAINER' ? ADMIN_TEXT.COMMON.FILTER.TRAINER : ADMIN_TEXT.COMMON.FILTER.MEMBER}
+                                        </span>
+                                    </div>
+                                </div>
                             </td>
                             <td className="py-4 px-6 text-gray-500">{user.email}</td>
                             <td className="py-4 px-6 text-gray-500">{user.joinDate}</td>

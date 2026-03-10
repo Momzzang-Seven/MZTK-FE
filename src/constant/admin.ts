@@ -9,6 +9,9 @@ export const ADMIN_TEXT = {
             BANNED: "정지",
             POSTING: "게시 중", // For posts
             DELETED: "삭제됨", // For posts
+            TRAINER: "트레이너",
+            MEMBER: "회원",
+            ALL_ROLES: "전체 역할",
         },
     },
     USER: {

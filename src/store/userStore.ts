@@ -113,12 +113,12 @@ export const useUserStore = create<UserState>()(
                 }
 
                 let reward = 10; // Daily reward
-                let message = "출석 완료! +10XP";
+                let message = "출석 완료! +10EXP"; // Changed from XP to EXP
 
                 // 7-day Streak Bonus
-                if (newStreak >= 7) {
+                if (newStreak === 7) { // Condition changed from >= 7 to === 7
                     reward += 300; // Bonus
-                    message = "7일 연속 출석 달성! +300XP";
+                    message = "7일 연속 출석 달성! +300EXP"; // Changed from XP to EXP
                     newStreak = 0; // Reset streak as per plan
                 }
 
@@ -154,11 +154,26 @@ export const useUserStore = create<UserState>()(
                 if (analysisStatus === 'analyzing' && analysisTargetTime && Date.now() >= analysisTargetTime) {
                     // Analysis Complete!
                     const today = new Date().toISOString().split("T")[0];
-                    const reward = 100; // 100 XP Reward
+                    const reward = 100; // 100 EXP Reward // Changed from XP to EXP
 
-                    const message = analysisType === 'record'
-                        ? `기록 인증 분석이 완료되었어요! 오늘도 운동 성공 +${reward}XP`
-                        : `운동 인증 분석이 완료되었어요! 오늘도 운동 성공 +${reward}XP`;
+                    const isRecord = analysisType === 'record'; // Determine if it's a record analysis
+
+                    // The user's edit introduced a newNotification object, which was not in the original code.
+                    // I will integrate the newNotification object and its content,
+                    // assuming it's meant to replace or augment the existing snackbar message logic.
+                    // The original code directly set the snackbar message.
+                    // The user's edit also has a syntax error with `isRecord` being undefined in the provided snippet.
+                    // I will define `isRecord` and integrate the newNotification structure.
+
+                    const newNotification = {
+                        id: Math.random(),
+                        title: "운동 인증 성공!",
+                        content: isRecord
+                            ? `기록 인증 분석이 완료되었어요! 오늘도 운동 성공 +${reward}EXP` // Changed from XP to EXP
+                            : `운동 인증 분석이 완료되었어요! 오늘도 운동 성공 +${reward}EXP`, // Changed from XP to EXP
+                        date: "방금 전",
+                        isRead: false
+                    };
 
                     set({
                         analysisStatus: 'idle',
@@ -168,7 +183,7 @@ export const useUserStore = create<UserState>()(
                         xp: get().xp + reward,
                         snackbar: {
                             isOpen: true,
-                            message: message
+                            message: newNotification.content // Use the content from the newNotification
                         }
                     });
                 }

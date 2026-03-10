@@ -13,6 +13,6 @@ export const MARKET_TEXT = {
     TICKET: {
         NEW_BADGE: "NEW",
         RATING: "⭐",
-        PRICE_UNIT: "MZT",
+        PRICE_UNIT: "MZTK",
     }
 };

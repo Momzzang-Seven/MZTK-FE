@@ -41,7 +41,7 @@ export const AttendanceBanner = () => {
 
                 <p className="text-[12px] font-bold opacity-90">
                     {attendanceStreak < 7
-                        ? `${remainingDays}일만 더 인증하면 100XP 추가 보상!`
+                        ? `${remainingDays}일만 더 인증하면 100EXP 추가 보상!`
                         : "이번 주 목표 달성 완료! 🎉"}
                 </p>
             </div>

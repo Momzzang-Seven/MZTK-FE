@@ -15,7 +15,7 @@ const RewardToken = ({ rewardToken, onClick }: NewQuestionRewardTokenProps) => {
       </div>
       <div className="flex flex-row gap-x-4 items-center">
         <div className="text-2xl font-bold">{rewardToken}</div>
-        <div className="body">MZT</div>
+        <div className="body">MZTK</div>
       </div>
     </div>
   );

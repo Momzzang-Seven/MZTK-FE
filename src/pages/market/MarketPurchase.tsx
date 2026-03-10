@@ -215,7 +215,7 @@ const MarketPurchase = () => {
             // !! 임시 기획: 테스트를 위해 30% 확률로 구매 실패를 재현합니다 !!
             const isSuccess = Math.random() > 0.3;
             if (!isSuccess) {
-                throw new Error("결제/예약 시스템 오류 또는 MZT 부족");
+                throw new Error("결제/예약 시스템 오류 또는 MZTK 부족");
             }
 
             alert(`🎉 예약이 확정되었습니다!\n\n${data.title}\n${selectedDateObj.full} (${selectedDateObj.day}요일) ${selectedTime}\n요청사항: ${requestMsg || "없음"}\n(서버 전송 시간 포맷: ${reservationDateTime})`);
@@ -240,7 +240,7 @@ const MarketPurchase = () => {
                         <span className="text-gray-500 text-sm font-medium">1회 구매 비용</span>
                         <div className="flex items-center gap-1">
                             <div className="w-[18px] h-[18px] rounded-full bg-main flex items-center justify-center text-white text-[10px] font-bold">
-                                MZT
+                                MZTK
                             </div>
                             <span className="font-bold text-[18px] text-gray-900 leading-none">{data.price}</span>
                         </div>
@@ -277,7 +277,7 @@ const MarketPurchase = () => {
             {/* 하단 고정 토큰 지불 / 구매 바 */}
             <div className="fixed bottom-0 max-w-[450px] w-full bg-white px-5 py-4 flex flex-col gap-3 border-t border-gray-100 shadow-[0_-4px_15px_rgba(0,0,0,0.03)] z-50 rounded-t-2xl">
                 <CommonButton
-                    label={`총 ${data.price} MZT 결제 및 예약 확정`}
+                    label={`총 ${data.price} MZTK 결제 및 예약 확정`}
                     onClick={handlePurchase}
                     className={`h-[56px] rounded-xl font-bold text-[16px] ${selectedDateObj && selectedTime ? "" : "opacity-50"}`}
                 />

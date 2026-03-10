@@ -13,7 +13,7 @@ export const CurrentTkn = () => {
         <div className="text-2xl font-bold">
           {loading ? "..." : Number(balance).toLocaleString()}
         </div>
-        <div className="body">MZT</div>
+        <div className="body">MZTK</div>
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ export const LevelProgress = () => {
       {/* current xp */}
       <div className="flex flex-row justify-between w-full label text-grey-deep">
         <div>현재 EXP</div>
-        <div>{xp.toLocaleString()} XP</div>
+        <div>{xp.toLocaleString()} EXP</div>
       </div>
       {/* progress bar */}
       <div className="w-full bg-grey-pale rounded-full h-4">
@@ -27,7 +27,7 @@ export const LevelProgress = () => {
       {/* goal xp */}
       <div className="flex flex-row justify-between w-full label text-grey-deep">
         <div>목표 EXP</div>
-        <div className="font-bold text-black">{maxXp.toLocaleString()} XP</div>
+        <div className="font-bold text-black">{maxXp.toLocaleString()} EXP</div>
       </div>
     </MySectionCard>
   );
