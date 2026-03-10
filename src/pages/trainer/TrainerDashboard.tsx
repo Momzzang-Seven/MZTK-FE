@@ -3,20 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { TRAINER_DASHBOARD_TEXT } from "@constant";
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonModal } from "@components/common";
+import { useTrainerStatus } from "@hooks";
 
 const TrainerDashboard = () => {
     const navigate = useNavigate();
     const [showRegisterModal, setShowRegisterModal] = useState(false);
+    const { isRestricted, handleAppeal } = useTrainerStatus();
 
     useEffect(() => {
         const hasVisited = localStorage.getItem("hasVisitedTrainerDashboard");
         const hasStore = localStorage.getItem("trainerStoreRegistered");
 
-        if (!hasVisited && !hasStore) {
+        if (!hasVisited && !hasStore && !isRestricted) {
             setShowRegisterModal(true);
             localStorage.setItem("hasVisitedTrainerDashboard", "true");
         }
-    }, []);
+    }, [isRestricted]);
 
     const handleGoToRegister = () => {
         setShowRegisterModal(false);
@@ -74,6 +76,16 @@ const TrainerDashboard = () => {
                     desc="클래스 등록 및 관리를 위해<br/>먼저 매장 정보를 등록해주세요."
                     confirmLabel="매장 등록하기"
                     onConfirmClick={handleGoToRegister}
+                />
+            )}
+
+            {/* 5. Restriction Modal */}
+            {isRestricted && (
+                <CommonModal
+                    title="이용 제한 안내"
+                    desc="이용이 제한된 트레이너 입니다."
+                    confirmLabel="문의하기"
+                    onConfirmClick={handleAppeal}
                 />
             )}
         </div>

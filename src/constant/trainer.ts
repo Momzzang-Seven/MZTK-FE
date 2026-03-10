@@ -31,7 +31,7 @@ export const CREATE_TICKET_TEXT = {
     LABELS: {
         TITLE: "클래스 제목",
         CATEGORY: "카테고리",
-        PRICE: "가격 (토큰)",
+        PRICE: "가격 (MZT)",
         CAPACITY: "정원 (명)",
         DESC: "프로그램 상세 소개",
         FEATURES: "프로그램 특징 (선택)",

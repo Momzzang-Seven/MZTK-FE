@@ -12,7 +12,8 @@ const MOCK_TRAINER_RESERVATIONS = [
         day: "목",
         time: "19:00",
         remainingTime: "71시간 58분",
-        requestMsg: "오른쪽 무릎이 조금 안 좋습니다."
+        requestMsg: "오른쪽 무릎이 조금 안 좋습니다.",
+        txHash: null
     },
     {
         id: "tr2",
@@ -22,7 +23,9 @@ const MOCK_TRAINER_RESERVATIONS = [
         date: "2026-03-06",
         day: "금",
         time: "09:00",
-        requestMsg: "살 엄청 빼고 싶어요 ㅠㅠ"
+        requestMsg: "살 엄청 빼고 싶어요 ㅠㅠ",
+        txHash: "0x7a8b9c1d2e3f4g5h6i7j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z",
+        autoConfirmDDay: 3
     },
     {
         id: "tr3",
@@ -32,22 +35,30 @@ const MOCK_TRAINER_RESERVATIONS = [
         date: "2026-02-15",
         day: "일",
         time: "10:00",
-        requestMsg: "식단 점검 부탁드립니다."
+        requestMsg: "식단 점검 부탁드립니다.",
+        txHash: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z",
+        completedAt: "2026-02-15 11:30"
     }
 ];
 
 const TrainerReservations = () => {
     const [activeTab, setActiveTab] = useState<"pending" | "confirmed" | "completed">("pending");
 
-    // 예약 반려 모달 상태
+    // 모달 상태
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [txModalOpen, setTxModalOpen] = useState(false);
     const [rejectReason, setRejectReason] = useState("");
-    const [selectedRejectId, setSelectedRejectId] = useState<string | null>(null);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const handleRejectClick = (id: string) => {
-        setSelectedRejectId(id);
+        setSelectedId(id);
         setRejectReason("");
         setRejectModalOpen(true);
+    };
+
+    const handleTxClick = (id: string) => {
+        setSelectedId(id);
+        setTxModalOpen(true);
     };
 
     const handleRejectConfirm = () => {
@@ -55,13 +66,13 @@ const TrainerReservations = () => {
             alert("반려 사유를 입력해주세요.");
             return;
         }
-
-        // [TODO] 실제 서버 연동 로직 (선택된 ID: selectedRejectId)
-        console.log("Rejecting:", selectedRejectId);
+        console.log("Rejecting:", selectedId);
         alert(`예약이 반려되었습니다.\n사유: ${rejectReason}`);
         setRejectModalOpen(false);
-        setSelectedRejectId(null);
+        setSelectedId(null);
     };
+
+    const selectedReservation = MOCK_TRAINER_RESERVATIONS.find(r => r.id === selectedId);
 
     const filteredReservations = MOCK_TRAINER_RESERVATIONS.filter(res => {
         if (activeTab === "pending") return res.status === "신규 예약";
@@ -112,13 +123,7 @@ const TrainerReservations = () => {
 
             {/* 안내 경고 메시지 영역 */}
             {activeTab === "pending" && (
-                <div className="bg-red-50 px-5 py-3 text-[12px] text-red-600 font-medium tracking-tight">
-                    <p>🚨 72시간 내 미승인 시 서버 지갑에서 자동 환불 및 트레이너 제재 시스템이 동작합니다.</p>
-                </div>
-            )}
-
-            {(activeTab === "pending" || activeTab === "confirmed") && (
-                <div className="bg-[#FFF9EE] px-5 py-3 text-[12px] text-orange-500 font-medium tracking-tight border-t border-[#FAD390]/30 shadow-sm">
+                <div className="bg-[#FFF9EE] px-5 py-3 text-[12px] text-orange-500 font-medium tracking-tight border-b border-[#FAD390]/30 shadow-sm">
                     <p>⚠️ 3회 이상 예약 반려 시 트레이너 이용 정지 됩니다.</p>
                 </div>
             )}
@@ -127,12 +132,12 @@ const TrainerReservations = () => {
                 {filteredReservations.length > 0 ? (
                     filteredReservations.map((item) => (
                         <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-4">
-                            {/* 헤더: 상태 & 날짜/시간 */}
+                            {/* 헤더: 상태 & 타이머 */}
                             <div className="flex justify-between items-center mb-1 border-b border-gray-100 pb-2">
                                 <span className={`text-[11px] font-bold px-2.5 py-1 rounded-md ${item.status === "신규 예약"
                                     ? "bg-red-50 text-red-500"
                                     : item.status === "예약 확정"
-                                        ? "bg-orange-50 text-orange-500"
+                                        ? "bg-main/10 text-main"
                                         : "bg-gray-100 text-gray-500"
                                     }`}>
                                     {item.status}
@@ -192,12 +197,28 @@ const TrainerReservations = () => {
                             )}
 
                             {item.status === "예약 확정" && (
+                                <div className="mt-2 pt-1 border-t border-gray-100 flex flex-col gap-3">
+                                    <button
+                                        onClick={() => handleTxClick(item.id)}
+                                        className="w-full mt-2 py-4 rounded-xl font-bold text-[15px] bg-main/5 text-main border border-main/20 flex items-center justify-center gap-2 active:bg-main/10 transition-all shadow-sm"
+                                    >
+                                        <span className="text-[12px] bg-main text-white px-2 py-0.5 rounded-md">D-{item.autoConfirmDDay}</span>
+                                        자동 정산까지 남은 시간
+                                    </button>
+                                    <p className="text-[11px] text-gray-400 text-center font-medium">
+                                        * 예약 확정 후에는 반려가 불가능합니다.
+                                    </p>
+                                </div>
+                            )}
+
+                            {item.status === "수강 완료" && (
                                 <div className="mt-2 pt-1 border-t border-gray-100">
                                     <button
-                                        onClick={() => handleRejectClick(item.id)}
-                                        className="w-full mt-2 py-3.5 rounded-xl font-bold text-[14px] bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                                        onClick={() => handleTxClick(item.id)}
+                                        className="w-full mt-2 py-3.5 rounded-xl font-bold text-[14px] bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
                                     >
-                                        예약 반려하기
+                                        <span className="text-color-blue font-bold text-[11px] bg-blue-50 px-1.5 py-0.5 rounded">정산 완료</span>
+                                        트랜잭션 정보 확인
                                     </button>
                                 </div>
                             )}
@@ -231,7 +252,7 @@ const TrainerReservations = () => {
                     cancelLabel="취소"
                     onCancelClick={() => {
                         setRejectModalOpen(false);
-                        setSelectedRejectId(null);
+                        setSelectedId(null);
                     }}
                 >
                     <div className="w-full mt-2">
@@ -241,6 +262,42 @@ const TrainerReservations = () => {
                             placeholder="예) 해당 시간대에 이미 잡혀있는 오프라인 일정이 있습니다. 다른 시간대로 예약 부탁드립니다."
                             className="w-full h-[100px] bg-gray-50 border border-gray-200 rounded-xl p-3 text-[14px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-main focus:ring-1 focus:ring-main/20 resize-none transition-all shadow-sm text-left"
                         />
+                    </div>
+                </CommonModal>
+            )}
+
+            {/* 트랜잭션 정보 모달 */}
+            {txModalOpen && selectedReservation && (
+                <CommonModal
+                    title="트랜잭션 정보"
+                    desc={`${selectedReservation.customerName} 회원님의 예약 관련 블록체인 기록입니다.`}
+                    confirmLabel="확인"
+                    onConfirmClick={() => {
+                        setTxModalOpen(false);
+                        setSelectedId(null);
+                    }}
+                >
+                    <div className="w-full mt-3 flex flex-col gap-4">
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col gap-3">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Transaction Hash</span>
+                                <div className="text-[12px] text-gray-600 break-all font-mono bg-white p-2 rounded border border-gray-100 leading-relaxed shadow-inner">
+                                    {selectedReservation.txHash || "기록을 찾을 수 없습니다."}
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center text-[12px]">
+                                <span className="text-gray-400 font-medium">상태</span>
+                                <span className="text-main font-bold">
+                                    {selectedReservation.status === "예약 확정" ? "스마트 컨트랙트 예치 중" : "정산 완료"}
+                                </span>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => window.open(`https://etherscan.io/tx/${selectedReservation.txHash}`, "_blank")}
+                            className="text-[12px] text-main font-bold underline text-center"
+                        >
+                            블록스캔에서 자세히 보기
+                        </button>
                     </div>
                 </CommonModal>
             )}

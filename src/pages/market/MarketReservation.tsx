@@ -86,10 +86,10 @@ const MarketReservation = () => {
                             {/* 헤더 */}
                             <div className="flex justify-between items-center">
                                 <span className={`text-[12px] font-bold px-2.5 py-1 rounded-md ${item.status === "예약 확정"
-                                        ? "bg-main/10 text-main"
-                                        : item.status === "수강 완료"
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-gray-100 text-gray-500"
+                                    ? "bg-main/10 text-main"
+                                    : item.status === "수강 완료"
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-gray-100 text-gray-500"
                                     }`}>
                                     {item.status}
                                 </span>
@@ -127,22 +127,34 @@ const MarketReservation = () => {
 
                             {/* 액션 버튼 */}
                             {item.status === "예약 확정" && (
-                                <div className="flex gap-2.5 mt-1">
+                                <div className="flex flex-col gap-2 mt-1">
+                                    <div className="flex gap-2.5">
+                                        <button
+                                            onClick={() => {
+                                                if (window.confirm("예약을 취소하시겠습니까? (규정에 따라 수수료가 발생할 수 있습니다.)")) {
+                                                    alert("예약이 취소되었습니다.");
+                                                }
+                                            }}
+                                            className="flex-1 py-3.5 rounded-xl font-bold text-[14px] bg-gray-100 text-gray-400 hover:bg-gray-200 transition-colors"
+                                        >
+                                            예약 취소
+                                        </button>
+                                        <button
+                                            className="flex-1 py-3.5 rounded-xl font-bold text-[14px] bg-main text-white shadow-sm hover:brightness-95 transition-all border border-transparent"
+                                            onClick={() => {
+                                                if (window.confirm("클래스 수강이 완료되었나요?\n'구매 확정' 시 트레이너에게 대금이 정산됩니다.")) {
+                                                    alert("구매 확정이 완료되었습니다. 클래스가 '지난 내역'으로 이동합니다.");
+                                                }
+                                            }}
+                                        >
+                                            구매 확정
+                                        </button>
+                                    </div>
                                     <button
-                                        onClick={() => {
-                                            if (window.confirm("예약을 취소하시겠습니까? (규정에 따라 수수료가 발생할 수 있습니다.)")) {
-                                                alert("예약이 취소되었습니다.");
-                                            }
-                                        }}
-                                        className="flex-1 py-3 rounded-xl font-bold text-[14px] bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                                    >
-                                        예약 취소
-                                    </button>
-                                    <button
-                                        className="flex-1 py-3 rounded-xl font-bold text-[14px] bg-gray-900 text-white shadow-sm hover:bg-gray-800 transition-all border border-transparent"
+                                        className="w-full py-3 rounded-xl font-bold text-[13px] text-gray-400 border border-gray-100 bg-white"
                                         onClick={() => navigate(`/market/purchase/${item.id.replace('r', '')}`)}
                                     >
-                                        클래스 정보
+                                        클래스 상세 정보 보기
                                     </button>
                                 </div>
                             )}

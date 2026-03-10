@@ -1,7 +1,11 @@
 import { CommonButton } from "@components/common";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useUserStore } from "@store";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { setUser, setAccessToken } = useUserStore();
   const [currentSlide, setCurrentSlide] = useState(0);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
@@ -140,8 +144,30 @@ const Login = () => {
     window.location.href = url;
   };
 
+  // Mock Login for Test
+  const handleMockLogin = (role: "TRAINER" | "MEMBER") => {
+    const mockUser = {
+      userId: role === "TRAINER" ? 100 : 200,
+      email: `${role.toLowerCase()}@example.com`,
+      nickname: `가짜${role === "TRAINER" ? "트레이너" : "회원"}`,
+      profileImage: "",
+      role: role,
+      walletAddress: "0x1234567890123456789012345678901234567890",
+    };
+
+    setUser(mockUser);
+    setAccessToken("mock_access_token");
+
+    // If role is already set, go to home, else go to register
+    if (role) {
+      navigate("/");
+    } else {
+      navigate("/register");
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full items-center bg-white px-5 pt-16 pb-10">
+    <div className="flex flex-col h-full items-center bg-white px-5 pt-16 pb-10 overflow-y-auto">
       {/* 1. Logo Title */}
       <div className="font-gmarket text-[52px] leading-tight text-[#FAB12F] text-center mb-10 shrink-0">
         몸짱
@@ -199,6 +225,25 @@ const Login = () => {
           onClick={() => handleLogin("google")}
           className="w-full title h-[56px] shadow-sm rounded-xl"
         />
+
+        {/* Mock Login Section - Subtle dev shortcut */}
+        <div className="mt-6 flex flex-col gap-2 border-t border-gray-100 pt-6">
+          <p className="text-center text-[11px] text-gray-300 font-medium tracking-tight mb-1 uppercase">Development Testing Only</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleMockLogin("TRAINER")}
+              className="flex-1 h-9 rounded-lg bg-gray-50 text-gray-400 text-xs font-bold hover:bg-gray-100 hover:text-main transition-colors"
+            >
+              트레이너 목업로그인
+            </button>
+            <button
+              onClick={() => handleMockLogin("MEMBER")}
+              className="flex-1 h-9 rounded-lg bg-gray-50 text-gray-400 text-xs font-bold hover:bg-gray-100 hover:text-main transition-colors"
+            >
+              회원 목업로그인
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

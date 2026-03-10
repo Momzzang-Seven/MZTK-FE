@@ -111,7 +111,7 @@ const Market = () => {
                     <h1 className="text-2xl font-bold border-b-2 border-main w-fit pb-1 border-opacity-30">운동 클래스 찾기</h1>
                     <p className="text-gray-600 text-sm font-medium leading-relaxed">마음에 드는 운동 클래스를 찾아<br />지금 바로 시작해 보세요!</p>
 
-                    {/* 잔여 토큰 표시 (우측 배치) */}
+                    {/* 잔여 MZT 표시 (우측 배치) */}
                     <div className="absolute top-10 right-5 bg-main text-white px-4 py-2 rounded-2xl shadow-md flex items-center gap-2 active:scale-95 transition-transform cursor-pointer select-none">
                         <img src="/icon/token.svg" alt="token" className="w-5 h-5 brightness-0 invert drop-shadow-sm" />
                         <span className="font-bold text-[17px] tabular-nums tracking-wide mt-[1px]">2,450</span>

@@ -271,12 +271,15 @@ const CreateTicket = () => {
                     )}
                 </div>
 
-                {/* 4. 이미지 업로드 섹션 */}
-                <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                        <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.IMAGE}</label>
-                        <span className="text-xs text-gray-400 font-medium">{imagePreviews.length}/5장</span>
+                {/* 4. 이미지 업로드 섹션 - 5구 그리드 방식 */}
+                <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center px-1">
+                        <label className="text-sm font-bold text-gray-800">{CREATE_TICKET_TEXT.LABELS.IMAGE}</label>
+                        <span className="text-xs text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded-md">
+                            최대 5장
+                        </span>
                     </div>
+
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -285,34 +288,64 @@ const CreateTicket = () => {
                         multiple
                         className="hidden"
                     />
-                    <div className="flex gap-3 overflow-x-auto scrollbar-hide py-1">
-                        {imagePreviews.length < 5 && (
-                            <div
-                                onClick={triggerFileInput}
-                                className="w-24 h-24 flex-shrink-0 bg-grey-pale rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200 cursor-pointer active:scale-[0.99] transition-all hover:bg-gray-50"
-                            >
-                                <img src="/icon/camera.svg" alt="camera" className="w-6 h-6 opacity-30 mb-1" />
-                                <span className="text-[10px] text-gray-400 font-medium">사진 추가</span>
-                            </div>
-                        )}
-                        {imagePreviews.map((preview, index) => (
-                            <div key={index} className="w-24 h-24 flex-shrink-0 relative rounded-xl overflow-hidden border border-gray-100">
-                                <img src={preview} alt={`preview-${index}`} className="w-full h-full object-cover" />
-                                <button
-                                    onClick={() => removeImage(index)}
-                                    className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] font-bold"
-                                >
-                                    ✕
-                                </button>
-                                {index === 0 && (
-                                    <div className="absolute bottom-0 left-0 right-0 bg-main/80 text-white text-[9px] font-bold text-center py-0.5">
-                                        대표 이미지
+
+                    <div className="grid grid-cols-3 gap-3 px-1">
+                        {[0, 1, 2, 3, 4].map((index) => {
+                            const hasImage = index < imagePreviews.length;
+                            const isNextSlot = index === imagePreviews.length;
+
+                            if (hasImage) {
+                                return (
+                                    <div key={index} className="aspect-square relative rounded-2xl overflow-hidden border border-gray-100 group shadow-sm">
+                                        <img src={imagePreviews[index]} alt={`preview-${index}`} className="w-full h-full object-cover" />
+                                        <button
+                                            onClick={() => removeImage(index)}
+                                            className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center text-[12px] active:bg-main/80"
+                                        >
+                                            ✕
+                                        </button>
+                                        {index === 0 && (
+                                            <div className="absolute bottom-0 left-0 right-0 bg-main text-[10px] font-bold text-white text-center py-1">
+                                                대표
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        ))}
+                                );
+                            }
+
+                            if (isNextSlot) {
+                                return (
+                                    <button
+                                        key={index}
+                                        onClick={triggerFileInput}
+                                        className="aspect-square bg-grey-pale rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-main/40 transition-all active:scale-[0.96]"
+                                    >
+                                        <img src="/icon/camera.svg" alt="camera" className="w-6 h-6 opacity-40 mb-1" />
+                                        <span className="text-[10px] font-bold text-gray-400">사진 추가</span>
+                                        <span className="text-[10px] font-bold text-main/50 mt-0.5">{index + 1}/5</span>
+                                    </button>
+                                );
+                            }
+
+                            return (
+                                <div
+                                    key={index}
+                                    className="aspect-square bg-gray-50/50 rounded-2xl flex items-center justify-center border-[1.5px] border-gray-100"
+                                >
+                                    <div className="w-1.5 h-1.5 bg-gray-200 rounded-full" />
+                                </div>
+                            );
+                        })}
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-1">권장 사이즈 1028x720 / 첫 번째 사진이 대표 이미지로 설정됩니다.</p>
+
+                    <div className="flex flex-col gap-1 px-1 mt-1">
+                        <p className="text-[11px] text-gray-400 leading-tight">
+                            • 첫 번째 사진이 클래스 썸네일(대표 이미지)로 사용됩니다.
+                        </p>
+                        <p className="text-[11px] text-gray-400 leading-tight">
+                            • 가로 비율의 깨끗한 이미지는 클래스 신뢰도를 높여줍니다.
+                        </p>
+                    </div>
                 </div>
             </div>
 
