@@ -15,7 +15,7 @@ export const LevelProgress = () => {
 
     const handleLevelUp = () => {
         if (levelUp()) {
-            alert(`축하합니다! Lv.${level + 1} 달성! 보상으로 토큰이 지급되었습니다.`);
+            alert(`축하합니다! Lv.${level + 1} 달성! 보상으로 MZTK가 지급되었습니다.`);
         }
     };
 

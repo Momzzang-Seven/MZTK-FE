@@ -11,7 +11,7 @@ const RewardToken = ({ rewardToken, onClick }: NewQuestionRewardTokenProps) => {
     >
       <div className="flex flex-row gap-x-4 items-center">
         <img src="/icon/token.svg" alt="tokenIcon" />
-        <div className="label-bold">지급할 토큰</div>
+        <div className="label-bold">지급할 MZTK</div>
       </div>
       <div className="flex flex-row gap-x-4 items-center">
         <div className="text-2xl font-bold">{rewardToken}</div>

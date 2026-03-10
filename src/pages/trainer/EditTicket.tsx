@@ -1,123 +1,29 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
 import { CREATE_TICKET_TEXT, EDIT_TICKET_TEXT, EXERCISE_CATEGORIES } from "@constant";
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonButton, CommonModal } from "@components/common";
+import { useEditTicket } from "@hooks/trainer/useEditTicket";
 import { calculateEndTime } from "@utils";
 
 const EditTicket = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
+    const {
+        formData,
+        imagePreviews,
+        fileInputRef,
+        handleChange,
+        handleFeatureChange,
+        handleTagChange,
+        handleDayToggle,
+        handleAddTime,
+        handleRemoveTime,
+        handleImageChange,
+        removeImage,
+        triggerFileInput,
+        isSubmitDisabled
+    } = useEditTicket();
 
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
-
-    const [formData, setFormData] = useState({
-        title: "",
-        category: EXERCISE_CATEGORIES[1],
-        price: "",
-        capacity: "",
-        description: "",
-        tags: ["", "", ""],
-        features: ["", "", ""],
-        duration: "",
-        supplies: "",
-        operatingDays: [] as string[],
-        operatingTimes: {
-            월: [],
-            화: [],
-            수: [],
-            목: [],
-            금: [],
-            토: [],
-            일: [],
-        } as Record<string, string[]>,
-    });
-
-    // Dummy data loading effect
-    useEffect(() => {
-        // In a real app, you'd fetch by ID. Here we use dummy data.
-        console.log(`Loading ticket with ID: ${id}`);
-        setFormData({
-            title: "1:1 집중 웨이트 트레이닝",
-            category: "PT/헬스",
-            price: "350",
-            capacity: "1",
-            description: "개인별 맞춤형 웨이트 트레이닝 프로그램입니다.",
-            tags: ["체형 분석", "웨이트", "다이어트"],
-            features: ["체형 분석 및 평가", "개인 맞춤형 식단 제공", "수업 외 카톡 밀착 코칭"],
-            duration: "50분",
-            supplies: "실내용 개인 선호 운동화",
-            operatingDays: ["월", "수", "금"],
-            operatingTimes: {
-                월: ["09:00", "10:00", "18:00"],
-                화: [],
-                수: ["09:00", "15:00", "19:00"],
-                목: [],
-                금: ["10:00", "11:00"],
-                토: [],
-                일: [],
-            },
-        });
-    }, [id]);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleFeatureChange = (index: number, value: string) => {
-        setFormData(prev => {
-            const newFeatures = [...prev.features];
-            newFeatures[index] = value;
-            return { ...prev, features: newFeatures };
-        });
-    };
-
-    const handleTagChange = (index: number, value: string) => {
-        setFormData(prev => {
-            const newTags = [...prev.tags];
-            newTags[index] = value;
-            return { ...prev, tags: newTags };
-        });
-    };
-
-    const handleDayToggle = (day: string) => {
-        setFormData(prev => {
-            const isSelected = prev.operatingDays.includes(day);
-            return {
-                ...prev,
-                operatingDays: isSelected
-                    ? prev.operatingDays.filter(d => d !== day)
-                    : [...prev.operatingDays, day]
-            };
-        });
-    };
-
-    const handleAddTime = (day: string, time: string) => {
-        if (!time) return;
-        setFormData(prev => {
-            const currentTimes = prev.operatingTimes[day];
-            if (currentTimes.includes(time)) return prev;
-            return {
-                ...prev,
-                operatingTimes: {
-                    ...prev.operatingTimes,
-                    [day]: [...currentTimes, time].sort()
-                }
-            };
-        });
-    };
-
-    const handleRemoveTime = (day: string, timeToRemove: string) => {
-        setFormData(prev => ({
-            ...prev,
-            operatingTimes: {
-                ...prev.operatingTimes,
-                [day]: prev.operatingTimes[day].filter(time => time !== timeToRemove)
-            }
-        }));
-    };
 
     const handleSubmit = async () => {
         if (formData.operatingDays.length === 0) {
@@ -134,15 +40,10 @@ const EditTicket = () => {
         }
 
         try {
-            // [TODO] 실제 서버 API 연동 시 이 영역에 PUT/PATCH 요청을 구현합니다.
-            // 예시: 
-            // const response = await updateTicketApi(id, formData);
-            // if (response.code !== "SUCCESS") throw new Error(response.message);
-
+            // [TODO] 실제 서버 API 연동 구현
             alert("클래스가 성공적으로 수정되었습니다!");
-            navigate("/trainer");
+            window.location.href = "/trainer";
         } catch (error: any) {
-            // 백엔드에서 전송한 실패 사유 및 에러 코드 처리
             const backendErrorMessage = error?.response?.data?.message || error?.message || "서버 요청 중 오류가 발생했습니다. 다시 시도해주세요.";
             setErrorMessage(backendErrorMessage);
             setShowErrorModal(true);
@@ -154,60 +55,60 @@ const EditTicket = () => {
             <TrainerHeader title={EDIT_TICKET_TEXT.TITLE} showBack />
 
             <div className="flex-1 px-5 py-6 flex flex-col gap-6 overflow-y-auto pb-32">
-                {/* Title */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.TITLE}</label>
-                    <input
-                        name="title"
-                        value={formData.title}
-                        onChange={handleChange}
-                        placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.TITLE}
-                        className="w-full bg-grey-pale rounded-xl py-3.5 px-4 text-sm outline-none focus:ring-2 focus:ring-main/20"
-                    />
-                </div>
-
-                {/* Category */}
-                <div className="flex flex-col gap-2 border-b border-gray-50 pb-2">
-                    <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.CATEGORY}</label>
-                    <select
-                        name="category"
-                        value={formData.category}
-                        onChange={handleChange}
-                        className="w-full bg-grey-pale rounded-xl py-3.5 px-4 text-sm outline-none focus:ring-2 focus:ring-main/20 appearance-none bg-[url('https://cdn0.iconfinder.com/data/icons/user-interface-2062/24/arrow_drop_down-512.png')] bg-[length:24px] bg-[right_12px_center] bg-no-repeat"
-                    >
-                        {EXERCISE_CATEGORIES.filter(cat => cat !== "전체").map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Price & Capacity */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* 1. 기본 정보 섹션 */}
+                <div className="flex flex-col gap-5">
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.PRICE}</label>
+                        <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.TITLE}</label>
                         <input
-                            name="price"
-                            type="number"
-                            value={formData.price}
+                            name="title"
+                            value={formData.title}
                             onChange={handleChange}
-                            placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.PRICE}
+                            placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.TITLE}
                             className="w-full bg-grey-pale rounded-xl py-3.5 px-4 text-sm outline-none focus:ring-2 focus:ring-main/20"
                         />
                     </div>
+
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.CAPACITY}</label>
-                        <input
-                            name="capacity"
-                            type="number"
-                            value={formData.capacity}
+                        <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.CATEGORY}</label>
+                        <select
+                            name="category"
+                            value={formData.category}
                             onChange={handleChange}
-                            placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.CAPACITY}
-                            className="w-full bg-grey-pale rounded-xl py-3.5 px-4 text-sm outline-none focus:ring-2 focus:ring-main/20"
-                        />
+                            className="w-full bg-grey-pale rounded-xl py-3.5 px-4 text-sm outline-none focus:ring-2 focus:ring-main/20 appearance-none bg-[url('https://cdn0.iconfinder.com/data/icons/user-interface-2062/24/arrow_drop_down-512.png')] bg-[length:24px] bg-[right:12px_center] bg-no-repeat"
+                        >
+                            {EXERCISE_CATEGORIES.filter(cat => cat !== "전체").map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.PRICE}</label>
+                            <input
+                                name="price"
+                                type="number"
+                                value={formData.price}
+                                onChange={handleChange}
+                                placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.PRICE}
+                                className="w-full bg-grey-pale rounded-xl py-3.5 px-4 text-sm outline-none focus:ring-2 focus:ring-main/20"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.CAPACITY}</label>
+                            <input
+                                name="capacity"
+                                type="number"
+                                value={formData.capacity}
+                                onChange={handleChange}
+                                placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.CAPACITY}
+                                className="w-full bg-grey-pale rounded-xl py-3.5 px-4 text-sm outline-none focus:ring-2 focus:ring-main/20"
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* 상세 설명 및 부가 정보 */}
+                {/* 2. 상세 설명 섹션 */}
                 <div className="flex flex-col gap-6">
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.DESC}</label>
@@ -221,7 +122,6 @@ const EditTicket = () => {
                         />
                     </div>
 
-                    {/* 해시태그 */}
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-bold text-gray-700">해시태그 (최대 3개)</label>
                         <div className="flex gap-2">
@@ -239,7 +139,6 @@ const EditTicket = () => {
                         </div>
                     </div>
 
-                    {/* 프로그램 특징 (딱 3칸) */}
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.FEATURES}</label>
                         <div className="flex flex-col gap-2">
@@ -257,7 +156,6 @@ const EditTicket = () => {
                         </div>
                     </div>
 
-                    {/* 수업 시간 & 준비물 */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.DURATION}</label>
@@ -282,12 +180,10 @@ const EditTicket = () => {
                     </div>
                 </div>
 
-                {/* 3. 스케줄 및 시간 설정 섹션 */}
-                <div className="flex flex-col gap-8 mt-2">
-                    {/* 운영 요일 */}
+                {/* 3. 스케줄 섹션 */}
+                <div className="flex flex-col gap-8">
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.OPERATING_DAYS}</label>
-                        <p className="text-xs text-gray-500 mb-1">{CREATE_TICKET_TEXT.LABELS.OPERATING_DAYS_DESC}</p>
                         <div className="flex justify-between gap-1.5">
                             {['월', '화', '수', '목', '금', '토', '일'].map((day) => {
                                 const isSelected = formData.operatingDays.includes(day);
@@ -295,7 +191,7 @@ const EditTicket = () => {
                                     <button
                                         key={day}
                                         onClick={() => handleDayToggle(day)}
-                                        className={`w-10 h-10 rounded-full font-bold text-[14px] transition-all flex items-center justify-center ${isSelected ? 'bg-gray-300 text-gray-800 shadow-inner' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                        className={`w-10 h-10 rounded-full font-bold text-[14px] transition-all flex items-center justify-center ${isSelected ? 'bg-gray-300 text-gray-800 shadow-inner' : 'bg-gray-100 text-gray-500'}`}
                                     >
                                         {day}
                                     </button>
@@ -304,17 +200,10 @@ const EditTicket = () => {
                         </div>
                     </div>
 
-                    {/* 매장 운영 시간 (개별 요일별) */}
                     {formData.operatingDays.length > 0 && (
-                        <div className="flex flex-col gap-4 mt-2">
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.OPERATING_HOURS}</label>
-                                <p className="text-xs text-gray-500">{CREATE_TICKET_TEXT.LABELS.OPERATING_HOURS_DESC}</p>
-                            </div>
-
-                            {/* 선택된 요일별 시간 입력 */}
+                        <div className="flex flex-col gap-4">
                             {['월', '화', '수', '목', '금', '토', '일'].filter(day => formData.operatingDays.includes(day)).map((day) => (
-                                <div key={day} className="flex flex-col gap-2 p-4 bg-gray-50 rounded-xl border border-gray-100/80">
+                                <div key={day} className="flex flex-col gap-2 p-4 bg-gray-50 rounded-xl border border-gray-100">
                                     <div className="flex items-center gap-3">
                                         <div className="text-[15px] font-bold text-gray-800 w-8">{day}</div>
                                         <div className="flex flex-1 gap-2">
@@ -338,15 +227,14 @@ const EditTicket = () => {
                                         </div>
                                     </div>
 
-                                    {/* 추가된 시간 리스트 */}
                                     {formData.operatingTimes[day].length > 0 && (
                                         <div className="flex flex-wrap gap-2 mt-1.5 pl-11">
                                             {formData.operatingTimes[day].map((time) => (
-                                                <div key={time} className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-[13px] shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+                                                <div key={time} className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-[13px] shadow-sm">
                                                     <span className="font-bold">
                                                         {formData.duration ? `${time} ~ ${calculateEndTime(time, formData.duration)}` : time}
                                                     </span>
-                                                    <button onClick={() => handleRemoveTime(day, time)} className="text-gray-400 hover:text-red-500 font-bold p-0.5 ml-0.5 leading-none transition-colors">✕</button>
+                                                    <button onClick={() => handleRemoveTime(day, time)} className="text-gray-400 font-bold p-0.5 ml-0.5">✕</button>
                                                 </div>
                                             ))}
                                         </div>
@@ -357,27 +245,84 @@ const EditTicket = () => {
                     )}
                 </div>
 
-                {/* Image Placeholder */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-sm font-bold text-gray-700">{CREATE_TICKET_TEXT.LABELS.IMAGE}</label>
-                    <div className="w-full aspect-video bg-grey-pale rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200">
-                        <img src="/icon/camera.svg" alt="camera" className="w-8 h-8 opacity-20 mb-2" />
-                        <span className="text-xs text-gray-400 font-medium">이미지 수정 (준비중)</span>
-                        <span className="text-[10px] text-gray-400/80 font-medium mt-1">권장 사이즈 1028x720</span>
+                {/* 4. 이미지 업로드 섹션 - 5구 그리드 방식 */}
+                <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center px-1">
+                        <label className="text-sm font-bold text-gray-800">{CREATE_TICKET_TEXT.LABELS.IMAGE}</label>
+                        <span className="text-xs text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded-md">
+                            최대 5장
+                        </span>
+                    </div>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                    />
+
+                    <div className="grid grid-cols-3 gap-3 px-1">
+                        {[0, 1, 2, 3, 4].map((index) => {
+                            const hasImage = index < imagePreviews.length;
+                            const isNextSlot = index === imagePreviews.length;
+
+                            if (hasImage) {
+                                return (
+                                    <div key={index} className="aspect-square relative rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                                        <img src={imagePreviews[index]} alt={`preview-${index}`} className="w-full h-full object-cover" />
+                                        <button
+                                            onClick={() => removeImage(index)}
+                                            className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center text-[12px] active:bg-main/80"
+                                        >
+                                            ✕
+                                        </button>
+                                        {index === 0 && (
+                                            <div className="absolute bottom-0 left-0 right-0 bg-main text-[10px] font-bold text-white text-center py-1">
+                                                대표
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
+
+                            if (isNextSlot) {
+                                return (
+                                    <button
+                                        key={index}
+                                        onClick={triggerFileInput}
+                                        className="aspect-square bg-grey-pale rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-main/40 transition-all active:scale-[0.96]"
+                                    >
+                                        <img src="/icon/camera.svg" alt="camera" className="w-6 h-6 opacity-40 mb-1" />
+                                        <span className="text-[10px] font-bold text-gray-400">사진 추가</span>
+                                        <span className="text-[10px] font-bold text-main/50 mt-0.5">{index + 1}/5</span>
+                                    </button>
+                                );
+                            }
+
+                            return (
+                                <div
+                                    key={index}
+                                    className="aspect-square bg-gray-50/50 rounded-2xl flex items-center justify-center border-[1.5px] border-gray-100"
+                                >
+                                    <div className="w-1.5 h-1.5 bg-gray-200 rounded-full" />
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
 
-            <div className="p-5 border-t border-gray-100 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+            <div className="p-5 border-t border-gray-100 bg-white shadow-sm">
                 <CommonButton
                     label={EDIT_TICKET_TEXT.SUBMIT}
-                    className="h-[56px] rounded-2xl"
+                    className="h-[60px] rounded-2xl"
                     onClick={handleSubmit}
-                    disabled={!formData.title || !formData.price || !formData.capacity || !formData.description || !formData.duration || !formData.supplies || formData.operatingDays.length === 0}
+                    disabled={isSubmitDisabled}
                 />
             </div>
 
-            {/* Error Modal */}
             {showErrorModal && (
                 <CommonModal
                     title="수정 실패"

@@ -61,7 +61,7 @@ export const adminHeaderByPath: HeaderByPathType[] = [
     path: "/admin/users",
   },
   {
-    label: "토큰 지급 기록",
+    label: "MZTK 지급 기록",
     path: "/admin/token-logs",
   },
   {

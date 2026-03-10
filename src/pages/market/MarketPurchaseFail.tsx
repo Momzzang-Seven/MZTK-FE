@@ -16,7 +16,7 @@ const MarketPurchaseFail = () => {
                     클래스 예약이<br />실패했습니다
                 </h2>
                 <p className="text-gray-500 text-center text-[15px] font-medium leading-relaxed mb-6">
-                    보유한 토큰이 부족하거나<br />서버 통신 중 오류가 발생했습니다.<br />다시 시도해주세요.
+                    보유한 MZT가 부족하거나<br />서버 통신 중 오류가 발생했습니다.<br />다시 시도해주세요.
                 </p>
                 <div className="w-full max-w-[400px] flex flex-col gap-3">
                     <CommonButton

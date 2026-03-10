@@ -33,3 +33,10 @@ export const footerItem: FooterItemType[] = [
     path: "/my",
   },
 ];
+
+export const TRAINER_FOOTER_ITEM: FooterItemType = {
+  label: "내 클래스",
+  src: "/icon/dumbellFooter.svg",
+  activeSrc: "/icon/dumbellActiveFooter.svg",
+  path: "/trainer",
+};

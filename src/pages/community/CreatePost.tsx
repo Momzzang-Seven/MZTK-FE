@@ -49,9 +49,8 @@ const CreatePost = () => {
         onBackClick={handleBackClick}
         button={
           <div
-            className={`font-semibold items-center cursor-pointer ${
-              !isSubmitActive ? "text-gray-400" : "text-main"
-            }`}
+            className={`font-semibold text-xs items-center cursor-pointer ${!isSubmitActive ? "text-gray-400" : "text-main"
+              }`}
             onClick={isSubmitActive ? handleSubmitClick : undefined}
           >
             등록하기
@@ -76,7 +75,7 @@ const CreatePost = () => {
 
       {isQuestion && rewardModalOpen && (
         <CommonModal
-          title="보상 토큰 지급"
+          title="보상 MZTK 지급"
           desc={`채택된 답변의 사용자에게 <b>${reward} MZTK</b>을 지급합니다.`}
           confirmLabel="설정"
           onConfirmClick={handleRewardTokenConfirm}

@@ -7,14 +7,14 @@ export const LevelProgress = () => {
   return (
     <MySectionCard>
       <div className="flex flex-row justify-between w-full">
-        <div className="title">경험치 & 레벨</div>
+        <div className="title">EXP & 레벨</div>
         <div className="rounded-full bg-main text-white py-1 px-3">
           LV {level}
         </div>
       </div>
       {/* current xp */}
       <div className="flex flex-row justify-between w-full label text-grey-deep">
-        <div>현재 경험치</div>
+        <div>현재 EXP</div>
         <div>{xp.toLocaleString()} XP</div>
       </div>
       {/* progress bar */}
@@ -26,7 +26,7 @@ export const LevelProgress = () => {
       </div>
       {/* goal xp */}
       <div className="flex flex-row justify-between w-full label text-grey-deep">
-        <div>목표 경험치</div>
+        <div>목표 EXP</div>
         <div className="font-bold text-black">{maxXp.toLocaleString()} XP</div>
       </div>
     </MySectionCard>
