@@ -9,6 +9,7 @@ export interface AdminUser {
     postCount: number;
     commentCount: number;
     profileColor: string; // Hex color for avatar background
+    role: 'MEMBER' | 'TRAINER';
 }
 
 export interface AdminComment {
@@ -34,12 +35,25 @@ export interface AdminPost {
     commentCount: number;
 }
 
+export interface AdminInquiry {
+    id: number;
+    author: string;
+    authorId: number;
+    authorRole: 'MEMBER' | 'TRAINER';
+    title: string;
+    content: string;
+    date: string;
+    status: 'OPEN' | 'CLOSED';
+    isAuthorBanned: boolean;
+}
+
 interface AdminState {
     // User Management State
     users: AdminUser[];
     filteredUsers: AdminUser[];
     searchQuery: string;
     statusFilter: 'ALL' | 'ACTIVE' | 'BANNED';
+    roleFilter: 'ALL' | 'MEMBER' | 'TRAINER';
     isLoading: boolean;
 
     // User Management Stats
@@ -52,6 +66,11 @@ interface AdminState {
     searchPostQuery: string;
     postStatusFilter: 'ALL' | 'ACTIVE' | 'BANNED';
 
+    // Inquiry Management State
+    inquiries: AdminInquiry[];
+    filteredInquiries: AdminInquiry[];
+    inquiryFilter: 'ALL' | 'MEMBER' | 'TRAINER';
+
     // Pagination
     page: number;
     hasMore: boolean;
@@ -60,6 +79,7 @@ interface AdminState {
     // User Management Actions
     fetchUsers: () => Promise<void>;
     setStatusFilter: (status: 'ALL' | 'ACTIVE' | 'BANNED') => void;
+    setRoleFilter: (role: 'ALL' | 'MEMBER' | 'TRAINER') => void;
     searchUsers: (query: string) => void;
     banUser: (userId: number) => Promise<void>;
     unbanUser: (userId: number) => Promise<void>;
@@ -73,18 +93,23 @@ interface AdminState {
     unbanPost: (postId: number) => Promise<void>;
     deleteComment: (postId: number, commentId: number) => Promise<void>;
     restoreComment: (postId: number, commentId: number) => Promise<void>;
+
+    // Inquiry Management Actions
+    fetchInquiries: () => Promise<void>;
+    setInquiryFilter: (filter: 'ALL' | 'MEMBER' | 'TRAINER') => void;
+    toggleUserBanByInquiry: (inquiryId: number) => Promise<void>;
 }
 
 // Mock Data Generator
 const generateMockUsers = (): AdminUser[] => {
     return [
-        { id: 1, nickname: '김규원의마지막', email: 'gyugyugyu@email.com', joinDate: '2024.01.15', status: 'ACTIVE', postCount: 24, commentCount: 156, profileColor: '#FFD700' },
-        { id: 2, nickname: '운동하는직장인', email: 'fitness_lover@test.com', joinDate: '2024.02.03', status: 'ACTIVE', postCount: 18, commentCount: 89, profileColor: '#FFA500' },
-        { id: 3, nickname: '헬스장빌런', email: 'villain@bad.com', joinDate: '2023.12.20', status: 'BANNED', postCount: 5, commentCount: 12, profileColor: '#FF4500' },
-        { id: 4, nickname: '건강이최고', email: 'health_first@good.com', joinDate: '2024.03.10', status: 'ACTIVE', postCount: 42, commentCount: 231, profileColor: '#32CD32' },
-        { id: 5, nickname: '작심삼일', email: 'three_days@fail.com', joinDate: '2024.01.28', status: 'ACTIVE', postCount: 15, commentCount: 67, profileColor: '#1E90FF' },
-        { id: 6, nickname: '홍길동', email: 'hong@test.com', joinDate: '2024.04.01', status: 'ACTIVE', postCount: 0, commentCount: 2, profileColor: '#BA55D3' },
-        { id: 7, nickname: '스팸계정', email: 'spam@spam.com', joinDate: '2024.04.05', status: 'BANNED', postCount: 100, commentCount: 500, profileColor: '#808080' },
+        { id: 1, nickname: '김규원의마지막', email: 'gyugyugyu@email.com', joinDate: '2024.01.15', status: 'ACTIVE', postCount: 24, commentCount: 156, profileColor: '#FFD700', role: 'MEMBER' },
+        { id: 2, nickname: '운동하는직장인', email: 'fitness_lover@test.com', joinDate: '2024.02.03', status: 'ACTIVE', postCount: 18, commentCount: 89, profileColor: '#FFA500', role: 'TRAINER' },
+        { id: 3, nickname: '헬스장빌런', email: 'villain@bad.com', joinDate: '2023.12.20', status: 'BANNED', postCount: 5, commentCount: 12, profileColor: '#FF4500', role: 'MEMBER' },
+        { id: 4, nickname: '건강이최고', email: 'health_first@good.com', joinDate: '2024.03.10', status: 'ACTIVE', postCount: 42, commentCount: 231, profileColor: '#32CD32', role: 'TRAINER' },
+        { id: 5, nickname: '작심삼일', email: 'three_days@fail.com', joinDate: '2024.01.28', status: 'ACTIVE', postCount: 15, commentCount: 67, profileColor: '#1E90FF', role: 'MEMBER' },
+        { id: 6, nickname: '홍길동', email: 'hong@test.com', joinDate: '2024.04.01', status: 'ACTIVE', postCount: 0, commentCount: 2, profileColor: '#BA55D3', role: 'MEMBER' },
+        { id: 7, nickname: '스팸계정', email: 'spam@spam.com', joinDate: '2024.04.05', status: 'BANNED', postCount: 100, commentCount: 500, profileColor: '#808080', role: 'TRAINER' },
     ];
 };
 
@@ -123,11 +148,24 @@ const generateMockPosts = (page: number): AdminPost[] => {
     return posts;
 };
 
+const generateMockInquiries = (): AdminInquiry[] => {
+    return [
+        { id: 1, author: '김규원의마지막', authorId: 1, authorRole: 'MEMBER', title: '토큰 지급이 안 됐어요', content: '안녕하세요, 어제 레벨업 했는데 토큰이 안 들어왔습니다. 확인 부탁드려요.', date: '2024-03-09 10:20', status: 'OPEN', isAuthorBanned: false },
+        { id: 2, author: '운동하는직장인', authorId: 2, authorRole: 'TRAINER', title: '정산 관련 문의', content: '이번 주 정산 예정 금액이 실제 수업 횟수와 다릅니다. 확인 부탁드립니다.', date: '2024-03-09 11:45', status: 'OPEN', isAuthorBanned: false },
+        { id: 3, author: '헬스장빌런', authorId: 3, authorRole: 'MEMBER', title: '계정 정지 이의신청', content: '왜 정지됐는지 모르겠어요. 풀어주세요.', date: '2024-03-08 17:10', status: 'CLOSED', isAuthorBanned: true },
+        { id: 4, author: '건강이최고', authorId: 4, authorRole: 'TRAINER', title: '클래스 승인 반려 사유', content: '등록한 클래스가 반려됐는데 정확한 사유를 알고 싶습니다.', date: '2024-03-08 13:00', status: 'OPEN', isAuthorBanned: false },
+        { id: 5, author: '작심삼일', authorId: 5, authorRole: 'MEMBER', title: '앱 오류 제보', content: '운동 인증 버튼을 눌러도 반응이 없을 때가 많습니다.', date: '2024-03-07 14:30', status: 'CLOSED', isAuthorBanned: false },
+    ];
+};
+
 // Helper to filter users
-const getFilteredUsers = (users: AdminUser[], status: string, query: string) => {
+const getFilteredUsers = (users: AdminUser[], status: string, role: string, query: string) => {
     let filtered = users;
     if (status !== 'ALL') {
         filtered = filtered.filter(user => user.status === status);
+    }
+    if (role !== 'ALL') {
+        filtered = filtered.filter(user => user.role === role);
     }
     const trimmedQuery = query.trim().toLowerCase();
     if (trimmedQuery) {
@@ -137,6 +175,12 @@ const getFilteredUsers = (users: AdminUser[], status: string, query: string) => 
         );
     }
     return filtered;
+};
+
+// Helper to filter inquiries
+const getFilteredInquiries = (inquiries: AdminInquiry[], role: string) => {
+    if (role === 'ALL') return inquiries;
+    return inquiries.filter(i => i.authorRole === role);
 };
 
 // Helper to filter posts
@@ -164,6 +208,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     filteredUsers: [],
     searchQuery: '',
     statusFilter: 'ALL',
+    roleFilter: 'ALL',
     isLoading: false,
     totalUsers: 0,
     bannedUsers: 0,
@@ -176,6 +221,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     page: 1,
     hasMore: true,
     isFetchingPosts: false,
+
+    // Inquiry State
+    inquiries: [],
+    filteredInquiries: [],
+    inquiryFilter: 'ALL',
 
     // User Actions
     fetchUsers: async () => {
@@ -195,38 +245,44 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
     setStatusFilter: (status: 'ALL' | 'ACTIVE' | 'BANNED') => {
         set({ statusFilter: status });
-        const { users, searchQuery } = get();
-        set({ filteredUsers: getFilteredUsers(users, status, searchQuery) });
+        const { users, searchQuery, roleFilter } = get();
+        set({ filteredUsers: getFilteredUsers(users, status, roleFilter, searchQuery) });
+    },
+
+    setRoleFilter: (role: 'ALL' | 'MEMBER' | 'TRAINER') => {
+        set({ roleFilter: role });
+        const { users, searchQuery, statusFilter } = get();
+        set({ filteredUsers: getFilteredUsers(users, statusFilter, role, searchQuery) });
     },
 
     searchUsers: (query: string) => {
         set({ searchQuery: query });
-        const { users, statusFilter } = get();
-        set({ filteredUsers: getFilteredUsers(users, statusFilter, query) });
+        const { users, statusFilter, roleFilter } = get();
+        set({ filteredUsers: getFilteredUsers(users, statusFilter, roleFilter, query) });
     },
 
     banUser: async (userId: number) => {
-        const { users, searchQuery, statusFilter } = get();
+        const { users, searchQuery, statusFilter, roleFilter } = get();
         const updatedUsers = users.map(user =>
             user.id === userId ? { ...user, status: 'BANNED' as const } : user
         );
 
         set({
             users: updatedUsers,
-            filteredUsers: getFilteredUsers(updatedUsers, statusFilter, searchQuery),
+            filteredUsers: getFilteredUsers(updatedUsers, statusFilter, roleFilter, searchQuery),
             bannedUsers: updatedUsers.filter(u => u.status === 'BANNED').length
         });
     },
 
     unbanUser: async (userId: number) => {
-        const { users, searchQuery, statusFilter } = get();
+        const { users, searchQuery, statusFilter, roleFilter } = get();
         const updatedUsers = users.map(user =>
             user.id === userId ? { ...user, status: 'ACTIVE' as const } : user
         );
 
         set({
             users: updatedUsers,
-            filteredUsers: getFilteredUsers(updatedUsers, statusFilter, searchQuery),
+            filteredUsers: getFilteredUsers(updatedUsers, statusFilter, roleFilter, searchQuery),
             bannedUsers: updatedUsers.filter(u => u.status === 'BANNED').length
         });
     },
@@ -325,6 +381,47 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         set({
             posts: updatedPosts,
             filteredPosts: getFilteredPosts(updatedPosts, postStatusFilter, searchPostQuery)
+        });
+    },
+
+    // Inquiry Actions
+    fetchInquiries: async () => {
+        set({ isLoading: true });
+        await new Promise(r => setTimeout(r, 500));
+        const mockData = generateMockInquiries();
+        set({
+            inquiries: mockData,
+            filteredInquiries: getFilteredInquiries(mockData, get().inquiryFilter),
+            isLoading: false
+        });
+    },
+
+    setInquiryFilter: (filter: 'ALL' | 'MEMBER' | 'TRAINER') => {
+        set({ inquiryFilter: filter });
+        set({ filteredInquiries: getFilteredInquiries(get().inquiries, filter) });
+    },
+
+    toggleUserBanByInquiry: async (inquiryId: number) => {
+        const { inquiries, inquiryFilter, users } = get();
+        const inquiry = inquiries.find(i => i.id === inquiryId);
+        if (!inquiry) return;
+
+        const newBanStatus = !inquiry.isAuthorBanned;
+
+        // Update inquiries
+        const updatedInquiries = inquiries.map(i =>
+            i.authorId === inquiry.authorId ? { ...i, isAuthorBanned: newBanStatus } : i
+        );
+
+        // Update corresponding user in user list if exists
+        const updatedUsers = users.map(u =>
+            u.id === inquiry.authorId ? { ...u, status: newBanStatus ? 'BANNED' as const : 'ACTIVE' as const } : u
+        );
+
+        set({
+            inquiries: updatedInquiries,
+            filteredInquiries: getFilteredInquiries(updatedInquiries, inquiryFilter),
+            users: updatedUsers
         });
     }
 }));

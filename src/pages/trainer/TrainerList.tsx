@@ -73,7 +73,7 @@ const TrainerList = () => {
                                 <img src={ticket.image} alt={ticket.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                                 <div className="flex-1 min-w-0 pr-2">
                                     <h3 className="font-bold text-gray-900 text-[15px] truncate">{ticket.title}</h3>
-                                    <p className="text-main font-bold text-sm mt-1">{ticket.price} MZT</p>
+                                    <p className="text-main font-bold text-sm mt-1">{ticket.price} MZTK</p>
                                 </div>
                                 {/* 명시적인 수정 버튼 뱃지 */}
                                 <div className="flex-shrink-0 bg-gray-100/80 px-3 py-1.5 rounded-lg text-gray-500 font-bold text-[11px] group-active:bg-gray-300 transition-colors">

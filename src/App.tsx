@@ -25,6 +25,7 @@ import {
   TokenLog,
   UserManagement,
   PostManagement,
+  InquiryManagement,
   TrainerDashboard,
   CreateTicket,
   EditTicket,
@@ -69,6 +70,7 @@ function App() {
                 <Route path="users" element={<UserManagement />} />
                 <Route path="posts" element={<PostManagement />} />
                 <Route path="token-logs" element={<TokenLog />} />
+                <Route path="inquiries" element={<InquiryManagement />} />
 
                 <Route path="/404" element={<Err404 />} />
                 <Route
