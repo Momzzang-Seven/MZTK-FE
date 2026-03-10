@@ -1,62 +1,72 @@
 [
   {
-    "id": 1,
-    "author": {
+    "postId": 1,
+    "writer": {
       "nickname": "운동하는너구리",
       "profileImage": null
     },
     "createdAt": "2026-01-01T10:15:00",
-    "postImage": "https://picsum.photos/600/400?random=1",
-    "likes": 12,
-    "comments": 3,
-    "description": "새해 첫날이라 목표 세워봤다. 올해는 꾸준히 운동 기록 남겨보려고 함. 가나다라마바사 줄바꿈 테스트"
+    "imageUrls": "https://picsum.photos/600/400?random=1",
+    "isLiked": false,
+    "likeCount": 12,
+    "commentCount": 3,
+    "content": "새해 첫날이라 목표 세워봤다. 올해는 꾸준히 운동 기록 남겨보려고 함.",
+    "tags": ["운동목표", "새해다짐"]
   },
   {
-    "id": 2,
-    "author": {
+    "postId": 2,
+    "writer": {
       "nickname": "헬린이",
       "profileImage": null
     },
     "createdAt": "2026-01-02T18:42:00",
-    "postImage": "https://picsum.photos/600/400?random=2",
-    "likes": 45,
-    "comments": 12,
-    "description": "데드리프트 자세 맞는지 봐주세요 🙏"
+    "imageUrls": "https://picsum.photos/600/400?random=2",
+    "isLiked": true,
+    "likeCount": 45,
+    "commentCount": 12,
+    "content": "데드리프트 자세 맞는지 봐주세요 🙏",
+    "tags": ["데드리프트", "자세교정"]
   },
   {
-    "id": 3,
-    "author": {
+    "postId": 3,
+    "writer": {
       "nickname": "올라잇",
       "profileImage": null
     },
     "createdAt": "2026-01-03T21:05:00",
-    "postImage": "https://picsum.photos/600/400?random=3",
-    "likes": 8,
-    "comments": 1,
-    "description": "분명 어제까지 3대 460에서 막혔는데 갑자기 500 뚫음"
+    "imageUrls": "https://picsum.photos/600/400?random=3",
+    "isLiked": false,
+    "likeCount": 8,
+    "commentCount": 1,
+    "content": "분명 어제까지 3대 460에서 막혔는데 갑자기 500 뚫음",
+    "tags": ["데드리프트", "운동기록"]
   },
   {
-    "id": 4,
-    "author": {
+    "postId": 4,
+    "writer": {
       "nickname": "오운완",
       "profileImage": null
     },
     "createdAt": "2026-01-04T23:48:00",
-    "postImage": "https://picsum.photos/600/400?random=4",
-    "likes": 67,
-    "comments": 19,
-    "description": "고립 또 고립"
+    "imageUrls": "https://picsum.photos/600/400?random=4",
+    "isLiked": false,
+    "likeCount": 67,
+    "commentCount": 19,
+    "content": "고립 또 고립",
+    "tags": ["이두", "운동사진"]
   },
   {
-    "id": 5,
-    "author": {
+    "postId": 5,
+    "writer": {
       "nickname": "헬스보단MMA",
       "profileImage": null
     },
     "createdAt": "2026-01-06T09:30:00",
-    "postImage": "https://picsum.photos/600/400?random=5",
-    "likes": 102,
-    "comments": 27,
-    "description": "헬스 백날 해봐야 5초만에 탭치게 만들 수 있음"
+    "imageUrls": "https://picsum.photos/600/400?random=5",
+    "isLiked": false,
+    "likeCount": 102,
+    "commentCount": 27,
+    "content": "헬스 백날 해봐야 5초만에 탭치게 만들 수 있음",
+    "tags": ["운동철학", "MMA"]
   }
 ]

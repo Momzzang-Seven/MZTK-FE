@@ -8,21 +8,23 @@ import {
   RewardToken,
   TokenSelect,
 } from "@components/community";
+import NewPostTitleInput from "@components/community/newPost/NewPostTitleInput";
 
 const CreatePost = () => {
   const navigate = useNavigate();
 
   const { type } = useParams();
   const isQuestion = type === "question";
-  const isAnswer = type === "answer";
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [rewardToken, setRewardToken] = useState(0);
-  const [rewardTokenModalOpen, setRewardTokenModalOpen] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [reward, setReward] = useState(0);
+  const [rewardModalOpen, setRewardModalOpen] = useState(false);
 
   const isSubmitActive =
-    content.trim() !== "" && (isQuestion ? rewardToken >= 1 : true);
+    content.trim() !== "" &&
+    (isQuestion ? title.trim() !== "" && reward >= 1 : true);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -31,13 +33,14 @@ const CreatePost = () => {
   const handleSubmitClick = () => {
     const formData = new FormData();
     if (imageFile) formData.append("image", imageFile);
+    if (isQuestion) formData.append("title", title);
     formData.append("content", content);
 
     navigate(-1);
   };
 
   const handleRewardTokenConfirm = () => {
-    setRewardTokenModalOpen(false);
+    setRewardModalOpen(false);
   };
 
   return (
@@ -57,26 +60,27 @@ const CreatePost = () => {
 
       <div className="flex flex-col gap-4">
         <NewPostImageUploader onChange={setImageFile} />
+        {isQuestion && <NewPostTitleInput onChange={setTitle} />}
         <NewPostContentInput onChange={setContent} />
       </div>
 
-      {isQuestion && !isAnswer && (
+      {isQuestion && (
         <div className="fixed bottom-10 w-full max-w-[420px] px-6">
           <RewardToken
-            rewardToken={rewardToken}
-            onClick={() => setRewardTokenModalOpen(true)}
+            rewardToken={reward}
+            onClick={() => setRewardModalOpen(true)}
           />
         </div>
       )}
 
-      {isQuestion && !isAnswer && rewardTokenModalOpen && (
+      {isQuestion && rewardModalOpen && (
         <CommonModal
           title="보상 MZTK 지급"
-          desc={`채택된 답변의 사용자에게 <b>${rewardToken} MZTK</b>을 지급합니다.`}
+          desc={`채택된 답변의 사용자에게 <b>${reward} MZTK</b>을 지급합니다.`}
           confirmLabel="설정"
           onConfirmClick={handleRewardTokenConfirm}
         >
-          <TokenSelect setRewardToken={setRewardToken} />
+          <TokenSelect reward={reward} setReward={setReward} />
         </CommonModal>
       )}
     </div>

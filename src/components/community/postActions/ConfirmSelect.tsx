@@ -1,26 +1,24 @@
 import { CommonButton } from "@components/common";
 
-interface ConfirmReportProps {
-  handleReportClick: () => void;
+interface ConfirmSelectProps {
+  handleSelectClick: () => void;
   handleCancelClick: () => void;
 }
 
-const ConfirmReport = ({
-  handleReportClick,
+const ConfirmSelect = ({
+  handleSelectClick,
   handleCancelClick,
-}: ConfirmReportProps) => {
+}: ConfirmSelectProps) => {
   return (
     <div className="w-full flex flex-col gap-y-3">
-      <div className="text-16">
-        신고사유 드롭다운
-        <br />
-        (추가예정)
+      <div className="text-center text-lg font-medium">
+        해당 답변을 채택하시겠습니까?
       </div>
       <CommonButton
-        label="신고하기"
-        bgColor="bg-red-400"
+        label="채택하기"
+        bgColor="bg-main"
         className="border !rounded-full"
-        onClick={handleReportClick}
+        onClick={handleSelectClick}
       />
       <div
         className="text-base font-normal underline cursor-pointer"
@@ -32,4 +30,4 @@ const ConfirmReport = ({
   );
 };
 
-export default ConfirmReport;
+export default ConfirmSelect;

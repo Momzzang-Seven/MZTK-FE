@@ -4,6 +4,7 @@ import { CommonModal } from "@components/common";
 import {
   MyPostActions,
   OtherPostActions,
+  ConfirmSelect,
   ConfirmDelete,
   ConfirmReport,
   EditComment,
@@ -22,6 +23,7 @@ interface PostActionListProps {
   type: string;
   id?: number;
   authorId: number;
+  isSelectable?: boolean;
   commentId?: number;
   commentContent?: string;
 }
@@ -30,6 +32,7 @@ const ActionList = ({
   size = "md",
   type,
   id,
+  isSelectable = true,
   authorId,
   commentContent = "",
 }: PostActionListProps) => {
@@ -53,23 +56,31 @@ const ActionList = ({
     if (type === "comment") setModalType("EDIT_COMMENT");
   };
 
+  const handleConfirmEditClick = () => {
+    closeModal();
+  };
+
   const handleDeleteClick = () => {
     setModalType("DELETE_CONFIRM");
   };
 
+  const handleConfirmDeleteClick = () => {
+    closeModal();
+  };
+
   const handleReportClick = () => {
-    setModalType("REPORT");
+    setModalType("REPORT_CONFIRM");
   };
 
-  const handleConfirmDeletePostClick = () => {
+  const handleConfirmReportClick = () => {
     closeModal();
   };
 
-  const handleConfirmReportPostClick = () => {
-    closeModal();
+  const handleSelectClick = () => {
+    setModalType("SELECT_CONFIRM");
   };
 
-  const handleConfirmEditClick = () => {
+  const handleConfirmSelectClick = () => {
     closeModal();
   };
 
@@ -87,7 +98,18 @@ const ActionList = ({
       case "OTHERS":
         return (
           <OtherPostActions
+            type={type}
+            isSelectable={isSelectable}
+            handleSelectClick={handleSelectClick}
             handleReportClick={handleReportClick}
+            handleCancelClick={closeModal}
+          />
+        );
+
+      case "SELECT_CONFIRM":
+        return (
+          <ConfirmSelect
+            handleSelectClick={handleConfirmSelectClick}
             handleCancelClick={closeModal}
           />
         );
@@ -95,15 +117,15 @@ const ActionList = ({
       case "DELETE_CONFIRM":
         return (
           <ConfirmDelete
-            handleConfirmClick={handleConfirmDeletePostClick}
+            handleConfirmClick={handleConfirmDeleteClick}
             handleCancelClick={closeModal}
           />
         );
 
-      case "REPORT":
+      case "REPORT_CONFIRM":
         return (
           <ConfirmReport
-            handleReportClick={handleConfirmReportPostClick}
+            handleReportClick={handleConfirmReportClick}
             handleCancelClick={closeModal}
           />
         );

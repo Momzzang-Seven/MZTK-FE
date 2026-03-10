@@ -1,0 +1,26 @@
+[
+  {
+    "replyId": 501,
+    "writer": {
+      "userId": 1,
+      "nickname": "건강한몸에건강한정신",
+      "profileImage": null
+    },
+    "content": "오 그렇군요 감사합니다.",
+    "isDeleted": false,
+    "createdAt": "2026-02-01T12:20:00",
+    "updatedAt": "2026-02-01T12:20:00"
+  },
+  {
+    "replyId": 502,
+    "writer": {
+      "userId": 102,
+      "nickname": "헬스만능론자",
+      "profileImage": null
+    },
+    "content": "네 도움이 되셨다니 다행입니다!",
+    "isDeleted": false,
+    "createdAt": "2026-02-01T13:15:00",
+    "updatedAt": "2026-02-01T13:15:00"
+  }
+]

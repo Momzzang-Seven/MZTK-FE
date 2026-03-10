@@ -24,26 +24,32 @@ const QuestionDetail = () => {
 
   if (!question) return;
 
+  const stored = localStorage.getItem("user-storage");
+  const userId = stored ? JSON.parse(stored)?.state?.user?.userId : null;
+
+  const isMyQuestion = userId !== null && question.writer.userId === userId;
+  const canAcceptAnswer = isMyQuestion && !question.question.isSolved;
+
   return (
     <div className="h-full bg-gray-100">
       <QuestionHeader
         type="question"
         postId={Number(params.postId)}
-        author={question.author}
+        writer={question.writer}
         createdAt={question.createdAt}
       />
 
       <div className="flex flex-col gap-3 pt-[72px]">
-        <Question question={question} />
+        <Question post={question} />
 
         <div className="pt-3 px-3 font-bold text-xl">
-          답변 {question.answers}개
+          답변 {question.commentCount}개
         </div>
 
         {answers.length > 0 &&
           answers.map((answer) => (
-            <div key={answer.id}>
-              <Answer answer={answer} />
+            <div key={answer.answerId}>
+              <Answer answer={answer} isSelectable={canAcceptAnswer} />
             </div>
           ))}
       </div>

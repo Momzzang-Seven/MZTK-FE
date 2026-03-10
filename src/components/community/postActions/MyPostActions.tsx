@@ -1,3 +1,5 @@
+import { CommonButton } from "@components/common";
+
 interface MyPostActionsProps {
   handleEditClick: () => void;
   handleDeleteClick: () => void;
@@ -11,18 +13,18 @@ const MyPostActions = ({
 }: MyPostActionsProps) => {
   return (
     <div className="w-full flex flex-col gap-y-3">
-      <div
-        className="flex flex-row items-center justify-center bg-main text-white text-lg font-semibold p-[11.5px] border rounded-full cursor-pointer"
+      <CommonButton
+        label="수정하기"
+        bgColor="bg-main"
+        className="border !rounded-full"
         onClick={handleEditClick}
-      >
-        수정하기
-      </div>
-      <div
-        className="flex flex-row items-center justify-center bg-red-400 text-white text-lg font-semibold p-[11.5px] border rounded-full cursor-pointer"
+      />
+      <CommonButton
+        label="삭제하기"
+        bgColor="bg-red-400"
+        className="border !rounded-full"
         onClick={handleDeleteClick}
-      >
-        삭제하기
-      </div>
+      />
       <div
         className="text-base font-normal underline cursor-pointer"
         onClick={handleCancelClick}

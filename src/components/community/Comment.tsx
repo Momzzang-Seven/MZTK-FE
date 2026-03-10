@@ -9,16 +9,16 @@ interface Props {
 
 const CommentItem = ({ comment, showProfileImage = true }: Props) => {
   return (
-    <div className={"flex gap-3 p-3"}>
+    <div className={"flex gap-3 p-2"}>
       {/* 프로필 사진*/}
-      {showProfileImage && comment.author.profileImage ? (
+      {showProfileImage && (
         <img
-          src={comment.author.profileImage}
-          alt={comment.author.nickname}
-          className="h-10 w-10 rounded-full object-cover"
+          src={comment.writer.profileImage || "/icon/defaultUser.svg"}
+          alt={comment.writer.nickname}
+          className={`h-10 w-10 rounded-full ${
+            comment.writer.profileImage ? "object-cover" : "bg-main pt-2"
+          }`}
         />
-      ) : (
-        <div className="h-10 w-10 rounded-full bg-main" />
       )}
 
       <div className="flex-1">
@@ -26,7 +26,7 @@ const CommentItem = ({ comment, showProfileImage = true }: Props) => {
         <div className="flex items-center justify-between">
           <div className="flex gap-2 items-center">
             <span className="text-sm font-medium">
-              {comment.author.nickname}
+              {comment.writer.nickname}
             </span>
             <span className="text-xs text-gray-400">
               {formatTimeAgo(comment.createdAt)}
@@ -35,14 +35,14 @@ const CommentItem = ({ comment, showProfileImage = true }: Props) => {
           <ActionList
             size="xs"
             type="comment"
-            id={comment.id}
-            authorId={comment.author.userId}
-            commentContent={comment.description}
+            id={comment.commentId}
+            authorId={comment.writer.userId}
+            commentContent={comment.content}
           />
         </div>
 
         {/* 본문 */}
-        <p className="mt-1 text-sm leading-relaxed">{comment.description}</p>
+        <p className="mt-1 text-sm leading-relaxed">{comment.content}</p>
       </div>
     </div>
   );
