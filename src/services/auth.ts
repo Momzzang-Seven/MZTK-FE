@@ -1,24 +1,71 @@
-import { authApi, walletApi } from "./client";
+import { authApi } from "./client";
+
+// DTO Interfaces based on Backend
+export interface LoginRequest {
+  provider: "KAKAO" | "GOOGLE" | "LOCAL";
+  email?: string;
+  password?: string;
+  authorizationCode?: string;
+  redirectUri?: string;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  nickname: string;
+}
+
+export interface ReactivateRequest extends LoginRequest {}
+
+export interface StepUpRequest {
+  password?: string;
+  authorizationCode?: string;
+  redirectUri?: string;
+}
+
+export interface UserInfo {
+  userId: number;
+  email: string;
+  nickname: string;
+  profileImage: string;
+  role: string;
+  walletAddress: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  grantType: string;
+  expiresIn: number;
+  isNewUser: boolean;
+  userInfo: UserInfo;
+}
+
+export interface SignupResponse {
+  userId: number;
+}
+
+export interface ReissueTokenResponse {
+  accessToken: string;
+  grantType: string;
+  expiresIn: number;
+}
 
 // POST: Login
-export const PostLogin = async (
-  provider: "KAKAO" | "GOOGLE" | "LOCAL",
-  code: string,
-  redirectUri?: string
-) => {
-  const { data } = await authApi.post("/login", {
-    provider,
-    authorizationCode: code,
-    redirectUri,
-  });
+export const PostLogin = async (request: LoginRequest): Promise<LoginResponse> => {
+  const { data } = await authApi.post("/login", request);
+  return data.data; // ApiResponse.success(response) 구조 대응
+};
 
-  return data;
+// POST: Signup
+export const PostSignup = async (request: SignupRequest): Promise<SignupResponse> => {
+  const { data } = await authApi.post("/signup", request);
+  return data.data;
 };
 
 // POST: Reissue Token
-export const PostReissueToken = async () => {
+export const PostReissueToken = async (): Promise<ReissueTokenResponse> => {
   const { data } = await authApi.post("/reissue");
-  return data;
+  return data.data;
 };
 
 // POST: Logout
@@ -26,32 +73,32 @@ export const PostLogout = async () => {
   await authApi.post("/logout");
 };
 
-
-// POST: Issue Challenge
-export const PostIssueChallenge = async (addr: string) => {
-  const { data } = await walletApi.post("/challenge", { address: addr });
-
-  return data.message;
+// POST: Reactivate
+export const PostReactivate = async (request: ReactivateRequest): Promise<LoginResponse> => {
+  const { data } = await authApi.post("/reactivate", request);
+  return data.data;
 };
 
-// POST: Verify Challenge
-export const PostVerifyChallenge = async (addr: string, challenge: string) => {
-  const { data } = await walletApi.post("/login", {
-    address: addr,
-    signature: challenge,
-  });
-
-  return data;
+// POST: StepUp
+export const PostStepUp = async (request: StepUpRequest): Promise<{ accessToken: string }> => {
+  const { data } = await authApi.post("/stepup", request);
+  return data.data;
 };
 
 // GET: Check Login Status (Get Me)
-// Currently verifying if there is a 'me' endpoint or if we rely on stored data.
-// Based on UserController, we might not have a direct 'me' endpoint for basic info except re-issue or during login.
-// However, the original code called /me on walletApi.
-// Let's assume we might use /users/me/role to check validity or just rely on store.
-export const GetLoginStatus = async () => {
-  // Try to reissue token to check validity and get new access token
+export const GetLoginStatus = async (): Promise<ReissueTokenResponse> => {
   const { data } = await authApi.post("/reissue");
-  return data;
+  return data.data;
 };
 
+// POST: Issue Challenge for Wallet Login
+export const PostIssueChallenge = async (walletAddress: string): Promise<string> => {
+  const { data: responseData } = await authApi.post("/challenge", { walletAddress });
+  return responseData.data;
+};
+
+// POST: Verify Challenge for Wallet Login
+export const PostVerifyChallenge = async (walletAddress: string, signature: string): Promise<LoginResponse> => {
+  const { data: responseData } = await authApi.post("/verify", { walletAddress, signature });
+  return responseData.data;
+};

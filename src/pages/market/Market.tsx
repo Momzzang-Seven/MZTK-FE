@@ -121,7 +121,10 @@ const Market = () => {
                 {/* 검색 바 */}
                 <div className="px-5 mt-4 mb-2">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex items-center px-4 py-3 focus-within:ring-2 focus-within:ring-main/20 focus-within:border-transparent transition-all">
-                        <img src="/icon/search.svg" alt="search" className="w-5 h-5 opacity-40 mr-2" />
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400 mr-2">
+                            <path d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M22 22L20 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                         <input
                             type="text"
                             placeholder="원하는 클래스와 트레이너를 검색해보세요"

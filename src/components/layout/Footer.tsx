@@ -1,4 +1,4 @@
-import { footerItem, TRAINER_FOOTER_ITEM } from "@constant";
+import { footerItem } from "@constant";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "@store";
 
@@ -8,9 +8,7 @@ export const Footer = () => {
   const { user } = useUserStore();
 
   const isTrainer = user?.role === "TRAINER";
-  const items = isTrainer
-    ? [...footerItem.slice(0, 3), TRAINER_FOOTER_ITEM, footerItem[3]]
-    : footerItem;
+  const items = footerItem;
 
   return (
     <div className="z-[998] w-full fixed max-w-[420px] rounded-t-[20px] bg-white bottom-0 flex flex-row justify-between items-center h-[82px] px-[20px] py-[10px] shadow-[0_-4px_8px_rgba(0,0,0,0.05)]">
@@ -18,14 +16,37 @@ export const Footer = () => {
       <div className="w-full grid" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((item) => {
           const path = location.pathname;
-          // Home ('/') should be exact match, others can be prefix matches
+          // 내 클래스 경로는 역할에 따라 다름
+          const effectivePath =
+            item.label === "내 클래스"
+              ? isTrainer
+                ? "/trainer"
+                : "/market/reservations"
+              : item.path;
+
           const isActive =
-            item.path === "/" ? path === "/" : path.startsWith(item.path);
+            effectivePath === "/"
+              ? path === "/"
+              : path.startsWith(effectivePath) &&
+                !items.some((other) => {
+                  const otherPath =
+                    other.label === "내 클래스"
+                      ? isTrainer
+                        ? "/trainer"
+                        : "/market/reservations"
+                      : other.path;
+                  return (
+                    otherPath !== effectivePath &&
+                    otherPath !== "/" &&
+                    path.startsWith(otherPath) &&
+                    otherPath.length > effectivePath.length
+                  );
+                });
 
           return (
             <button
               key={item.label}
-              onClick={() => navigate(item.path)}
+              onClick={() => navigate(effectivePath)}
               className="flex flex-col items-center justify-center"
             >
               <img

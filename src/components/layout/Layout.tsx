@@ -1,7 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthModalStore } from "@store";
 import { CommonModal } from "@components/common";
-import { Header, Footer } from "@components/layout";
+import { Header } from "./Header";
+import { Footer } from "./Footer";
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -28,7 +29,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     "/trainer/reservations",
     "/trainer/reviews",
     "/trainer/store-register",
-    "/market/",
+    "/market/purchase",
+    "/market/review",
   ];
   const showHeaderPages: string[] = ["/leaderboard"];
   const shouldShowHeader = showHeaderPages.includes(location.pathname);

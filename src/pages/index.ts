@@ -26,11 +26,13 @@ export { default as TrainerList } from "./trainer/TrainerList";
 export { default as TrainerReservations } from "./trainer/TrainerReservations";
 export { default as TrainerReviews } from "./trainer/TrainerReviews";
 export { default as TrainerStoreRegister } from "./trainer/TrainerStoreRegister";
+export { default as RegisterTicket } from "./trainer/RegisterTicket";
 export { default as Market } from "./market/Market";
 export { default as MarketDetail } from "./market/MarketDetail";
 export { default as MarketPurchase } from "./market/MarketPurchase";
 export { default as MarketPurchaseFail } from "./market/MarketPurchaseFail";
 export { default as MarketReservation } from "./market/MarketReservation";
+export { default as ReviewWrite } from "./market/ReviewWrite";
 
 // admin page
 export { default as AdminDashboard } from "./admin/Dashboard";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
-import { CommonButton } from "@components/common";
+import { CommonButton, CommonModal } from "@components/common";
 
 const MOCK_RESERVATIONS = [
     {
@@ -44,6 +44,7 @@ const MOCK_RESERVATIONS = [
 
 const MarketReservation = () => {
     const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
+    const [selectedRes, setSelectedRes] = useState<typeof MOCK_RESERVATIONS[0] | null>(null);
     const navigate = useNavigate();
 
     const filteredReservations = MOCK_RESERVATIONS.filter(res => {
@@ -93,7 +94,10 @@ const MarketReservation = () => {
                                     }`}>
                                     {item.status}
                                 </span>
-                                <span className="text-[12px] font-bold text-gray-400 cursor-pointer hover:text-gray-600 underline">
+                                <span
+                                    onClick={() => setSelectedRes(item)}
+                                    className="text-[12px] font-bold text-gray-400 cursor-pointer hover:text-gray-600 underline"
+                                >
                                     예약 상세
                                 </span>
                             </div>
@@ -116,11 +120,15 @@ const MarketReservation = () => {
                             {/* 예약 일시 */}
                             <div className="bg-gray-50 rounded-xl p-3 flex flex-col gap-1.5">
                                 <div className="flex items-center gap-2">
-                                    <img src="/icon/calendar.svg" alt="calendar" className="w-[14px] h-[14px] opacity-40" />
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400">
+                                        <path d="M8 2V5M16 2V5M3.5 9.09H20.5M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
                                     <span className="text-[13px] font-bold text-gray-700">{item.date} ({item.day})</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <img src="/icon/clock.svg" alt="clock" className="w-[14px] h-[14px] opacity-40" />
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400">
+                                        <path d="M22 12C22 17.52 17.52 22 12 22C6.48 22 2 17.52 2 12C2 6.48 6.48 2 12 2C17.52 2 22 6.48 22 12ZM15.71 15.18L12.61 13.33C12.11 13.03 11.71 12.31 11.71 11.72V7.61" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
                                     <span className="text-[13px] font-bold text-gray-700">{item.time} 방문</span>
                                 </div>
                             </div>
@@ -150,19 +158,13 @@ const MarketReservation = () => {
                                             구매 확정
                                         </button>
                                     </div>
-                                    <button
-                                        className="w-full py-3 rounded-xl font-bold text-[13px] text-gray-400 border border-gray-100 bg-white"
-                                        onClick={() => navigate(`/market/purchase/${item.id.replace('r', '')}`)}
-                                    >
-                                        클래스 상세 정보 보기
-                                    </button>
                                 </div>
                             )}
 
                             {item.status === "수강 완료" && (
                                 <CommonButton
                                     label="리뷰 남기기"
-                                    onClick={() => alert("리뷰 작성 화면으로 이동합니다.")}
+                                    onClick={() => navigate(`/market/review/${item.id}`)}
                                     className="h-[48px] rounded-xl font-bold text-[14px] mt-1"
                                 />
                             )}
@@ -190,6 +192,59 @@ const MarketReservation = () => {
                     </div>
                 )}
             </div>
+
+            {/* 예약 상세 모달 */}
+            {selectedRes && (
+                <CommonModal
+                    title="예약 상세 정보"
+                    desc="블록체인에 기록된 예약 정보입니다."
+                    confirmLabel="확인"
+                    onConfirmClick={() => setSelectedRes(null)}
+                >
+                    <div className="w-full flex flex-col gap-4 mt-2 mb-1">
+                        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex flex-col gap-4">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">클래스 정보</span>
+                                <p className="text-[14px] text-gray-800 font-bold">{selectedRes.title}</p>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">트레이너</span>
+                                <p className="text-[14px] text-gray-800 font-bold">{selectedRes.trainerName}</p>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">결제 금액</span>
+                                <div className="flex items-center gap-1">
+                                    <div className="w-4 h-4 rounded-full bg-main flex items-center justify-center text-white text-[9px] font-bold">T</div>
+                                    <p className="text-[14px] text-gray-800 font-bold">{selectedRes.price} MZTK</p>
+                                </div>
+                            </div>
+                            {selectedRes.requestMsg && (
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">내 요청사항</span>
+                                    <div className="bg-white p-3 rounded-xl border border-gray-100 text-[13px] text-gray-600 leading-relaxed italic">
+                                        "{selectedRes.requestMsg}"
+                                    </div>
+                                </div>
+                            )}
+                            <div className="flex flex-col gap-1 pt-2 border-t border-gray-100">
+                                <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Transaction ID</span>
+                                <p className="text-[10px] text-gray-400 font-mono break-all bg-white p-2 rounded border border-gray-50">
+                                    0x{Math.random().toString(16).substring(2, 10)}...{Math.random().toString(16).substring(2, 10)}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            className="text-[12px] text-gray-400 underline font-medium text-center"
+                            onClick={() => {
+                                alert("블록체인 익스플로러로 연결됩니다.");
+                                setSelectedRes(null);
+                            }}
+                        >
+                            온체인 데이터 자세히 보기
+                        </button>
+                    </div>
+                </CommonModal>
+            )}
         </div>
     );
 };

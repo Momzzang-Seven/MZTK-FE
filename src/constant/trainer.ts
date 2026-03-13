@@ -5,7 +5,7 @@ export const TRAINER_DASHBOARD_TEXT = {
         {
             groupName: "클래스 관리",
             items: [
-                { title: "클래스 등록하기", icon: "/icon/dumbell.svg", path: "/trainer/create", bgClass: "bg-main", filterClass: "brightness-200" },
+                { title: "클래스 등록하기", icon: "/icon/dumbell.svg", path: "/trainer/register-ticket", bgClass: "bg-main", filterClass: "brightness-200" },
                 { title: "내 클래스 목록", icon: "/icon/paste.svg", path: "/trainer/list", bgClass: "bg-main", filterClass: "brightness-200" },
             ]
         },
@@ -31,7 +31,7 @@ export const CREATE_TICKET_TEXT = {
     LABELS: {
         TITLE: "클래스 제목",
         CATEGORY: "카테고리",
-        PRICE: "가격 (MZTK)",
+        PRICE: "1회당 가격 (MZTK)",
         CAPACITY: "정원 (명)",
         DESC: "프로그램 상세 소개",
         FEATURES: "프로그램 특징 (선택)",
@@ -46,7 +46,7 @@ export const CREATE_TICKET_TEXT = {
     },
     PLACEHOLDERS: {
         TITLE: "예) 1:1 집중 웨이트 트레이닝",
-        PRICE: "숫자만 입력해주세요",
+        PRICE: "예) 500",
         CAPACITY: "예) 4",
         DESC: "프로그램에 대해 자세히 설명해주세요",
         FEATURE: "예) 체형 분석 및 맞춤형 식단 제공",
