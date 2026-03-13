@@ -27,6 +27,12 @@ export const footerItem: FooterItemType[] = [
     path: "/market",
   },
   {
+    label: "내 클래스",
+    src: "/icon/dumbellFooter.svg",
+    activeSrc: "/icon/dumbellActiveFooter.svg",
+    path: "/trainer", // Default, will be handled dynamically if needed
+  },
+  {
     label: "마이페이지",
     src: "/icon/user.svg",
     activeSrc: "/icon/userActive.svg",
@@ -34,9 +40,3 @@ export const footerItem: FooterItemType[] = [
   },
 ];
 
-export const TRAINER_FOOTER_ITEM: FooterItemType = {
-  label: "내 클래스",
-  src: "/icon/dumbellFooter.svg",
-  activeSrc: "/icon/dumbellActiveFooter.svg",
-  path: "/trainer",
-};

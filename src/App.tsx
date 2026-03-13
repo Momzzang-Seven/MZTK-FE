@@ -38,6 +38,8 @@ import {
   MarketPurchase,
   MarketPurchaseFail,
   MarketReservation,
+  ReviewWrite,
+  RegisterTicket,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -138,6 +140,7 @@ function App() {
                     />
                     <Route path="/trainer" element={<TrainerDashboard />} />
                     <Route path="/trainer/create" element={<CreateTicket />} />
+                    <Route path="/trainer/register-ticket" element={<RegisterTicket />} />
                     <Route path="/trainer/edit/:id" element={<EditTicket />} />
                     <Route path="/trainer/list" element={<TrainerList />} />
                     <Route path="/trainer/reservations" element={<TrainerReservations />} />
@@ -145,6 +148,7 @@ function App() {
                     <Route path="/trainer/store-register" element={<TrainerStoreRegister />} />
                     <Route path="/market" element={<Market />} />
                     <Route path="/market/reservations" element={<MarketReservation />} />
+                    <Route path="/market/review/:id" element={<ReviewWrite />} />
                     <Route path="/market/:id" element={<MarketDetail />} />
                     <Route path="/market/purchase/:id" element={<MarketPurchase />} />
                     <Route path="/market/purchase-fail" element={<MarketPurchaseFail />} />

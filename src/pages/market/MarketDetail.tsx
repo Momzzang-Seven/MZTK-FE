@@ -34,7 +34,23 @@ const MarketDetail = () => {
                     onClick={() => navigate(-1)}
                     className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:bg-black/50 transition-colors"
                 >
-                    <img src="/icon/backArrow.svg" alt="back" className="w-6 h-6 invert" />
+                    <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="text-white"
+                    >
+                        <path
+                            d="M9.57 5.92993L3.5 11.9999L9.57 18.0699M20.5 11.9999H3.67"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
                 </button>
             </div>
 

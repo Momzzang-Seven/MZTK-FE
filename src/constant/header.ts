@@ -48,6 +48,10 @@ export const headerByPath: HeaderByPathType[] = [
   {
     label: "운동 클래스 찾기",
     path: "/market",
+  },
+  {
+    label: "후기 작성",
+    path: "/market/review",
   }
 ];
 

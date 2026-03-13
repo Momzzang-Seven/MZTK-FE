@@ -23,6 +23,7 @@
   --color-grey-deep: #4b5563;
 
   --default-ring-color: var(--color-main);
+  --font-family: var(--font-sans);
 }
 
 .font-gmarket {
@@ -40,7 +41,7 @@ body {
 :root {
   color: #000;
   font-synthesis: none;
-  text-rendering: opximizeLegibility;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
