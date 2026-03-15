@@ -43,7 +43,7 @@ interface UserState {
 
     // Actions
     addXp: (amount: number) => void;
-    checkAttendance: () => { success: boolean; message: string; rewardedXp: number };
+    checkAttendance: () => Promise<{ success: boolean; message: string; rewardedXp: number }>;
     completeExercise: () => { success: boolean; message: string; rewardedXp: number };
 
     // Async Analysis Actions
@@ -91,39 +91,35 @@ export const useUserStore = create<UserState>()(
 
             addXp: (amount) => set((state) => ({ xp: state.xp + amount })),
 
-            checkAttendance: () => {
-                const { lastAttendanceDate, attendanceStreak } = get();
+            checkAttendance: async () => {
+                const { lastAttendanceDate } = get();
                 const today = new Date().toISOString().split("T")[0];
 
                 if (lastAttendanceDate === today) {
                     return { success: false, message: "오늘의 출석을 이미 완료했습니다.", rewardedXp: 0 };
                 }
 
-                // Check if yesterday was attended to maintain streak
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split("T")[0];
+                try {
+                    const { attendanceService } = await import("@services/attendance");
+                    const result = await attendanceService.checkIn();
 
-                let newStreak = attendanceStreak;
-
-                if (lastAttendanceDate === yesterdayStr) {
-                    newStreak += 1;
-                } else {
-                    newStreak = 1; // Reset if streak broken
+                    if (result.success) {
+                        set({ 
+                            lastAttendanceDate: today, 
+                            attendanceStreak: result.streakDays, 
+                            xp: get().xp + result.grantedXp + result.bonusXp 
+                        });
+                        return { 
+                            success: true, 
+                            message: result.message, 
+                            rewardedXp: result.grantedXp + result.bonusXp 
+                        };
+                    }
+                    return { success: false, message: result.message, rewardedXp: 0 };
+                } catch (error: any) {
+                    console.error("출석 API 호출 실패:", error);
+                    return { success: false, message: "서버 통신 실패", rewardedXp: 0 };
                 }
-
-                let reward = 10; // Daily reward
-                let message = "출석 완료! +10EXP"; // Changed from XP to EXP
-
-                // 7-day Streak Bonus
-                if (newStreak === 7) { // Condition changed from >= 7 to === 7
-                    reward += 300; // Bonus
-                    message = "7일 연속 출석 달성! +300EXP"; // Changed from XP to EXP
-                    newStreak = 0; // Reset streak as per plan
-                }
-
-                set({ lastAttendanceDate: today, attendanceStreak: newStreak, xp: get().xp + reward });
-                return { success: true, message, rewardedXp: reward };
             },
 
             completeExercise: () => {
@@ -186,6 +182,9 @@ export const useUserStore = create<UserState>()(
                             message: newNotification.content // Use the content from the newNotification
                         }
                     });
+
+                    // 자동으로 출석 체크 API 호출 시도 (이미 했으면 스토어 로직에서 걸러짐)
+                    get().checkAttendance();
                 }
             },
 

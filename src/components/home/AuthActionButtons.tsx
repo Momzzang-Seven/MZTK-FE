@@ -19,8 +19,8 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
         setIsExerciseDone(lastExerciseDate === today);
     }, [lastAttendanceDate, lastExerciseDate]);
 
-    const handleAttendance = () => {
-        const result = checkAttendance();
+    const handleAttendance = async () => {
+        const result = await checkAttendance();
         if (result.success) {
             alert(result.message);
         } else {
