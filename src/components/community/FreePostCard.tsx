@@ -10,16 +10,18 @@ interface Props {
 
 const FreePostCard = ({ post }: Props) => {
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likes);
+  const [liked, setLiked] = useState(post.isLiked);
+  const [likeCount, setLikeCount] = useState(post.likeCount);
 
   const handleLikeClick = () => {
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+    setLiked((prevLiked) => {
+      setLikeCount((prevCount) => (prevLiked ? prevCount - 1 : prevCount + 1));
+      return !prevLiked;
+    });
   };
 
   const handleCommentClick = () => {
-    navigate("/community/free/" + post.id);
+    navigate("/community/free/" + post.postId);
   };
 
   return (
@@ -27,18 +29,16 @@ const FreePostCard = ({ post }: Props) => {
       {/* 헤더 */}
       <div className="flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          {post.author.profileImage ? (
-            <img
-              src={post.author.profileImage}
-              alt={post.author.nickname}
-              className="h-10 w-10 rounded-full object-cover"
-            />
-          ) : (
-            <div className="h-10 w-10 rounded-full bg-main" />
-          )}
+          <img
+            src={post.writer.profileImage || "/icon/defaultUser.svg"}
+            alt={post.writer.nickname}
+            className={`h-10 w-10 rounded-full ${
+              post.writer.profileImage ? "object-cover" : "bg-main pt-2"
+            }`}
+          />
           <div className="flex flex-col">
             <span className="text-sm font-semibold fontSize-16">
-              {post.author.nickname}
+              {post.writer.nickname}
             </span>
             <span className="text-xs text-gray-500 fontSize-14">
               {formatTimeAgo(post.createdAt)}
@@ -46,21 +46,23 @@ const FreePostCard = ({ post }: Props) => {
           </div>
         </div>
         <ActionList
-          id={post.id}
+          id={post.postId}
           type="free"
-          authorId={post.author.userId}
+          authorId={post.writer.userId}
           size="sm"
         />
       </div>
 
       {/* 게시물 이미지 */}
-      <div className="mt-3 w-full">
-        <img
-          src={post.postImage}
-          alt="post"
-          className="w-full h-auto object-cover"
-        />
-      </div>
+      {post.imageUrls && (
+        <div className="mt-3 w-full">
+          <img
+            src={post.imageUrls}
+            alt="post"
+            className="w-full h-auto object-cover"
+          />
+        </div>
+      )}
 
       {/* 액션 영역 */}
       <div className="flex items-center gap-4 px-4 py-1">
@@ -84,16 +86,30 @@ const FreePostCard = ({ post }: Props) => {
         >
           <img src="/icon/comment.svg" alt="comment" className="w-5 h-5" />
           <span className="text-sm font-medium text-gray-700">
-            {post.comments}
+            {post.commentCount}
           </span>
         </div>
 
         {/* 공유 */}
-        <SharePost type="free" postId={post.id} />
+        <SharePost type="free" postId={post.postId} />
       </div>
 
-      {/* 설명 */}
-      <p className="px-4 pb-7 text-sm">{post.description}</p>
+      {/* 내용 및 태그 */}
+      <div className="flex flex-col px-4 pb-7 text-sm">
+        <p>{post.content}</p>
+
+        <div className="mt-2 flex flex-wrap gap-1">
+          {post.tags.map((tag) => (
+            <span
+              key={tag}
+              className="text-blue-600 cursor-pointer"
+              onClick={() => navigate(`/community/free?tag=${tag}`)}
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

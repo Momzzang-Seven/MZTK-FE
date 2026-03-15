@@ -29,7 +29,7 @@ const QuestionBoard = () => {
     <div className="flex flex-col gap-2 mt-3">
       {questionPosts.length > 0
         ? questionPosts.map((post) => (
-            <QuestionPostCard key={post.id} post={post} />
+            <QuestionPostCard key={post.postId} post={post} />
           ))
         : isSearchMode && (
             <p className="text-center text-gray-400 py-8">

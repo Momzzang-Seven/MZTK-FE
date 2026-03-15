@@ -6,21 +6,21 @@ interface SharePostProps {
 }
 
 const SharePost = ({ type, postId }: SharePostProps) => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const COMMUNITY_BASE = `${BASE_URL}/community`;
+
+  const basePathByType: Record<PostType, string> = {
+    free: `${COMMUNITY_BASE}/free/`,
+    question: `${COMMUNITY_BASE}/question/`,
+  };
+
+  const url = basePathByType[type] + postId;
+
   const handleShareClick = () => {
     if (!navigator.share) {
       console.log("Web Share API를 지원하지 않는 환경입니다.");
       return;
     }
-
-    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-    const COMMUNITY_BASE = `${BASE_URL}/community`;
-
-    const basePathByType: Record<PostType, string> = {
-      free: `${COMMUNITY_BASE}/free/`,
-      question: `${COMMUNITY_BASE}/question/`,
-    };
-
-    const url = basePathByType[type] + postId;
 
     navigator
       .share({

@@ -24,7 +24,7 @@ export const LevelReward = () => {
 
         <div className="rounded-full bg-white py-2 px-3 flex flex-row text-main items-center gap-x-2">
           <img src="/icon/orangeToken.svg" alt="tokenIcon" />
-          <div className="label-bold">+{reward} 토큰</div>
+          <div className="label-bold">+{reward} MZTK</div>
         </div>
       </div>
     </MySectionCard>

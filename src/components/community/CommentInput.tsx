@@ -1,23 +1,21 @@
-import { useState } from "react";
-
 interface Props {
   isAnswerPost?: boolean;
+  comment: string;
+  setComment: React.Dispatch<React.SetStateAction<string>>;
   postId?: number;
+  commentId?: number;
+  handleCommentSubmit: () => void;
 }
 
 const maxLength = 500;
 
-const CommentInput = ({ isAnswerPost = false, postId }: Props) => {
-  const [comment, setComment] = useState("");
+const CommentInput = ({
+  isAnswerPost = false,
+  comment = "",
+  setComment,
+  handleCommentSubmit,
+}: Props) => {
   const isActive = comment.trim().length > 0;
-
-  const handleSend = () => {
-    if (!comment.trim()) return;
-
-    // 전송 api 추가
-    console.log(postId, comment);
-    setComment("");
-  };
 
   if (!isAnswerPost) {
     return (
@@ -32,8 +30,8 @@ const CommentInput = ({ isAnswerPost = false, postId }: Props) => {
         />
 
         {/* 전송 버튼 */}
-        <button
-          onClick={handleSend}
+        <div
+          onClick={handleCommentSubmit}
           className="flex items-center justify-center"
         >
           <img
@@ -41,7 +39,7 @@ const CommentInput = ({ isAnswerPost = false, postId }: Props) => {
             alt="send"
             className="w-5 h-5"
           />
-        </button>
+        </div>
       </div>
     );
   } else if (isAnswerPost) {
@@ -62,8 +60,8 @@ const CommentInput = ({ isAnswerPost = false, postId }: Props) => {
           </span>
 
           {/* 전송 아이콘 */}
-          <button
-            onClick={handleSend}
+          <div
+            onClick={handleCommentSubmit}
             className="flex items-center justify-center"
           >
             <img
@@ -71,7 +69,7 @@ const CommentInput = ({ isAnswerPost = false, postId }: Props) => {
               alt="send"
               className="w-5 h-5 mt-1 mr-1"
             />
-          </button>
+          </div>
         </div>
       </div>
     );

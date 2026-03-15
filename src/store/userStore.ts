@@ -43,14 +43,17 @@ interface UserState {
 
     // Actions
     addXp: (amount: number) => void;
-    checkAttendance: () => { success: boolean; message: string; rewardedXp: number };
+    setLevel: (level: number) => void;
+    setXp: (xp: number) => void;
+    setMaxXp: (maxXp: number) => void;
+    checkAttendance: () => Promise<{ success: boolean; message: string; rewardedXp: number }>;
     completeExercise: () => { success: boolean; message: string; rewardedXp: number };
 
     // Async Analysis Actions
     startAnalysis: (type: 'exercise' | 'record') => void;
     checkAnalysisCompletion: () => void;
     closeSnackbar: () => void;
-    levelUp: () => boolean;
+    levelUp: () => Promise<{ success: boolean; message: string }>;
 }
 
 export const useUserStore = create<UserState>()(
@@ -90,40 +93,39 @@ export const useUserStore = create<UserState>()(
                 set({ user: null, isAuthenticated: false, accessToken: null, level: 1, xp: 0, attendanceStreak: 0, lastAttendanceDate: null, lastExerciseDate: null }),
 
             addXp: (amount) => set((state) => ({ xp: state.xp + amount })),
+            setLevel: (level) => set({ level }),
+            setXp: (xp) => set({ xp }),
+            setMaxXp: (maxXp) => set({ maxXp }),
 
-            checkAttendance: () => {
-                const { lastAttendanceDate, attendanceStreak } = get();
+            checkAttendance: async () => {
+                const { lastAttendanceDate } = get();
                 const today = new Date().toISOString().split("T")[0];
 
                 if (lastAttendanceDate === today) {
                     return { success: false, message: "오늘의 출석을 이미 완료했습니다.", rewardedXp: 0 };
                 }
 
-                // Check if yesterday was attended to maintain streak
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split("T")[0];
+                try {
+                    const { attendanceService } = await import("@services/attendance");
+                    const result = await attendanceService.checkIn();
 
-                let newStreak = attendanceStreak;
-
-                if (lastAttendanceDate === yesterdayStr) {
-                    newStreak += 1;
-                } else {
-                    newStreak = 1; // Reset if streak broken
+                    if (result.success) {
+                        set({ 
+                            lastAttendanceDate: today, 
+                            attendanceStreak: result.streakDays, 
+                            xp: get().xp + result.grantedXp + result.bonusXp 
+                        });
+                        return { 
+                            success: true, 
+                            message: result.message, 
+                            rewardedXp: result.grantedXp + result.bonusXp 
+                        };
+                    }
+                    return { success: false, message: result.message, rewardedXp: 0 };
+                } catch (error: any) {
+                    console.error("출석 API 호출 실패:", error);
+                    return { success: false, message: "서버 통신 실패", rewardedXp: 0 };
                 }
-
-                let reward = 10; // Daily reward
-                let message = "출석 완료! +10XP";
-
-                // 7-day Streak Bonus
-                if (newStreak >= 7) {
-                    reward += 300; // Bonus
-                    message = "7일 연속 출석 달성! +300XP";
-                    newStreak = 0; // Reset streak as per plan
-                }
-
-                set({ lastAttendanceDate: today, attendanceStreak: newStreak, xp: get().xp + reward });
-                return { success: true, message, rewardedXp: reward };
             },
 
             completeExercise: () => {
@@ -154,11 +156,26 @@ export const useUserStore = create<UserState>()(
                 if (analysisStatus === 'analyzing' && analysisTargetTime && Date.now() >= analysisTargetTime) {
                     // Analysis Complete!
                     const today = new Date().toISOString().split("T")[0];
-                    const reward = 100; // 100 XP Reward
+                    const reward = 100; // 100 EXP Reward // Changed from XP to EXP
 
-                    const message = analysisType === 'record'
-                        ? `기록 인증 분석이 완료되었어요! 오늘도 운동 성공 +${reward}XP`
-                        : `운동 인증 분석이 완료되었어요! 오늘도 운동 성공 +${reward}XP`;
+                    const isRecord = analysisType === 'record'; // Determine if it's a record analysis
+
+                    // The user's edit introduced a newNotification object, which was not in the original code.
+                    // I will integrate the newNotification object and its content,
+                    // assuming it's meant to replace or augment the existing snackbar message logic.
+                    // The original code directly set the snackbar message.
+                    // The user's edit also has a syntax error with `isRecord` being undefined in the provided snippet.
+                    // I will define `isRecord` and integrate the newNotification structure.
+
+                    const newNotification = {
+                        id: Math.random(),
+                        title: "운동 인증 성공!",
+                        content: isRecord
+                            ? `기록 인증 분석이 완료되었어요! 오늘도 운동 성공 +${reward}EXP` // Changed from XP to EXP
+                            : `운동 인증 분석이 완료되었어요! 오늘도 운동 성공 +${reward}EXP`, // Changed from XP to EXP
+                        date: "방금 전",
+                        isRead: false
+                    };
 
                     set({
                         analysisStatus: 'idle',
@@ -168,9 +185,12 @@ export const useUserStore = create<UserState>()(
                         xp: get().xp + reward,
                         snackbar: {
                             isOpen: true,
-                            message: message
+                            message: newNotification.content // Use the content from the newNotification
                         }
                     });
+
+                    // 자동으로 출석 체크 API 호출 시도 (이미 했으면 스토어 로직에서 걸러짐)
+                    get().checkAttendance();
                 }
             },
 
@@ -178,18 +198,24 @@ export const useUserStore = create<UserState>()(
                 set((state) => ({ snackbar: { ...state.snackbar, isOpen: false } }));
             },
 
-            levelUp: () => {
-                const { xp, maxXp, level } = get();
-                if (xp >= maxXp) {
-                    const overflowXp = xp - maxXp; // Carry over XP
-                    set({
-                        level: level + 1,
-                        xp: overflowXp,
-                        maxXp: (level + 1) * 100 // Example: Increase requirement
-                    });
-                    return true;
+            levelUp: async () => {
+                try {
+                    const { levelService } = await import("@services/level");
+                    const result = await levelService.levelUp();
+                    
+                    if (result) {
+                        set({
+                            level: result.toLevel,
+                            xp: get().xp - result.spentXp,
+                            // maxXp는 다음 호출(refreshLevel) 등에서 갱신됨
+                        });
+                        return { success: true, message: "레벨업 성공!" };
+                    }
+                    return { success: false, message: "레벨업 실패" };
+                } catch (error: any) {
+                    console.error("레벨업 API 호출 실패:", error);
+                    return { success: false, message: error.response?.data?.message || "서버 통신 실패" };
                 }
-                return false;
             }
         }),
         {

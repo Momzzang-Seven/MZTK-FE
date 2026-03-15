@@ -60,7 +60,9 @@ export const PostItem = ({
                     <CommonButton
                         label={ADMIN_TEXT.POST.BTN_DELETE_POST}
                         onClick={() => onOpenDeleteModal('POST', post.id)}
-                        className="px-4 py-2 border border-red-200 text-sm font-semibold flex items-center gap-2"
+                        className="border border-red-200 text-sm font-semibold flex items-center gap-2 rounded-xl"
+                        width="w-fit"
+                        padding="px-4 py-2"
                         bgColor="bg-red-50 hover:bg-red-100"
                         textColor="text-red-500"
                         icon={<img src="/icon/trash.svg" alt="delete" className="w-4 h-4" />}
@@ -69,7 +71,9 @@ export const PostItem = ({
                     <CommonButton
                         label={ADMIN_TEXT.POST.BTN_RESTORE_POST}
                         onClick={() => onRestorePost(post.id)}
-                        className="px-4 py-2 border border-green-200 text-sm font-semibold flex items-center gap-2"
+                        className="border border-green-200 text-sm font-semibold flex items-center gap-2 rounded-xl"
+                        width="w-fit"
+                        padding="px-4 py-2"
                         bgColor="bg-green-50 hover:bg-green-100"
                         textColor="text-green-600"
                         icon={<img src="/icon/refresh.svg" alt="restore" className="w-4 h-4" />}
@@ -112,10 +116,10 @@ export const PostItem = ({
                                 ) : (
                                     <button
                                         onClick={() => onRestoreComment(post.id, comment.id)}
-                                        className="w-8 h-8 rounded-full border border-green-200 text-green-500 flex items-center justify-center hover:bg-green-50"
+                                        className="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center hover:bg-green-600 shadow-sm transition-all active:scale-90"
                                         title={ADMIN_TEXT.POST.BTN_RESTORE_COMMENT}
                                     >
-                                        <img src="/icon/refresh.svg" alt="restore" className="w-4 h-4" />
+                                        <img src="/icon/refresh.svg" alt="restore" className="w-4 h-4 brightness-0 invert" />
                                     </button>
                                 )}
                             </div>

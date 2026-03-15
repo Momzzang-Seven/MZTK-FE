@@ -26,7 +26,7 @@ export const WithdrawAmt = ({ amt, value, onChange }: WithdrawAmtProps) => {
       <div className="flex justify-between w-full">
         <div className="text-grey-deep label">출금 금액</div>
         <div className="text-xs text-grey-main">
-          잔액: {amt.toLocaleString()} MZT
+          잔액: {amt.toLocaleString()} MZTK
         </div>
       </div>
 
@@ -39,7 +39,7 @@ export const WithdrawAmt = ({ amt, value, onChange }: WithdrawAmtProps) => {
             onChange={(e) => onChange(e.target.value)}
             placeholder="0"
           />
-          <div className="body shrink-0 pb-2 text-black font-medium">MZT</div>
+          <div className="body shrink-0 pb-2 text-black font-medium">MZTK</div>
         </div>
 
         <div className="flex flex-row gap-x-2 w-full mt-2">
@@ -50,11 +50,10 @@ export const WithdrawAmt = ({ amt, value, onChange }: WithdrawAmtProps) => {
                 key={percentage}
                 type="button"
                 onClick={() => handlePercentageClick(percentage)}
-                className={`${
-                  active
+                className={`${active
                     ? "bg-main text-white shadow-sm"
                     : "bg-grey-pale text-grey-deep"
-                } w-full text-center rounded-xl py-2 px-3 label hover:brightness-95 active:scale-95 transition-all`}
+                  } w-full text-center rounded-xl py-2 px-3 label hover:brightness-95 active:scale-95 transition-all`}
               >
                 {percentage === 100 ? "전체" : `${percentage}%`}
               </button>

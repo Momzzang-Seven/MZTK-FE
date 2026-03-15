@@ -1,3 +1,5 @@
+import { CommonButton } from "@components/common";
+
 interface ConfirmReportProps {
   handleReportClick: () => void;
   handleCancelClick: () => void;
@@ -14,12 +16,12 @@ const ConfirmReport = ({
         <br />
         (추가예정)
       </div>
-      <div
-        className="flex flex-row items-center justify-center bg-red-400 text-white text-lg font-semibold p-[11.5px] border rounded-full cursor-pointer"
+      <CommonButton
+        label="신고하기"
+        bgColor="bg-red-400"
+        className="border !rounded-full"
         onClick={handleReportClick}
-      >
-        신고하기
-      </div>
+      />
       <div
         className="text-base font-normal underline cursor-pointer"
         onClick={handleCancelClick}

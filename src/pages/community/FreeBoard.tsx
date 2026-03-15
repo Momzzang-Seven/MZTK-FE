@@ -25,7 +25,9 @@ const FreeBoard = () => {
   return (
     <div className="flex flex-col gap-2 mt-3">
       {freePosts.length > 0
-        ? freePosts.map((post) => <FreePostCard key={post.id} post={post} />)
+        ? freePosts.map((post) => (
+            <FreePostCard key={post.postId} post={post} />
+          ))
         : isSearchMode && (
             <p className="text-center text-gray-400 py-8">
               검색 결과가 없습니다.

@@ -1,68 +1,67 @@
 [
   {
-    "id": 101,
-    "author": {
+    "answerId": 101,
+    "writer": {
       "userId": 1,
       "nickname": "6운동1휴식",
       "profileImage": null
     },
     "createdAt": "2026-01-21T04:10:38.160778",
-    "postImage": "https://picsum.photos/600/400?random=1",
-    "description": "허리 말리는 건 코어 힘이 부족하거나, 자세 진입할 때 골반이 말리는 경우가 많아요. 복압 먼저 잡고 내려가보세요!",
-
-    "comments": 3,
-    "isSelected": true
+    "imageUrls": "https://picsum.photos/600/400?random=1",
+    "content": "허리 말리는 건 코어 힘이 부족하거나, 자세 진입할 때 골반이 말리는 경우가 많아요. 복압 먼저 잡고 내려가보세요!",
+    "commentCount": 3,
+    "isAccepted": true
   },
   {
-    "id": 102,
-    "author": {
+    "answerId": 102,
+    "writer": {
       "userId": 2,
       "nickname": "건강한육체에건강한정신이깃든다",
       "profileImage": null
     },
     "createdAt": "2026-01-22T04:10:38.160798",
-    "postImage": "https://picsum.photos/600/400?random=2",
-    "description": "스탠스 폭, 발끝 각도도 한 번 점검해보세요. 허리가 말리는 경우 햄스트링이 너무 타이트한 것도 원인일 수 있어요.",
-    "comments": 5,
-    "isSelected": false
+    "imageUrls": "https://picsum.photos/600/400?random=2",
+    "content": "스탠스 폭, 발끝 각도도 한 번 점검해보세요. 허리가 말리는 경우 햄스트링이 너무 타이트한 것도 원인일 수 있어요.",
+    "commentCount": 5,
+    "isAccepted": false
   },
   {
-    "id": 103,
-    "author": {
+    "answerId": 103,
+    "writer": {
       "userId": 3,
       "nickname": "마라토너",
       "profileImage": null
     },
     "createdAt": "2026-01-23T04:10:38.160807",
-    "postImage": "https://picsum.photos/600/400?random=3",
-    "description": "가능하면 영상 찍어서 확인해보세요. 허리말림은 하중이 누적될수록 부상으로 이어질 수 있으니 조심하는 게 좋아요.",
-    "comments": 7,
-    "isSelected": false
+    "imageUrls": "https://picsum.photos/600/400?random=3",
+    "content": "가능하면 영상 찍어서 확인해보세요. 허리말림은 하중이 누적될수록 부상으로 이어질 수 있으니 조심하는 게 좋아요.",
+    "commentCount": 7,
+    "isAccepted": false
   },
   {
-    "id": 104,
-    "author": {
+    "answerId": 104,
+    "writer": {
       "userId": 4,
       "nickname": "토큰약탈자",
       "profileImage": null
     },
     "createdAt": "2026-01-24T04:10:38.160815",
-    "postImage": null,
-    "description": "운동 전 고관절 가동성 스트레칭도 꼭 해보세요. 세팅 전부터 허리 부담이 확 줄어듭니다!",
-    "comments": 9,
-    "isSelected": false
+    "imageUrls": null,
+    "content": "운동 전 고관절 가동성 스트레칭도 꼭 해보세요. 세팅 전부터 허리 부담이 확 줄어듭니다!",
+    "commentCount": 9,
+    "isAccepted": false
   },
   {
-    "id": 105,
-    "author": {
+    "answerId": 105,
+    "writer": {
       "userId": 5,
       "nickname": "몸짱코인상시거주자",
       "profileImage": null
     },
     "createdAt": "2026-01-25T04:10:38.160822",
-    "postImage": null,
-    "description": "This is the 5th answer post description with some details.",
-    "comments": 11,
-    "isSelected": false
+    "imageUrls": null,
+    "content": "This is the 5th answer post content with some details.",
+    "commentCount": 11,
+    "isAccepted": false
   }
 ]

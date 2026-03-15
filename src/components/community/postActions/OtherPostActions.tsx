@@ -1,20 +1,36 @@
+import { CommonButton } from "@components/common";
+
 interface OtherPostActionsProps {
+  type: string;
+  isSelectable?: boolean;
+  handleSelectClick: () => void;
   handleReportClick: () => void;
   handleCancelClick: () => void;
 }
 
 const OtherPostActions = ({
+  type,
+  isSelectable = true,
+  handleSelectClick,
   handleReportClick,
   handleCancelClick,
 }: OtherPostActionsProps) => {
   return (
     <div className="w-full flex flex-col gap-y-3">
-      <div
-        className="flex flex-row items-center justify-center bg-red-400 text-white text-lg font-semibold p-[11.5px] border rounded-full cursor-pointer"
+      {type === "answer" && isSelectable && (
+        <CommonButton
+          label="채택하기"
+          bgColor="bg-main"
+          className="border !rounded-full"
+          onClick={handleSelectClick}
+        />
+      )}
+      <CommonButton
+        label="신고하기"
+        bgColor="bg-red-400"
+        className="border !rounded-full"
         onClick={handleReportClick}
-      >
-        신고하기
-      </div>
+      />
       <div
         className="text-base font-normal underline cursor-pointer"
         onClick={handleCancelClick}

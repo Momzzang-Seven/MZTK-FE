@@ -1,82 +1,92 @@
 [
   {
-    "id": 1,
-    "author": {
+    "postId": 1,
+    "writer": {
       "userId": 101,
       "nickname": "김운동",
       "profileImage": null
     },
-    "isSolved": false,
-    "rewardToken": 50,
+    "question": {
+      "isSolved": false,
+      "reward": 50
+    },
     "createdAt": "2026-01-25T13:40:00+09:00",
-    "postImage": "https://example.com/posts/1.png",
-    "answers": 0,
+    "imageUrls": "https://example.com/posts/1.png",
+    "commentCount": 0,
     "title": "데드리프트 첫 세트에서 허리가 말립니다.",
-    "description": "무게는 80kg이고 5x5로 진행 중인데, 첫 세트부터 허리가 약간 말리는 느낌이 있습니다. 세팅할 때 어떤 부분을 더 신경 써야 할까요?",
+    "content": "무게는 80kg이고 5x5로 진행 중인데, 첫 세트부터 허리가 약간 말리는 느낌이 있습니다. 세팅할 때 어떤 부분을 더 신경 써야 할까요?",
     "tags": ["데드리프트", "자세질문", "초보"]
   },
   {
-    "id": 2,
-    "author": {
+    "postId": 2,
+    "writer": {
       "userId": 102,
       "nickname": "스쿼터",
       "profileImage": null
     },
-    "isSolved": false,
-    "rewardToken": 80,
+    "question": {
+      "isSolved": false,
+      "reward": 80
+    },
     "createdAt": "2026-01-25T12:10:00+09:00",
-    "postImage": "https://example.com/posts/2.png",
-    "answers": 5,
+    "imageUrls": "https://example.com/posts/2.png",
+    "commentCount": 5,
     "title": "하이바 스쿼트 시 무릎이 너무 앞으로 나갑니다.",
-    "description": "발 길이보다 무릎이 많이 앞으로 나가는데, 이게 정상 범위인지 아니면 힙을 더 뒤로 빼야 하는지 헷갈립니다. 키는 175cm, 발폭은 어깨보다 약간 넓게 두고 있습니다.",
+    "content": "발 길이보다 무릎이 많이 앞으로 나가는데, 이게 정상 범위인지 아니면 힙을 더 뒤로 빼야 하는지 헷갈립니다. 키는 175cm, 발폭은 어깨보다 약간 넓게 두고 있습니다.",
     "tags": ["스쿼트", "무릎", "자세점검"]
   },
   {
-    "id": 3,
-    "author": {
+    "postId": 3,
+    "writer": {
       "userId": 103,
       "nickname": "벤치장인",
       "profileImage": null
     },
-    "isSolved": true,
-    "rewardToken": 30,
+    "question": {
+      "isSolved": true,
+      "reward": 30
+    },
     "createdAt": "2026-01-24T20:30:00+09:00",
-    "postImage": "https://example.com/posts/3.png",
-    "answers": 7,
+    "imageUrls": "https://example.com/posts/3.png",
+    "commentCount": 7,
     "title": "벤치프레스 그립 넓이에 따른 자극 차이 질문",
-    "description": "현재는 엄지와 검지 사이가 링에 닿게 넓게 잡고 있습니다. 좀 더 좁게 잡으면 삼두 자극이 늘어난다고 들었는데, 어깨 부상 위험은 없는지 궁금합니다.",
+    "content": "현재는 엄지와 검지 사이가 링에 닿게 넓게 잡고 있습니다. 좀 더 좁게 잡으면 삼두 자극이 늘어난다고 들었는데, 어깨 부상 위험은 없는지 궁금합니다.",
     "tags": ["벤치프레스", "그립", "부상예방"]
   },
   {
-    "id": 4,
-    "author": {
+    "postId": 4,
+    "writer": {
       "userId": 104,
       "nickname": "직장인헬린이",
       "profileImage": null
     },
-    "isSolved": false,
-    "rewardToken": 40,
+    "question": {
+      "isSolved": false,
+      "reward": 40
+    },
     "createdAt": "2026-01-23T18:05:00+09:00",
-    "postImage": "https://example.com/posts/4.png",
-    "answers": 2,
+    "imageUrls": "https://example.com/posts/4.png",
+    "commentCount": 2,
     "title": "3분할 루틴에서 데드리프트 주 몇 회가 적당할까요?",
-    "description": "가슴/어깨, 등/이두, 하체/삼두 3분할로 주 5회 운동 중입니다. 컨벤셔널 데드리프트를 등날과 하체날 중 어디에 넣는 게 좋을지, 주당 횟수 추천 부탁드립니다.",
+    "content": "가슴/어깨, 등/이두, 하체/삼두 3분할로 주 5회 운동 중입니다. 컨벤셔널 데드리프트를 등날과 하체날 중 어디에 넣는 게 좋을지, 주당 횟수 추천 부탁드립니다.",
     "tags": ["운동루틴", "데드리프트", "3분할"]
   },
   {
-    "id": 5,
-    "author": {
+    "postId": 5,
+    "writer": {
       "userId": 105,
       "nickname": "컷팅중",
       "profileImage": null
     },
-    "isSolved": true,
-    "rewardToken": 100,
+    "question": {
+      "isSolved": true,
+      "reward": 100
+    },
     "createdAt": "2026-01-22T09:15:00+09:00",
-    "postImage": "https://example.com/posts/5.png",
-    "answers": 10,
+    "imageUrls": "https://example.com/posts/5.png",
+    "commentCount": 10,
     "title": "컷팅 중 데드리프트 중량 유지가 너무 힘듭니다.",
-    "description": "체지방을 빼려고 칼로리 적자를 크게 가져가니 데드리프트 기록이 계속 떨어집니다. 영양이나 휴식 측면에서 어떤 전략을 쓰면 좋을지 궁금합니다.",
+    "content": "체지방을 빼려고 칼로리 적자를 크게 가져가니 데드리프트 기록이 계속 떨어집니다. 영양이나 휴식 측면에서 어떤 전략을 쓰면 좋을지 궁금합니다.",
     "tags": ["다이어트", "근손실", "데드리프트"]
   }
 ]

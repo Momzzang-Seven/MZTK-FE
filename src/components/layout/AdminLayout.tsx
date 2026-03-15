@@ -1,4 +1,5 @@
-import { AdminHeader, AdminSidebar } from "@components/layout";
+import { AdminHeader } from "./AdminHeader";
+import { AdminSidebar } from "./AdminSidebar";
 
 export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   return (

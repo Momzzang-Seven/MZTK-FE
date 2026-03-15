@@ -1,19 +1,19 @@
 import { useNavigate } from "react-router-dom";
-import type { PostType, Author } from "@types";
+import type { PostType, Writer } from "@types";
 import { formatTimeAgo } from "@utils";
 import { ActionList, SharePost } from "@components/community";
 
 interface QuestionHeaderProps {
   type: PostType;
   postId: number;
-  author: Author;
+  writer: Writer;
   createdAt: string;
 }
 
 const QuestionHeader = ({
   type,
   postId,
-  author,
+  writer,
   createdAt,
 }: QuestionHeaderProps) => {
   const navigate = useNavigate();
@@ -27,18 +27,16 @@ const QuestionHeader = ({
         >
           <img src="/icon/backArrow.svg" alt="뒤로가기" className="w-5 h-5" />
         </div>
-        {author.profileImage ? (
-          <img
-            src={author.profileImage}
-            alt={author.nickname}
-            className="h-10 w-10 rounded-full object-cover"
-          />
-        ) : (
-          <div className="h-10 w-10 rounded-full bg-main" />
-        )}
+        <img
+          src={writer.profileImage || "/icon/defaultUser.svg"}
+          alt={writer.nickname}
+          className={`h-10 w-10 rounded-full ${
+            writer.profileImage ? "object-cover" : "bg-main pt-2"
+          }`}
+        />
         <div className="flex flex-col">
           <span className="font-semibold text-base text-black">
-            {author.nickname}
+            {writer.nickname}
           </span>
           <span className="font-medium text-sm text-gray-500">
             {formatTimeAgo(createdAt)}
@@ -50,7 +48,7 @@ const QuestionHeader = ({
           size="md"
           type={type}
           id={postId}
-          authorId={author.userId}
+          authorId={writer.userId}
         />
         <SharePost type={type} postId={postId} />
       </div>

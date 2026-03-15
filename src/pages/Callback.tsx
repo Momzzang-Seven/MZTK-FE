@@ -37,10 +37,10 @@ const Callback = () => {
 
         const redirectUri = window.location.origin + "/callback";
 
-        const response = await PostLogin(provider, code, redirectUri);
+        const response = await PostLogin({ provider, authorizationCode: code, redirectUri });
 
-        if (response.data) {
-          const { userInfo, accessToken } = response.data;
+        if (response) {
+          const { userInfo, accessToken } = response;
           setUser(userInfo);
           setAccessToken(accessToken);
           navigate("/register");

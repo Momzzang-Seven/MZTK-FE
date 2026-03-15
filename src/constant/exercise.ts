@@ -9,3 +9,5 @@ export const EXERCISE_TEXT = {
     ANALYZING_TITLE_1: "분석이 완료되면",
     ANALYZING_TITLE_2: "알려드릴게요!",
 };
+
+export const EXERCISE_CATEGORIES = ["전체", "요가/필라테스", "PT/헬스", "크로스핏"];

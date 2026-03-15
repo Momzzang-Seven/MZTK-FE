@@ -15,16 +15,22 @@ export const footerItem: FooterItemType[] = [
     path: "/",
   },
   {
-    label: "리더보드",
-    src: "/icon/leaderboard.svg",
-    activeSrc: "/icon/leaderboardActive.svg",
-    path: "/leaderboard",
-  },
-  {
     label: "커뮤니티",
     src: CommunityIcon,
     activeSrc: "/icon/communityActive.svg",
     path: "/community",
+  },
+  {
+    label: "마켓",
+    src: "/icon/market.svg",
+    activeSrc: "/icon/marketActive.svg",
+    path: "/market",
+  },
+  {
+    label: "내 클래스",
+    src: "/icon/dumbellFooter.svg",
+    activeSrc: "/icon/dumbellActiveFooter.svg",
+    path: "/trainer", // Default, will be handled dynamically if needed
   },
   {
     label: "마이페이지",
@@ -33,3 +39,4 @@ export const footerItem: FooterItemType[] = [
     path: "/my",
   },
 ];
+

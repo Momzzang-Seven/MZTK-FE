@@ -31,5 +31,5 @@ export const VERIFY_TEXT = {
     MODAL_REG_CONFIRM: "운동 위치 등록하기",
     MODAL_FAIL_TITLE: "위치 인증에 실패했어요",
     SUCCESS_TITLE: "오늘도 운동 성공!",
-    SUCCESS_XP: "+100XP"
+    SUCCESS_XP: "+100EXP"
 };

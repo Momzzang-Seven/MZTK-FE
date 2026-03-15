@@ -41,6 +41,18 @@ export const headerByPath: HeaderByPathType[] = [
     label: "답변 수정",
     path: "/community/edit/answer",
   },
+  {
+    label: "예약/수강 내역",
+    path: "/market/reservations",
+  },
+  {
+    label: "운동 클래스 찾기",
+    path: "/market",
+  },
+  {
+    label: "후기 작성",
+    path: "/market/review",
+  }
 ];
 
 export const adminHeaderByPath: HeaderByPathType[] = [
@@ -53,7 +65,7 @@ export const adminHeaderByPath: HeaderByPathType[] = [
     path: "/admin/users",
   },
   {
-    label: "토큰 지급 기록",
+    label: "MZTK 지급 기록",
     path: "/admin/token-logs",
   },
   {

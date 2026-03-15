@@ -35,8 +35,8 @@ const formatTokenLog = (tx: EtherscanTxItem): TokenLogItem => ({
   id: `사용자 #${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`,
   desc:
     tx.from === "0x0000000000000000000000000000000000000000"
-      ? "토큰 발행(Mint)"
-      : "토큰 전송",
+      ? "MZTK 발행(Mint)"
+      : "MZTK 전송",
   amount: `+${Number(ethers.formatUnits(tx.value, 18)).toLocaleString()} MZTK`,
 });
 

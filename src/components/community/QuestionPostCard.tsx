@@ -8,7 +8,7 @@ interface Props {
 
 const QuestionPostCard = ({ post }: Props) => {
   const navigate = useNavigate();
-  const status = getStatus(post.isSolved, post.answers);
+  const status = getStatus(post.question.isSolved, post.commentCount);
   const statusStyle = statusStyleMap[status];
 
   return (
@@ -28,22 +28,22 @@ const QuestionPostCard = ({ post }: Props) => {
       {/* 제목 + 내용 미리보기 */}
       <div
         className="mb-2"
-        onClick={() => navigate("/community/question/" + post.id)}
+        onClick={() => navigate("/community/question/" + post.postId)}
       >
         <div className="mb-1 text-base font-medium text-gray-900 line-clamp-1">
           {post.title}
         </div>
         <p className="text-sm text-gray-500 font-normal line-clamp-2">
-          {post.description}
+          {post.content}
         </p>
       </div>
 
       {/* 태그 */}
-      <div className="mb-2 flex flex-wrap gap-1">
+      <div className="mb-2 flex flex-wrap gap-1 text-sm text-[#4C6FFF]">
         {post.tags.map((tag) => (
           <span
             key={tag}
-            className="text-sm text-[#4C6FFF]"
+            className="cursor-pointer"
             onClick={() => navigate(`/community/question?tag=${tag}`)}
           >
             #{tag}
@@ -55,28 +55,26 @@ const QuestionPostCard = ({ post }: Props) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            {post.author.profileImage ? (
-              <img
-                src={post.author.profileImage}
-                alt={post.author.nickname}
-                className="h-6 w-6 rounded-full object-cover"
-              />
-            ) : (
-              <div className="h-6 w-6 rounded-full bg-main" />
-            )}
+            <img
+              src={post.writer.profileImage || "/icon/defaultUser.svg"}
+              alt={post.writer.nickname}
+              className={`h-6 w-6 rounded-full ${
+                post.writer.profileImage ? "object-cover" : "bg-main pt-1"
+              }`}
+            />
             <span className="text-sm text-gray-500 font-medium">
-              {post.author.nickname}
+              {post.writer.nickname}
             </span>
           </div>
           <div className="flex items-center gap-1 text-xs font-semibold text-gray-500">
             <img src="/icon/comment.svg" alt="comment" className="w-5 h-5" />
-            <span>{post.answers}</span>
+            <span>{post.commentCount}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-1 text-sm font-normal text-[#ffffff] bg-[#FAB12F] px-2 py-1 rounded-full">
           <img src="/icon/token.svg" alt="token" className="w-5 h-5" />
-          <span>{post.rewardToken}</span>
+          <span>{post.question.reward}</span>
         </div>
       </div>
     </div>

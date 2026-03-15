@@ -18,7 +18,7 @@ const TokenLogsSection = ({
 }: TokenLogsSectionProps) => (
   <div className="bg-white p-6 rounded-2xl border border-gray-100">
     <div className="flex justify-between items-center mb-6">
-      <h4 className="font-bold text-gray-800">토큰 지급 기록</h4>
+      <h4 className="font-bold text-gray-800">MZTK 지급 기록</h4>
       <CommonButton
         label="전체 보기"
         img="/icon/eye.svg"

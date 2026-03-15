@@ -1,0 +1,61 @@
+﻿On branch feat/MOM-273-Market-place-UI-modify
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Changes to be committed:
+	modified:   .gitignore
+	new file:   AGENTS.md
+	modified:   public/data/answers.json
+	modified:   public/data/comments.json
+	modified:   public/data/freePosts.json
+	modified:   public/data/question.json
+	modified:   public/data/questions.json
+	new file:   public/data/replies.json
+	new file:   public/icon/defaultUser.svg
+	new file:   src/components/AGENTS.md
+	modified:   src/components/community/Answer.tsx
+	modified:   src/components/community/Comment.tsx
+	modified:   src/components/community/CommentInput.tsx
+	modified:   src/components/community/FreePostCard.tsx
+	modified:   src/components/community/Question.tsx
+	modified:   src/components/community/QuestionHeader.tsx
+	modified:   src/components/community/QuestionPostCard.tsx
+	deleted:    src/components/community/TokenSelect.tsx
+	new file:   src/components/community/__tests__/ActionList.test.tsx
+	new file:   src/components/community/__tests__/Answer.test.tsx
+	modified:   src/components/community/__tests__/BoardToggle.test.tsx
+	modified:   src/components/community/__tests__/Comment.test.tsx
+	modified:   src/components/community/__tests__/CreatePostButton.test.tsx
+	new file:   src/components/community/__tests__/FreePostCard.test.tsx
+	modified:   src/components/community/__tests__/SearchBar.test.tsx
+	new file:   src/components/community/__tests__/TokenSelect.test.tsx
+	modified:   src/components/community/index.ts
+	renamed:    src/components/community/NewPostContentInput.tsx -> src/components/community/newPost/NewPostContentInput.tsx
+	renamed:    src/components/community/NewPostImageUploader.tsx -> src/components/community/newPost/NewPostImageUploader.tsx
+	new file:   src/components/community/newPost/NewPostTitleInput.tsx
+	renamed:    src/components/community/RewardToken.tsx -> src/components/community/newPost/RewardToken.tsx
+	new file:   src/components/community/newPost/TokenSelect.tsx
+	modified:   src/components/community/postActions/ActionList.tsx
+	modified:   src/components/community/postActions/ConfirmDelete.tsx
+	modified:   src/components/community/postActions/ConfirmReport.tsx
+	new file:   src/components/community/postActions/ConfirmSelect.tsx
+	modified:   src/components/community/postActions/MyPostActions.tsx
+	modified:   src/components/community/postActions/OtherPostActions.tsx
+	modified:   src/components/community/postActions/SharePost.tsx
+	new file:   src/pages/__tests__/CreatePost.test.tsx
+	modified:   src/pages/community/FreeBoard.tsx
+	modified:   src/pages/community/FreePostDetail.tsx
+	modified:   src/pages/community/QuestionBoard.tsx
+	modified:   src/pages/community/QuestionDetail.tsx
+	modified:   src/types/community.ts
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+	both modified:   src/pages/community/CreatePost.tsx
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	git_status.txt
+	git_status_utf8.txt
+
