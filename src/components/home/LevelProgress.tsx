@@ -13,9 +13,12 @@ export const LevelProgress = () => {
     const percentage = Math.min((animatedXp / maxXp) * 100, 100);
     const isLevelUpAvailable = xp >= maxXp;
 
-    const handleLevelUp = () => {
-        if (levelUp()) {
-            alert(`축하합니다! Lv.${level + 1} 달성! 보상으로 MZTK가 지급되었습니다.`);
+    const handleLevelUp = async () => {
+        const result = await levelUp();
+        if (result.success) {
+            alert(result.message);
+        } else {
+            alert(result.message);
         }
     };
 

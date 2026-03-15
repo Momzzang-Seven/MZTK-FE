@@ -43,6 +43,9 @@ interface UserState {
 
     // Actions
     addXp: (amount: number) => void;
+    setLevel: (level: number) => void;
+    setXp: (xp: number) => void;
+    setMaxXp: (maxXp: number) => void;
     checkAttendance: () => Promise<{ success: boolean; message: string; rewardedXp: number }>;
     completeExercise: () => { success: boolean; message: string; rewardedXp: number };
 
@@ -50,7 +53,7 @@ interface UserState {
     startAnalysis: (type: 'exercise' | 'record') => void;
     checkAnalysisCompletion: () => void;
     closeSnackbar: () => void;
-    levelUp: () => boolean;
+    levelUp: () => Promise<{ success: boolean; message: string }>;
 }
 
 export const useUserStore = create<UserState>()(
@@ -90,6 +93,9 @@ export const useUserStore = create<UserState>()(
                 set({ user: null, isAuthenticated: false, accessToken: null, level: 1, xp: 0, attendanceStreak: 0, lastAttendanceDate: null, lastExerciseDate: null }),
 
             addXp: (amount) => set((state) => ({ xp: state.xp + amount })),
+            setLevel: (level) => set({ level }),
+            setXp: (xp) => set({ xp }),
+            setMaxXp: (maxXp) => set({ maxXp }),
 
             checkAttendance: async () => {
                 const { lastAttendanceDate } = get();
@@ -192,18 +198,24 @@ export const useUserStore = create<UserState>()(
                 set((state) => ({ snackbar: { ...state.snackbar, isOpen: false } }));
             },
 
-            levelUp: () => {
-                const { xp, maxXp, level } = get();
-                if (xp >= maxXp) {
-                    const overflowXp = xp - maxXp; // Carry over XP
-                    set({
-                        level: level + 1,
-                        xp: overflowXp,
-                        maxXp: (level + 1) * 100 // Example: Increase requirement
-                    });
-                    return true;
+            levelUp: async () => {
+                try {
+                    const { levelService } = await import("@services/level");
+                    const result = await levelService.levelUp();
+                    
+                    if (result) {
+                        set({
+                            level: result.toLevel,
+                            xp: get().xp - result.spentXp,
+                            // maxXp는 다음 호출(refreshLevel) 등에서 갱신됨
+                        });
+                        return { success: true, message: "레벨업 성공!" };
+                    }
+                    return { success: false, message: "레벨업 실패" };
+                } catch (error: any) {
+                    console.error("레벨업 API 호출 실패:", error);
+                    return { success: false, message: error.response?.data?.message || "서버 통신 실패" };
                 }
-                return false;
             }
         }),
         {
