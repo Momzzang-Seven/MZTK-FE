@@ -1,19 +1,46 @@
+import { api } from "./client";
+import type { 
+  GetMyLocationsResponse, 
+  RegisterLocationRequest, 
+  RegisterLocationResponse,
+  VerifyLocationRequest,
+  VerifyLocationResponse,
+  DeleteLocationResponse
+} from "../types/location";
 
-// Mock Service for Location
+/**
+ * 위치(Location) 관련 API 서비스
+ */
+export const locationService = {
+  /**
+   * 내 위치 목록 조회
+   */
+  async getMyLocations(): Promise<GetMyLocationsResponse> {
+    const response = await api.get("/users/me/locations");
+    return response.data.data;
+  },
 
-export const getUserLocation = async () => {
-    // Mock API Call delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  /**
+   * 위치 등록
+   */
+  async registerLocation(request: RegisterLocationRequest): Promise<RegisterLocationResponse> {
+    const response = await api.post("/users/me/locations/register", request);
+    return response.data.data;
+  },
 
-    // Return null or a mock location
-    // For now, we simulate "not registered" if not found in local storage (handled by zustand persist mainly),
-    // but this API would return the DB state.
-    // We'll return null to let the flow work as "new user" by default unless set.
-    return null;
-};
+  /**
+   * 위치 인증 (GPS 검증 및 XP 지급)
+   */
+  async verifyLocation(request: VerifyLocationRequest): Promise<VerifyLocationResponse> {
+    const response = await api.post("/locations/verify", request);
+    return response.data.data;
+  },
 
-export const registerLocation = async (coords: { lat: number; lng: number; address: string }) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("Mock API: Location Registered", coords);
-    return { success: true, ...coords };
+  /**
+   * 위치 삭제
+   */
+  async deleteLocation(locationId: number): Promise<DeleteLocationResponse> {
+    const response = await api.delete(`/users/me/locations/${locationId}`);
+    return response.data.data;
+  }
 };
