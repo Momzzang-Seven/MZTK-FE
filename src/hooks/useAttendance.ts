@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { attendanceService } from "@/services/attendance";
+import { attendanceService } from "@services/attendance";
 import type { 
   AttendanceStatus, 
   WeeklyAttendance, 
   CheckInResponse 
-} from "@/types/attendance";
+} from "../types/attendance";
 
 /**
  * 출석 관련 기능을 관리하는 커스텀 훅

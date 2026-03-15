@@ -3,7 +3,7 @@ import type {
   CheckInResponse, 
   AttendanceStatus, 
   WeeklyAttendance 
-} from "@/types/attendance";
+} from "../types/attendance";
 
 /**
  * 출석 관련 API 서비스
