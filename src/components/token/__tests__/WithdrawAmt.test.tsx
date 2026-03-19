@@ -57,11 +57,11 @@ describe('WithdrawAmt', () => {
     expect(input.value).toBe('500');
   });
 
-  it('MZT 단위가 표시된다', () => {
+  it('MZTK단위가 표시된다', () => {
     render(<WithdrawAmt amt={1000} value="" onChange={mockOnChange} />);
     
-    const mztLabels = screen.getAllByText('MZT');
-    expect(mztLabels.length).toBeGreaterThan(0);
+    const mztkLabels = screen.getAllByText('MZTK');
+    expect(mztkLabels.length).toBeGreaterThan(0);
   });
 
   it('퍼센트 버튼들이 렌더링된다', () => {

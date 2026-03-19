@@ -42,7 +42,7 @@ const LeaderboardItem = ({ user, isMe = false }: LeaderboardItemProps) => {
             ${isMe ? "text-white/90" : "text-gray-600"}
           `}
         >
-          레벨 {user.level} / {user.xp}EXP
+          레벨 {user.level} / {user.xp}XP
         </span>
       </div>
     </div>

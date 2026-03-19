@@ -26,7 +26,7 @@ export const WithdrawAmt = ({ amt, value, onChange }: WithdrawAmtProps) => {
       <div className="flex justify-between w-full">
         <div className="text-grey-deep label">출금 금액</div>
         <div className="text-xs text-grey-main">
-          잔액: {amt.toLocaleString()} MZTK
+          잔액: {amt.toLocaleString()} MZT
         </div>
       </div>
 
