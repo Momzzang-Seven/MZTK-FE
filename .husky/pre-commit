@@ -1,4 +1,5 @@
 echo "Running pre-commit hooks..."
 pnpm lint-staged
+pnpm build
 pnpm test:ci
 echo "Passed"
