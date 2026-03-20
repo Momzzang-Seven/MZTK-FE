@@ -4,8 +4,19 @@ import { CommonButton } from "@components/common";
 import { SimpleHeader } from "@components/layout";
 // import { calculateEndTime } from "@utils";
 
+interface MockData {
+    id: string;
+    title: string;
+    trainerName: string;
+    price: number;
+    capacity: number;
+    duration: string;
+    operatingDays: string[];
+    operatingTimes: Record<string, string[]>;
+}
+
 // 실제 앱에서는 API로 호출하거나 상태관리 도구를 사용하므로 여기선 임시로 재정의합니다.
-const MOCK_DATA: Record<string, any> = {
+const MOCK_DATA: Record<string, MockData> = {
     "1": {
         id: "1",
         title: "1:1 집중 웨이트 트레이닝",
@@ -220,7 +231,7 @@ const MarketPurchase = () => {
 
             alert(`🎉 예약이 확정되었습니다!\n\n${data.title}\n${selectedDateObj.full} (${selectedDateObj.day}요일) ${selectedTime}\n요청사항: ${requestMsg || "없음"}\n(서버 전송 시간 포맷: ${reservationDateTime})`);
             navigate("/market/reservations");
-        } catch (error) {
+        } catch {
             // 예약/결제 실패 시 실패 안내 페이지로 리다이렉트
             navigate("/market/purchase-fail");
         }

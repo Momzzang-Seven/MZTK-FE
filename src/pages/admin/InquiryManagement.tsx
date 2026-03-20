@@ -41,7 +41,7 @@ const InquiryManagement = () => {
                     <select
                         className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-4 pl-4 pr-10 rounded-xl focus:outline-none focus:border-main text-sm font-bold min-w-[150px] cursor-pointer"
                         value={inquiryFilter}
-                        onChange={(e) => setInquiryFilter(e.target.value as any)}
+                        onChange={(e) => setInquiryFilter(e.target.value as Parameters<typeof setInquiryFilter>[0])}
                     >
                         <option value="ALL">전체 사용자</option>
                         <option value="MEMBER">회원 문의</option>

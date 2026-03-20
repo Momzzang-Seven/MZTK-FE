@@ -6,7 +6,7 @@ import { QuestionHeader, Question, Answer } from "@components/community";
 
 const QuestionDetail = () => {
   const navigate = useNavigate();
-  let params = useParams();
+  const params = useParams();
   const [question, setQuestion] = useState<QuestionPost | null>(null);
   const [answers, setAnswers] = useState<AnswerPost[]>([]);
 

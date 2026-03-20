@@ -52,9 +52,10 @@ const CreateTicket = () => {
 
             alert("클래스가 성공적으로 등록되었습니다!");
             window.location.href = "/trainer";
-        } catch (error: any) {
+        } catch (error: unknown) {
             // 백엔드에서 전송한 실패 사유(message) 및 에러 코드를 에러 모달에 반영합니다.
-            const backendErrorMessage = error?.response?.data?.message || error?.message || "서버 요청 중 오류가 발생했습니다. 다시 시도해주세요.";
+            const err = error as { response?: { data?: { message?: string } }, message?: string };
+            const backendErrorMessage = err?.response?.data?.message || err?.message || "서버 요청 중 오류가 발생했습니다. 다시 시도해주세요.";
             setErrorMessage(backendErrorMessage);
             setShowErrorModal(true);
         }

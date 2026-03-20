@@ -1,4 +1,27 @@
-export const DUMMY_DETAILS: Record<string, any> = {
+export interface DummyDetail {
+    id: string;
+    title: string;
+    category: string;
+    trainerName: string;
+    price: number;
+    rating: string;
+    reviewCount: number;
+    capacity: number;
+    images: string[];
+    tags: string[];
+    description: string;
+    features: string[];
+    duration: string;
+    supplies: string;
+    operatingDays: string[];
+    operatingTimes: Record<string, string[]>;
+    location: string;
+    address: string;
+    phone: string;
+    sns: { insta: string };
+}
+
+export const DUMMY_DETAILS: Record<string, DummyDetail> = {
     "1": {
         id: "1",
         title: "1:1 집중 웨이트 트레이닝",

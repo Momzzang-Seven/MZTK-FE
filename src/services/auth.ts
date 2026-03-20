@@ -15,7 +15,7 @@ export interface SignupRequest {
   nickname: string;
 }
 
-export interface ReactivateRequest extends LoginRequest {}
+export type ReactivateRequest = LoginRequest;
 
 export interface StepUpRequest {
   password?: string;

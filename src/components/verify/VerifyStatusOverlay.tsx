@@ -1,7 +1,7 @@
 import { VERIFY_TEXT } from "@constant/location";
 
 interface VerifyStatusOverlayProps {
-    gymLocation: any; // Type according to your store definition
+    gymLocation: { lat: number; lng: number } | null; // Type according to your store definition
     distance: number | null;
     isNear: boolean;
 }

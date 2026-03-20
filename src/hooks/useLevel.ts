@@ -49,9 +49,10 @@ export const useLevel = () => {
       // 레벨업 성공 후 정보 갱신
       await fetchLevelInfo();
       return result;
-    } catch (err: any) {
+    } catch (err) {
       console.error("레벨업 실패:", err);
-      const message = err.response?.data?.message || "레벨업에 실패했습니다.";
+      const errorResponse = err as { response?: { data?: { message?: string } } };
+      const message = errorResponse.response?.data?.message || "레벨업에 실패했습니다.";
       setError(message);
       return null;
     } finally {

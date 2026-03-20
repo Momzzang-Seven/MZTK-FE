@@ -8,10 +8,10 @@ vi.mock("@utils", () => ({
 }));
 
 vi.mock("@components/community", () => ({
-  CommentItem: ({ comment }: any) => (
+  CommentItem: ({ comment }: { comment: { content: string } }) => (
     <div data-testid="mock-comment-item">{comment.content}</div>
   ),
-  CommentInput: ({ comment, setComment, handleCommentSubmit }: any) => (
+  CommentInput: ({ comment, setComment, handleCommentSubmit }: { comment: string, setComment: (c: string) => void, handleCommentSubmit: () => void }) => (
     <div data-testid="mock-comment-input">
       <input
         aria-label="comment input"
@@ -40,14 +40,14 @@ describe("Answer 컴포넌트", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (formatTimeAgo as any).mockReturnValue("방금 전");
+    (formatTimeAgo as import("vitest").Mock).mockReturnValue("방금 전");
     // 3. fetch는 vi.spyOn(global, "fetch")로 mock 처리
     vi.spyOn(global, "fetch");
     vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   it("기본 정보(작성자, 본문, 댓글 수, 시간)가 올바르게 렌더링된다", () => {
-    render(<Answer answer={mockAnswer as any} isSelectable={false} />);
+    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} isSelectable={false} />);
 
     expect(screen.getByText("작성자닉네임")).toBeInTheDocument();
     expect(screen.getByText("이것은 답변 내용입니다.")).toBeInTheDocument();
@@ -57,13 +57,13 @@ describe("Answer 컴포넌트", () => {
 
   it("isAccepted가 true일 때 '✓ 채택된 답변'이 표시된다", () => {
     const acceptedAnswer = { ...mockAnswer, isAccepted: true };
-    render(<Answer answer={acceptedAnswer as any} isSelectable={false} />);
+    render(<Answer answer={acceptedAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} isSelectable={false} />);
 
     expect(screen.getByText("✓ 채택된 답변")).toBeInTheDocument();
   });
 
   it("profileImage가 없을 때 기본 이미지를 렌더링한다", () => {
-    render(<Answer answer={mockAnswer as any} isSelectable={false} />);
+    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} isSelectable={false} />);
     expect(screen.getByAltText("작성자닉네임")).toHaveAttribute(
       "src",
       "/icon/defaultUser.svg"
@@ -75,7 +75,7 @@ describe("Answer 컴포넌트", () => {
       ...mockAnswer,
       writer: { ...mockAnswer.writer, profileImage: "/images/profile.png" },
     };
-    render(<Answer answer={answerWithProfile as any} isSelectable={false} />);
+    render(<Answer answer={answerWithProfile as unknown as Parameters<typeof Answer>[0]["answer"]} isSelectable={false} />);
 
     expect(screen.getByAltText("작성자닉네임")).toHaveAttribute(
       "src",
@@ -84,11 +84,11 @@ describe("Answer 컴포넌트", () => {
   });
 
   it("댓글 아이콘 클릭 시 댓글 영역이 열리고 닫힌다", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as import("vitest").Mock).mockResolvedValueOnce({
       json: async () => [{ commentId: 1, content: "댓글 1", replyCount: 0 }],
     });
 
-    render(<Answer answer={mockAnswer as any} isSelectable={false} />);
+    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} isSelectable={false} />);
 
     expect(screen.queryByTestId("mock-comment-input")).not.toBeInTheDocument();
 
@@ -106,11 +106,11 @@ describe("Answer 컴포넌트", () => {
   });
 
   it("댓글이 없을 때 '댓글이 없습니다.' 문구를 표시한다", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as import("vitest").Mock).mockResolvedValueOnce({
       json: async () => [],
     });
 
-    render(<Answer answer={mockAnswer as any} isSelectable={false} />);
+    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} isSelectable={false} />);
 
     fireEvent.click(screen.getByAltText("comment"));
 
@@ -120,7 +120,7 @@ describe("Answer 컴포넌트", () => {
   });
 
   it("replyCount가 0보다 크면 답글 펼쳐보기 버튼이 보이고, 클릭 시 답글을 로드하여 렌더링한다", async () => {
-    (global.fetch as any)
+    (global.fetch as import("vitest").Mock)
       .mockResolvedValueOnce({
         json: async () => [{ commentId: 1, content: "댓글 1", replyCount: 2 }],
       })
@@ -128,7 +128,7 @@ describe("Answer 컴포넌트", () => {
         json: async () => [{ commentId: 2, content: "답글 1", replyCount: 0 }],
       });
 
-    render(<Answer answer={mockAnswer as any} isSelectable={false} />);
+    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} isSelectable={false} />);
 
     fireEvent.click(screen.getByAltText("comment"));
 
@@ -145,11 +145,11 @@ describe("Answer 컴포넌트", () => {
   });
 
   it("댓글 입력 후 제출하면 console.log가 호출되고 입력창이 초기화된다", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as import("vitest").Mock).mockResolvedValueOnce({
       json: async () => [],
     });
 
-    render(<Answer answer={mockAnswer as any} isSelectable={false} />);
+    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} isSelectable={false} />);
 
     fireEvent.click(screen.getByAltText("comment"));
 
