@@ -9,7 +9,7 @@ vi.mock("react-router-dom", () => ({
 }));
 
 vi.mock("@components/common", () => ({
-  CommonModal: ({ children, title, onConfirmClick }: any) => (
+  CommonModal: ({ children, title, onConfirmClick }: { children: React.ReactNode; title: string; onConfirmClick: () => void }) => (
     <div data-testid="common-modal">
       <h2>{title}</h2>
       <button onClick={onConfirmClick}>confirm</button>
@@ -19,26 +19,26 @@ vi.mock("@components/common", () => ({
 }));
 
 vi.mock("@components/layout", () => ({
-  SimpleHeader: ({ button }: any) => (
+  SimpleHeader: ({ button }: { button: React.ReactNode }) => (
     <header data-testid="simple-header">{button}</header>
   ),
 }));
 
 vi.mock("@components/community", () => ({
   NewPostImageUploader: () => <div data-testid="new-post-image-uploader" />,
-  NewPostContentInput: ({ onChange }: any) => (
+  NewPostContentInput: ({ onChange }: { onChange: (v: string) => void }) => (
     <input
       data-testid="new-post-content-input"
       onChange={(e) => onChange(e.target.value)}
       placeholder="내용 입력"
     />
   ),
-  RewardToken: ({ onClick }: any) => (
+  RewardToken: ({ onClick }: { onClick: () => void }) => (
     <button data-testid="reward-token" onClick={onClick}>
       RewardToken
     </button>
   ),
-  TokenSelect: ({ setReward }: any) => (
+  TokenSelect: ({ setReward }: { setReward: (v: number) => void }) => (
     <div data-testid="token-select">
       <button onClick={() => setReward(10)}>Set Reward (10)</button>
     </div>

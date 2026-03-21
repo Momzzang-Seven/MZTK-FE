@@ -108,6 +108,7 @@ describe('chartConfig utils', () => {
     it('tooltip label 콜백이 올바른 형식을 반환한다', () => {
       const options = getChartOptions();
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockContext: any = {
         label: '부적절한 내용',
         parsed: 30,

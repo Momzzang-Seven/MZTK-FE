@@ -122,8 +122,9 @@ export const useUserStore = create<UserState>()(
                         };
                     }
                     return { success: false, message: result.message, rewardedXp: 0 };
-                } catch (error: any) {
-                    console.error("출석 API 호출 실패:", error);
+                } catch (error: unknown) {
+                    const err = error as { response?: { data?: { message?: string } }, message?: string };
+                    console.error("출석 API 호출 실패:", err);
                     return { success: false, message: "서버 통신 실패", rewardedXp: 0 };
                 }
             },
@@ -212,9 +213,10 @@ export const useUserStore = create<UserState>()(
                         return { success: true, message: "레벨업 성공!" };
                     }
                     return { success: false, message: "레벨업 실패" };
-                } catch (error: any) {
-                    console.error("레벨업 API 호출 실패:", error);
-                    return { success: false, message: error.response?.data?.message || "서버 통신 실패" };
+                } catch (error: unknown) {
+                    const err = error as { response?: { data?: { message?: string } }, message?: string };
+                    console.error("레벨업 API 호출 실패:", err);
+                    return { success: false, message: err.response?.data?.message || "서버 통신 실패" };
                 }
             }
         }),

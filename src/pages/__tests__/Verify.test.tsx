@@ -12,7 +12,7 @@ const mockSetCoor = vi.fn();
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
     return {
-        ...actual as any,
+        ...(actual as object),
         useNavigate: () => mockNavigate,
     };
 });
@@ -34,6 +34,7 @@ vi.mock('@store/userStore', () => ({
 // Geolocation 모킹
 const mockWatchPosition = vi.fn();
 const mockClearWatch = vi.fn();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global.navigator as any).geolocation = {
     watchPosition: mockWatchPosition,
     clearWatch: mockClearWatch,

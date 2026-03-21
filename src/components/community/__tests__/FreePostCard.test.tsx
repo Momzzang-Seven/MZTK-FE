@@ -45,7 +45,7 @@ describe("FreePostCard", () => {
   describe("기본 렌더링", () => {
     it("작성자 닉네임, 게시글 내용, 댓글 수, 작성 시간이 정상적으로 렌더링된다", () => {
       // any 타입을 사용하여 타입 에러 방지 (실제 FreePost 타입의 필수 속성이 다를 수 있으므로)
-      render(<FreePostCard post={defaultPost as any} />);
+      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
 
       expect(screen.getByText("테스트유저")).toBeInTheDocument();
       expect(screen.getByText("테스트 게시글 내용입니다.")).toBeInTheDocument();
@@ -56,7 +56,7 @@ describe("FreePostCard", () => {
 
   describe("프로필 이미지 분기", () => {
     it("profileImage가 있을 때 해당 이미지를 렌더링한다", () => {
-      render(<FreePostCard post={defaultPost as any} />);
+      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
       const profileImage = screen.getByAltText("테스트유저");
 
       expect(profileImage).toHaveAttribute(
@@ -70,7 +70,7 @@ describe("FreePostCard", () => {
         ...defaultPost,
         writer: { ...defaultPost.writer, profileImage: null },
       };
-      render(<FreePostCard post={postWithoutProfile as any} />);
+      render(<FreePostCard post={postWithoutProfile as unknown as Parameters<typeof FreePostCard>[0]["post"]} />);
       const profileImage = screen.getByAltText("테스트유저");
 
       expect(profileImage).toHaveAttribute("src", "/icon/defaultUser.svg");
@@ -79,7 +79,7 @@ describe("FreePostCard", () => {
 
   describe("게시물 이미지 분기", () => {
     it("imageUrls가 있을 때 이미지를 렌더링한다", () => {
-      render(<FreePostCard post={defaultPost as any} />);
+      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
       const postImage = screen.getByAltText("post");
 
       expect(postImage).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe("FreePostCard", () => {
 
     it("imageUrls가 없을 때 이미지를 렌더링하지 않는다", () => {
       const postWithoutImage = { ...defaultPost, imageUrls: null };
-      render(<FreePostCard post={postWithoutImage as any} />);
+      render(<FreePostCard post={postWithoutImage as unknown as Parameters<typeof FreePostCard>[0]["post"]} />);
 
       expect(screen.queryByAltText("post")).not.toBeInTheDocument();
     });
@@ -96,7 +96,7 @@ describe("FreePostCard", () => {
 
   describe("좋아요 동작", () => {
     it("기본적으로 isLiked 상태에 따라 빈 하트 아이콘이 렌더링된다", () => {
-      render(<FreePostCard post={defaultPost as any} />);
+      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
       const likeIcon = screen.getByAltText("like");
 
       expect(likeIcon).toHaveAttribute("src", "/icon/like.svg");
@@ -105,14 +105,14 @@ describe("FreePostCard", () => {
 
     it("isLiked가 true인 경우 채워진 하트 아이콘이 렌더링된다", () => {
       const likedPost = { ...defaultPost, isLiked: true };
-      render(<FreePostCard post={likedPost as any} />);
+      render(<FreePostCard post={likedPost as unknown as Parameters<typeof FreePostCard>[0]["post"]} />);
       const likeIcon = screen.getByAltText("like");
 
       expect(likeIcon).toHaveAttribute("src", "/icon/likeActive.svg");
     });
 
     it("좋아요를 클릭하면 아이콘이 변경되고 likeCount가 증가/감소한다", () => {
-      render(<FreePostCard post={defaultPost as any} />);
+      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
 
       const likeIcon = screen.getByAltText("like");
 
@@ -132,7 +132,7 @@ describe("FreePostCard", () => {
 
   describe("댓글 클릭", () => {
     it("댓글 영역 클릭 시 상세 페이지로 이동한다", () => {
-      render(<FreePostCard post={defaultPost as any} />);
+      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
 
       const commentIcon = screen.getByAltText("comment");
       fireEvent.click(commentIcon);
@@ -143,14 +143,14 @@ describe("FreePostCard", () => {
 
   describe("태그 클릭", () => {
     it("태그가 정상적으로 렌더링된다", () => {
-      render(<FreePostCard post={defaultPost as any} />);
+      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
 
       expect(screen.getByText("#react")).toBeInTheDocument();
       expect(screen.getByText("#frontend")).toBeInTheDocument();
     });
 
     it("태그 클릭 시 해당 태그 검색 결과 페이지로 이동한다", () => {
-      render(<FreePostCard post={defaultPost as any} />);
+      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
 
       const reactTag = screen.getByText("#react");
       fireEvent.click(reactTag);

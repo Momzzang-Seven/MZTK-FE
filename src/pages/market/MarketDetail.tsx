@@ -25,7 +25,7 @@ const MarketDetail = () => {
                 {/* 인디케이터 */}
                 {data.images?.length > 1 && (
                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                        {data.images.map((_: any, idx: number) => (
+                        {data.images.map((_: string, idx: number) => (
                             <div key={idx} className="w-1.5 h-1.5 rounded-full bg-white/80 shadow-sm"></div>
                         ))}
                     </div>
@@ -97,7 +97,7 @@ const MarketDetail = () => {
                 ].map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
+                        onClick={() => setActiveTab(tab.id as "intro" | "location" | "review")}
                         className={`flex-1 py-3 text-[15px] font-bold transition-colors ${activeTab === tab.id ? "text-gray-900" : "text-gray-400"}`}
                     >
                         {tab.label}

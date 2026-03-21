@@ -51,6 +51,7 @@ const TrainerStoreRegister = () => {
     useEffect(() => {
         if (isMapLoaded && address && mapRef.current) {
             try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 window.naver.maps.Service.geocode({ query: address }, (status: any, response: any) => {
                     if (status !== window.naver.maps.Service.Status.OK) return;
 
@@ -65,13 +66,13 @@ const TrainerStoreRegister = () => {
                         });
                     }
                 });
-            } catch (e) {
+            } catch {
                 console.warn("Geocoding failed, check client ID");
             }
         }
     }, [address, isMapLoaded]);
 
-    const handleCompletePostcode = (data: any) => {
+    const handleCompletePostcode = (data: { address: string; addressType: string; bname: string; buildingName: string; }) => {
         let fullAddress = data.address;
         let extraAddress = '';
 

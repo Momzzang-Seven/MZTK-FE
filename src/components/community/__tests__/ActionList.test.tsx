@@ -27,7 +27,7 @@ vi.mock("@components/community", () => ({
     handleEditClick,
     handleDeleteClick,
     handleCancelClick,
-  }: any) => (
+  }: Record<string, () => void>) => (
     <div data-testid="my-post-actions">
       <button onClick={handleEditClick}>수정</button>
       <button onClick={handleDeleteClick}>삭제</button>
@@ -38,32 +38,32 @@ vi.mock("@components/community", () => ({
     handleSelectClick,
     handleReportClick,
     handleCancelClick,
-  }: any) => (
+  }: Record<string, () => void>) => (
     <div data-testid="other-post-actions">
       <button onClick={handleSelectClick}>채택</button>
       <button onClick={handleReportClick}>신고</button>
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
-  ConfirmSelect: ({ handleSelectClick, handleCancelClick }: any) => (
+  ConfirmSelect: ({ handleSelectClick, handleCancelClick }: Record<string, () => void>) => (
     <div data-testid="confirm-select">
       <button onClick={handleSelectClick}>채택 확인</button>
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
-  ConfirmDelete: ({ handleConfirmClick, handleCancelClick }: any) => (
+  ConfirmDelete: ({ handleConfirmClick, handleCancelClick }: Record<string, () => void>) => (
     <div data-testid="confirm-delete">
       <button onClick={handleConfirmClick}>삭제 확인</button>
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
-  ConfirmReport: ({ handleReportClick, handleCancelClick }: any) => (
+  ConfirmReport: ({ handleReportClick, handleCancelClick }: Record<string, () => void>) => (
     <div data-testid="confirm-report">
       <button onClick={handleReportClick}>신고 확인</button>
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
-  EditComment: ({ handleEditClick, handleCancelClick }: any) => (
+  EditComment: ({ handleEditClick, handleCancelClick }: Record<string, () => void>) => (
     <div data-testid="edit-comment">
       <button onClick={handleEditClick}>수정 완료</button>
       <button onClick={handleCancelClick}>취소</button>
@@ -72,6 +72,7 @@ vi.mock("@components/community", () => ({
 }));
 
 describe("ActionList 컴포넌트", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockGetItem: any;
 
   beforeAll(() => {
@@ -86,7 +87,7 @@ describe("ActionList 컴포넌트", () => {
     mockGetItem.mockRestore();
   });
 
-  const setup = (props: any = {}) => {
+  const setup = (props: Record<string, unknown> = {}) => {
     return render(<ActionList type="free" id={1} authorId={100} {...props} />);
   };
 

@@ -11,7 +11,7 @@ const mockRegisterGymLocation = vi.fn().mockResolvedValue(undefined);
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
     return {
-        ...actual as any,
+        ...(actual as object),
         useNavigate: () => mockNavigate,
         useLocation: () => ({ state: { from: 'verify' } }),
     };
@@ -25,6 +25,7 @@ vi.mock('@store/userStore', () => ({
 
 // Geolocation 모킹
 const mockGetCurrentPosition = vi.fn();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global.navigator as any).geolocation = {
     getCurrentPosition: mockGetCurrentPosition,
 };

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 // 제네릭 타입을 사용하여 다양한 모달 데이터 타입을 지원하도록 함
-export const useModal = <T = any, S = any>() => {
+export const useModal = <T = unknown, S = unknown>() => {
     const [isOpen, setIsOpen] = useState(false);
     const [modalData, setModalData] = useState<{
         type: T | null;

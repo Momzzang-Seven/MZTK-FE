@@ -29,10 +29,10 @@ describe('RestTkn', () => {
     expect(screen.getByText('사용 가능한 잔액')).toBeInTheDocument();
   });
 
-  it('"MZT" 단위가 표시된다', () => {
+  it('"MZTK" 단위가 표시된다', () => {
     render(<RestTkn amt={1000} />);
     
-    expect(screen.getByText('MZT')).toBeInTheDocument();
+    expect(screen.getByText('MZTK')).toBeInTheDocument();
   });
 
   it('토큰 아이콘이 렌더링된다', () => {

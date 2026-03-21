@@ -43,8 +43,9 @@ const EditTicket = () => {
             // [TODO] 실제 서버 API 연동 구현
             alert("클래스가 성공적으로 수정되었습니다!");
             window.location.href = "/trainer";
-        } catch (error: any) {
-            const backendErrorMessage = error?.response?.data?.message || error?.message || "서버 요청 중 오류가 발생했습니다. 다시 시도해주세요.";
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } }, message?: string };
+            const backendErrorMessage = err?.response?.data?.message || err?.message || "서버 요청 중 오류가 발생했습니다. 다시 시도해주세요.";
             setErrorMessage(backendErrorMessage);
             setShowErrorModal(true);
         }
