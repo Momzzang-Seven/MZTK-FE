@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Verify from '../Verify';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -66,7 +66,9 @@ describe('Verify Page', () => {
         const verifyButton = screen.getByRole('button', { name: VERIFY_TEXT.BTN_VERIFY });
         fireEvent.click(verifyButton);
 
-        expect(mockCompleteExercise).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(mockCompleteExercise).toHaveBeenCalled();
+        });
 
         // 성공 오버레이 확인 (VerifySuccessOverlay 내부의 텍스트가 있을 것임)
         // 여기서는 컴포넌트가 렌더링되었는지만 확인하는 식으로 작성
