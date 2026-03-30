@@ -1,9 +1,10 @@
 import { useUserStore } from "@store";
 
 export const AttendanceBanner = () => {
-    const { attendanceStreak } = useUserStore();
+    const { attendanceStreak, weeklyAttendance } = useUserStore();
     const maxStreak = 7;
-    const remainingDays = maxStreak - attendanceStreak;
+    const attendedCount = weeklyAttendance?.attendedCount ?? attendanceStreak;
+    const remainingDays = maxStreak - attendedCount;
 
     return (
         <div className="w-full bg-[#FFC107] rounded-[20px] p-5 text-white shadow-md relative overflow-hidden flex items-center justify-between">
@@ -27,12 +28,12 @@ export const AttendanceBanner = () => {
                     {[...Array(maxStreak)].map((_, i) => (
                         <div
                             key={i}
-                            className={`w-6 h-6 rounded-full flex items-center justify-center border-2 border-white/40 ${i < attendanceStreak
+                            className={`w-6 h-6 rounded-full flex items-center justify-center border-2 border-white/40 ${i < attendedCount
                                 ? "bg-white text-[#FFC107]"
                                 : "bg-transparent text-white"
                                 }`}
                         >
-                            {i < attendanceStreak && (
+                            {i < attendedCount && (
                                 <img src="/icon/check.svg" alt="checked" width={14} height={14} />
                             )}
                         </div>
@@ -40,7 +41,7 @@ export const AttendanceBanner = () => {
                 </div>
 
                 <p className="text-[12px] font-bold opacity-90">
-                    {attendanceStreak < 7
+                    {attendedCount < 7
                         ? `${remainingDays}일만 더 인증하면 100EXP 추가 보상!`
                         : "이번 주 목표 달성 완료! 🎉"}
                 </p>

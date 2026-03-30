@@ -30,7 +30,7 @@ export const useLevel = () => {
       // 유저 스토어 동기화
       setLevel(data.level);
       setXp(data.availableXp);
-      setMaxXp(data.availableXp + data.requiredXpForNext);
+      setMaxXp(data.requiredXpForNext); // Fix: use total requirement directly
     } catch (err) {
       console.error("레벨 정보 조회 실패:", err);
       setError("레벨 정보를 불러오는 데 실패했습니다.");

@@ -14,11 +14,15 @@ export const LevelProgress = () => {
     const isLevelUpAvailable = xp >= maxXp;
 
     const handleLevelUp = async () => {
-        const result = await levelUp();
-        if (result.success) {
-            alert(result.message);
-        } else {
-            alert(result.message);
+        try {
+            const result = await levelUp();
+            if (result.success) {
+                alert(result.message);
+            } else {
+                alert(result.message || "레벨업 중 오류가 발생했습니다.");
+            }
+        } catch (e) {
+            alert("서버와 통신하는 중 문제가 발생했습니다.");
         }
     };
 
