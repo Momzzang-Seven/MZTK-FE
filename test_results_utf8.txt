@@ -1,0 +1,7 @@
+﻿
+> mztk-fe@0.0.0 test C:\Users\hero9\projects\MZTK_FE
+> vitest
+
+
+[1m[44m DEV [49m[22m [34mv4.0.18 [39m[90mC:/Users/hero9/projects/MZTK_FE[39m
+

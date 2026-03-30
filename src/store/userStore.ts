@@ -222,9 +222,10 @@ export const useUserStore = create<UserState>()(
                         };
                     }
                     return { success: false, message: "레벨업 실패: 결과 데이터를 확인할 수 없습니다." };
-                } catch (error: any) {
+                } catch (error: unknown) {
                     console.error("레벨업 API 호출 실패:", error);
-                    return { success: false, message: error.response?.data?.message || "서버 통신 실패" };
+                    const err = error as { response?: { data?: { message?: string } } };
+                    return { success: false, message: err.response?.data?.message || "서버 통신 실패" };
                 }
             },
 

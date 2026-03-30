@@ -91,7 +91,7 @@ const Verify = () => {
         } else {
           setFailModalOpen(true);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error("위치 인증 실패:", e);
         setFailModalOpen(true);
       } finally {

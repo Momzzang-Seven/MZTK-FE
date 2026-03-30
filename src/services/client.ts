@@ -21,8 +21,8 @@ const attachInterceptors = (instance: AxiosInstance) => {
       const status = error.response?.status;
 
       // 401 Unauthorized
-      if (status === 401 && !(error.config as any)._retry) {
-        const originalRequest = error.config as any;
+      const originalRequest = error.config as { _retry?: boolean; url?: string; headers: Record<string, string> };
+      if (status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
         // Do not retry if the request was already a login or reissue attempt
