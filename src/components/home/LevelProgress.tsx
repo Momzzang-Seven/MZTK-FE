@@ -70,7 +70,7 @@ export const LevelProgress = () => {
                     <>
                         <div className="text-gray-400 text-xs font-medium mb-1">현재 레벨</div>
                         <div className="text-[#FAB12F] text-5xl font-bold font-gmarket">Lv.{level}</div>
-                        <div className="text-gray-300 text-[11px] mt-2 font-medium">{xp} / {maxXp} XP</div>
+                        <div className="text-gray-300 text-[11px] mt-2 font-medium">{xp} / {maxXp} EXP</div>
                     </>
                 )}
             </div>

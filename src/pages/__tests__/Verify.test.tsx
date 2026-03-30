@@ -26,9 +26,15 @@ vi.mock('@store', () => ({
 
 vi.mock('@store/userStore', () => ({
     useUserStore: () => ({
-        gymLocation: { lat: 37.5665, lng: 126.9780 }, // 같은 위치로 설정 (Near 상태)
+        gymLocation: { locationId: 1, lat: 37.5665, lng: 126.9780 }, // locationId 추가
         completeExercise: mockCompleteExercise,
     }),
+}));
+
+vi.mock('@services/location', () => ({
+    locationService: {
+        verifyLocation: vi.fn().mockResolvedValue({ isVerified: true, grantedXp: 100 }),
+    },
 }));
 
 // Geolocation 모킹
