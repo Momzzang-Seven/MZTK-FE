@@ -20,9 +20,31 @@ const attachInterceptors = (instance: AxiosInstance) => {
     (error) => {
       const status = error.response?.status;
 
-      // 401
-      if (status === 401) {
-        authModalState.setUnauthorized(true);
+      // 401 Unauthorized
+      const originalRequest = error.config as { _retry?: boolean; url?: string; headers: Record<string, string> };
+      if (status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        // Do not retry if the request was already a login or reissue attempt
+        if (originalRequest.url?.includes('/auth/reissue') || originalRequest.url?.includes('/auth/login')) {
+          authModalState.setUnauthorized(true);
+          useUserStore.getState().clearUser();
+          return Promise.reject(error);
+        }
+
+        // Attempt to reissue token
+        return axios.post(`${BASE}/auth/reissue`, {}, { withCredentials: true })
+          .then((res) => {
+             const data = res.data.data;
+             useUserStore.getState().setAccessToken(data.accessToken);
+             originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+             return instance(originalRequest);
+          })
+          .catch((err) => {
+             authModalState.setUnauthorized(true);
+             useUserStore.getState().clearUser();
+             return Promise.reject(err);
+          });
       }
 
       // 404

@@ -9,15 +9,15 @@ interface AuthActionButtonsProps {
 }
 
 export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) => {
-    const { checkAttendance, lastAttendanceDate, lastExerciseDate } = useUserStore();
+    const { checkAttendance, hasAttendedToday, lastExerciseDate } = useUserStore();
     const [isAttended, setIsAttended] = useState(false);
     const [isExerciseDone, setIsExerciseDone] = useState(false);
 
     useEffect(() => {
+        setIsAttended(hasAttendedToday);
         const today = new Date().toISOString().split("T")[0];
-        setIsAttended(lastAttendanceDate === today);
         setIsExerciseDone(lastExerciseDate === today);
-    }, [lastAttendanceDate, lastExerciseDate]);
+    }, [hasAttendedToday, lastExerciseDate]);
 
     const handleAttendance = async () => {
         const result = await checkAttendance();

@@ -1,0 +1,324 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/hero9/projects/MZTK_FE[39m
+
+ [32m✓[39m src/components/common/__tests__/CommonButton.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 3369[2mms[22m[39m
+     [33m[2m✓[22m[39m 기본 버튼이 올바르게 렌더링된다 [33m 1683[2mms[22m[39m
+     [33m[2m✓[22m[39m 클릭 이벤트가 정상적으로 동작한다 [33m 434[2mms[22m[39m
+     [33m[2m✓[22m[39m 커스텀 스타일이 적용된다 [33m 368[2mms[22m[39m
+     [33m[2m✓[22m[39m 아이콘과 함께 렌더링된다 [33m 355[2mms[22m[39m
+node.exe : Not implemented
+: Window's alert() method
+위치 C:\nvm4w\nodejs\npx.ps1
+:29 문자:3
++   & $NODE_EXE $NPX_CLI_J
+S $args
++   ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (N  
+  ot implemented: Windo   
+ w's alert() method:St    
+ring) [], RemoteExcep    t
+ion
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+ [32m✓[39m src/components/common/__tests__/CommonModal.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 3730[2mms[22m[39m
+     [33m[2m✓[22m[39m 확인 버튼 클릭 시 onConfirmClick이 호출된다 [33m 2178[2mms[22m[39m
+     [33m[2m✓[22m[39m 취소 버튼 클릭 시 onCancelClick이 호출된다 [33m 623[2mms[22m[39m
+     [33m[2m✓[22m[39m cancelLabel이 없으면 취소 버튼이 렌더링되지 않는다 [33m 317[2mms[22m[39m
+ [31m❯[39m src/components/home/__tests__/LevelProgress.test.tsx [2m([22m[2m10 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 3730[2mms[22m[39m
+     [32m✓[39m 현재 레벨이 표시된다[32m 250[2mms[22m[39m
+[31m     [31m×[31m XP 진행도가 표시된다[39m[32m 110[2mms[22m[39m
+     [32m✓[39m 현재 레벨 텍스트가 표시된다[32m 25[2mms[22m[39m
+     [33m[2m✓[22m[39m 레벨업 가능 시 "레벨업!" 버튼이 표시된다 [33m 2061[2mms[22m[39m
+     [32m✓[39m 레벨업 가능 시 현재 레벨 정보가 숨겨진다[32m 94[2mms[22m[39m
+     [33m[2m✓[22m[39m 레벨업 버튼 클릭 시 levelUp 함수가 호출된다 [33m 449[2mms[22m[39m
+     [33m[2m✓[22m[39m 레벨업 성공 시 alert가 표시된다 [33m 334[2mms[22m[39m
+     [32m✓[39m 레벨업 실패 시 실패 메시지 alert가 표시된다[32m 218[2mms[22m[39m
+     [32m✓[39m SVG circle이 렌더링된다[32m 24[2mms[22m[39m
+     [32m✓[39m XP가 maxXp를 초과해도 100%로 제한된다[32m 155[2mms[22m[39m
+Not implemented: Window's 
+alert() method
+ [31m❯[39m src/pages/__tests__/Verify.test.tsx [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 2265[2mms[22m[39m
+[31m     [31m×[31m 인증 버튼 클릭 시 성공 오버레이가 표시되고 2초 후 홈으로 이동한다[39m[33m 2250[2mms[22m[39m
+ [32m✓[39m src/components/admin/common/__tests__/AdminSearchBar.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 3696[2mms[22m[39m
+     [33m[2m✓[22m[39m 검색 버튼 클릭 시 onSearch가 호출된다 [33m 2300[2mms[22m[39m
+     [33m[2m✓[22m[39m filterOptions가 있을 때 드롭다운이 표시된다 [33m 377[2mms[22m[39m
+ [32m✓[39m src/components/token/__tests__/RestTkn.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 3860[2mms[22m[39m
+     [33m[2m✓[22m[39m 잔액이 표시된다 [33m 389[2mms[22m[39m
+     [33m[2m✓[22m[39m 새로고침 버튼이 렌더링된다 [33m 2318[2mms[22m[39m
+     [33m[2m✓[22m[39m 새로고침 버튼 클릭 시 onRefresh가 호출된다 [33m 449[2mms[22m[39m
+ [32m✓[39m src/components/token/__tests__/WithdrawAmt.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 3921[2mms[22m[39m
+     [33m[2m✓[22m[39m 입력 필드가 렌더링된다 [33m 346[2mms[22m[39m
+     [33m[2m✓[22m[39m 퍼센트 버튼들이 렌더링된다 [33m 2543[2mms[22m[39m
+     [33m[2m✓[22m[39m 퍼센트 버튼 클릭 시 계산된 금액으로 onChange가 호출된다 [33m 343[2mms[22m[39m
+     [33m[2m✓[22m[39m 전체 버튼 클릭 시 전체 금액으로 onChange가 호출된다 [33m 334[2mms[22m[39m
+ [32m✓[39m src/components/layout/__tests__/Footer.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 3314[2mms[22m[39m
+     [33m[2m✓[22m[39m Footer 아이템들이 렌더링된다 [33m 612[2mms[22m[39m
+     [33m[2m✓[22m[39m 아이템 버튼 클릭 시 navigate가 호출된다 [33m 2460[2mms[22m[39m
+ [32m✓[39m src/pages/admin/__tests__/PostManagement.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3423[2mms[22m[39m
+     [33m[2m✓[22m[39m 마운트 시 게시글 목록을 가져온다 [33m 768[2mms[22m[39m
+     [33m[2m✓[22m[39m 삭제 버튼 클릭 시 모달이 표시되고 확인 시 banPost가 호출된다 [33m 2345[2mms[22m[39m
+ [32m✓[39m src/components/auth/__tests__/PinPad.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 4489[2mms[22m[39m
+     [33m[2m✓[22m[39m 숫자 버튼 (0-9)이 렌더링된다 [33m 3154[2mms[22m[39m
+     [33m[2m✓[22m[39m 숫자 버튼 클릭 시 onInput이 호출된다 [33m 534[2mms[22m[39m
+ [32m✓[39m src/components/community/__tests__/TokenSelect.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 4769[2mms[22m[39m
+       [33m[2m✓[22m[39m 10부터 100까지 10단위 버튼이 10개 렌더링되어야 한다 [33m 3361[2mms[22m[39m
+       [33m[2m✓[22m[39m 버튼 클릭 시 setReward가 해당 값으로 호출되어야 한다 [33m 524[2mms[22m[39m
+       [33m[2m✓[22m[39m reward prop과 동일한 버튼에 선택 스타일(bg-main)이 적용되어야 한다 [33m 430[2mms[22m[39m
+ [32m✓[39m src/pages/__tests__/ExerciseAuth.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1489[2mms[22m[39m
+     [33m[2m✓[22m[39m 초기 렌더링 시 가이드 문구와 업로드 버튼이 표시된다 [33m 989[2mms[22m[39m
+ [32m✓[39m src/components/community/__tests__/CreatePostButton.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 1460[2mms[22m[39m
+     [33m[2m✓[22m[39m 버튼이 렌더링된다 [33m 858[2mms[22m[39m
+ [32m✓[39m src/components/home/__tests__/RedeemVoucher.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1444[2mms[22m[39m
+     [33m[2m✓[22m[39m Redeem 버튼 클릭 시 onRedeem 콜백이 호출된다 [33m 813[2mms[22m[39m
+ [32m✓[39m src/pages/__tests__/RecordAuth.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1488[2mms[22m[39m
+     [33m[2m✓[22m[39m 초기 렌더링 시 가이드 문구와 버튼이 표시된다 [33m 955[2mms[22m[39m
+ [32m✓[39m src/components/location/__tests__/LocationHeader.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1011[2mms[22m[39m
+     [33m[2m✓[22m[39m 제목이 렌더링된다 [33m 923[2mms[22m[39m
+ [32m✓[39m src/components/record/__tests__/RecordHeader.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 894[2mms[22m[39m
+     [33m[2m✓[22m[39m 제목이 렌더링된다 [33m 806[2mms[22m[39m
+ [32m✓[39m src/components/wallet/__tests__/WalletSuccessSection.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 1254[2mms[22m[39m
+     [33m[2m✓[22m[39m 기본 버튼 라벨이 표시된다 [33m 773[2mms[22m[39m
+ [32m✓[39m src/components/home/__tests__/IssueVoucher.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 1109[2mms[22m[39m
+     [33m[2m✓[22m[39m Issue 버튼 클릭 시 onIssue 콜백이 호출된다 [33m 720[2mms[22m[39m
+ [32m✓[39m src/pages/admin/__tests__/UserManagement.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1249[2mms[22m[39m
+     [33m[2m✓[22m[39m 검색 입력 시 searchUsers가 호출된다 [33m 852[2mms[22m[39m
+ [32m✓[39m src/pages/__tests__/LocationRegister.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 796[2mms[22m[39m
+     [33m[2m✓[22m[39m 등록 버튼 클릭 시 등록 로딩 화면이 표시되고 완료 후 이동한다 [33m 522[2mms[22m[39m
+ [32m✓[39m src/pages/__tests__/Onboarding.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 720[2mms[22m[39m
+     [33m[2m✓[22m[39m 지갑 생성하기 버튼 클릭 시 /create-wallet으로 이동한다 [33m 458[2mms[22m[39m
+ [32m✓[39m src/components/exercise/__tests__/ExerciseHeader.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1646[2mms[22m[39m
+     [33m[2m✓[22m[39m 제목이 렌더링된다 [33m 1182[2mms[22m[39m
+     [33m[2m✓[22m[39m 올바른 스타일 클래스가 적용된다 [33m 415[2mms[22m[39m
+ [32m✓[39m src/components/onboarding/__tests__/OnboardingHeader.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1349[2mms[22m[39m
+     [33m[2m✓[22m[39m 제목이 렌더링된다 [33m 1054[2mms[22m[39m
+ [32m✓[39m src/components/community/__tests__/Answer.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 611[2mms[22m[39m
+ [32m✓[39m src/components/community/__tests__/BoardToggle.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 319[2mms[22m[39m
+ [32m✓[39m src/components/verify/__tests__/VerifyHeader.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 895[2mms[22m[39m
+     [33m[2m✓[22m[39m 제목이 렌더링된다 [33m 828[2mms[22m[39m
+ [32m✓[39m src/components/admin/Dashboard/__tests__/SummaryCard.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[32m 231[2mms[22m[39m
+ [32m✓[39m src/components/leaderboard/__tests__/LeaderboardItem.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[32m 189[2mms[22m[39m
+ [32m✓[39m src/components/verify/__tests__/VerifyStatusOverlay.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 151[2mms[22m[39m
+ [32m✓[39m src/components/community/__tests__/FreePostCard.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[32m 262[2mms[22m[39m
+ [32m✓[39m src/pages/__tests__/CreatePost.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[32m 258[2mms[22m[39m
+ [32m✓[39m src/components/community/__tests__/SearchBar.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[32m 182[2mms[22m[39m
+ [32m✓[39m src/components/community/__tests__/ActionList.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[32m 251[2mms[22m[39m
+ [32m✓[39m src/components/community/__tests__/Comment.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 395[2mms[22m[39m
+ [32m✓[39m src/hooks/__tests__/useModal.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 199[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/getQuestionStatus.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m src/components/trainer/__tests__/TrainerStats.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 294[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/chartConfig.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/geo.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/formatTimeAgo.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/components/layout/__tests__/Header.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 206[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/voucher.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/components/trainer/__tests__/TrainerHeader.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 182[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m
+ Failed Tests 2 [49m[22m
+[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m 
+src/pages/__tests__/Verify
+.test.tsx[2m > [22mVerif
+y Page[2m > [22m인증 버튼 클릭
+ 시 성공 오버레이가 표시되고 2초 후 홈으로 
+이동한다
+[31m[1mAssertionError[2
+2m: expected "vi.fn()" to 
+be called at least once[3
+9m
+[36m [2m❯[22m src/pages
+/__tests__/Verify.test.tsx
+:[2m63:38[22m[39m
+    [90m 61| [39m       
+ fireEvent[33m.[39m[34m
+click[39m(verifyButton)[
+33m;[39m
+    [90m 62| [39m
+    [90m 63| [39m       
+ [34mexpect[39m(mockComp
+leteExercise)[33m.[39m[
+34mtoHaveBeenCalled[39m()
+[33m;[39m
+    [90m   | [39m       
+                          
+    [31m^[39m
+    [90m 64| [39m
+    [90m 65| [39m       
+ [90m// 성공 오버레이 확인 (Verif
+ySuccessOverlay 내부의 텍스트가 있
+을 것임)[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m 
+src/components/home/__test
+s__/LevelProgress.test.tsx
+[2m > [22mLevelProgress
+[2m > [22mXP 진행도가 표시된다
+[31m[1mTestingLibraryEle
+mentError[22m: Unable to 
+find an element with the t
+ext: 75 / 100 EXP. This co
+uld be because the text is
+ broken up by multiple ele
+ments. In this case, you c
+an provide a function for 
+your text matcher to make 
+your matcher more flexible
+.
+
+Ignored nodes: comments, s
+cript, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32
+m"relative w-[230px] h-[23
+0px] flex items-center jus
+tify-center"[31m
+    [36m>[31m
+      [36m<svg[31m
+        [33mclass[31m=[
+32m"w-full h-full transfor
+m -rotate-90"[31m
+      [36m>[31m
+        [36m<circle[31m
+          [33mcx[31m=[3
+2m"115"[31m
+          [33mcy[31m=[3
+2m"115"[31m
+          [33mfill[31m=
+[32m"transparent"[31m
+          [33mr[31m=[32
+m"95"[31m
+          [33mstroke[31m
+=[32m"#f3f4f6"[31m
+          [33mstroke-line
+cap[31m=[32m"round"[31m
+          [33mstroke-widt
+h[31m=[32m"14"[31m
+        [36m/>[31m
+        [36m<circle[31m
+          [33mclass[31m=
+[32m"transition-all durat
+ion-1000 ease-out"[31m
+          [33mcx[31m=[3
+2m"115"[31m
+          [33mcy[31m=[3
+2m"115"[31m
+          [33mfill[31m=
+[32m"transparent"[31m
+          [33mr[31m=[32
+m"95"[31m
+          [33mstroke[31m
+=[32m"#FAB12F"[31m
+          [33mstroke-dash
+array[31m=[32m"596.90260
+41820607"[31m
+          [33mstroke-dash
+offset[31m=[32m"596.9026
+041820607"[31m
+          [33mstroke-line
+cap[31m=[32m"round"[31m
+          [33mstroke-widt
+h[31m=[32m"14"[31m
+        [36m/>[31m
+      [36m</svg>[31m
+      [36m<div[31m
+        [33mclass[31m=[
+32m"absolute inset-0 flex 
+flex-col items-center just
+ify-center"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=
+[32m"text-gray-400 text-x
+s font-medium mb-1"[31m
+        [36m>[31m
+          [0m현재 레벨[0m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=
+[32m"text-[#FAB12F] text-
+5xl font-bold font-gmarket
+"[31m
+        [36m>[31m
+          [0mLv.[0m
+          [0m3[0m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=
+[32m"text-gray-300 text-[
+11px] mt-2 font-medium"[3
+1m
+        [36m>[31m
+          [0m75[0m
+          [0m / [0m
+          [0m100[0m
+          [0m XP[0m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+[90m [2m❯[22m Object.ge
+tElementError node_modules
+/.pnpm/@testing-library+do
+m@10.4.1/node_modules/@tes
+ting-library/dom/dist/conf
+ig.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modu
+les/.pnpm/@testing-library
++dom@10.4.1/node_modules/@
+testing-library/dom/dist/q
+uery-helpers.js:[2m76:38
+[22m[39m
+[90m [2m❯[22m node_modu
+les/.pnpm/@testing-library
++dom@10.4.1/node_modules/@
+testing-library/dom/dist/q
+uery-helpers.js:[2m52:17
+[22m[39m
+[90m [2m❯[22m getByText
+ node_modules/.pnpm/@testi
+ng-library+dom@10.4.1/node
+_modules/@testing-library/
+dom/dist/query-helpers.js:
+[2m95:19[22m[39m
+[36m [2m❯[22m src/compo
+nents/home/__tests__/Level
+Progress.test.tsx:[2m45:1
+9[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m42 passed[39m[22m[90m (44)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m318 passed[39m[22m[90m (320)[39m
+[2m   Start at [22m 22:00:02
+[2m   Duration [22m 63.13s[2m (transform 9.25s, setup 123.43s, import 17.10s, tests 61.23s, environment 429.25s)[22m
+
+    [90m 43| [39m    [3
+4mrender[39m([33m<[39m
+[33mLevelProgress[39m [3
+3m/[39m[33m>[39m)[33m;
+[39m
+    [90m 44| [39m    
+    [90m 45| [39m    [3
+4mexpect[39m(screen[33m.
+[39m[34mgetByText[39m(
+[32m'75 / 100 EXP'[39m))
+[33m.[39m[34mtoBeInTheDo
+cument[39m()[33m;[39m
+    [90m   | [39m       
+           [31m^[39m
+    [90m 46| [39m  })[3
+3m;[39m
+    [90m 47| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+

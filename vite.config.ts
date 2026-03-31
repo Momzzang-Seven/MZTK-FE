@@ -30,6 +30,8 @@ export default defineConfig({
       "/auth": "http://127.0.0.1:8080",
       "/users": "http://127.0.0.1:8080",
       "/api": "http://127.0.0.1:8080",
+      "/locations": "http://127.0.0.1:8080",
+      "/levels": "http://127.0.0.1:8080",
     },
   },
   test: {

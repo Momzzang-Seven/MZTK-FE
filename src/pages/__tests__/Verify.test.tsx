@@ -1,7 +1,7 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Verify from '../Verify';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { VERIFY_TEXT } from '@constant/location';
 
 // 모킹
@@ -26,9 +26,15 @@ vi.mock('@store', () => ({
 
 vi.mock('@store/userStore', () => ({
     useUserStore: () => ({
-        gymLocation: { lat: 37.5665, lng: 126.9780 }, // 같은 위치로 설정 (Near 상태)
+        gymLocation: { locationId: 1, lat: 37.5665, lng: 126.9780 }, // locationId 추가
         completeExercise: mockCompleteExercise,
     }),
+}));
+
+vi.mock('@services/location', () => ({
+    locationService: {
+        verifyLocation: vi.fn().mockResolvedValue({ isVerified: true, grantedXp: 100 }),
+    },
 }));
 
 // Geolocation 모킹
@@ -43,11 +49,6 @@ const mockClearWatch = vi.fn();
 describe('Verify Page', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-        vi.useRealTimers();
     });
 
     it('인증 버튼 클릭 시 성공 오버레이가 표시되고 2초 후 홈으로 이동한다', async () => {
@@ -60,15 +61,12 @@ describe('Verify Page', () => {
         const verifyButton = screen.getByRole('button', { name: VERIFY_TEXT.BTN_VERIFY });
         fireEvent.click(verifyButton);
 
-        expect(mockCompleteExercise).toHaveBeenCalled();
-
-        // 성공 오버레이 확인 (VerifySuccessOverlay 내부의 텍스트가 있을 것임)
-        // 여기서는 컴포넌트가 렌더링되었는지만 확인하는 식으로 작성
-
-        act(() => {
-            vi.advanceTimersByTime(2000);
+        await waitFor(() => {
+            expect(mockCompleteExercise).toHaveBeenCalled();
         });
 
-        expect(mockNavigate).toHaveBeenCalledWith('/');
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith('/');
+        }, { timeout: 3000 });
     });
 });

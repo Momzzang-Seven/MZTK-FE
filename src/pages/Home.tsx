@@ -5,14 +5,20 @@ import {
   AuthActionButtons,
   AuthChoiceModal,
 } from "@components/home";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store/userStore";
 
 const Home = () => {
-  const { gymLocation } = useUserStore();
+  const { gymLocation, initAttendance, initLevel, initLocation } = useUserStore();
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    initAttendance();
+    initLevel();
+    initLocation();
+  }, [initAttendance, initLevel, initLocation]);
 
   const handleExerciseAuth = () => {
     setIsAuthModalOpen(true);

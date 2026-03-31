@@ -20,6 +20,7 @@ const Verify = () => {
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [failModalOpen, setFailModalOpen] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const { coor, setCoor } = useLocationStore();
   const { gymLocation, completeExercise } = useUserStore();
@@ -62,15 +63,40 @@ const Verify = () => {
     }
   }, [coor, gymLocation]);
 
-  const handleVerify = () => {
-    if (distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS) {
-      completeExercise();
-      setSuccessModalOpen(true);
+  const handleVerify = async () => {
+    if (!gymLocation || !gymLocation.locationId) {
+      alert(VERIFY_TEXT.MODAL_REG_DESC);
+      return;
+    }
+    if (!coor) return;
 
-      // Auto redirect after 2s
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
+    if (distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS) {
+      setIsVerifying(true);
+      try {
+        const { locationService } = await import("@services/location");
+        const result = await locationService.verifyLocation({
+          locationId: gymLocation.locationId,
+          currentLatitude: coor.lat,
+          currentLongitude: coor.lng
+        });
+        
+        if (result.isVerified) {
+          completeExercise(result.grantedXp || 100);
+          setSuccessModalOpen(true);
+
+          // Auto redirect after 2s
+          setTimeout(() => {
+            navigate("/");
+          }, 2000);
+        } else {
+          setFailModalOpen(true);
+        }
+      } catch (e: unknown) {
+        console.error("위치 인증 실패:", e);
+        setFailModalOpen(true);
+      } finally {
+        setIsVerifying(false);
+      }
     } else {
       setFailModalOpen(true);
     }
@@ -91,10 +117,11 @@ const Verify = () => {
       {/* Verify Button */}
       <div className="absolute bottom-[110px] left-0 right-0 px-5 z-20">
         <CommonButton
-          label={isNear ? VERIFY_TEXT.BTN_VERIFY : VERIFY_TEXT.BTN_MOVE_TO_RANGE}
+          label={isVerifying ? "인증 중..." : (isNear ? VERIFY_TEXT.BTN_VERIFY : VERIFY_TEXT.BTN_MOVE_TO_RANGE)}
           onClick={handleVerify}
-          bgColor={isNear ? "bg-main hover:bg-[#E09E2B]" : "bg-gray-300"}
-          textColor={isNear ? "text-white" : "text-gray-500"}
+          disabled={isVerifying}
+          bgColor={isNear && !isVerifying ? "bg-main hover:bg-[#E09E2B]" : "bg-gray-300"}
+          textColor={isNear && !isVerifying ? "text-white" : "text-gray-500"}
           className="font-bold text-xl py-4 rounded-2xl shadow-lg transition-all active:scale-95 w-full"
         />
       </div>

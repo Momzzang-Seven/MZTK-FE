@@ -16,7 +16,7 @@ interface UserState {
     accessToken: string | null;
 
     // Gym Location
-    gymLocation: { lat: number, lng: number; address: string } | null;
+    gymLocation: { locationId?: number; lat: number, lng: number; address: string } | null;
 
     // Level & Attendance System
     level: number;
@@ -37,7 +37,7 @@ interface UserState {
 
     setUser: (user: UserInfo) => void;
     setAccessToken: (token: string) => void;
-    setGymLocation: (location: { lat: number, lng: number; address: string } | null) => void;
+    setGymLocation: (location: { locationId?: number; lat: number, lng: number; address: string } | null) => void;
     registerGymLocation: (location: { lat: number; lng: number; address: string }) => Promise<void>;
     clearUser: () => void;
 
@@ -47,13 +47,20 @@ interface UserState {
     setXp: (xp: number) => void;
     setMaxXp: (maxXp: number) => void;
     checkAttendance: () => Promise<{ success: boolean; message: string; rewardedXp: number }>;
-    completeExercise: () => { success: boolean; message: string; rewardedXp: number };
+    completeExercise: (reward?: number) => { success: boolean; message: string; rewardedXp: number };
+
+    // Daily & Weekly Attendance Data from Server
+    weeklyAttendance: { attendedCount: number } | null;
+    hasAttendedToday: boolean;
 
     // Async Analysis Actions
     startAnalysis: (type: 'exercise' | 'record') => void;
     checkAnalysisCompletion: () => void;
     closeSnackbar: () => void;
     levelUp: () => Promise<{ success: boolean; message: string }>;
+    initAttendance: () => Promise<void>;
+    initLevel: () => Promise<void>;
+    initLocation: () => Promise<void>;
 }
 
 export const useUserStore = create<UserState>()(
@@ -66,11 +73,14 @@ export const useUserStore = create<UserState>()(
             // Initial Limit
             level: 1,
             xp: 0,
-            maxXp: 100, // Fixed for now, can be dynamic (e.g. level * 100)
+            maxXp: 100, // Temporarily set to 100 for testing
             attendanceStreak: 0,
             lastAttendanceDate: null,
             lastExerciseDate: null,
             gymLocation: null,
+            // Default values
+            weeklyAttendance: null,
+            hasAttendedToday: false,
 
             // ... existing initial state ...
 
@@ -84,10 +94,20 @@ export const useUserStore = create<UserState>()(
             setGymLocation: (location) => set({ gymLocation: location }),
 
             registerGymLocation: async (location) => {
-                // Here we would call the API
-                // const result = await locationService.registerLocation(location);
-                // For now, just update store
-                set({ gymLocation: location });
+                try {
+                    const { locationService } = await import("@services/location");
+                    const result = await locationService.registerLocation({
+                        locationName: "나의 운동 장소",
+                        address: location.address,
+                        latitude: location.lat,
+                        longitude: location.lng
+                    });
+                    set({ gymLocation: { ...location, locationId: result.locationId } });
+                } catch (e) {
+                    console.error("위치 등록 통신 실패:", e);
+                    // Fallback to storing it locally even if API fails, so UI can proceed
+                    set({ gymLocation: location });
+                }
             },
             clearUser: () =>
                 set({ user: null, isAuthenticated: false, accessToken: null, level: 1, xp: 0, attendanceStreak: 0, lastAttendanceDate: null, lastExerciseDate: null }),
@@ -110,11 +130,13 @@ export const useUserStore = create<UserState>()(
                     const result = await attendanceService.checkIn();
 
                     if (result.success) {
-                        set({ 
+                        set((state) => ({ 
                             lastAttendanceDate: today, 
                             attendanceStreak: result.streakDays, 
-                            xp: get().xp + result.grantedXp + result.bonusXp 
-                        });
+                            hasAttendedToday: true,
+                            weeklyAttendance: state.weeklyAttendance ? { attendedCount: state.weeklyAttendance.attendedCount + 1 } : { attendedCount: result.streakDays > 7 ? 1 : result.streakDays },
+                            xp: state.xp + result.grantedXp + result.bonusXp 
+                        }));
                         return { 
                             success: true, 
                             message: result.message, 
@@ -129,7 +151,7 @@ export const useUserStore = create<UserState>()(
                 }
             },
 
-            completeExercise: () => {
+            completeExercise: (rewardAmount = 100) => {
                 const { lastExerciseDate } = get();
                 const today = new Date().toISOString().split("T")[0];
 
@@ -137,14 +159,12 @@ export const useUserStore = create<UserState>()(
                     return { success: false, message: "오늘의 운동을 이미 인증했습니다.", rewardedXp: 0 };
                 }
 
-                // Immediate reward for location verification
-                const reward = 100;
                 set((state) => ({
                     lastExerciseDate: today,
-                    xp: state.xp + reward
+                    xp: state.xp + rewardAmount
                 }));
 
-                return { success: true, message: "운동 인증 완료", rewardedXp: reward };
+                return { success: true, message: "운동 인증 완료", rewardedXp: rewardAmount };
             },
 
             startAnalysis: (type) => {
@@ -160,13 +180,6 @@ export const useUserStore = create<UserState>()(
                     const reward = 100; // 100 EXP Reward // Changed from XP to EXP
 
                     const isRecord = analysisType === 'record'; // Determine if it's a record analysis
-
-                    // The user's edit introduced a newNotification object, which was not in the original code.
-                    // I will integrate the newNotification object and its content,
-                    // assuming it's meant to replace or augment the existing snackbar message logic.
-                    // The original code directly set the snackbar message.
-                    // The user's edit also has a syntax error with `isRecord` being undefined in the provided snippet.
-                    // I will define `isRecord` and integrate the newNotification structure.
 
                     const newNotification = {
                         id: Math.random(),
@@ -189,9 +202,6 @@ export const useUserStore = create<UserState>()(
                             message: newNotification.content // Use the content from the newNotification
                         }
                     });
-
-                    // 자동으로 출석 체크 API 호출 시도 (이미 했으면 스토어 로직에서 걸러짐)
-                    get().checkAttendance();
                 }
             },
 
@@ -205,18 +215,82 @@ export const useUserStore = create<UserState>()(
                     const result = await levelService.levelUp();
                     
                     if (result) {
-                        set({
-                            level: result.toLevel,
-                            xp: get().xp - result.spentXp,
-                            // maxXp는 다음 호출(refreshLevel) 등에서 갱신됨
-                        });
-                        return { success: true, message: "레벨업 성공!" };
+                        await get().initLevel();
+                        return { 
+                            success: true, 
+                            message: `축하합니다! Lv.${result.toLevel} 달성! 보상으로 ${result.rewardMztk} MZTK가 지급되었습니다.` 
+                        };
                     }
-                    return { success: false, message: "레벨업 실패" };
+                    return { success: false, message: "레벨업 실패: 결과 데이터를 확인할 수 없습니다." };
                 } catch (error: unknown) {
-                    const err = error as { response?: { data?: { message?: string } }, message?: string };
-                    console.error("레벨업 API 호출 실패:", err);
+                    console.error("레벨업 API 호출 실패:", error);
+                    const err = error as { response?: { data?: { message?: string } } };
                     return { success: false, message: err.response?.data?.message || "서버 통신 실패" };
+                }
+            },
+
+            initAttendance: async () => {
+                try {
+                    const { attendanceService } = await import("@services/attendance");
+                    const [statusRes, weeklyRes] = await Promise.all([
+                        attendanceService.getStatus(),
+                        attendanceService.getWeekly()
+                    ]);
+                    
+                    set((state) => ({
+                        attendanceStreak: statusRes.streakCount,
+                        hasAttendedToday: statusRes.hasAttendedToday,
+                        weeklyAttendance: { attendedCount: weeklyRes.attendedCount },
+                        lastAttendanceDate: statusRes.hasAttendedToday ? new Date().toISOString().split("T")[0] : state.lastAttendanceDate
+                    }));
+                } catch (e) {
+                    console.error("출석 초기화 통신 실패:", e);
+                }
+            },
+
+            initLevel: async () => {
+                try {
+                    const { levelService } = await import("@services/level");
+                    const [levelData] = await Promise.all([
+                        levelService.getMyLevel(),
+                        levelService.getLevelPolicies()
+                    ]);
+                    
+                    if (levelData) {
+                        set({
+                            level: levelData.level,
+                            xp: levelData.availableXp,
+                            maxXp: levelData.requiredXpForNext // Fix: use total requirement directly
+                        });
+                    }
+
+                    // Fire off ledger and history requests just to ensure they are "connected" and caching
+                    levelService.getMyXpLedger(0, 5).catch(() => {});
+                    levelService.getMyLevelUpHistories(0, 5).catch(() => {});
+
+                } catch (e) {
+                    console.error("레벨 초기화 통신 실패:", e);
+                }
+            },
+
+            initLocation: async () => {
+                try {
+                    const { locationService } = await import("@services/location");
+                    const result = await locationService.getMyLocations();
+                    if (result.locations && result.locations.length > 0) {
+                        // Use the most recently registered location, or the first one
+                        const loc = result.locations[0];
+                        set({
+                            gymLocation: {
+                                locationId: loc.locationId,
+                                lat: loc.latitude || 0,
+                                lng: loc.longitude || 0,
+                                address: loc.address || ""
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error("위치 정보 초기화 통신 실패:", e);
                 }
             }
         }),
