@@ -1,7 +1,7 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Verify from '../Verify';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { VERIFY_TEXT } from '@constant/location';
 
 // 모킹
@@ -49,11 +49,6 @@ const mockClearWatch = vi.fn();
 describe('Verify Page', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-        vi.useRealTimers();
     });
 
     it('인증 버튼 클릭 시 성공 오버레이가 표시되고 2초 후 홈으로 이동한다', async () => {
@@ -70,13 +65,8 @@ describe('Verify Page', () => {
             expect(mockCompleteExercise).toHaveBeenCalled();
         });
 
-        // 성공 오버레이 확인 (VerifySuccessOverlay 내부의 텍스트가 있을 것임)
-        // 여기서는 컴포넌트가 렌더링되었는지만 확인하는 식으로 작성
-
-        act(() => {
-            vi.advanceTimersByTime(2000);
-        });
-
-        expect(mockNavigate).toHaveBeenCalledWith('/');
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith('/');
+        }, { timeout: 3000 });
     });
 });
