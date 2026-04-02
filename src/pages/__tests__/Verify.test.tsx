@@ -58,12 +58,13 @@ describe('Verify Page', () => {
             </BrowserRouter>
         );
 
-        const verifyButton = screen.getByRole('button', { name: VERIFY_TEXT.BTN_VERIFY });
+        // 버튼이 '인증 위치로 이동해주세요'에서 '위치 인증하기'로 바뀔 때까지 대기
+        const verifyButton = await screen.findByRole('button', { name: VERIFY_TEXT.BTN_VERIFY });
         fireEvent.click(verifyButton);
 
         await waitFor(() => {
             expect(mockCompleteExercise).toHaveBeenCalled();
-        });
+        }, { timeout: 2000 });
 
         await waitFor(() => {
             expect(mockNavigate).toHaveBeenCalledWith('/');

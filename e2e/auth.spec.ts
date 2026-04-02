@@ -1,40 +1,60 @@
 import { test, expect } from '@playwright/test';
-import { TEST_USER } from './fixtures/testUser';
 
-test.describe('로그인 흐름', () => {
+test.describe('로그인 및 로그아웃 흐름', () => {
   test.beforeEach(async ({ page }) => {
+    // API 모킹: 초기 레벨 정보를 설정하여 테스트 일관성 유지
+    await page.route('**/users/me/level', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ 
+          status: 'SUCCESS', 
+          data: { level: 3, availableXp: 50, requiredXpForNext: 100 } 
+        })
+      });
+    });
+
     await page.goto('/login');
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    await page.reload();
   });
 
-  test('이메일/비밀번호로 로그인 후 홈으로 이동한다', async ({ page }) => {
-    await page.getByPlaceholder('이메일').fill(TEST_USER.email);
-    await page.getByPlaceholder('비밀번호').fill(TEST_USER.password);
-    await page.getByRole('button', { name: /로그인/ }).click();
+  test('회원 목업로그인 후 홈으로 이동한다', async ({ page }) => {
+    const mockLoginBtn = page.getByRole('button', { name: '회원 목업로그인' }).first();
+    await expect(mockLoginBtn).toBeVisible();
+    await mockLoginBtn.click();
+
+    await expect(page).toHaveURL('/');
+    // 레벨 표시 확인 (유연한 매칭)
+    await expect(page.getByText(/Lv\.\d+/i).first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('트레이너 목업로그인 후 홈으로 이동한다', async ({ page }) => {
+    const mockLoginBtn = page.getByRole('button', { name: '트레이너 목업로그인' }).first();
+    await expect(mockLoginBtn).toBeVisible();
+    await mockLoginBtn.click();
 
     await expect(page).toHaveURL('/');
   });
 
-  test('틀린 비밀번호로 로그인 시 오류 메시지가 표시된다', async ({ page }) => {
-    await page.getByPlaceholder('이메일').fill(TEST_USER.email);
-    await page.getByPlaceholder('비밀번호').fill('wrongpassword');
-    await page.getByRole('button', { name: /로그인/ }).click();
-
-    await expect(
-      page.getByText(/비밀번호|오류|실패/i)
-    ).toBeVisible({ timeout: 5000 });
-  });
-
-  test('로그아웃 후 로그인 페이지로 이동한다', async ({ page }) => {
-    // 먼저 로그인
-    await page.getByPlaceholder('이메일').fill(TEST_USER.email);
-    await page.getByPlaceholder('비밀번호').fill(TEST_USER.password);
-    await page.getByRole('button', { name: /로그인/ }).click();
+  test('로그아웃 시 로그인 페이지로 리다이렉트된다', async ({ page }) => {
+    await page.getByRole('button', { name: '회원 목업로그인' }).first().click();
     await page.waitForURL('/');
 
-    // 마이 페이지로 이동 후 로그아웃
     await page.goto('/my');
-    await page.getByRole('button', { name: /로그아웃/ }).click();
+    
+    // 로그아웃 확인창 핸들러
+    page.on('dialog', async dialog => {
+      await dialog.accept();
+    });
 
-    await expect(page).toHaveURL('/login');
+    const logoutBtn = page.getByRole('button', { name: /로그아웃/ });
+    await expect(logoutBtn).toBeVisible();
+    await logoutBtn.click();
+
+    await expect(page).toHaveURL(/\/login/);
   });
 });

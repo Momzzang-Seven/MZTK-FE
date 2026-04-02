@@ -42,7 +42,7 @@ describe('LevelProgress', () => {
 
     render(<LevelProgress />);
     
-    expect(screen.getByText('75 / 100 EXP')).toBeInTheDocument();
+    expect(screen.getByText(/75\s*\/\s*100\s*EXP/)).toBeInTheDocument();
   });
 
   it('현재 레벨 텍스트가 표시된다', () => {
