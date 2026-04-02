@@ -13,7 +13,7 @@ vi.mock('@constant/location', async () => {
     return {
         ...actual,
         LOCATION_CONSTANTS: {
-            ...(actual as any).LOCATION_CONSTANTS,
+            ...(actual as Record<string, unknown>).LOCATION_CONSTANTS as Record<string, unknown>,
             ANIMATION_DURATION: 0,
         },
     };
@@ -36,7 +36,7 @@ const mockGetCurrentPosition = vi.fn((success) => {
         success({ coords: { latitude: 37.5, longitude: 127.0 } });
     }
 });
-(global.navigator as any).geolocation = {
+(global.navigator as unknown as { geolocation: unknown }).geolocation = {
     getCurrentPosition: mockGetCurrentPosition,
 };
 

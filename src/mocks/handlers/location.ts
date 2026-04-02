@@ -36,7 +36,10 @@ export const locationHandlers = [
   ),
 
   http.delete('/users/me/locations/:locationId', () =>
-    HttpResponse.json({ success: true })
+    HttpResponse.json({ 
+      success: true, 
+      data: { success: true } 
+    })
   ),
 ];
 

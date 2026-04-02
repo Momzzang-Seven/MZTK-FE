@@ -90,6 +90,10 @@ describe('Verify Page API Integration (MSW)', () => {
         const verifyButton = await screen.findByRole('button', { name: VERIFY_TEXT.BTN_VERIFY });
         fireEvent.click(verifyButton);
 
+        // 인증 성공 메시지(스낵바 등) 표시 대기
+        const successTitle = await screen.findByText(VERIFY_TEXT.SUCCESS_TITLE, {}, { timeout: 4000 });
+        expect(successTitle).toBeInTheDocument();
+
         // 경험치 획득 함수 호출 확인
         await waitFor(() => {
             expect(mockCompleteExercise).toHaveBeenCalledWith(100);

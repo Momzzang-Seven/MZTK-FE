@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useUserStore } from '@store';
 import { PostLogout } from '@services/auth';
@@ -10,7 +10,7 @@ vi.mock('@services/auth', () => ({
 
 // Store 모킹은 유지하되 실제 액션을 호출하도록 설정
 vi.mock('@store', () => {
-    let mockState = {
+    const mockState = {
         isAuthenticated: true,
         user: { nickname: '테스트유저' },
         clearUser: async () => {
@@ -19,7 +19,7 @@ vi.mock('@store', () => {
     };
     return {
         useUserStore: Object.assign(
-            (selector: any) => selector(mockState),
+            (selector: (state: unknown) => unknown) => selector(mockState),
             {
                 getState: () => mockState,
                 subscribe: vi.fn(),
