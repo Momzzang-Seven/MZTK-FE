@@ -39,11 +39,11 @@ const TrainerStoreRegister = () => {
     useEffect(() => {
         if (isMapLoaded && mapElement.current && !mapRef.current) {
             // 기본 위도, 경도 (서울시청 기준)
-            const mapOptions = {
-                center: new window.naver.maps.LatLng(37.5666805, 126.9784147),
+            const mapOptions: naver.maps.MapOptions = {
+                center: new naver.maps.LatLng(37.5666805, 126.9784147),
                 zoom: 15,
             };
-            mapRef.current = new window.naver.maps.Map(mapElement.current, mapOptions);
+            mapRef.current = new naver.maps.Map(mapElement.current, mapOptions);
         }
     }, [isMapLoaded]);
 
@@ -51,16 +51,15 @@ const TrainerStoreRegister = () => {
     useEffect(() => {
         if (isMapLoaded && address && mapRef.current) {
             try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                window.naver.maps.Service.geocode({ query: address }, (status: any, response: any) => {
-                    if (status !== window.naver.maps.Service.Status.OK) return;
+                naver.maps.Service.geocode({ query: address }, (status: naver.maps.Service.Status, response: naver.maps.Service.GeocodeResponse) => {
+                    if (status !== naver.maps.Service.Status.OK) return;
 
                     if (response.v2.meta.totalCount > 0) {
                         const item = response.v2.addresses[0];
-                        const point = new window.naver.maps.Point(Number(item.x), Number(item.y));
+                        const point = new naver.maps.Point(Number(item.x), Number(item.y));
                         mapRef.current!.setCenter(point);
 
-                        new window.naver.maps.Marker({
+                        new naver.maps.Marker({
                             position: point,
                             map: mapRef.current!
                         });
@@ -219,7 +218,7 @@ const TrainerStoreRegister = () => {
                                     지도를 불러오는 중입니다...
                                 </div>
                             )}
-                            {isMapLoaded && !window.naver?.maps && (
+                            {isMapLoaded && !window.naver && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-[14px] font-bold bg-white/90 z-10 px-5 text-center leading-relaxed backdrop-blur-sm border border-gray-100">
                                     네이버 Map 연동 필요
                                     <span className="text-[12px] font-medium text-gray-400 mt-1">NCP Client ID를 적용하면<br />지도가 활성화됩니다.</span>

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CommonButton } from "@components/common";
 import { SimpleHeader } from "@components/layout";
-// import { calculateEndTime } from "@utils";
 
 interface MockData {
     id: string;
