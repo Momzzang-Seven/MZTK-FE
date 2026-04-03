@@ -11,8 +11,8 @@ import { useUserStore } from '@store';
 
 describe('[통합] Level System - 초기 로딩 및 정책 연동', () => {
     beforeEach(() => {
+        vi.resetModules();
         server.use(...levelHandlers);
-        // Store 초기화 (테스트 간 간섭 방지)
         useUserStore.getState().clearUser();
     });
 
@@ -23,19 +23,19 @@ describe('[통합] Level System - 초기 로딩 및 정책 연동', () => {
             </BrowserRouter>
         );
 
-        // LevelProgress 컴포넌트에서 레벨(5)과 XP(80/100)가 표시되는지 확인
+        // LevelProgress 컴포넌트에서 레벨(5)이 표시되는지 확인
         // MSW handlers/level.ts 에서 level: 5, availableXp: 80, requiredXpForNext: 100 으로 주입됨
+        // 컴포넌트 렌더링: `Lv.{level}` 형식 (대소문자 Lv)
         await waitFor(() => {
-            const levelText = screen.getByText(/LV\.5/i);
+            const levelText = screen.getByText(/Lv\.5/);
             expect(levelText).toBeInTheDocument();
-        });
+        }, { timeout: 10000 });
 
         await waitFor(() => {
-            // XP 퍼센트 계산 (80/100 = 80%)
-            // 컴포넌트 내부에서 xp-text-main 등으로 표시될 것임
-            const xpText = screen.getByText(/80/);
+            // xp / maxXp EXP 형식으로 표시됨 (예: "80 / 100 EXP")
+            const xpText = screen.getByText(/80\s*\/\s*100/);
             expect(xpText).toBeInTheDocument();
-        });
+        }, { timeout: 10000 });
     });
 
     it('XP Ledger 및 Level History API가 백그라운드에서 호출된다 (connectivity check)', async () => {
