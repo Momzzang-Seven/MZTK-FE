@@ -1,5 +1,6 @@
 import { expect, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { useUserStore } from '@store/userStore';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { server } from '@mocks/server';
 
@@ -17,6 +18,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
 afterEach(() => {
   server.resetHandlers();
   cleanup();
+  useUserStore.getState().reset();
   window.localStorage.clear();
   window.sessionStorage.clear();
 });

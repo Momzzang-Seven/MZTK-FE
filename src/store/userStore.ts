@@ -61,33 +61,32 @@ interface UserState {
     initAttendance: () => Promise<void>;
     initLevel: () => Promise<void>;
     initLocation: () => Promise<void>;
+    reset: () => void;
 }
+
+const initialState = {
+    user: null,
+    isAuthenticated: false,
+    accessToken: null,
+    level: 1,
+    xp: 0,
+    maxXp: 100,
+    attendanceStreak: 0,
+    lastAttendanceDate: null,
+    lastExerciseDate: null,
+    gymLocation: null,
+    weeklyAttendance: null,
+    hasAttendedToday: false,
+    snackbar: { isOpen: false, message: "" },
+    analysisStatus: 'idle' as const,
+    analysisType: null as 'exercise' | 'record' | null,
+    analysisTargetTime: null as number | null,
+};
 
 export const useUserStore = create<UserState>()(
     persist(
         (set, get) => ({
-            user: null,
-            isAuthenticated: false,
-            accessToken: null,
-
-            // Initial Limit
-            level: 1,
-            xp: 0,
-            maxXp: 100, // Temporarily set to 100 for testing
-            attendanceStreak: 0,
-            lastAttendanceDate: null,
-            lastExerciseDate: null,
-            gymLocation: null,
-            // Default values
-            weeklyAttendance: null,
-            hasAttendedToday: false,
-
-            // ... existing initial state ...
-
-            snackbar: { isOpen: false, message: "" },
-            analysisStatus: 'idle',
-            analysisType: null,
-            analysisTargetTime: null,
+            ...initialState,
 
             setUser: (user) => set({ user, isAuthenticated: true }),
             setAccessToken: (token) => set({ accessToken: token }),
@@ -111,6 +110,8 @@ export const useUserStore = create<UserState>()(
             },
             clearUser: () =>
                 set({ user: null, isAuthenticated: false, accessToken: null, level: 1, xp: 0, attendanceStreak: 0, lastAttendanceDate: null, lastExerciseDate: null }),
+
+            reset: () => set(initialState),
 
             addXp: (amount) => set((state) => ({ xp: state.xp + amount })),
             setLevel: (level) => set({ level }),
