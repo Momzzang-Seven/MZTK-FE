@@ -17,5 +17,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
 afterEach(() => {
   server.resetHandlers();
   cleanup();
+  window.localStorage.clear();
+  window.sessionStorage.clear();
 });
 afterAll(() => server.close());
