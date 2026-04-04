@@ -38,5 +38,9 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "./src/test/setup.tsx",
+    exclude: ['node_modules', 'dist', 'e2e', 'develop', '.git', '.cache'],
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    pool: 'forks',
   },
 });

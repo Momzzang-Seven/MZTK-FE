@@ -1,11 +1,10 @@
 import { useAuthModalStore, useUserStore } from "@store";
 import axios, { type AxiosInstance } from "axios";
 
-const BASE_ENV = `${import.meta.env.VITE_API_BASE_URL}`;
-// Robust fix: If we are in DEV and the user set the BASE to the backend port directly,
-// we force it to empty string to ensure the Vite proxy is used.
-let BASE = BASE_ENV;
-if (import.meta.env.DEV && BASE_ENV.includes("localhost:8080")) {
+const BASE_ENV = import.meta.env.VITE_API_BASE_URL;
+let BASE = (BASE_ENV && BASE_ENV !== "undefined") ? (BASE_ENV as string) : "";
+
+if (import.meta.env.DEV && BASE && BASE.includes("localhost:8080")) {
   console.warn("Detected localhost:8080 in VITE_API_BASE_URL during DEV. Forcing proxy usage.");
   BASE = "";
 }
