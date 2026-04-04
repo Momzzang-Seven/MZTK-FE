@@ -23,12 +23,12 @@ describe('[통합] Level System - 초기 로딩 및 정책 연동', () => {
         useUserStore.getState().reset();
 
         // 서비스 응답 모킹 (정상 케이스)
-        (levelService.getMyLevel as any).mockResolvedValue({
+        vi.mocked(levelService.getMyLevel).mockResolvedValue({
             level: 5,
             availableXp: 80,
             requiredXpForNext: 100,
         });
-        (levelService.getLevelPolicies as any).mockResolvedValue({
+        vi.mocked(levelService.getLevelPolicies).mockResolvedValue({
             policies: [{ level: 1, requiredXp: 100 }],
         });
     });
