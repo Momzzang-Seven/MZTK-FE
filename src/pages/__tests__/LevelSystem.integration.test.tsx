@@ -9,8 +9,12 @@ vi.mock('@services/level', () => ({
     levelService: {
         getMyLevel: vi.fn(),
         getLevelPolicies: vi.fn(),
-        getMyXpLedger: vi.fn().mockResolvedValue({ content: [], totalElements: 0 }),
-        getMyLevelUpHistories: vi.fn().mockResolvedValue({ content: [], totalElements: 0 }),
+        getMyXpLedger: vi.fn().mockResolvedValue({ 
+            page: 0, size: 5, hasNext: false, earnedOn: "", entries: [], todayCaps: [] 
+        }),
+        getMyLevelUpHistories: vi.fn().mockResolvedValue({ 
+            page: 0, size: 5, hasNext: false, histories: [] 
+        }),
     },
 }));
 
@@ -27,9 +31,13 @@ describe('[통합] Level System - 초기 로딩 및 정책 연동', () => {
             level: 5,
             availableXp: 80,
             requiredXpForNext: 100,
+            rewardMztkForNext: 10, // 필수 필드 추가
         });
         vi.mocked(levelService.getLevelPolicies).mockResolvedValue({
-            policies: [{ level: 1, requiredXp: 100 }],
+            levelPolicies: [ // policies -> levelPolicies로 변경
+                { currentLevel: 1, toLevel: 2, requiredXp: 100, rewardMztk: 5 }
+            ],
+            xpPolicies: [] // 필수 필드 추가
         });
     });
 
