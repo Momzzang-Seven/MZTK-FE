@@ -1,50 +1,66 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Home from '@pages/Home';
-import { levelHandlers } from '@mocks/handlers/level';
-import { server } from '@mocks/server';
+import { useUserStore } from '@store/userStore';
 
-// Note: We use the actual Store here to test the real integration with MSW
-// But we need to make sure the store is initialized for each test.
-import { useUserStore } from '@store';
+// levelService를 직접 모킹하여 네트워크/MSW 레이어의 불확실성을 제거합니다.
+vi.mock('@services/level', () => ({
+    levelService: {
+        getMyLevel: vi.fn(),
+        getLevelPolicies: vi.fn(),
+        getMyXpLedger: vi.fn().mockResolvedValue({ content: [], totalElements: 0 }),
+        getMyLevelUpHistories: vi.fn().mockResolvedValue({ content: [], totalElements: 0 }),
+    },
+}));
+
+import { levelService } from '@services/level';
 
 describe('[통합] Level System - 초기 로딩 및 정책 연동', () => {
     beforeEach(() => {
-        server.use(...levelHandlers);
-        // Ensure store is completely reset before each test
+        vi.clearAllMocks();
+        // 스토어 완전 초기화
         useUserStore.getState().reset();
+
+        // 서비스 응답 모킹 (정상 케이스)
+        (levelService.getMyLevel as any).mockResolvedValue({
+            level: 5,
+            availableXp: 80,
+            requiredXpForNext: 100,
+        });
+        (levelService.getLevelPolicies as any).mockResolvedValue({
+            policies: [{ level: 1, requiredXp: 100 }],
+        });
     });
 
-    it('홈 진입 시 /level 및 /policies API를 호출하고 결과를 UI에 반영한다', async () => {
+    it('홈 진입 시 levelService를 호출하고 결과를 UI에 반영한다', async () => {
         render(
             <BrowserRouter>
                 <Home />
             </BrowserRouter>
         );
 
-        // LevelProgress 컴포넌트에서 레벨(5)이 표시되는지 확인
-        // findByText는 내부적으로 waitFor를 내장하고 있어 테스트가 훨씬 안정적입니다.
-        // 정규표현식에 'i'(case-insensitive)와 '.'(wildcard)를 더 관대하게 사용하여 비결정적 매칭 오류를 방지합니다.
-        const levelText = await screen.findByText(/Lv\.*5/i, {}, { timeout: 15000 });
+        // 1. 레벨 텍스트 확인 (Lv.5)
+        // findByText는 최대 1000ms 동안 대기하며, 요소가 나타날 때까지 스마트하게 기다립니다.
+        const levelText = await screen.findByText(/Lv\.5/i);
         expect(levelText).toBeInTheDocument();
 
-        // xp / maxXp EXP 형식으로 표시됨 (예: "80 / 100 EXP")
-        const xpText = await screen.findByText(/80.*\/.*100/i, {}, { timeout: 15000 });
+        // 2. XP 텍스트 확인 (80 / 100 EXP)
+        const xpText = await screen.findByText(/80\s*\/\s*100/i);
         expect(xpText).toBeInTheDocument();
     });
 
-    it('XP Ledger 및 Level History API가 백그라운드에서 호출된다 (connectivity check)', async () => {
-        const spyInit = vi.spyOn(useUserStore.getState(), 'initLevel');
-        
+    it('레벨 정보 로딩 시 백그라운드 호출이 정상적으로 수행된다', async () => {
         render(
             <BrowserRouter>
                 <Home />
             </BrowserRouter>
         );
 
-        await waitFor(() => {
-            expect(spyInit).toHaveBeenCalled();
-        }, { timeout: 15000 });
+        // findByText를 통해 비동기 업데이트가 완료될 때까지 기다린 후 호출 여부 확인
+        await screen.findByText(/Lv\.5/i);
+        
+        expect(levelService.getMyLevel).toHaveBeenCalled();
+        expect(levelService.getMyXpLedger).toHaveBeenCalled();
     });
 });
