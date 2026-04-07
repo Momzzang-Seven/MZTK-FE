@@ -1,12 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
 import { CommonButton, CommonModal } from "@components/common";
+import { RESERVATION_STATUS } from "@constant/reservation";
+import type { ReservationStatus } from "@constant/reservation";
 
 const MOCK_RESERVATIONS = [
     {
+        id: "r0",
+        status: RESERVATION_STATUS.PENDING as ReservationStatus,
+        title: "바디프로필 챌린지 (입문반)",
+        trainerName: "박태환 강사",
+        date: "2026-03-12",
+        day: "목",
+        time: "10:00",
+        image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1470&auto=format&fit=crop",
+        price: 450,
+        requestMsg: "식단 관리도 같이 받고 싶습니다."
+    },
+    {
         id: "r1",
-        status: "예약 확정",
+        status: RESERVATION_STATUS.CONFIRMED as ReservationStatus,
         title: "1:1 집중 웨이트 트레이닝",
         trainerName: "김근육 트레이너",
         date: "2026-03-05",
@@ -18,7 +32,7 @@ const MOCK_RESERVATIONS = [
     },
     {
         id: "r2",
-        status: "수강 완료",
+        status: RESERVATION_STATUS.ADMIN_SETTLED as ReservationStatus,
         title: "체형 교정 & 코어 강화 소그룹 PT",
         trainerName: "이유연 강사",
         date: "2026-02-15",
@@ -26,31 +40,160 @@ const MOCK_RESERVATIONS = [
         time: "10:00",
         image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1470&auto=format&fit=crop",
         price: 180,
-        requestMsg: ""
+        requestMsg: "코어 근육을 집중적으로 강화하고 싶습니다."
     },
     {
         id: "r3",
-        status: "예약 취소",
-        title: "바디프로필 준비반 (식단방 포함)",
-        trainerName: "박태환 강사",
+        status: RESERVATION_STATUS.CANCELLED as ReservationStatus,
+        title: "거북목 탈출 필라테스",
+        trainerName: "정유연 강사",
         date: "2026-02-10",
         day: "화",
         time: "20:00",
         image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1470&auto=format&fit=crop",
+        price: 250,
+        requestMsg: "목이랑 어깨가 너무 뻐근해요."
+    },
+    {
+        id: "r4",
+        status: RESERVATION_STATUS.ADMIN_SETTLED as ReservationStatus,
+        title: "파워 리프팅 기초",
+        trainerName: "장미란 관장",
+        date: "2026-01-20",
+        day: "월",
+        time: "15:00",
+        image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1470&auto=format&fit=crop",
         price: 500,
-        requestMsg: "다이어트 목적입니다."
+        requestMsg: "스쿼트 자세 교정 부탁드립니다."
     }
 ];
 
 const MarketReservation = () => {
     const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
+    const [reservations, setReservations] = useState(MOCK_RESERVATIONS);
     const [selectedRes, setSelectedRes] = useState<typeof MOCK_RESERVATIONS[0] | null>(null);
     const navigate = useNavigate();
 
-    const filteredReservations = MOCK_RESERVATIONS.filter(res => {
-        if (activeTab === "upcoming") return res.status === "예약 확정";
-        return res.status === "수강 완료" || res.status === "예약 취소";
+    // 과거 클래스 자동 정산 처리 (Mock Logic)
+    useEffect(() => {
+        // 실제 운영 시에는 현재 날짜를 사용: new Date().toISOString().split('T')[0]
+        // 현재는 목업 데이터 유지를 위해 기준일을 과거로 설정하여 자동 정산이 발생하지 않도록 함
+        const today = "2026-01-01"; 
+        setReservations(prev => prev.map(res => {
+            // 날짜가 지났고, 취소되지 않았으며, 아직 정산완료가 아닌 항목들은 자동으로 정산완료 처리
+            if (res.date < today && res.status !== RESERVATION_STATUS.CANCELLED && res.status !== RESERVATION_STATUS.ADMIN_SETTLED) {
+                return { ...res, status: RESERVATION_STATUS.ADMIN_SETTLED };
+            }
+            return res;
+        }));
+    }, []);
+
+    // 모달 관리 상태 (Stale Closure 방지 및 구조 통일)
+    const [modal, setModal] = useState<{
+        isOpen: boolean;
+        type: "CANCEL_PENDING" | "REQUEST_CANCEL" | "CONFIRM_PURCHASE" | "ALERT" | "";
+        title: string;
+        desc: string;
+        confirmLabel: string;
+        cancelLabel?: string;
+        targetId?: string;
+    }>({
+        isOpen: false,
+        type: "",
+        title: "",
+        desc: "",
+        confirmLabel: "확인"
     });
+
+    const [cancelReason, setCancelReason] = useState("");
+
+    const filteredReservations = reservations.filter(res => {
+        if (activeTab === "upcoming") return ([RESERVATION_STATUS.PENDING, RESERVATION_STATUS.CONFIRMED, RESERVATION_STATUS.CANCELLATION_REQUESTED] as ReservationStatus[]).includes(res.status as ReservationStatus);
+        return ([RESERVATION_STATUS.COMPLETED, RESERVATION_STATUS.ADMIN_SETTLED, RESERVATION_STATUS.CANCELLED] as ReservationStatus[]).includes(res.status as ReservationStatus);
+    });
+
+    const closeModal = () => {
+        setModal(prev => ({ ...prev, isOpen: false, type: "" }));
+        setCancelReason("");
+    };
+
+    const openModal = (config: Partial<typeof modal>) => {
+        setModal({
+            isOpen: true,
+            type: config.type || "",
+            title: config.title || "",
+            desc: config.desc || "",
+            confirmLabel: config.confirmLabel || "확인",
+            cancelLabel: config.cancelLabel,
+            targetId: config.targetId
+        });
+    };
+
+    const handleModalConfirm = () => {
+        const { type, targetId } = modal;
+
+        if (type === "CANCEL_PENDING") {
+            setReservations(prev => prev.map(res =>
+                res.id === targetId ? { ...res, status: RESERVATION_STATUS.CANCELLED } : res
+            ));
+            openModal({
+                type: "ALERT",
+                title: "처리 완료",
+                desc: "취소가 완료되었습니다.",
+                confirmLabel: "확인"
+            });
+        }
+        else if (type === "REQUEST_CANCEL") {
+            if (!cancelReason.trim()) {
+                setModal(prev => ({
+                    ...prev,
+                    type: "ALERT",
+                    title: "알림",
+                    desc: "취소 요청 사유를 입력해주세요.",
+                    confirmLabel: "확인",
+                    cancelLabel: undefined
+                }));
+                return;
+            }
+
+            setReservations(prev => prev.map(res =>
+                res.id === targetId ? { ...res, status: RESERVATION_STATUS.CANCELLATION_REQUESTED, requestMsg: cancelReason } : res
+            ));
+
+            openModal({
+                type: "ALERT",
+                title: "요청 완료",
+                desc: "취소 요청이 접수되었습니다.<br/>강사의 승인 후 취소가 완료됩니다.",
+                confirmLabel: "확인"
+            });
+        }
+        else {
+            closeModal();
+        }
+    };
+
+    const handleCancelClick = (id: string, currentStatus: ReservationStatus) => {
+        if (currentStatus === RESERVATION_STATUS.PENDING) {
+            openModal({
+                type: "CANCEL_PENDING",
+                targetId: id,
+                title: "예약 취소",
+                desc: "진짜 취소하시겠습니까?<br/>취소 후 복구가 불가능합니다.",
+                confirmLabel: "취소하기",
+                cancelLabel: "닫기"
+            });
+        } else if (currentStatus === RESERVATION_STATUS.CONFIRMED) {
+            setCancelReason("");
+            openModal({
+                type: "REQUEST_CANCEL",
+                targetId: id,
+                title: "취소 요청",
+                desc: "이미 확정된 예약은 직접 취소할 수 없습니다.<br/>취소 요청 사유를 작성해주세요.",
+                confirmLabel: "요청하기",
+                cancelLabel: "닫기"
+            });
+        }
+    };
 
     return (
         <div className="flex flex-col h-full bg-gray-50 min-h-screen">
@@ -86,11 +229,17 @@ const MarketReservation = () => {
                         <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col gap-4">
                             {/* 헤더 */}
                             <div className="flex justify-between items-center">
-                                <span className={`text-[12px] font-bold px-2.5 py-1 rounded-md ${item.status === "예약 확정"
+                                <span className={`text-[12px] font-bold px-2.5 py-1 rounded-md ${item.status === RESERVATION_STATUS.CONFIRMED
                                     ? "bg-main/10 text-main"
-                                    : item.status === "수강 완료"
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-gray-100 text-gray-500"
+                                    : item.status === RESERVATION_STATUS.PENDING
+                                        ? "bg-red-50 text-red-500"
+                                        : item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED
+                                            ? "bg-orange-50 text-orange-500"
+                                            : item.status === RESERVATION_STATUS.COMPLETED
+                                                ? "bg-green-100 text-green-700"
+                                                : item.status === RESERVATION_STATUS.ADMIN_SETTLED
+                                                    ? "bg-blue-50 text-blue-600"
+                                                    : "bg-gray-100 text-gray-500"
                                     }`}>
                                     {item.status}
                                 </span>
@@ -134,34 +283,58 @@ const MarketReservation = () => {
                             </div>
 
                             {/* 액션 버튼 */}
-                            {item.status === "예약 확정" && (
+                            {(item.status === RESERVATION_STATUS.PENDING || item.status === RESERVATION_STATUS.CONFIRMED || item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED) && (
                                 <div className="flex flex-col gap-2 mt-1">
                                     <div className="flex gap-2.5">
                                         <button
-                                            onClick={() => {
-                                                if (window.confirm("예약을 취소하시겠습니까? (규정에 따라 수수료가 발생할 수 있습니다.)")) {
-                                                    alert("예약이 취소되었습니다.");
-                                                }
-                                            }}
-                                            className="flex-1 py-3.5 rounded-xl font-bold text-[14px] bg-gray-100 text-gray-400 hover:bg-gray-200 transition-colors"
+                                            onClick={() => handleCancelClick(item.id, item.status)}
+                                            disabled={item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED}
+                                            className={`w-full py-3.5 rounded-xl font-bold text-[14px] transition-colors ${item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED
+                                                ? "bg-gray-50 text-gray-300 cursor-not-allowed"
+                                                : item.status === RESERVATION_STATUS.PENDING
+                                                    ? "bg-main text-white hover:brightness-95 shadow-sm"
+                                                    : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                                                }`}
                                         >
-                                            예약 취소
-                                        </button>
-                                        <button
-                                            className="flex-1 py-3.5 rounded-xl font-bold text-[14px] bg-main text-white shadow-sm hover:brightness-95 transition-all border border-transparent"
-                                            onClick={() => {
-                                                if (window.confirm("클래스 수강이 완료되었나요?\n'구매 확정' 시 트레이너에게 대금이 정산됩니다.")) {
-                                                    alert("구매 확정이 완료되었습니다. 클래스가 '지난 내역'으로 이동합니다.");
-                                                }
-                                            }}
-                                        >
-                                            구매 확정
+                                            {item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED ? "취소 요청 중" : "예약 취소"}
                                         </button>
                                     </div>
+                                    {item.status === RESERVATION_STATUS.PENDING ? (
+                                        <p className="text-[11px] text-red-400 text-center font-medium">
+                                            * 강사가 예약 승인을 검토 중입니다.
+                                        </p>
+                                    ) : item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED && (
+                                        <p className="text-[11px] text-orange-400 text-center font-medium">
+                                            * 강사가 취소 요청을 확인하고 있습니다. 조금만 기다려주세요.
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
-                            {item.status === "수강 완료" && (
+                            {/* 모달 렌더링 */}
+                            {modal.isOpen && (
+                                <CommonModal
+                                    title={modal.title}
+                                    desc={modal.desc}
+                                    confirmLabel={modal.confirmLabel}
+                                    onConfirmClick={handleModalConfirm}
+                                    cancelLabel={modal.cancelLabel}
+                                    onCancelClick={closeModal}
+                                >
+                                    {modal.type === "REQUEST_CANCEL" && (
+                                        <div className="w-full mt-2">
+                                            <textarea
+                                                value={cancelReason}
+                                                onChange={(e) => setCancelReason(e.target.value)}
+                                                placeholder="취소 사유를 입력해주세요. (예: 갑작스러운 일정 변경)"
+                                                className="w-full h-[100px] bg-gray-50 border border-gray-200 rounded-xl p-3 text-[14px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-main focus:ring-1 focus:ring-main/20 resize-none transition-all shadow-sm text-left"
+                                            />
+                                        </div>
+                                    )}
+                                </CommonModal>
+                            )}
+
+                            {(item.status === RESERVATION_STATUS.COMPLETED || item.status === RESERVATION_STATUS.ADMIN_SETTLED) && (
                                 <CommonButton
                                     label="리뷰 남기기"
                                     onClick={() => navigate(`/market/review/${item.id}`)}
@@ -220,7 +393,9 @@ const MarketReservation = () => {
                             </div>
                             {selectedRes.requestMsg && (
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">내 요청사항</span>
+                                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">
+                                        {selectedRes.status === RESERVATION_STATUS.CANCELLED ? "취소 사유" : "내 요청사항"}
+                                    </span>
                                     <div className="bg-white p-3 rounded-xl border border-gray-100 text-[13px] text-gray-600 leading-relaxed italic">
                                         "{selectedRes.requestMsg}"
                                     </div>
@@ -236,8 +411,13 @@ const MarketReservation = () => {
                         <button
                             className="text-[12px] text-gray-400 underline font-medium text-center"
                             onClick={() => {
-                                alert("블록체인 익스플로러로 연결됩니다.");
                                 setSelectedRes(null);
+                                openModal({
+                                    type: "ALERT",
+                                    title: "알림",
+                                    desc: "블록체인 익스플로러로 연결됩니다.",
+                                    confirmLabel: "확인"
+                                });
                             }}
                         >
                             온체인 데이터 자세히 보기

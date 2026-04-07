@@ -340,8 +340,8 @@ const CreateTicket = () => {
                     </div>
 
                     <div className="flex flex-col gap-1 px-1 mt-1">
-                        <p className="text-[11px] text-gray-400 leading-tight">
-                            • 첫 번째 사진이 클래스 썸네일(대표 이미지)로 사용됩니다.
+                        <p className="text-[11px] text-main font-bold leading-tight">
+                            • 첫 번째 사진이 대표 이미지로 노출됩니다.
                         </p>
                         <p className="text-[11px] text-gray-400 leading-tight">
                             • 가로 비율의 깨끗한 이미지는 클래스 신뢰도를 높여줍니다.
