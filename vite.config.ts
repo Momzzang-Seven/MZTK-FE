@@ -26,13 +26,13 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    host: "127.0.0.1",
+    host: "localhost",
     proxy: {
-      "/auth": "http://127.0.0.1:8080",
-      "/users": "http://127.0.0.1:8080",
-      "/api": "http://127.0.0.1:8080",
-      "/locations": "http://127.0.0.1:8080",
-      "/levels": "http://127.0.0.1:8080",
+      "/auth": "http://localhost:8080",
+      "/users": "http://localhost:8080",
+      "/api": "http://localhost:8080",
+      "/locations": "http://localhost:8080",
+      "/levels": "http://localhost:8080",
     },
   },
   test: {

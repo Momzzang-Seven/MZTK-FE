@@ -5,16 +5,18 @@ import { headerByPath } from "@constant";
 interface SimpleHeaderProps {
   onBackClick?: () => void;
   button?: React.ReactNode;
+  title?: string;
 }
 
-export const SimpleHeader = ({ onBackClick, button }: SimpleHeaderProps) => {
+export const SimpleHeader = ({ onBackClick, button, title }: SimpleHeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;
   const currentHeader = headerByPath.find((part) => path.startsWith(part.path));
+  const displayTitle = title ?? currentHeader?.label ?? "";
 
   return (
-    <header className="z-[998] w-full sticky max-w-[420px] flex items-center justify-between px-6 py-6 border-b border-gray-300">
+    <header className="z-[998] w-full sticky max-w-[450px] mx-auto flex items-center justify-between px-6 py-6 border-b border-gray-300 bg-white">
       <svg
         width="20"
         height="16"
@@ -33,7 +35,7 @@ export const SimpleHeader = ({ onBackClick, button }: SimpleHeaderProps) => {
           strokeLinejoin="round"
         />
       </svg>
-      <div className="font-bold text-lg">{currentHeader?.label ?? ""}</div>
+      <div className="font-bold text-lg">{displayTitle}</div>
       {button && <div>{button}</div>}
       {!button && <div className="w-5 h-4" />}
     </header>
