@@ -24,7 +24,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     "/exercise-auth",
     "/record-auth",
     "/location-register",
-    "/trainer/create",
     "/trainer/list",
     "/trainer/reservations",
     "/trainer/reviews",
