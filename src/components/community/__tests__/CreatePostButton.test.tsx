@@ -41,7 +41,7 @@ describe("CreatePostButton", () => {
     const button = screen.getByRole("button");
     fireEvent.click(button);
 
-    expect(mockNavigate).toHaveBeenCalledWith("/community/new/free");
+    expect(mockNavigate).toHaveBeenCalledWith("/community/free/new/select-image");
   });
 
   it("질문게시판 경로에서 클릭 시 새 질문 작성 페이지로 이동한다", () => {
@@ -50,7 +50,7 @@ describe("CreatePostButton", () => {
     const button = screen.getByRole("button");
     fireEvent.click(button);
 
-    expect(mockNavigate).toHaveBeenCalledWith("/community/new/question");
+    expect(mockNavigate).toHaveBeenCalledWith("/community/question/new");
   });
 
   it("버튼이 고정 위치에 있다", () => {

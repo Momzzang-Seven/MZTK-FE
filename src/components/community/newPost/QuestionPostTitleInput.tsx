@@ -12,18 +12,15 @@ const NewPostTitleInput = ({
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // 내용 길이에 따라 height 자동 조절
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
 
     el.style.height = "auto";
-    const lineHeight = 20;
-    const maxHeight = lineHeight;
-    const newHeight = Math.min(el.scrollHeight, maxHeight);
 
-    el.style.height = `${newHeight}px`;
-    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+    el.style.height = `${el.scrollHeight}px`;
+    
+    el.style.overflowY = "hidden";
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -41,7 +38,7 @@ const NewPostTitleInput = ({
         placeholder="제목을 입력하세요."
         className="
           w-full bg-transparent
-          text-sm leading-relaxed text-gray-900
+          text-lg font-semibold leading-relaxed text-gray-900
           placeholder:text-gray-400
           resize-none outline-none
           border-none

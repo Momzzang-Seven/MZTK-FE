@@ -14,7 +14,8 @@ import {
   Community,
   FreeBoard,
   QuestionBoard,
-  CreatePost,
+  SelectImage,
+  WritePost,
   FreePostDetail,
   QuestionDetail,
   Leaderboard,
@@ -111,25 +112,33 @@ function App() {
                       <Route path="question" element={<QuestionBoard />} />
                     </Route>
                     <Route
+                      path="/community/:type/new/select-image"
+                      element={<SelectImage />}
+                    />
+                    <Route
+                      path="/community/:type/new"
+                      element={<WritePost />}
+                    />
+                    <Route
+                      path="/community/:type/new/:postId"
+                      element={<WritePost />}
+                    />
+                    <Route
+                      path="/community/:type/edit/:postId/select-image"
+                      element={<SelectImage />}
+                    />
+                    <Route
+                      path="/community/:type/edit/:postId"
+                      element={<WritePost />}
+                    />
+                    <Route
                       path="/community/free/:postId"
                       element={<FreePostDetail />}
                     />
                     <Route
                       path="/community/question/:postId"
                       element={<QuestionDetail />}
-                    />
-                    <Route
-                      path="/community/new/:type"
-                      element={<CreatePost />}
-                    />
-                    <Route
-                      path="/community/new/answer/:postId"
-                      element={<CreatePost />}
-                    />
-                    <Route
-                      path="/community/edit/:type/:postId"
-                      element={<CreatePost />}
-                    />
+                    />  
                     <Route path="/my" element={<My />} />
                     <Route path="/myTknTx" element={<MyTx />} />
                     <Route path="/exercise-auth" element={<ExerciseAuth />} />

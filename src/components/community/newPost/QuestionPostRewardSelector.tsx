@@ -3,10 +3,10 @@ import { useState } from "react";
 
 interface TokenSelectProps {
   reward: number;
-  setReward: React.Dispatch<React.SetStateAction<number>>;
+  setReward: (value: number) => void;
 }
 
-const TokenSelect = ({ reward, setReward }: TokenSelectProps) => {
+const TokenSelector = ({ reward, setReward }: TokenSelectProps) => {
   // const { balance } = useTokenBalance();
   const dummyBalance = 80;
   const [customValue, setCustomValue] = useState("");
@@ -86,4 +86,4 @@ const TokenSelect = ({ reward, setReward }: TokenSelectProps) => {
   );
 };
 
-export default TokenSelect;
+export default TokenSelector;

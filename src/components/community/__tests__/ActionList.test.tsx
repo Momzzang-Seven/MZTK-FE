@@ -142,28 +142,28 @@ describe("ActionList 컴포넌트", () => {
       setLocalStorageUser(100); // 내 단일 권한
     });
 
-    it('type이 "free"일 때 수정 클릭 시 navigate("/community/edit/free/{id}")가 호출된다', () => {
+    it('type이 "free"일 때 수정 클릭 시 navigate("/community/free/edit/{id}")가 호출된다', () => {
       setup({ type: "free", id: 10 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/community/edit/free/10");
+      expect(mockNavigate).toHaveBeenCalledWith("/community/free/edit/10");
     });
 
-    it('type이 "question"일 때 수정 클릭 시 navigate("/community/edit/question/{id}")가 호출된다', () => {
+    it('type이 "question"일 때 수정 클릭 시 navigate("/community/question/edit/{id}")가 호출된다', () => {
       setup({ type: "question", id: 20 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/community/edit/question/20");
+      expect(mockNavigate).toHaveBeenCalledWith("/community/question/edit/20");
     });
 
-    it('type이 "answer"일 때 수정 클릭 시 navigate("/community/edit/answer/{id}")가 호출된다', () => {
+    it('type이 "answer"일 때 수정 클릭 시 navigate("/community/answer/edit/{id}")가 호출된다', () => {
       setup({ type: "answer", id: 30 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/community/edit/answer/30");
+      expect(mockNavigate).toHaveBeenCalledWith("/community/answer/edit/30");
     });
   });
 

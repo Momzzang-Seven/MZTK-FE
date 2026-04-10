@@ -50,9 +50,9 @@ const ActionList = ({
   const closeModal = () => setModalType(null);
 
   const handleEditClick = () => {
-    if (type === "free") navigate("/community/edit/free/" + id);
-    if (type === "question") navigate("/community/edit/question/" + id);
-    if (type === "answer") navigate("/community/edit/answer/" + id);
+    if (type === "free") navigate(`/community/free/edit/${id}`);
+    if (type === "question") navigate(`/community/question/edit/${id}`);
+    if (type === "answer") navigate(`/community/answer/edit/${id}`);
     if (type === "comment") setModalType("EDIT_COMMENT");
   };
 
