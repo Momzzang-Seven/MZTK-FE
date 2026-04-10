@@ -26,7 +26,7 @@ const SelectImage = () => {
   };
 
   const handleNextClick = () => {
-    navigate(`/community/new/${type}/write`);
+    navigate(`/community/${type}/new`);
   };
 
   return (

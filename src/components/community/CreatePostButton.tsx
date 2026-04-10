@@ -12,15 +12,15 @@ const CreatePostButton = ({ postId }: CreatePostButtonProps) => {
   const handleCreatePost = () => {
     if (postId !== undefined) {
       navigate(
-        `/community/new/answer/${encodeURIComponent(postId)}/write`,
+        `/community/answer/new/${encodeURIComponent(postId)}`,
       );
       return;
     }
 
     if (pathname === "/community/free") {
-      navigate("/community/new/free/select-image");
+      navigate("/community/free/new/select-image");
     } else if (pathname === "/community/question") {
-      navigate("/community/new/question/write");
+      navigate("/community/question/new");
     }
   };
 

@@ -8,7 +8,7 @@ const ImageUploadNodeView = ({ node }: NodeViewProps) => {
     // draggable="false"로 NodeViewWrapper의 기본 draggable 속성을 덮어씀
     <NodeViewWrapper draggable="false" data-drag-handle="">
       <div
-        className="relative my-2"
+        className="relative"
         draggable={false}
         onDragStart={(e) => e.preventDefault()}
       >
