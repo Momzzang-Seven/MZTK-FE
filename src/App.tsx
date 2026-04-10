@@ -14,7 +14,8 @@ import {
   Community,
   FreeBoard,
   QuestionBoard,
-  CreatePost,
+  SelectImage,
+  WritePost,
   FreePostDetail,
   QuestionDetail,
   Leaderboard,
@@ -119,16 +120,16 @@ function App() {
                       element={<QuestionDetail />}
                     />
                     <Route
-                      path="/community/new/:type"
-                      element={<CreatePost />}
+                      path="/community/new/:type/select-image"
+                      element={<SelectImage />}
                     />
                     <Route
-                      path="/community/new/answer/:postId"
-                      element={<CreatePost />}
+                      path="/community/new/:type/write"
+                      element={<WritePost />}
                     />
                     <Route
-                      path="/community/edit/:type/:postId"
-                      element={<CreatePost />}
+                      path="/community/new/answer/:postId/write"
+                      element={<WritePost />}
                     />
                     <Route path="/my" element={<My />} />
                     <Route path="/myTknTx" element={<MyTx />} />
