@@ -48,7 +48,13 @@ export const useCreatePost = () => {
       }
 
       reset();
-      navigate(-1);
+
+      if (postType === "answer" && parentPostId || postType == "question") {
+        navigate(-1); // 답변, 질문 -> 이전 페이지로
+      } else if (postType === "free" ){
+        navigate(-2); // 자유 -> 이미지 선택 페이지에서 왔으므로 두 번 뒤로
+      }
+
     } catch (error) {
       console.error("게시물 등록 실패:", error);
     } finally {

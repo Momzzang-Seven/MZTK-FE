@@ -128,7 +128,7 @@ function App() {
                       element={<WritePost />}
                     />
                     <Route
-                      path="/community/new/answer/:postId/write"
+                      path="/community/new/:type/:postId/write"
                       element={<WritePost />}
                     />
                     <Route path="/my" element={<My />} />

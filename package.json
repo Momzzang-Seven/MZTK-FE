@@ -13,6 +13,10 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:ci": "vitest run",
+    "test:integration": "vitest run --reporter=verbose src/**/*.integration.test.*",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -46,6 +50,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/google.maps": "^3.58.1",
@@ -61,6 +66,7 @@
     "husky": "^9.1.7",
     "jsdom": "^28.1.0",
     "lint-staged": "^16.4.0",
+    "msw": "^2.12.14",
     "prettier": "^3.7.4",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.3",

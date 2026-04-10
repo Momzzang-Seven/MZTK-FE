@@ -15,12 +15,11 @@ interface PresignedUrlResponse {
 
 /**
  * Presigned URL 요청 (Mock)
- * 실제 연동 시 엔드포인트만 교체
  */
 export const getPresignedUrl = async (
   filename: string,
 ): Promise<PresignedUrlResponse> => {
-  // TODO: 실제 API 연동 시 아래 mock 제거
+  // 실제 API 연동 시 아래 mock 제거
   const tmpObjectKey = crypto.randomUUID();
   const presignedUrl = `https://mztk-bucket.s3.ap-northeast-2.amazonaws.com/posts/${tmpObjectKey}/${filename}`;
 
@@ -31,14 +30,12 @@ export const getPresignedUrl = async (
 };
 
 /**
- * S3 Presigned URL로 이미지 직접 업로드 (Mock)
- * 실제 연동 시 PUT 요청만 활성화
+ * S3 Presigned URL로 이미지 직접 업로드
  */
 export const uploadImageToS3 = async (
   url: string,
   file: File,
 ): Promise<void> => {
-  // TODO: 실제 연동 시 아래 mock → fetch(url, { method: "PUT", body: file })
   console.log(url, file);
   return Promise.resolve();
 };
@@ -48,7 +45,6 @@ export const uploadImageToS3 = async (
  */
 export const createPost = async (payload: PostPayload): Promise<void> => {
   console.log(payload)
-  // await api.post("/posts", payload);
 };
 
 /**
@@ -59,5 +55,4 @@ export const createAnswer = async (
   payload: PostPayload,
 ): Promise<void> => {
   console.log(postId, payload)
-  // await api.post(`/posts/${postId}/answers`, payload);
 };

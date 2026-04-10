@@ -37,19 +37,19 @@ const TrainerStoreRegister = () => {
 
     // 맵 초기화
     useEffect(() => {
-        if (isMapLoaded && mapElement.current && !mapRef.current) {
+        if (isMapLoaded && mapElement.current && !mapRef.current && window.naver) {
             // 기본 위도, 경도 (서울시청 기준)
-            const mapOptions = {
-                center: new window.naver.maps.LatLng(37.5666805, 126.9784147),
+            const mapOptions: naver.maps.MapOptions = {
+                center: new naver.maps.LatLng(37.5666805, 126.9784147),
                 zoom: 15,
             };
-            mapRef.current = new window.naver.maps.Map(mapElement.current, mapOptions);
+            mapRef.current = new naver.maps.Map(mapElement.current, mapOptions);
         }
     }, [isMapLoaded]);
 
     // 주소 검색 시 좌표 변경
     useEffect(() => {
-        if (isMapLoaded && address && mapRef.current) {
+        if (isMapLoaded && address && mapRef.current && window.naver?.Service) {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 window.naver.maps.Service.geocode({ query: address }, (status: any, response: any) => {
@@ -66,8 +66,8 @@ const TrainerStoreRegister = () => {
                         });
                     }
                 });
-            } catch {
-                console.warn("Geocoding failed, check client ID");
+            } catch (err) {
+                console.warn("Geocoding failed", err);
             }
         }
     }, [address, isMapLoaded]);
@@ -84,35 +84,6 @@ const TrainerStoreRegister = () => {
 
         setAddress(fullAddress);
         setIsPostcodeOpen(false);
-    };
-
-    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
-
-        if (imagePreviews.length + files.length > 5) {
-            alert("이미지는 최대 5장까지 등록 가능합니다.");
-            return;
-        }
-
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreviews(prev => [...prev, reader.result as string]);
-            };
-            reader.readAsDataURL(file);
-        });
-    };
-
-    const removeImage = (indexToRemove: number) => {
-        setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove));
-    };
-
-    const triggerFileInput = () => {
-        fileInputRef.current?.click();
     };
 
     const handleRegister = () => {
@@ -133,55 +104,13 @@ const TrainerStoreRegister = () => {
         <div className="flex flex-col h-full bg-white min-h-screen relative">
             <TrainerHeader title="매장 및 클래스 장소 등록/수정" showBack />
 
-            <div className="flex-1 px-5 py-6 flex flex-col gap-8 overflow-y-auto pb-32 focus-within:pb-40 transition-all">
-                {/* 1. 매장 사진 섹션 */}
-                <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                        <label className="text-sm font-bold text-gray-700">매장 및 시설 사진 <span className="text-gray-400 font-medium text-xs ml-1">(선택)</span></label>
-                        <span className="text-xs text-gray-400 font-medium">{imagePreviews.length}/5장</span>
-                    </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageChange}
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                    />
-                    <div className="flex gap-3 overflow-x-auto scrollbar-hide py-1">
-                        {imagePreviews.length < 5 && (
-                            <div
-                                onClick={triggerFileInput}
-                                className="w-24 h-24 flex-shrink-0 bg-grey-pale rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200 cursor-pointer active:scale-[0.99] transition-all hover:bg-gray-50"
-                            >
-                                <img src="/icon/camera.svg" alt="camera" className="w-6 h-6 opacity-30 mb-1" />
-                                <span className="text-[10px] text-gray-400 font-medium">사진 추가</span>
-                            </div>
-                        )}
-                        {imagePreviews.map((preview, index) => (
-                            <div key={index} className="w-24 h-24 flex-shrink-0 relative rounded-xl overflow-hidden border border-gray-100">
-                                <img src={preview} alt={`preview-${index}`} className="w-full h-full object-cover" />
-                                <button
-                                    onClick={() => removeImage(index)}
-                                    className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] font-bold"
-                                >
-                                    ✕
-                                </button>
-                                {index === 0 && (
-                                    <div className="absolute bottom-0 left-0 right-0 bg-main/80 text-white text-[9px] font-bold text-center py-0.5">
-                                        대표 이미지
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    <p className="text-[11px] text-gray-400 mt-1">권장 사이즈 1028x720 / 첫 번째 사진이 매장 대표 사진으로 설정됩니다.</p>
-                </div>
+            <div className="flex-1 px-5 py-6 flex flex-col gap-10 overflow-y-auto pb-32 focus-within:pb-40 transition-all">
+                {/* 1. 매장 위치 섹션 */}
 
                 {/* 2. 매장 위치 섹션 */}
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-6">
                     {/* 주소 검색 */}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                         <label className="text-sm font-bold text-gray-700">매장 위치 (주소) <span className="text-main">*</span></label>
                         <div className="flex gap-2">
                             <input
@@ -189,7 +118,7 @@ const TrainerStoreRegister = () => {
                                 value={address}
                                 placeholder="주소를 검색해주세요"
                                 onClick={() => setIsPostcodeOpen(true)}
-                                className="flex-1 bg-grey-pale rounded-xl py-4 px-4 text-[14px] outline-none cursor-pointer text-gray-800"
+                                className="flex-1 bg-gray-50 rounded-xl py-4 px-4 text-[14px] outline-none cursor-pointer text-gray-800 border border-gray-100"
                             />
                             <button
                                 onClick={() => setIsPostcodeOpen(true)}
@@ -198,28 +127,26 @@ const TrainerStoreRegister = () => {
                                 주소 찾기
                             </button>
                         </div>
-                        {address && (
-                            <input
-                                type="text"
-                                value={detailAddress}
-                                onChange={(e) => setDetailAddress(e.target.value)}
-                                placeholder="상세 주소를 입력해주세요"
-                                className="w-full bg-grey-pale rounded-xl py-4 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 mt-1"
-                            />
-                        )}
+                        <input
+                            type="text"
+                            value={detailAddress}
+                            onChange={(e) => setDetailAddress(e.target.value)}
+                            placeholder="상세 주소를 입력해주세요 (동, 호수 등)"
+                            className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
+                        />
                     </div>
 
                     {/* 지도 표출 */}
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-bold text-gray-700">지도 위치</label>
-                        <div className="w-full h-[220px] bg-grey-pale rounded-xl overflow-hidden relative border border-gray-100">
+                        <div className="w-full h-[220px] bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100">
                             <div ref={mapElement} className="w-full h-full" />
                             {!isMapLoaded && (
-                                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-[13px] font-medium">
+                                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-[13px] font-medium bg-gray-50">
                                     지도를 불러오는 중입니다...
                                 </div>
                             )}
-                            {isMapLoaded && !window.naver?.maps && (
+                            {isMapLoaded && !window.naver && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-[14px] font-bold bg-white/90 z-10 px-5 text-center leading-relaxed backdrop-blur-sm border border-gray-100">
                                     네이버 Map 연동 필요
                                     <span className="text-[12px] font-medium text-gray-400 mt-1">NCP Client ID를 적용하면<br />지도가 활성화됩니다.</span>
@@ -246,39 +173,39 @@ const TrainerStoreRegister = () => {
                     <label className="text-sm font-bold text-gray-700 mb-1">SNS 계정 연동 <span className="text-gray-400 font-medium text-xs ml-1">(선택)</span></label>
 
                     <div className="flex items-center gap-3">
-                        <div className="text-[13px] text-gray-600 font-bold w-[76px] flex items-center gap-1.5 opacity-80">
-                            <img src="/icon/user.svg" alt="home" className="w-4 h-4 grayscale" /> 홈페이지
+                        <div className="text-[13px] text-gray-600 font-bold w-[100px] flex items-center opacity-80">
+                            홈페이지
                         </div>
                         <input
                             type="text"
                             value={sns.home}
                             onChange={(e) => setSns({ ...sns, home: e.target.value })}
                             placeholder="URL 입력"
-                            className="flex-1 bg-grey-pale rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+                            className="flex-1 bg-gray-50 rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
                         />
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="text-[13px] text-gray-600 font-bold w-[76px] flex items-center gap-1.5 opacity-80">
-                            <img src="/icon/gallery.svg" alt="insta" className="w-4 h-4 grayscale" /> 인스타
+                        <div className="text-[13px] text-gray-600 font-bold w-[100px] flex items-center opacity-80">
+                            인스타
                         </div>
                         <input
                             type="text"
                             value={sns.insta}
                             onChange={(e) => setSns({ ...sns, insta: e.target.value })}
                             placeholder="@아이디 입력"
-                            className="flex-1 bg-grey-pale rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+                            className="flex-1 bg-gray-50 rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
                         />
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="text-[13px] text-gray-600 font-bold w-[76px] flex items-center gap-1.5 opacity-80">
-                            <img src="/icon/comment.svg" alt="x" className="w-4 h-4 grayscale" /> X (트위터)
+                        <div className="text-[13px] text-gray-600 font-bold w-[100px] flex items-center opacity-80">
+                            X (트위터)
                         </div>
                         <input
                             type="text"
                             value={sns.x}
                             onChange={(e) => setSns({ ...sns, x: e.target.value })}
                             placeholder="@아이디 입력"
-                            className="flex-1 bg-grey-pale rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+                            className="flex-1 bg-gray-50 rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
                         />
                     </div>
                 </div>

@@ -5,6 +5,8 @@ import ImageUploadNodeView from "./ImageUploadNodeView";
 const ImageUploadNode = Image.extend({
   name: "imageUploadNode",
 
+  draggable: false,
+
   addAttributes() {
     return {
       ...this.parent?.(),

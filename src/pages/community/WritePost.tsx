@@ -22,10 +22,11 @@ const WritePost = () => {
   // question/answer 전용: 스토어 초기화 + 타입 설정
   useEffect(() => {
     const urlType = (type ?? "free") as CreatePostType;
-    if (urlType === "free") return;
 
-    reset();
-    setPostType(urlType);
+    if (type !== "free") {
+      reset();
+      setPostType(urlType);
+    }
 
     if (urlType === "answer" && postId) {
       setParentPostId(Number(postId));

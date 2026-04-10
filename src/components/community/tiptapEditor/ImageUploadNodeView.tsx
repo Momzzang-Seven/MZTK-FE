@@ -5,13 +5,19 @@ const ImageUploadNodeView = ({ node }: NodeViewProps) => {
   const { src, uploading } = node.attrs;
 
   return (
-    <NodeViewWrapper>
-      <div className="relative my-2">
+    // draggable="false"로 NodeViewWrapper의 기본 draggable 속성을 덮어씀
+    <NodeViewWrapper draggable="false" data-drag-handle="">
+      <div
+        className="relative my-2"
+        draggable={false}
+        onDragStart={(e) => e.preventDefault()}
+      >
         {src && (
           <img
             src={src}
             alt="삽입된 이미지"
-            className={`w-full rounded-lg ${
+            draggable={false}
+            className={`w-full rounded-lg select-none ${
               uploading ? "opacity-50" : ""
             }`}
           />
