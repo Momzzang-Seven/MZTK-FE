@@ -1,5 +1,5 @@
 import type { CreatePostState, UploadedImage } from "@store/createPostStore";
-import type { PostPayload } from "@services/community";
+import type { PostPayload } from "@types";
 
 /**
  * HTML 문자열에서 <img data-uuid="..."> 속성을 등장 순서대로 수집.

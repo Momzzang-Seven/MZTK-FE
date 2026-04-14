@@ -1,13 +1,15 @@
 import { EditorContent } from "@tiptap/react";
 import { useTiptapEditor } from "@hooks/useTiptapEditor";
+import type { ImageReferenceType } from "@types";
 import Toolbar from "./Toolbar";
 
 interface TiptapEditorProps {
   onChange: (html: string) => void;
+  referenceType: ImageReferenceType;
 }
 
-const TiptapEditor = ({ onChange }: TiptapEditorProps) => {
-  const { editor, handleImageSelect } = useTiptapEditor(onChange);
+const TiptapEditor = ({ onChange, referenceType }: TiptapEditorProps) => {
+  const { editor, handleImageSelect } = useTiptapEditor(onChange, referenceType);
 
   return (
     <div className="w-full">

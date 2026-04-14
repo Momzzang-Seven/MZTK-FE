@@ -1,4 +1,4 @@
-import { useCreatePostStore } from "@store/createPostStore";
+import { useCreatePostStore } from "@store";
 import TiptapEditor from "../tiptapEditor/TiptapEditor";
 
 const AnswerPostForm = () => {
@@ -6,7 +6,7 @@ const AnswerPostForm = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <TiptapEditor onChange={setContent} />
+      <TiptapEditor onChange={setContent} referenceType="COMMUNITY_ANSWER" />
     </div>
   );
 };

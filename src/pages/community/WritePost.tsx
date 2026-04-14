@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
-import { useCreatePostStore } from "@store/createPostStore";
-import type { CreatePostType } from "@store/createPostStore";
-import { useCreatePost } from "@hooks/useCreatePost";
+import { useCreatePostStore } from "@store";
+import type { CreatePostType } from "@store";
+import { useCreatePost } from "@hooks";
 import FreePostForm from "@components/community/newPost/FreePostForm";
 import QuestionPostForm from "@components/community/newPost/QuestionPostForm";
 import AnswerPostForm from "@components/community/newPost/AnswerPostForm";

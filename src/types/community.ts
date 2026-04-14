@@ -1,5 +1,13 @@
 export type PostType = "free" | "question";
 
+export interface PostPayload {
+  title?: string;
+  content: string;
+  images: string[];
+  reward?: number;
+  tags?: string[];
+}
+
 export type ActionModalType =
   | "MY"
   | "OTHERS"

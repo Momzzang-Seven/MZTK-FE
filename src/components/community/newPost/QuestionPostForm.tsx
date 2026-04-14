@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CommonModal } from "@components/common";
-import { useCreatePostStore } from "@store/createPostStore";
+import { useCreatePostStore } from "@store";
 import NewPostTitleInput from "./QuestionPostTitleInput";
 import TiptapEditor from "../tiptapEditor/TiptapEditor";
 import TagInput from "./TagInput";
@@ -20,7 +20,7 @@ const QuestionPostForm = () => {
   return (
     <div className="flex flex-col">
       <NewPostTitleInput onChange={setTitle} />
-      <TiptapEditor onChange={setContent} />
+      <TiptapEditor onChange={setContent} referenceType="COMMUNITY_QUESTION" />
       <TagInput tags={tags} onChange={setTags} />
 
       <div className="fixed bottom-10 w-full max-w-[420px] px-6">

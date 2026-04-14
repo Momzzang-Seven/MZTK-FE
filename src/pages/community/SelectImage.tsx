@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
-import { useCreatePostStore } from "@store/createPostStore";
-import type { CreatePostType } from "@store/createPostStore";
+import { useCreatePostStore } from "@store";
+import type { CreatePostType } from "@store";
 import MultiImageUploader from "@components/community/newPost/FreePostImageUploader";
 
 // free 게시글 전용 페이지

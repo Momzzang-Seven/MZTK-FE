@@ -1,20 +1,14 @@
 import { useRef, useCallback } from "react";
-import { useCreatePostStore } from "@store/createPostStore";
-import {
-  getPresignedUrl,
-  uploadImageToS3,
-} from "@services/community";
+import { useCreatePostStore } from "@store";
+import { useImageUpload } from "@hooks"; 
 
 interface MultiImageUploaderProps {
   maxImages?: number;
 }
 
-const MultiImageUploader = ({
-  maxImages = 5,
-}: MultiImageUploaderProps) => {
+const MultiImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
   const images = useCreatePostStore((s) => s.images);
-  const addImage = useCreatePostStore((s) => s.addImage);
-  const removeImage = useCreatePostStore((s) => s.removeImage);
+  const { uploadImages, removeImage } = useImageUpload("COMMUNITY_FREE");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSelectImages = useCallback(
@@ -25,20 +19,11 @@ const MultiImageUploader = ({
       const remaining = maxImages - images.length;
       const selected = Array.from(files).slice(0, remaining);
 
-      for (const file of selected) {
-        const previewUrl = URL.createObjectURL(file);
-        const { tmpObjectKey: imageId, presignedUrl: uploadUrl } = await getPresignedUrl(
-          file.name,
-        );
-        await uploadImageToS3(uploadUrl, file);
+      await uploadImages(selected);
 
-        addImage({ id: imageId, previewUrl });
-      }
-
-      // input 초기화 (같은 파일 재선택 허용)
       if (inputRef.current) inputRef.current.value = "";
     },
-    [images.length, maxImages, addImage],
+    [images.length, maxImages, uploadImages],
   );
 
   return (

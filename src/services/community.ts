@@ -1,58 +1,47 @@
-// import { api } from "./client";
+import { api } from "./client";
+import type { PostPayload } from "@types";
 
-export interface PostPayload {
-  title?: string;
-  content: string;
-  images: string[];
-  reward?: number;
-  tags?: string[];
+export const postService = {
+  /**
+   * 게시물 등록
+   */
+  async createPost(payload: PostPayload): Promise<void> {
+    const response = await api.post("/posts", payload);
+    return response.data;
+  },
+
+  /**
+   * 게시물 수정
+   */
+  async updatePost(postId: number, payload: PostPayload): Promise<void> {
+    console.log(postId, payload)
+  },
+
+  /**
+   * 게시물 삭제
+   */
+  async deletePost(postId: number): Promise<void> {
+    console.log(postId)
+  },
+
+  /**
+   * 게시물 목록 조회
+   */
+  async getPosts(): Promise<void> {
+    console.log("게시물 목록 조회")
+  },
+
+  /**
+   * 게시물 상세 조회
+   */
+  async getPost(postId: number): Promise<void> {
+    console.log(postId)
+  },
+
+  /**
+   * 답변 등록
+   */
+  async createAnswer(postId: number, payload: PostPayload): Promise<void> {
+    console.log(postId, payload)
+  }
 }
-
-interface PresignedUrlResponse {
-  tmpObjectKey: string;
-  presignedUrl: string;
-}
-
-/**
- * Presigned URL 요청 (Mock)
- */
-export const getPresignedUrl = async (
-  filename: string,
-): Promise<PresignedUrlResponse> => {
-  // 실제 API 연동 시 아래 mock 제거
-  const tmpObjectKey = crypto.randomUUID();
-  const presignedUrl = `https://mztk-bucket.s3.ap-northeast-2.amazonaws.com/posts/${tmpObjectKey}/${filename}`;
-
-  return Promise.resolve({
-    tmpObjectKey,
-    presignedUrl
-  });
-};
-
-/**
- * S3 Presigned URL로 이미지 직접 업로드
- */
-export const uploadImageToS3 = async (
-  url: string,
-  file: File,
-): Promise<void> => {
-  console.log(url, file);
-  return Promise.resolve();
-};
-
-/**
- * 게시물 등록
- */
-export const createPost = async (payload: PostPayload): Promise<void> => {
-  console.log(payload)
-};
-
-/**
- * 답변 등록
- */
-export const createAnswer = async (
-  postId: number,
-  payload: PostPayload,
-): Promise<void> => {
-  console.log(postId, payload)
-};

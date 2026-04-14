@@ -1,4 +1,4 @@
-import { useCreatePostStore } from "@store/createPostStore";
+import { useCreatePostStore } from "@store";
 import NewPostContentInput from "./FreePostContentInput";
 import TagInput from "./TagInput";
 

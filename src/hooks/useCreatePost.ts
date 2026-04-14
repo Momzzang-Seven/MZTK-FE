@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCreatePostStore } from "@store/createPostStore";
+import { useCreatePostStore } from "@store";
 import { buildPostPayload } from "@utils/buildPostPayload";
 import {
-  createPost,
-  createAnswer,
+  postService,
 } from "@services/community";
 
 /**
@@ -42,9 +41,9 @@ export const useCreatePost = () => {
       const payload = buildPostPayload(store);
 
       if (postType === "answer" && parentPostId) {
-        await createAnswer(parentPostId, payload);
+        await postService.createAnswer(parentPostId, payload);
       } else {
-        await createPost(payload);
+        await postService.createPost(payload);
       }
 
       reset();
