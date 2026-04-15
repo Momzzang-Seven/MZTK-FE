@@ -6,12 +6,10 @@ import {
   AuthChoiceModal,
 } from "@components/home";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store/userStore";
 
 const Home = () => {
-  const { gymLocation, initAttendance, initLevel, initLocation } = useUserStore();
-  const navigate = useNavigate();
+  const { initAttendance, initLevel, initLocation } = useUserStore();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
@@ -22,14 +20,6 @@ const Home = () => {
 
   const handleExerciseAuth = () => {
     setIsAuthModalOpen(true);
-  };
-
-  const handleLocationAuth = () => {
-    if (gymLocation) {
-      navigate("/verify");
-    } else {
-      navigate("/location-register");
-    }
   };
 
   return (
@@ -48,7 +38,6 @@ const Home = () => {
       {/* 3. Action Buttons (Bottom) */}
       <AuthActionButtons
         onExerciseClick={handleExerciseAuth}
-        onLocationClick={handleLocationAuth}
       />
 
       {/* Auth Method Selection Modal */}

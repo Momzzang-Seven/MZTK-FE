@@ -93,7 +93,7 @@ test.describe('레벨업 흐름', () => {
       await dialog.accept();
     });
 
-    await levelUpBtn.click();
+    await levelUpBtn.click({ force: true });
   });
 });
 

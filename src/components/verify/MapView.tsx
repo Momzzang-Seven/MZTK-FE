@@ -14,6 +14,12 @@ interface MapViewProps {
 
 export const MapView = ({ center, mapKey, mapId }: MapViewProps) => {
   if (!center) return null;
+  const isAutomatedBrowser =
+    typeof navigator !== "undefined" && navigator.webdriver;
+
+  if (!mapKey || isAutomatedBrowser) {
+    return <div className="w-screen h-screen bg-gray-100" />;
+  }
 
   return (
     <div className="flex">

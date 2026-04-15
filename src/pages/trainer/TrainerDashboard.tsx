@@ -53,7 +53,11 @@ const TrainerDashboard = () => {
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-inner ${item.bgClass}`}>
-                                            <img src={item.icon} alt={item.title} className={`w-5 h-5 ${item.filterClass}`} />
+                                            <img
+                                                src={item.icon}
+                                                alt={item.title}
+                                                className={`w-5 h-5 ${item.path === "/trainer/reviews" ? "brightness-0 invert" : item.filterClass}`}
+                                            />
                                         </div>
                                         <span className="font-semibold text-gray-800 text-[15px]">
                                             {item.title}

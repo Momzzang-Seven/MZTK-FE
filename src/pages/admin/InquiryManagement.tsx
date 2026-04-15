@@ -6,6 +6,7 @@ const InquiryManagement = () => {
     const {
         fetchInquiries,
         filteredInquiries,
+        searchInquiries,
         inquiryFilter,
         setInquiryFilter,
         toggleUserBanByInquiry,
@@ -33,8 +34,8 @@ const InquiryManagement = () => {
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-4">
                 <div className="flex-1">
                     <AdminSearchBar
-                        placeholder="제목 또는 내용으로 검색 (구현 예정)"
-                        onSearch={() => { }}
+                        placeholder="제목 또는 내용으로 검색"
+                        onSearch={searchInquiries}
                     />
                 </div>
                 <div className="relative">

@@ -5,7 +5,6 @@ import { CommonButton } from "@components/common";
 
 interface AuthActionButtonsProps {
     onExerciseClick: () => void;
-    onLocationClick: () => void;
 }
 
 export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) => {
@@ -93,3 +92,4 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
 };
 
 export default AuthActionButtons;
+

@@ -69,6 +69,7 @@ interface AdminState {
     // Inquiry Management State
     inquiries: AdminInquiry[];
     filteredInquiries: AdminInquiry[];
+    searchInquiryQuery: string;
     inquiryFilter: 'ALL' | 'MEMBER' | 'TRAINER';
 
     // Pagination
@@ -96,6 +97,7 @@ interface AdminState {
 
     // Inquiry Management Actions
     fetchInquiries: () => Promise<void>;
+    searchInquiries: (query: string) => void;
     setInquiryFilter: (filter: 'ALL' | 'MEMBER' | 'TRAINER') => void;
     toggleUserBanByInquiry: (inquiryId: number) => Promise<void>;
 }
@@ -178,9 +180,23 @@ const getFilteredUsers = (users: AdminUser[], status: string, role: string, quer
 };
 
 // Helper to filter inquiries
-const getFilteredInquiries = (inquiries: AdminInquiry[], role: string) => {
-    if (role === 'ALL') return inquiries;
-    return inquiries.filter(i => i.authorRole === role);
+const getFilteredInquiries = (inquiries: AdminInquiry[], role: string, query: string) => {
+    let filtered = inquiries;
+
+    if (role !== 'ALL') {
+        filtered = filtered.filter((inquiry) => inquiry.authorRole === role);
+    }
+
+    const trimmedQuery = query.trim().toLowerCase();
+    if (trimmedQuery) {
+        filtered = filtered.filter(
+            (inquiry) =>
+                inquiry.title.toLowerCase().includes(trimmedQuery) ||
+                inquiry.content.toLowerCase().includes(trimmedQuery)
+        );
+    }
+
+    return filtered;
 };
 
 // Helper to filter posts
@@ -225,6 +241,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     // Inquiry State
     inquiries: [],
     filteredInquiries: [],
+    searchInquiryQuery: '',
     inquiryFilter: 'ALL',
 
     // User Actions
@@ -389,20 +406,28 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         set({ isLoading: true });
         await new Promise(r => setTimeout(r, 500));
         const mockData = generateMockInquiries();
+        const { inquiryFilter, searchInquiryQuery } = get();
         set({
             inquiries: mockData,
-            filteredInquiries: getFilteredInquiries(mockData, get().inquiryFilter),
+            filteredInquiries: getFilteredInquiries(mockData, inquiryFilter, searchInquiryQuery),
             isLoading: false
         });
     },
 
+    searchInquiries: (query: string) => {
+        set({ searchInquiryQuery: query });
+        const { inquiries, inquiryFilter } = get();
+        set({ filteredInquiries: getFilteredInquiries(inquiries, inquiryFilter, query) });
+    },
+
     setInquiryFilter: (filter: 'ALL' | 'MEMBER' | 'TRAINER') => {
         set({ inquiryFilter: filter });
-        set({ filteredInquiries: getFilteredInquiries(get().inquiries, filter) });
+        const { inquiries, searchInquiryQuery } = get();
+        set({ filteredInquiries: getFilteredInquiries(inquiries, filter, searchInquiryQuery) });
     },
 
     toggleUserBanByInquiry: async (inquiryId: number) => {
-        const { inquiries, inquiryFilter, users } = get();
+        const { inquiries, inquiryFilter, users, searchInquiryQuery } = get();
         const inquiry = inquiries.find(i => i.id === inquiryId);
         if (!inquiry) return;
 
@@ -420,7 +445,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
         set({
             inquiries: updatedInquiries,
-            filteredInquiries: getFilteredInquiries(updatedInquiries, inquiryFilter),
+            filteredInquiries: getFilteredInquiries(updatedInquiries, inquiryFilter, searchInquiryQuery),
             users: updatedUsers
         });
     }
