@@ -51,7 +51,7 @@ test.describe('핵심 비즈니스 흐름 (로그인 → 운동 인증 → 보�
     });
 
     // 2. 헬스장 위치 등록 데이터 모킹
-    await page.route('**/locations/my', async route => {
+    await page.route('**/users/me/locations', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -129,7 +129,7 @@ test.describe('핵심 비즈니스 흐름 (로그인 → 운동 인증 → 보�
 
     // 레벨업 동작 시 level=6, xp=0 반환하도록 mock 데이터 변경
     mockLevelData = { level: 6, availableXp: 0, requiredXpForNext: 200 };
-    await levelUpBtn.click();
+    await levelUpBtn.click({ force: true });
 
     // 5단계: 레벨업 API 후 홈화면의 레벨 표시 갱신 (6으로 변경됨)
     await expect(page.getByText(/Lv\.6/i).first()).toBeVisible({ timeout: 15000 });

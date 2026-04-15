@@ -49,7 +49,7 @@ test.describe('위치 인증 흐름', () => {
     });
 
     // 운동 위치 API 모킹 (initLocation 성공을 위해 필요)
-    await page.route('**/locations/my', async route => {
+    await page.route('**/users/me/locations', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -107,7 +107,18 @@ test.describe('위치 인증 흐름', () => {
   });
 
   test('운동 장소 미등록 시 location-register 페이지로 이동한다', async ({ page }) => {
+    await page.route('**/users/me/locations', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'SUCCESS',
+          data: { locations: [] }
+        })
+      });
+    });
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
 
     const locationBtn = page.getByRole('button', { name: /위치 인증|헬스장 인증/ });
     await locationBtn.click();

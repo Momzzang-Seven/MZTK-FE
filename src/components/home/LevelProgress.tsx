@@ -1,7 +1,9 @@
 import { useUserStore } from "@store";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const LevelProgress = () => {
+    const navigate = useNavigate();
     const { level, xp, maxXp, levelUp } = useUserStore();
     const [animatedXp, setAnimatedXp] = useState(0);
 
@@ -14,6 +16,12 @@ export const LevelProgress = () => {
     const isLevelUpAvailable = xp >= maxXp;
 
     const handleLevelUp = async () => {
+        const walletAddr = localStorage.getItem("wallet_address");
+        if (!walletAddr) {
+            navigate("/register-wallet");
+            return;
+        }
+
         try {
             const result = await levelUp();
             if (result.success) {
