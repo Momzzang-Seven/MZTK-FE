@@ -9,7 +9,7 @@ export { default as QuestionPostCard } from "./QuestionPostCard";
 export { default as QuestionHeader } from "./QuestionHeader";
 export { default as Question } from "./Question";
 export { default as Answer } from "./Answer";
-export { default as MultiImageUploader } from "./newPost/FreePostImageUploader";
+export { default as FreePostImageUploader } from "./newPost/FreePostImageUploader";
 export { default as NewPostContentInput } from "./newPost/FreePostContentInput";
 export { default as RewardToken } from "./newPost/QuestionPostRewardToken";
 export { default as TokenSelector } from "./newPost/QuestionPostRewardSelector";

@@ -93,7 +93,7 @@ const Answer = ({ answer, isSelectable }: AnswerProps) => {
         </div>
         <ActionList
           size="sm"
-          type="answer"
+          type="ANSWER"
           id={answer.answerId}
           authorId={answer.writer.userId}
           isSelectable={isSelectable}

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
-import { useCreatePostStore } from "@store";
+import { usePostStore } from "@store";
 import type { CreatePostType } from "@store";
 import { useCreatePost } from "@hooks";
 import FreePostForm from "@components/community/newPost/FreePostForm";
@@ -10,23 +10,22 @@ import AnswerPostForm from "@components/community/newPost/AnswerPostForm";
 
 const WritePost = () => {
   const { type, postId } = useParams();
-  const postType = useCreatePostStore((s) => s.postType);
-  const reset = useCreatePostStore((s) => s.reset);
-  const setPostType = useCreatePostStore((s) => s.setPostType);
-  const setParentPostId = useCreatePostStore(
+  const postType = usePostStore((s) => s.postType);
+  const reset = usePostStore((s) => s.reset);
+  const setPostType = usePostStore((s) => s.setPostType);
+  const setParentPostId = usePostStore(
     (s) => s.setParentPostId,
   );
   const { isSubmitActive, isSubmitting, handleSubmit } =
     useCreatePost();
 
-  // question/answer 전용: 스토어 초기화 + 타입 설정
   useEffect(() => {
     const urlType = (type ?? "free") as CreatePostType;
 
     if (type !== "free") {
       reset();
       setPostType(urlType);
-    }
+    } // question/answer 전용: 스토어 초기화 + 타입 설정
 
     if (urlType === "answer" && postId) {
       setParentPostId(Number(postId));

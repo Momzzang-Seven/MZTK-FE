@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCreatePostStore } from "@store";
+import { usePostStore } from "@store";
 import { buildPostPayload } from "@utils/buildPostPayload";
 import {
   postService,
@@ -11,8 +11,8 @@ import {
  */
 export const useCreatePost = () => {
   const navigate = useNavigate();
-  const store = useCreatePostStore();
-  const uploadingCount = useCreatePostStore(
+  const store = usePostStore();
+  const uploadingCount = usePostStore(
     (s) => s.uploadingCount,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +43,7 @@ export const useCreatePost = () => {
       if (postType === "answer" && parentPostId) {
         await postService.createAnswer(parentPostId, payload);
       } else {
-        await postService.createPost(payload);
+        await postService.createFreePost(payload);
       }
 
       reset();

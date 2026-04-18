@@ -1,14 +1,24 @@
 import { useRef, useCallback } from "react";
-import { useCreatePostStore } from "@store";
-import { useImageUpload } from "@hooks"; 
+import { usePostStore } from "@store";
+import { useImageUpload } from "@hooks";
 
 interface MultiImageUploaderProps {
   maxImages?: number;
 }
 
-const MultiImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
-  const images = useCreatePostStore((s) => s.images);
-  const { uploadImages, removeImage } = useImageUpload("COMMUNITY_FREE");
+const FreePostImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
+  const images = usePostStore((s) => s.images);
+  const addImage = usePostStore((s) => s.addImage);
+  const removeImage = usePostStore((s) => s.removeImage);
+  const incrementUploading = usePostStore((s) => s.incrementUploading);
+  const decrementUploading = usePostStore((s) => s.decrementUploading);
+
+  const { uploadImages } = useImageUpload("COMMUNITY_FREE", {
+    onUploaded: addImage,
+    onUploadStart: incrementUploading,
+    onUploadEnd: decrementUploading,
+  });
+
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSelectImages = useCallback(
@@ -21,6 +31,7 @@ const MultiImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
 
       await uploadImages(selected);
 
+      // 같은 파일 재선택 허용
       if (inputRef.current) inputRef.current.value = "";
     },
     [images.length, maxImages, uploadImages],
@@ -77,4 +88,4 @@ const MultiImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
   );
 };
 
-export default MultiImageUploader;
+export default FreePostImageUploader;

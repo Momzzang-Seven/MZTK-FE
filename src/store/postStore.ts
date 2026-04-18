@@ -3,7 +3,7 @@ import { create } from "zustand";
 export type CreatePostType = "free" | "question" | "answer";
 
 export interface UploadedImage {
-  id: string;
+  id: number;
   previewUrl: string;
 }
 
@@ -19,7 +19,7 @@ export interface CreatePostState {
 
   setPostType: (type: CreatePostType) => void;
   addImage: (image: UploadedImage) => void;
-  removeImage: (id: string) => void;
+  removeImage: (id: number) => void;
   reorderImages: (images: UploadedImage[]) => void;
   incrementUploading: () => void;
   decrementUploading: () => void;
@@ -42,7 +42,7 @@ const initialState = {
   parentPostId: null,
 };
 
-export const useCreatePostStore = create<CreatePostState>()((set) => ({
+export const usePostStore = create<CreatePostState>()((set) => ({
   ...initialState,
 
   setPostType: (postType) => set({ postType }),

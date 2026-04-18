@@ -1,4 +1,4 @@
 export * from "./authModal";
-export * from "./createPostStore";
+export * from "./postStore";
 export * from "./locationStore";
 export * from "./userStore";

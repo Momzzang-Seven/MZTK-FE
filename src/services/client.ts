@@ -4,8 +4,12 @@ import axios, { type AxiosInstance } from "axios";
 const BASE_ENV = import.meta.env.VITE_API_BASE_URL;
 let BASE = (BASE_ENV && BASE_ENV !== "undefined") ? (BASE_ENV as string) : "";
 
-if (import.meta.env.DEV && BASE && BASE.includes("localhost:8080")) {
-  console.warn("Detected localhost:8080 in VITE_API_BASE_URL during DEV. Forcing proxy usage.");
+// if (import.meta.env.DEV && BASE && BASE.includes("localhost:8080")) {
+//   console.warn("Detected localhost:8080 in VITE_API_BASE_URL during DEV. Forcing proxy usage.");
+//   BASE = "";
+// }
+
+if (import.meta.env.DEV) {
   BASE = "";
 }
 

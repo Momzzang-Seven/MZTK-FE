@@ -36,7 +36,7 @@ const QuestionDetail = () => {
   return (
     <div className="h-full bg-gray-100">
       <QuestionHeader
-        type="question"
+        type="QUESTION"
         postId={Number(params.postId)}
         writer={question.writer}
         createdAt={question.createdAt}

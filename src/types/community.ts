@@ -1,9 +1,14 @@
-export type PostType = "free" | "question";
+export type PostType = "FREE" | "QUESTION";
+
+export interface PagedResponse<T> {
+  posts: T[];
+  hasNext: boolean;
+}
 
 export interface PostPayload {
   title?: string;
   content: string;
-  images: string[];
+  imageIds: number[];
   reward?: number;
   tags?: string[];
 }

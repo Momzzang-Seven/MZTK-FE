@@ -1,6 +1,8 @@
 import { CommonButton } from "@components/common";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useUserStore } from "@store";
+import { PostLogin } from "@services/auth";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -127,7 +129,7 @@ const Login = () => {
     touchEndX.current = 0;
   };
 
-  const handleLogin = (type: "kakao" | "google") => {
+  const handleLogin = async (type: "kakao" | "google" | "local") => {
     const redirectUri = window.location.origin + "/callback";
     let url = "";
 
@@ -139,6 +141,23 @@ const Login = () => {
       const clientId =
         import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
       url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=email profile&state=google`;
+    } else if (type === "local") {
+      try {
+        const response = await PostLogin({ provider: "LOCAL", email: "testuser1@example.com", password: "StrongPassword123!" })
+        if (response) {
+          const { userInfo, accessToken } = response;
+          setUser(userInfo);
+          setAccessToken(accessToken);
+          navigate("/register");
+        }
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          console.error("Login failed", err.message);
+        } else {
+          console.error("Login failed: Unknown error");
+        }
+        navigate("/login");
+      }
     }
 
     window.location.href = url;
@@ -209,6 +228,14 @@ const Login = () => {
 
       {/* 3. Action Buttons (Fixed Bottom Area) */}
       <div className="w-full max-w-sm flex flex-col gap-3 shrink-0">
+        <CommonButton
+          label="로컬 시작하기"
+          img="/icon/email.svg"
+          bgColor="bg-white border border-gray-200"
+          textColor="text-black"
+          onClick={() => handleLogin("local")}
+          className="w-full title h-[56px] shadow-sm rounded-xl"
+        />
         <CommonButton
           label="카카오로 시작하기"
           img="/icon/kakao.svg"

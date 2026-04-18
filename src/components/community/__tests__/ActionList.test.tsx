@@ -88,7 +88,7 @@ describe("ActionList 컴포넌트", () => {
   });
 
   const setup = (props: Record<string, unknown> = {}) => {
-    return render(<ActionList type="free" id={1} authorId={100} {...props} />);
+    return render(<ActionList type="FREE" id={1} authorId={100} {...props} />);
   };
 
   const setLocalStorageUser = (userId: number | null) => {
@@ -143,7 +143,7 @@ describe("ActionList 컴포넌트", () => {
     });
 
     it('type이 "free"일 때 수정 클릭 시 navigate("/community/free/edit/{id}")가 호출된다', () => {
-      setup({ type: "free", id: 10 });
+      setup({ type: "FREE", id: 10 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
@@ -151,7 +151,7 @@ describe("ActionList 컴포넌트", () => {
     });
 
     it('type이 "question"일 때 수정 클릭 시 navigate("/community/question/edit/{id}")가 호출된다', () => {
-      setup({ type: "question", id: 20 });
+      setup({ type: "QUESTION", id: 20 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
@@ -159,7 +159,7 @@ describe("ActionList 컴포넌트", () => {
     });
 
     it('type이 "answer"일 때 수정 클릭 시 navigate("/community/answer/edit/{id}")가 호출된다', () => {
-      setup({ type: "answer", id: 30 });
+      setup({ type: "ANSWER", id: 30 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
@@ -170,7 +170,7 @@ describe("ActionList 컴포넌트", () => {
   describe("댓글 수정 케이스", () => {
     it('type이 "comment"일 때 수정 클릭 시 EditComment 모달이 렌더링된다', () => {
       setLocalStorageUser(100);
-      setup({ type: "comment", authorId: 100 });
+      setup({ type: "COMMENT", authorId: 100 });
 
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));

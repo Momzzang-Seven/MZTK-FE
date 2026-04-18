@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CommonModal } from "@components/common";
-import { useCreatePostStore } from "@store";
+import { usePostStore } from "@store";
 import NewPostTitleInput from "./QuestionPostTitleInput";
 import TiptapEditor from "../tiptapEditor/TiptapEditor";
 import TagInput from "./TagInput";
@@ -8,12 +8,12 @@ import RewardToken from "./QuestionPostRewardToken";
 import TokenSelector from "./QuestionPostRewardSelector";
 
 const QuestionPostForm = () => {
-  const tags = useCreatePostStore((s) => s.tags);
-  const reward = useCreatePostStore((s) => s.reward);
-  const setTitle = useCreatePostStore((s) => s.setTitle);
-  const setContent = useCreatePostStore((s) => s.setContent);
-  const setTags = useCreatePostStore((s) => s.setTags);
-  const setReward = useCreatePostStore((s) => s.setReward);
+  const tags = usePostStore((s) => s.tags);
+  const reward = usePostStore((s) => s.reward);
+  const setTitle = usePostStore((s) => s.setTitle);
+  const setContent = usePostStore((s) => s.setContent);
+  const setTags = usePostStore((s) => s.setTags);
+  const setReward = usePostStore((s) => s.setReward);
 
   const [rewardModalOpen, setRewardModalOpen] = useState(false);
 

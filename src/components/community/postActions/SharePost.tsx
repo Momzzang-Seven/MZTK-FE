@@ -10,8 +10,8 @@ const SharePost = ({ type, postId }: SharePostProps) => {
   const COMMUNITY_BASE = `${BASE_URL}/community`;
 
   const basePathByType: Record<PostType, string> = {
-    free: `${COMMUNITY_BASE}/free/`,
-    question: `${COMMUNITY_BASE}/question/`,
+    FREE: `${COMMUNITY_BASE}/free/`,
+    QUESTION: `${COMMUNITY_BASE}/question/`,
   };
 
   const url = basePathByType[type] + postId;

@@ -1,5 +1,10 @@
 export type ImageReferenceType = "COMMUNITY_FREE" | "COMMUNITY_QUESTION" | "COMMUNITY_ANSWER";
 
+export interface UploadedImage {
+  id: number;
+  previewUrl: string;
+}
+
 export interface PresignedUrlRequest {
   referenceType: ImageReferenceType;
   images: string[];

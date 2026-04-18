@@ -34,7 +34,7 @@ const CommentItem = ({ comment, showProfileImage = true }: Props) => {
           </div>
           <ActionList
             size="xs"
-            type="comment"
+            type="COMMENT"
             id={comment.commentId}
             authorId={comment.writer.userId}
             commentContent={comment.content}
@@ -42,7 +42,7 @@ const CommentItem = ({ comment, showProfileImage = true }: Props) => {
         </div>
 
         {/* 본문 */}
-        <p className="mt-1 text-sm leading-relaxed">{comment.content}</p>
+        <p className="mt-1 pr-3 text-sm leading-relaxed">{comment.content}</p>
       </div>
     </div>
   );

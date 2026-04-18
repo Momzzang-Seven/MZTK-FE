@@ -1,24 +1,24 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
-import { useCreatePostStore } from "@store";
+import { usePostStore } from "@store";
 import type { CreatePostType } from "@store";
-import MultiImageUploader from "@components/community/newPost/FreePostImageUploader";
+import FreePostImageUploader from "@components/community/newPost/FreePostImageUploader";
 
 // free 게시글 전용 페이지
 const SelectImage = () => {
   const navigate = useNavigate();
   const { type } = useParams();
 
-  const reset = useCreatePostStore((s) => s.reset);
-  const setPostType = useCreatePostStore((s) => s.setPostType);
-  const images = useCreatePostStore((s) => s.images);
+  const reset = usePostStore((s) => s.reset);
+  const setPostType = usePostStore((s) => s.setPostType);
+  const images = usePostStore((s) => s.images);
 
   // 진입 시 스토어 초기화 + 타입 설정
   useEffect(() => {
     reset();
     setPostType(type as CreatePostType);
-  }, [reset, setPostType]);
+  }, [reset, setPostType, type]);
 
   const handleBackClick = () => {
     reset();
@@ -46,7 +46,7 @@ const SelectImage = () => {
       />
 
       <div className="mt-4">
-        <MultiImageUploader />
+        <FreePostImageUploader />
       </div>
     </div>
   );

@@ -26,7 +26,6 @@ const FreePostCard = ({ post }: Props) => {
 
   return (
     <div className="flex flex-col">
-      {/* 헤더 */}
       <div className="flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <img
@@ -47,13 +46,12 @@ const FreePostCard = ({ post }: Props) => {
         </div>
         <ActionList
           id={post.postId}
-          type="free"
+          type="FREE"
           authorId={post.writer.userId}
           size="sm"
         />
       </div>
 
-      {/* 게시물 이미지 */}
       {post.imageUrls && (
         <div className="mt-3 w-full">
           <img
@@ -64,9 +62,7 @@ const FreePostCard = ({ post }: Props) => {
         </div>
       )}
 
-      {/* 액션 영역 */}
       <div className="flex items-center gap-4 px-4 py-1">
-        {/* 좋아요 */}
         <div
           onClick={handleLikeClick}
           className="flex items-center gap-1 active:scale-95 transition cursor-pointer"
@@ -79,7 +75,6 @@ const FreePostCard = ({ post }: Props) => {
           <span className="text-sm font-medium text-gray-700">{likeCount}</span>
         </div>
 
-        {/* 댓글 */}
         <div
           onClick={handleCommentClick}
           className="flex items-center gap-1 active:scale-95 transition cursor-pointer"
@@ -90,11 +85,9 @@ const FreePostCard = ({ post }: Props) => {
           </span>
         </div>
 
-        {/* 공유 */}
-        <SharePost type="free" postId={post.postId} />
+        <SharePost type="FREE" postId={post.postId} />
       </div>
 
-      {/* 내용 및 태그 */}
       <div className="flex flex-col px-4 pb-7 text-sm">
         <p>{post.content}</p>
 

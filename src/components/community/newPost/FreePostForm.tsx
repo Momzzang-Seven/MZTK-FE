@@ -1,12 +1,12 @@
-import { useCreatePostStore } from "@store";
+import { usePostStore } from "@store";
 import NewPostContentInput from "./FreePostContentInput";
 import TagInput from "./TagInput";
 
 const FreePostForm = () => {
-  const images = useCreatePostStore((s) => s.images);
-  const tags = useCreatePostStore((s) => s.tags);
-  const setContent = useCreatePostStore((s) => s.setContent);
-  const setTags = useCreatePostStore((s) => s.setTags);
+  const images = usePostStore((s) => s.images);
+  const tags = usePostStore((s) => s.tags);
+  const setContent = usePostStore((s) => s.setContent);
+  const setTags = usePostStore((s) => s.setTags);
 
   return (
     <div className="flex flex-col gap-4">

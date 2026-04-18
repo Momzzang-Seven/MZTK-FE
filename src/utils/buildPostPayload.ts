@@ -1,15 +1,16 @@
-import type { CreatePostState, UploadedImage } from "@store/createPostStore";
+import type { CreatePostState, UploadedImage } from "@store";
 import type { PostPayload } from "@types";
 
 /**
  * HTML 문자열에서 <img data-uuid="..."> 속성을 등장 순서대로 수집.
  * 서버는 이 uuid 배열로 이미지 소유권 검증 및 src 매핑에 사용한다.
  */
-const extractImageIdsFromHtml = (html: string): string[] => {
+const extractImageIdsFromHtml = (html: string): number[] => {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  return Array.from(doc.querySelectorAll("img[data-uuid]"))
-    .map((img) => img.getAttribute("data-uuid"))
-    .filter((uuid): uuid is string => uuid !== null);
+  return Array.from(doc.querySelectorAll("img[imageId]"))
+    .map((img) => img.getAttribute("imageId"))
+    .filter((id): id is string => id !== null)
+    .map((id) => Number(id));
 };
 
 /**
@@ -28,7 +29,7 @@ export const buildPostPayload = (
     case "free":
       return {
         content: state.content,
-        images: images.map((img: UploadedImage) => img.id),
+        imageIds: images.map((img: UploadedImage) => img.id),
         tags,
       };
 
@@ -36,7 +37,7 @@ export const buildPostPayload = (
       return {
         title,
         content: state.content,
-        images: extractImageIdsFromHtml(state.content),
+        imageIds: extractImageIdsFromHtml(state.content),
         reward,
         tags,
       };
@@ -44,7 +45,7 @@ export const buildPostPayload = (
     case "answer":
       return {
         content: state.content,
-        images: extractImageIdsFromHtml(state.content),
+        imageIds: extractImageIdsFromHtml(state.content),
       };
   }
 };
