@@ -31,6 +31,7 @@ export const PinPad = ({ title, pin, onInput, onDelete }: Props) => {
             return (
               <button
                 key={i}
+                data-click-guard="off"
                 onClick={onDelete}
                 className="h-[64px] flex items-center justify-center text-color-grey-main"
               >
@@ -40,6 +41,7 @@ export const PinPad = ({ title, pin, onInput, onDelete }: Props) => {
           return (
             <button
               key={i}
+              data-click-guard="off"
               onClick={() => onInput(v as number)}
               className="h-[64px] bg-white border border-gray-50 rounded-2xl font-gmarket text-xl shadow-sm active:bg-main/20"
             >

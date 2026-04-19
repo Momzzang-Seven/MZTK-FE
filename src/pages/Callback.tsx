@@ -1,23 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { PostLogin } from "@services/auth";
-import { useUserStore } from "@store";
-import { CommonModal } from "@components/common/CommonModal";
 import axios from "axios";
+import { CommonModal } from "@components/common/CommonModal";
+import { PostLogin } from "@services/auth";
+import { useAuthModalStore, useUserStore } from "@store";
+import { isSanctionedAccountError } from "@utils";
 
 const Callback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
   const setAccessToken = useUserStore((state) => state.setAccessToken);
+  const setSanctioned = useAuthModalStore((state) => state.setSanctioned);
   const loginAttempted = useRef(false);
 
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); // 에러 메시지 상태 추가
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const code = searchParams.get("code");
-    const state = searchParams.get("state"); // Use state to identify provider
+    const state = searchParams.get("state");
 
     if (!code) {
       alert("로그인 실패: 인증 코드가 없습니다.");
@@ -30,14 +32,16 @@ const Callback = () => {
 
     const login = async () => {
       try {
-        // Simple provider detection based on state or hardcoded for now.
-        // You should pass 'kakao' or 'google' in state when redirecting.
         let provider: "KAKAO" | "GOOGLE" = "KAKAO";
         if (state === "google") provider = "GOOGLE";
 
         const redirectUri = window.location.origin + "/callback";
 
-        const response = await PostLogin({ provider, authorizationCode: code, redirectUri });
+        const response = await PostLogin({
+          provider,
+          authorizationCode: code,
+          redirectUri,
+        });
 
         if (response) {
           const { userInfo, accessToken } = response;
@@ -46,29 +50,33 @@ const Callback = () => {
           navigate("/register");
         }
       } catch (err: unknown) {
+        if (isSanctionedAccountError(err, { allowBareForbidden: true })) {
+          setSanctioned(true);
+          return;
+        }
+
         if (axios.isAxiosError(err)) {
-          // 409 Conflict: 이미 다른 소셜로 가입된 경우
           if (err.response?.status === 409) {
-            setErrorMessage(err.response.data.message || "이미 다른 소셜 계정으로 가입된 이메일입니다.");
+            setErrorMessage(
+              err.response.data.message ||
+                "이미 다른 소셜 계정으로 가입된 이메일입니다."
+            );
             setIsErrorModalOpen(true);
             return;
           }
+
           console.error("Login failed", err.message);
         } else {
           console.error("Login failed: Unknown error");
         }
-        // 그 외 에러는 일단 기존 처리 (alert 제거하고 리다이렉트만 하거나, 모달 띄우기)
-        // 여기서는 명시적인 409 외에는 조용히 실패 후 로그인 이동하거나, 필요 시 모달 확장 가능
-        // 일단 409가 아니면 로그인 페이지로 이동
         navigate("/login");
       }
     };
 
     login();
-  }, [searchParams, navigate, setUser, setAccessToken]);
+  }, [searchParams, navigate, setUser, setAccessToken, setSanctioned]);
 
-  const providerName =
-    searchParams.get("state") === "google" ? "구글" : "카카오";
+  const providerName = searchParams.get("state") === "google" ? "구글" : "카카오";
 
   return (
     <>

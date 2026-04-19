@@ -1,11 +1,109 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DaumPostcode from 'react-daum-postcode';
+import DaumPostcode from "react-daum-postcode";
+import {
+    APIProvider,
+    AdvancedMarker,
+    Map,
+    Pin,
+    useApiIsLoaded,
+    useMap,
+} from "@vis.gl/react-google-maps";
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonButton } from "@components/common";
 
+type Coordinates = {
+    latitude: number;
+    longitude: number;
+};
+
+const DEFAULT_COORDINATES: Coordinates = {
+    latitude: 37.5666805,
+    longitude: 126.9784147,
+};
+
+const DEFAULT_ZOOM = 15;
+
+const toMapPosition = (
+    coordinates: Coordinates = DEFAULT_COORDINATES
+): google.maps.LatLngLiteral => ({
+    lat: coordinates.latitude,
+    lng: coordinates.longitude,
+});
+
+const StoreMapController = ({ coordinates }: { coordinates: Coordinates | null }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!map) return;
+
+        map.panTo(toMapPosition(coordinates ?? DEFAULT_COORDINATES));
+
+        if (!coordinates) {
+            map.setZoom(DEFAULT_ZOOM);
+        }
+    }, [coordinates, map]);
+
+    return null;
+};
+
+const StoreGeocoder = ({
+    address,
+    setCoordinates,
+    setIsResolvingCoordinates,
+}: {
+    address: string;
+    setCoordinates: React.Dispatch<React.SetStateAction<Coordinates | null>>;
+    setIsResolvingCoordinates: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
+    const isApiLoaded = useApiIsLoaded();
+
+    useEffect(() => {
+        if (!address) {
+            setCoordinates(null);
+            setIsResolvingCoordinates(false);
+            return;
+        }
+
+        if (!isApiLoaded || !window.google?.maps?.Geocoder) {
+            return;
+        }
+
+        let isMounted = true;
+        const geocoder = new window.google.maps.Geocoder();
+
+        setIsResolvingCoordinates(true);
+
+        geocoder.geocode({ address }, (results, status) => {
+            if (!isMounted) return;
+
+            const location = results?.[0]?.geometry?.location;
+
+            if (status !== window.google.maps.GeocoderStatus.OK || !location) {
+                setCoordinates(null);
+                setIsResolvingCoordinates(false);
+                return;
+            }
+
+            setCoordinates({
+                latitude: location.lat(),
+                longitude: location.lng(),
+            });
+            setIsResolvingCoordinates(false);
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [address, isApiLoaded, setCoordinates, setIsResolvingCoordinates]);
+
+    return null;
+};
+
 const TrainerStoreRegister = () => {
     const navigate = useNavigate();
+    const mapKey = import.meta.env.VITE_GOOGLE_MAP_API || "";
+    const mapId = import.meta.env.VITE_GOOGLE_MAP_ID || "";
 
     // 폼 상태
     const [address, setAddress] = useState("");
@@ -13,64 +111,8 @@ const TrainerStoreRegister = () => {
     const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
     const [phone, setPhone] = useState("");
     const [sns, setSns] = useState({ home: "", insta: "", x: "" });
-
-    // 네이버 지도 스크립트 상태
-    const [isMapLoaded, setIsMapLoaded] = useState(false);
-    const mapRef = useRef<naver.maps.Map | null>(null);
-    const mapElement = useRef<HTMLDivElement>(null);
-
-    // 네이버 지도 API 스크립트 비동기 로드
-    useEffect(() => {
-        const scriptId = 'naver-map-api';
-        if (!document.getElementById(scriptId)) {
-            const script = document.createElement('script');
-            // Mock clientId for Naver (ncpClientId)
-            script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=YOUR_CLIENT_ID&submodules=geocoder`;
-            script.id = scriptId;
-            script.async = true;
-            script.onload = () => setIsMapLoaded(true);
-            document.head.appendChild(script);
-        } else {
-            setIsMapLoaded(true);
-        }
-    }, []);
-
-    // 맵 초기화
-    useEffect(() => {
-        if (isMapLoaded && mapElement.current && !mapRef.current && window.naver) {
-            // 기본 위도, 경도 (서울시청 기준)
-            const mapOptions: naver.maps.MapOptions = {
-                center: new naver.maps.LatLng(37.5666805, 126.9784147),
-                zoom: 15,
-            };
-            mapRef.current = new naver.maps.Map(mapElement.current, mapOptions);
-        }
-    }, [isMapLoaded]);
-
-    // 주소 검색 시 좌표 변경
-    useEffect(() => {
-        if (isMapLoaded && address && mapRef.current && window.naver?.Service) {
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                window.naver.maps.Service.geocode({ query: address }, (status: any, response: any) => {
-                    if (status !== window.naver.maps.Service.Status.OK) return;
-
-                    if (response.v2.meta.totalCount > 0) {
-                        const item = response.v2.addresses[0];
-                        const point = new window.naver.maps.Point(Number(item.x), Number(item.y));
-                        mapRef.current!.setCenter(point);
-
-                        new window.naver.maps.Marker({
-                            position: point,
-                            map: mapRef.current!
-                        });
-                    }
-                });
-            } catch (err) {
-                console.warn("Geocoding failed", err);
-            }
-        }
-    }, [address, isMapLoaded]);
+    const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+    const [isResolvingCoordinates, setIsResolvingCoordinates] = useState(false);
 
     const handleCompletePostcode = (data: { address: string; addressType: string; bname: string; buildingName: string; }) => {
         let fullAddress = data.address;
@@ -83,6 +125,7 @@ const TrainerStoreRegister = () => {
         }
 
         setAddress(fullAddress);
+        setCoordinates(null);
         setIsPostcodeOpen(false);
     };
 
@@ -134,22 +177,51 @@ const TrainerStoreRegister = () => {
                             placeholder="상세 주소를 입력해주세요 (동, 호수 등)"
                             className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
                         />
+                        {isResolvingCoordinates && (
+                            <p className="text-[12px] text-gray-400">주소 좌표를 확인하는 중입니다...</p>
+                        )}
                     </div>
 
                     {/* 지도 표출 */}
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-bold text-gray-700">지도 위치</label>
                         <div className="w-full h-[220px] bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100">
-                            <div ref={mapElement} className="w-full h-full" />
-                            {!isMapLoaded && (
-                                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-[13px] font-medium bg-gray-50">
-                                    지도를 불러오는 중입니다...
-                                </div>
-                            )}
-                            {isMapLoaded && !window.naver && (
+                            {mapKey ? (
+                                <APIProvider apiKey={mapKey}>
+                                    <StoreGeocoder
+                                        address={address}
+                                        setCoordinates={setCoordinates}
+                                        setIsResolvingCoordinates={setIsResolvingCoordinates}
+                                    />
+                                    <Map
+                                        defaultCenter={toMapPosition(DEFAULT_COORDINATES)}
+                                        defaultZoom={DEFAULT_ZOOM}
+                                        gestureHandling="greedy"
+                                        disableDefaultUI
+                                        mapId={mapId}
+                                        style={{ width: "100%", height: "100%" }}
+                                    >
+                                        <StoreMapController coordinates={coordinates} />
+                                        {coordinates && (
+                                            <AdvancedMarker position={toMapPosition(coordinates)}>
+                                                <Pin background="#fab12f" glyphColor="#fff" borderColor="#fab12f" />
+                                            </AdvancedMarker>
+                                        )}
+                                    </Map>
+                                    {address && !isResolvingCoordinates && !coordinates && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-white/85 text-[13px] font-medium text-gray-500 text-center px-6">
+                                            주소 좌표를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.
+                                        </div>
+                                    )}
+                                </APIProvider>
+                            ) : (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-[14px] font-bold bg-white/90 z-10 px-5 text-center leading-relaxed backdrop-blur-sm border border-gray-100">
-                                    네이버 Map 연동 필요
-                                    <span className="text-[12px] font-medium text-gray-400 mt-1">NCP Client ID를 적용하면<br />지도가 활성화됩니다.</span>
+                                    Google Map API Key 필요
+                                    <span className="text-[12px] font-medium text-gray-400 mt-1">
+                                        .env에 VITE_GOOGLE_MAP_API를 넣으면
+                                        <br />
+                                        지도가 활성화됩니다.
+                                    </span>
                                 </div>
                             )}
                         </div>
