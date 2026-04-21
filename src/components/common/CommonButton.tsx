@@ -43,7 +43,7 @@ export const CommonButton = ({
         `}
     >
       {img && <img src={img} alt="buttonImage" width="20px" className="mr-3" />}
-      {icon && <span className="mr-2 flex items-center">{icon}</span>}
+      {icon && <span className="flex items-center">{icon}</span>}
       {label}
     </button>
   );

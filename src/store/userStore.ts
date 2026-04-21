@@ -56,6 +56,7 @@ interface UserState {
     // Async Analysis Actions
     startAnalysis: (type: 'exercise' | 'record') => void;
     checkAnalysisCompletion: () => void;
+    showSnackbar: (message: string) => void;
     closeSnackbar: () => void;
     levelUp: () => Promise<{ success: boolean; message: string }>;
     initAttendance: () => Promise<void>;
@@ -136,7 +137,8 @@ export const useUserStore = create<UserState>()(
                             attendanceStreak: result.streakDays, 
                             hasAttendedToday: true,
                             weeklyAttendance: state.weeklyAttendance ? { attendedCount: state.weeklyAttendance.attendedCount + 1 } : { attendedCount: result.streakDays > 7 ? 1 : result.streakDays },
-                            xp: state.xp + result.grantedXp + result.bonusXp 
+                            xp: state.xp + result.grantedXp + result.bonusXp,
+                            snackbar: { isOpen: true, message: result.message }
                         }));
                         return { 
                             success: true, 
@@ -148,6 +150,7 @@ export const useUserStore = create<UserState>()(
                 } catch (error: unknown) {
                     const err = error as { response?: { data?: { message?: string } }, message?: string };
                     console.error("출석 API 호출 실패:", err);
+                    set({ snackbar: { isOpen: true, message: "서버 통신 실패" } });
                     return { success: false, message: "서버 통신 실패", rewardedXp: 0 };
                 }
             },
@@ -204,6 +207,10 @@ export const useUserStore = create<UserState>()(
                         }
                     });
                 }
+            },
+
+            showSnackbar: (message: string) => {
+                set({ snackbar: { isOpen: true, message } });
             },
 
             closeSnackbar: () => {

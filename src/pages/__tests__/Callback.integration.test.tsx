@@ -43,7 +43,7 @@ describe('[통합] Callback - 로그인 처리 흐름', () => {
     vi.clearAllMocks();
   });
 
-  it('성공적으로 로그인하면 /register 페이지로 이동한다', async () => {
+  it('기존 유저가 로그인하면 메인(/) 페이지로 이동한다', async () => {
     vi.mocked(PostLogin).mockResolvedValueOnce({
       userInfo: { 
         userId: 1, 
@@ -74,6 +74,35 @@ describe('[통합] Callback - 로그인 처리 흐름', () => {
         redirectUri: expect.stringContaining('/callback'),
       });
     });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('신규 유저가 로그인하면 회원가입(/register) 페이지로 이동한다', async () => {
+    vi.mocked(PostLogin).mockResolvedValueOnce({
+      userInfo: { 
+        userId: 1, 
+        nickname: '테스트',
+        email: 'test@example.com',
+        profileImage: '',
+        role: 'USER',
+        walletAddress: '0x123'
+      },
+      accessToken: 'mock-token',
+      grantType: 'Bearer',
+      expiresIn: 3600,
+      isNewUser: true,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/callback?code=test-code&state=kakao']}>
+        <Routes>
+          <Route path="/callback" element={<Callback />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/register');

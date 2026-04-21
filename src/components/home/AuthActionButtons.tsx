@@ -1,5 +1,4 @@
 import { useUserStore } from "@store";
-import { useEffect, useState } from "react";
 import { HOME_TEXT } from "@constant/home";
 import { CommonButton } from "@components/common";
 
@@ -9,22 +8,12 @@ interface AuthActionButtonsProps {
 
 export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) => {
     const { checkAttendance, hasAttendedToday, lastExerciseDate } = useUserStore();
-    const [isAttended, setIsAttended] = useState(false);
-    const [isExerciseDone, setIsExerciseDone] = useState(false);
-
-    useEffect(() => {
-        setIsAttended(hasAttendedToday);
-        const today = new Date().toISOString().split("T")[0];
-        setIsExerciseDone(lastExerciseDate === today);
-    }, [hasAttendedToday, lastExerciseDate]);
+    const today = new Date().toISOString().split("T")[0];
+    const isAttended = hasAttendedToday;
+    const isExerciseDone = lastExerciseDate === today;
 
     const handleAttendance = async () => {
-        const result = await checkAttendance();
-        if (result.success) {
-            alert(result.message);
-        } else {
-            alert(result.message);
-        }
+        await checkAttendance();
     };
 
     const activeStyle = "bg-[#FFC107] text-white shadow-lg active:scale-95 border-none cursor-pointer";
