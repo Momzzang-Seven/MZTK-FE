@@ -40,10 +40,15 @@ const Callback = () => {
         const response = await PostLogin({ provider, authorizationCode: code, redirectUri });
 
         if (response) {
-          const { userInfo, accessToken } = response;
+          const { userInfo, accessToken, isNewUser } = response;
           setUser(userInfo);
           setAccessToken(accessToken);
-          navigate("/register");
+          
+          if (isNewUser) {
+            navigate("/register");
+          } else {
+            navigate("/");
+          }
         }
       } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
