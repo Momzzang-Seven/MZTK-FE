@@ -15,12 +15,7 @@ export const AdminSidebar = () => {
       icon: "/icon/adminUser.svg",
     },
     {
-      label: "문의 내역 관리",
-      path: "/admin/inquiries",
-      icon: "/icon/adminInquiry.svg",
-    },
-    {
-      label: "게시판",
+      label: "게시글",
       path: "/admin/posts",
       icon: "/icon/adminBoard.svg",
     },
@@ -40,10 +35,11 @@ export const AdminSidebar = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-4 px-6 py-4 rounded-xl transition-all relative ${isActive
-                ? "bg-main/15 text-main font-bold"
-                : "text-gray-500 hover:bg-gray-50"
-                }`}
+              className={`flex items-center gap-4 px-6 py-4 rounded-xl transition-all relative ${
+                isActive
+                  ? "bg-main/15 text-main font-bold"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
             >
               {isActive && (
                 <div className="absolute right-0 top-1/4 bottom-1/4 w-1 bg-main rounded-r-full" />
