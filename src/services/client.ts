@@ -2,6 +2,13 @@ import { useAuthModalStore, useUserStore } from "@store";
 import { isSanctionedAccountError } from "@utils";
 import axios, { type AxiosInstance } from "axios";
 
+declare module "axios" {
+  interface AxiosRequestConfig {
+    _retry?: boolean;
+    _skipNotFoundRedirect?: boolean;
+  }
+}
+
 const BASE_ENV = import.meta.env.VITE_API_BASE_URL;
 let BASE = BASE_ENV && BASE_ENV !== "undefined" ? (BASE_ENV as string) : "";
 
@@ -16,6 +23,7 @@ console.log("Current API BASE URL:", BASE); // Debugging
 
 type RetriableRequestConfig = {
   _retry?: boolean;
+  _skipNotFoundRedirect?: boolean;
   url?: string;
   headers: Record<string, string>;
 };
@@ -85,7 +93,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
       }
 
       // 404
-      if (status === 404) {
+      if (status === 404 && !originalRequest?._skipNotFoundRedirect) {
         window.location.href = "/404";
       }
 
