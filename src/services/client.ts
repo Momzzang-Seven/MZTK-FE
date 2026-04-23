@@ -36,6 +36,9 @@ const isAuthRequest = (url?: string) =>
       url?.includes("/auth/reissue")
   );
 
+const isMockAccessToken = (token?: string | null) =>
+  typeof token === "string" && /^mock[-_]/.test(token);
+
 const showUnauthorizedModal = () => {
   const authModalState = useAuthModalStore.getState();
   authModalState.setSanctioned(false);
@@ -57,9 +60,15 @@ const attachInterceptors = (instance: AxiosInstance) => {
       const status = error.response?.status;
       const originalRequest = error.config as RetriableRequestConfig | undefined;
       const allowBareForbidden = isAuthRequest(originalRequest?.url);
+      const activeToken = useUserStore.getState().accessToken;
 
       if (isSanctionedAccountError(error, { allowBareForbidden })) {
         showSanctionedModal();
+        return Promise.reject(error);
+      }
+
+      if (status === 401 && isMockAccessToken(activeToken)) {
+        console.warn("Skipping token reissue for mock auth session.");
         return Promise.reject(error);
       }
 
