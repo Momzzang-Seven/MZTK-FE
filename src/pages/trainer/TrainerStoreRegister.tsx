@@ -45,17 +45,13 @@ const blankToNull = (value: string) => {
   return trimmedValue ? trimmedValue : null;
 };
 
-const StoreMapController = ({ coordinates }: { coordinates: Coordinates | null }) => {
+const StoreMapController = ({ coordinates }: { coordinates: Coordinates }) => {
   const map = useMap();
 
   useEffect(() => {
     if (!map) return;
 
-    map.panTo(toMapPosition(coordinates ?? DEFAULT_COORDINATES));
-
-    if (!coordinates) {
-      map.setZoom(DEFAULT_ZOOM);
-    }
+    map.panTo(toMapPosition(coordinates));
   }, [coordinates, map]);
 
   return null;
@@ -63,10 +59,12 @@ const StoreMapController = ({ coordinates }: { coordinates: Coordinates | null }
 
 const StoreGeocoder = ({
   address,
+  setMapCenter,
   setCoordinates,
   setIsResolvingCoordinates,
 }: {
   address: string;
+  setMapCenter: Dispatch<SetStateAction<Coordinates>>;
   setCoordinates: Dispatch<SetStateAction<Coordinates | null>>;
   setIsResolvingCoordinates: Dispatch<SetStateAction<boolean>>;
 }) => {
@@ -88,7 +86,7 @@ const StoreGeocoder = ({
 
     setIsResolvingCoordinates(true);
 
-    geocoder.geocode({ address }, (results, status) => {
+    geocoder.geocode({ address, region: "KR" }, (results, status) => {
       if (!isMounted) return;
 
       const location = results?.[0]?.geometry?.location;
@@ -99,17 +97,20 @@ const StoreGeocoder = ({
         return;
       }
 
-      setCoordinates({
+      const nextCoordinates = {
         latitude: location.lat(),
         longitude: location.lng(),
-      });
+      };
+
+      setMapCenter(nextCoordinates);
+      setCoordinates(nextCoordinates);
       setIsResolvingCoordinates(false);
     });
 
     return () => {
       isMounted = false;
     };
-  }, [address, isApiLoaded, setCoordinates, setIsResolvingCoordinates]);
+  }, [address, isApiLoaded, setCoordinates, setIsResolvingCoordinates, setMapCenter]);
 
   return null;
 };
@@ -125,6 +126,7 @@ const TrainerStoreRegister = () => {
   const [phone, setPhone] = useState("");
   const [sns, setSns] = useState({ home: "", insta: "", x: "" });
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+  const [mapCenter, setMapCenter] = useState<Coordinates>(DEFAULT_COORDINATES);
   const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
   const [isResolvingCoordinates, setIsResolvingCoordinates] = useState(false);
   const [isLoadingStore, setIsLoadingStore] = useState(true);
@@ -140,6 +142,11 @@ const TrainerStoreRegister = () => {
 
         if (!isMounted) return;
 
+        const nextCoordinates = {
+          latitude: store.latitude,
+          longitude: store.longitude,
+        };
+
         setHasExistingStore(true);
         setStoreName(store.storeName);
         setAddress(store.address);
@@ -150,10 +157,8 @@ const TrainerStoreRegister = () => {
           insta: store.instagramUrl ?? "",
           x: store.xProfileUrl ?? "",
         });
-        setCoordinates({
-          latitude: store.latitude,
-          longitude: store.longitude,
-        });
+        setCoordinates(nextCoordinates);
+        setMapCenter(nextCoordinates);
       } catch (error) {
         if (
           axios.isAxiosError(error) &&
@@ -197,6 +202,38 @@ const TrainerStoreRegister = () => {
     setIsPostcodeOpen(false);
   };
 
+  const handleCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      window.alert("현재 위치를 불러올 수 없는 환경입니다.");
+      return;
+    }
+
+    setIsResolvingCoordinates(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextCoordinates = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        setMapCenter(nextCoordinates);
+        setCoordinates(nextCoordinates);
+        setIsResolvingCoordinates(false);
+      },
+      (error) => {
+        console.error("Failed to get current position", error);
+        setIsResolvingCoordinates(false);
+        window.alert("현재 위치를 가져오지 못했습니다. 위치 권한을 확인해 주세요.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const handleConfirmMapLocation = () => {
+    setCoordinates(mapCenter);
+  };
+
   const handleRegister = async () => {
     if (!storeName.trim()) {
       window.alert("매장명을 입력해 주세요.");
@@ -219,7 +256,7 @@ const TrainerStoreRegister = () => {
     }
 
     if (!coordinates) {
-      window.alert("지도 좌표를 확인할 수 있는 주소를 입력해 주세요.");
+      window.alert("매장 위치 좌표를 먼저 설정해 주세요.");
       return;
     }
 
@@ -239,9 +276,7 @@ const TrainerStoreRegister = () => {
       });
 
       window.alert(
-        hasExistingStore
-          ? "매장 정보가 수정되었습니다."
-          : "매장 정보가 등록되었습니다."
+        hasExistingStore ? "매장 정보가 수정되었습니다." : "매장 정보가 등록되었습니다."
       );
       navigate("/trainer");
     } catch (error) {
@@ -253,15 +288,15 @@ const TrainerStoreRegister = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white min-h-screen relative">
+    <div className="relative flex min-h-screen flex-col bg-white">
       <TrainerHeader
         title={hasExistingStore ? "매장 정보 수정" : "매장 정보 등록"}
         showBack
       />
 
-      <div className="flex-1 px-5 py-6 flex flex-col gap-10 overflow-y-auto pb-32 focus-within:pb-40 transition-all">
+      <div className="flex flex-1 flex-col gap-10 overflow-y-auto px-5 py-6 pb-32 focus-within:pb-40 transition-all">
         {isLoadingStore ? (
-          <div className="flex-1 flex items-center justify-center text-sm font-medium text-gray-400">
+          <div className="flex flex-1 items-center justify-center text-sm font-medium text-gray-400">
             매장 정보를 불러오는 중입니다...
           </div>
         ) : (
@@ -274,27 +309,28 @@ const TrainerStoreRegister = () => {
                 type="text"
                 value={storeName}
                 onChange={(event) => setStoreName(event.target.value)}
-                placeholder="매장명을 입력해 주세요"
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
+                placeholder="매장명을 입력해 주세요."
+                className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
               />
             </div>
 
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-3">
                 <label className="text-sm font-bold text-gray-700">
-                  매장 위치 (주소) <span className="text-main">*</span>
+                  매장 위치(주소) <span className="text-main">*</span>
                 </label>
                 <div className="flex gap-2">
                   <input
                     readOnly
                     value={address}
-                    placeholder="주소를 검색해 주세요"
+                    placeholder="주소를 검색해 주세요."
                     onClick={() => setIsPostcodeOpen(true)}
-                    className="flex-1 bg-gray-50 rounded-xl py-4 px-4 text-[14px] outline-none cursor-pointer text-gray-800 border border-gray-100"
+                    className="flex-1 cursor-pointer rounded-xl border border-gray-100 bg-gray-50 px-4 py-4 text-[14px] text-gray-800 outline-none"
                   />
                   <button
+                    type="button"
                     onClick={() => setIsPostcodeOpen(true)}
-                    className="bg-main text-white px-5 rounded-xl text-[14px] font-bold shadow-sm whitespace-nowrap active:brightness-95 transition-all"
+                    className="whitespace-nowrap rounded-xl bg-main px-5 text-[14px] font-bold text-white shadow-sm transition-all active:brightness-95"
                   >
                     주소 찾기
                   </button>
@@ -303,8 +339,8 @@ const TrainerStoreRegister = () => {
                   type="text"
                   value={detailAddress}
                   onChange={(event) => setDetailAddress(event.target.value)}
-                  placeholder="상세 주소를 입력해 주세요"
-                  className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
+                  placeholder="상세 주소를 입력해 주세요."
+                  className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
                 />
                 {isResolvingCoordinates && (
                   <p className="text-[12px] text-gray-400">
@@ -315,11 +351,12 @@ const TrainerStoreRegister = () => {
 
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-bold text-gray-700">지도 위치</label>
-                <div className="w-full h-[220px] bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100">
+                <div className="relative h-[220px] w-full overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
                   {mapKey ? (
                     <APIProvider apiKey={mapKey}>
                       <StoreGeocoder
                         address={address}
+                        setMapCenter={setMapCenter}
                         setCoordinates={setCoordinates}
                         setIsResolvingCoordinates={setIsResolvingCoordinates}
                       />
@@ -328,35 +365,62 @@ const TrainerStoreRegister = () => {
                         defaultZoom={DEFAULT_ZOOM}
                         gestureHandling="greedy"
                         disableDefaultUI
-                        mapId={mapId}
+                        mapId={mapId || undefined}
                         style={{ width: "100%", height: "100%" }}
+                        onCameraChanged={(event) =>
+                          setMapCenter({
+                            latitude: event.detail.center.lat,
+                            longitude: event.detail.center.lng,
+                          })
+                        }
                       >
-                        <StoreMapController coordinates={coordinates} />
-                        {coordinates && (
-                          <AdvancedMarker position={toMapPosition(coordinates)}>
-                            <Pin
-                              background="#fab12f"
-                              glyphColor="#fff"
-                              borderColor="#fab12f"
-                            />
-                          </AdvancedMarker>
-                        )}
+                        <StoreMapController coordinates={coordinates ?? mapCenter} />
+                        <AdvancedMarker position={toMapPosition(mapCenter)}>
+                          <Pin
+                            background={coordinates ? "#fab12f" : "#6b7280"}
+                            glyphColor="#fff"
+                            borderColor={coordinates ? "#fab12f" : "#6b7280"}
+                          />
+                        </AdvancedMarker>
                       </Map>
-                      {address && !isResolvingCoordinates && !coordinates && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white/85 text-[13px] font-medium text-gray-500 text-center px-6">
-                          주소 좌표를 찾을 수 없습니다. 다른 주소로 다시 시도해 주세요.
-                        </div>
-                      )}
                     </APIProvider>
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-[14px] font-bold bg-white/90 z-10 px-5 text-center leading-relaxed backdrop-blur-sm border border-gray-100">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center border border-gray-100 bg-white/90 px-5 text-center text-[14px] font-bold leading-relaxed text-gray-500 backdrop-blur-sm">
                       Google Map API Key 필요
-                      <span className="text-[12px] font-medium text-gray-400 mt-1">
-                        `.env`에 `VITE_GOOGLE_MAP_API`를 넣으면
-                        <br />
-                        지도가 표시됩니다.
+                      <span className="mt-1 text-[12px] font-medium text-gray-400">
+                        `.env`의 `VITE_GOOGLE_MAP_API`를 채우면 지도가 표시됩니다.
                       </span>
                     </div>
+                  )}
+                </div>
+                <div className="mt-2 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCurrentLocation}
+                      className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-[13px] font-bold text-gray-700 active:opacity-90"
+                    >
+                      현재 위치 사용
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmMapLocation}
+                      className="flex-1 rounded-xl border border-main/20 bg-main/5 px-4 py-3 text-[13px] font-bold text-main active:opacity-90"
+                    >
+                      지도 중심으로 위치 설정
+                    </button>
+                  </div>
+                  {address && !isResolvingCoordinates && !coordinates && (
+                    <p className="text-[12px] text-gray-500">
+                      주소 좌표를 바로 찾지 못했습니다. 지도를 움직인 뒤 위치 설정 버튼을
+                      눌러 주세요.
+                    </p>
+                  )}
+                  {coordinates && (
+                    <p className="text-[12px] text-gray-500">
+                      선택된 좌표: {coordinates.latitude.toFixed(6)},{" "}
+                      {coordinates.longitude.toFixed(6)}
+                    </p>
                   )}
                 </div>
               </div>
@@ -371,18 +435,18 @@ const TrainerStoreRegister = () => {
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
                 placeholder="예: 02-1234-5678"
-                className="w-full bg-grey-pale rounded-xl py-4 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+                className="w-full rounded-xl bg-grey-pale px-4 py-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
               />
             </div>
 
             <div className="flex flex-col gap-3">
-              <label className="text-sm font-bold text-gray-700 mb-1">
-                SNS 계정 연동{" "}
-                <span className="text-gray-400 font-medium text-xs ml-1">(선택)</span>
+              <label className="mb-1 text-sm font-bold text-gray-700">
+                SNS 계정 연동
+                <span className="ml-1 text-xs font-medium text-gray-400">(선택)</span>
               </label>
 
               <div className="flex items-center gap-3">
-                <div className="text-[13px] text-gray-600 font-bold w-[100px] flex items-center opacity-80">
+                <div className="flex w-[100px] items-center text-[13px] font-bold text-gray-600 opacity-80">
                   홈페이지
                 </div>
                 <input
@@ -392,11 +456,11 @@ const TrainerStoreRegister = () => {
                     setSns((prev) => ({ ...prev, home: event.target.value }))
                   }
                   placeholder="https://example.com"
-                  className="flex-1 bg-gray-50 rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
+                  className="flex-1 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3.5 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
                 />
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-[13px] text-gray-600 font-bold w-[100px] flex items-center opacity-80">
+                <div className="flex w-[100px] items-center text-[13px] font-bold text-gray-600 opacity-80">
                   인스타그램
                 </div>
                 <input
@@ -406,11 +470,11 @@ const TrainerStoreRegister = () => {
                     setSns((prev) => ({ ...prev, insta: event.target.value }))
                   }
                   placeholder="https://instagram.com/..."
-                  className="flex-1 bg-gray-50 rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
+                  className="flex-1 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3.5 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
                 />
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-[13px] text-gray-600 font-bold w-[100px] flex items-center opacity-80">
+                <div className="flex w-[100px] items-center text-[13px] font-bold text-gray-600 opacity-80">
                   X
                 </div>
                 <input
@@ -420,7 +484,7 @@ const TrainerStoreRegister = () => {
                     setSns((prev) => ({ ...prev, x: event.target.value }))
                   }
                   placeholder="https://x.com/..."
-                  className="flex-1 bg-gray-50 rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 border border-gray-100"
+                  className="flex-1 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3.5 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
                 />
               </div>
             </div>
@@ -428,9 +492,15 @@ const TrainerStoreRegister = () => {
         )}
       </div>
 
-      <div className="p-5 border-t border-gray-100 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+      <div className="border-t border-gray-100 bg-white p-5 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
         <CommonButton
-          label={isSaving ? "저장 중..." : hasExistingStore ? "매장 정보 수정하기" : "매장 정보 등록하기"}
+          label={
+            isSaving
+              ? "저장 중..."
+              : hasExistingStore
+                ? "매장 정보 수정하기"
+                : "매장 정보 등록하기"
+          }
           onClick={handleRegister}
           disabled={
             isLoadingStore ||
@@ -441,23 +511,24 @@ const TrainerStoreRegister = () => {
             !phone.trim() ||
             !coordinates
           }
-          className="w-full h-[60px] rounded-2xl shadow-sm active:opacity-90 transition-all font-bold text-[16px]"
+          className="h-[60px] w-full rounded-2xl text-[16px] font-bold shadow-sm transition-all active:opacity-90"
         />
       </div>
 
       {isPostcodeOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-5 px-4 w-full h-full max-w-[420px] mx-auto">
-          <div className="bg-white w-full max-h-[80vh] rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-[16px]">주소 검색</h3>
+        <div className="fixed inset-0 z-[1000] mx-auto flex h-full w-full max-w-[420px] items-center justify-center bg-black/60 p-5 px-4">
+          <div className="relative flex max-h-[80vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 p-4">
+              <h3 className="text-[16px] font-bold text-gray-900">주소 검색</h3>
               <button
+                type="button"
                 onClick={() => setIsPostcodeOpen(false)}
-                className="text-gray-400 font-bold p-1 text-[20px] leading-none mb-1"
+                className="mb-1 p-1 text-[20px] font-bold leading-none text-gray-400"
               >
                 ×
               </button>
             </div>
-            <div className="flex-1 w-full relative overflow-y-auto">
+            <div className="relative w-full flex-1 overflow-y-auto">
               <DaumPostcode
                 onComplete={handleCompletePostcode}
                 style={{ width: "100%", height: "450px" }}
