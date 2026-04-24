@@ -1,5 +1,6 @@
 import { useCallback } from "react";
-import { useUserStore } from "@store";
+import { useAuthModalStore, useUserStore } from "@store";
+import { isSanctionedAccountError } from "@utils";
 import type { 
   LoginRequest,
   SignupRequest,
@@ -15,6 +16,7 @@ import {
 
 export const useAuth = () => {
   const { setUser, setAccessToken, clearUser, isAuthenticated } = useUserStore();
+  const { setSanctioned } = useAuthModalStore();
 
   const login = useCallback(async (request: LoginRequest) => {
     try {
@@ -23,10 +25,14 @@ export const useAuth = () => {
       setUser(data.userInfo);
       return data;
     } catch (error) {
+      if (isSanctionedAccountError(error, { allowBareForbidden: true })) {
+        clearUser();
+        setSanctioned(true);
+      }
       console.error("Login failed:", error);
       throw error;
     }
-  }, [setAccessToken, setUser]);
+  }, [clearUser, setAccessToken, setSanctioned, setUser]);
 
   const signup = useCallback(async (request: SignupRequest) => {
     try {
@@ -66,11 +72,14 @@ export const useAuth = () => {
       setAccessToken(data.accessToken);
       return data;
     } catch (error) {
+      if (isSanctionedAccountError(error, { allowBareForbidden: true })) {
+        setSanctioned(true);
+      }
       console.error("Token refresh failed:", error);
       clearUser();
       throw error;
     }
-  }, [setAccessToken, clearUser]);
+  }, [setAccessToken, clearUser, setSanctioned]);
 
   return {
     isAuthenticated,

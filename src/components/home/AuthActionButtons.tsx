@@ -23,6 +23,7 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
         <div className="w-full flex flex-col gap-4">
             {/* Attendance Button */}
             <CommonButton
+                ariaLabel="출석 인증"
                 onClick={isAttended ? undefined : handleAttendance}
                 className={`w-full !justify-start gap-4 p-5 rounded-[20px] transition-all text-left ${isAttended ? inactiveStyle : activeStyle}`}
                 bgColor=" " // Override default
@@ -51,6 +52,7 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
 
             {/* Exercise Button */}
             <CommonButton
+                ariaLabel="운동 인증"
                 onClick={isExerciseDone ? undefined : onExerciseClick}
                 className={`w-full !justify-start gap-4 p-5 rounded-[20px] transition-all text-left ${isExerciseDone ? inactiveStyle : activeStyle}`}
                 bgColor=" " // Override default

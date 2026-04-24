@@ -42,4 +42,3 @@ export { default as AdminLogin } from "./admin/Login";
 export { default as TokenLog } from "./admin/TokenLog";
 export { default as UserManagement } from "./admin/UserManagement";
 export { default as PostManagement } from "./admin/PostManagement";
-export { default as InquiryManagement } from "./admin/InquiryManagement";

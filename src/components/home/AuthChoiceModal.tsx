@@ -45,6 +45,7 @@ export const AuthChoiceModal = ({ isOpen, onClose }: AuthChoiceModalProps) => {
                 <div className="flex justify-between items-center">
                     {/* Location Auth */}
                     <button
+                        aria-label="위치 인증"
                         onClick={handleLocationAuth}
                         className="flex-1 flex flex-col items-center gap-3 group active:scale-95 transition-transform"
                     >
@@ -59,6 +60,7 @@ export const AuthChoiceModal = ({ isOpen, onClose }: AuthChoiceModalProps) => {
 
                     {/* Exercise Auth */}
                     <button
+                        aria-label="운동 사진 인증"
                         onClick={handleExerciseAuth}
                         className="flex-1 flex flex-col items-center gap-3 group active:scale-95 transition-transform"
                     >
@@ -75,6 +77,7 @@ export const AuthChoiceModal = ({ isOpen, onClose }: AuthChoiceModalProps) => {
 
                     {/* Record Auth */}
                     <button
+                        aria-label="운동 기록 인증"
                         onClick={handleRecordAuth}
                         className="flex-1 flex flex-col items-center gap-3 group active:scale-95 transition-transform"
                     >

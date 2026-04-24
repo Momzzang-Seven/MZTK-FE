@@ -57,4 +57,25 @@ test.describe('로그인 및 로그아웃 흐름', () => {
 
     await expect(page).toHaveURL(/\/login/);
   });
+
+  test('제재 계정 OAuth callback 실패 시 안내와 문의 링크가 표시된다', async ({ page }) => {
+    await page.route('**/auth/login', async route => {
+      await route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'ERROR',
+          code: 'AUTH_005',
+          message: 'Account blocked by administrator',
+        }),
+      });
+    });
+
+    await page.goto('/callback?code=blocked-code&state=kakao');
+
+    await expect(page.getByText('제재된 계정입니다')).toBeVisible();
+    const appealLink = page.getByRole('link', { name: '이의 제기 문의하기' });
+    await expect(appealLink).toBeVisible();
+    await expect(appealLink).toHaveAttribute('href', /forms\.google\.com/);
+  });
 });

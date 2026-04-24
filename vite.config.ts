@@ -33,6 +33,8 @@ export default defineConfig({
       "/api": "http://localhost:8080",
       "/locations": "http://localhost:8080",
       "/levels": "http://localhost:8080",
+      "/marketplace": "http://localhost:8080",
+      "/images": "http://localhost:8080",
     },
   },
   test: {

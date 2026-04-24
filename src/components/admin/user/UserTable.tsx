@@ -70,6 +70,7 @@ const UserTable = () => {
                             <td className="py-4 px-6">
                                 {user.status === 'ACTIVE' && (
                                     <button
+                                        aria-label={`${user.email} 사용자 제한`}
                                         onClick={() => banUser(user.id)}
                                         className="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 w-24"
                                     >
@@ -80,6 +81,7 @@ const UserTable = () => {
 
                                 {user.status === 'BANNED' && (
                                     <button
+                                        aria-label={`${user.email} 사용자 제한 해제`}
                                         onClick={() => unbanUser(user.id)}
                                         className="bg-gray-400 hover:bg-gray-500 text-white text-sm font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center w-24"
                                     >
