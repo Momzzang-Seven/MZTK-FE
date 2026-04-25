@@ -1,4 +1,8 @@
-export type ImageReferenceType = "COMMUNITY_FREE" | "COMMUNITY_QUESTION" | "COMMUNITY_ANSWER";
+export type ImageReferenceType =
+  | "COMMUNITY_FREE"
+  | "COMMUNITY_QUESTION"
+  | "COMMUNITY_ANSWER"
+  | "WORKOUT";
 
 export interface UploadedImage {
   imageId: number;

@@ -2,6 +2,7 @@ export * from "./useVoucher";
 export * from "./useTokenBalance";
 export * from "./useAdminDashboard";
 export * from "./useButtonClickGuard";
+export * from "./useWorkoutVerification";
 export * from "./trainer/useTicketForm";
 export * from "./trainer/useTrainerStatus";
 export * from "./useTiptapEditor";

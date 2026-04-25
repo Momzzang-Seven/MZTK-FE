@@ -48,13 +48,12 @@ test.describe("prod smoke", () => {
     await createAuthenticatedSession(page);
     await page.goto("/my");
 
-    const dialogPromise = page.waitForEvent("dialog");
+    page.once("dialog", async (dialog) => {
+      await dialog.accept();
+    });
     const logoutResponse = waitForApiResponse(page, "/auth/logout");
 
     await page.getByRole("button", { name: "로그아웃" }).click();
-
-    const dialog = await dialogPromise;
-    await dialog.accept();
 
     await expectOk(logoutResponse);
     await expect(page).toHaveURL(/\/login$/);
