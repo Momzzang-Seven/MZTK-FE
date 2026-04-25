@@ -1,12 +1,16 @@
-import { useCreatePostStore } from "@store/createPostStore";
-import TiptapEditor from "../tiptapEditor/TiptapEditor";
+import { usePostStore } from "@store";
+import { TiptapEditor } from "@components/community";
 
-const AnswerPostForm = () => {
-  const setContent = useCreatePostStore((s) => s.setContent);
+interface AnswerPostFormProps {
+  initialContent?: string;
+}
+
+const AnswerPostForm = ({ initialContent }: AnswerPostFormProps) => {
+  const setContent = usePostStore((s) => s.setContent);
 
   return (
     <div className="flex flex-col gap-4">
-      <TiptapEditor onChange={setContent} />
+      <TiptapEditor onChange={setContent} referenceType="COMMUNITY_ANSWER" initialContent={initialContent} />
     </div>
   );
 };

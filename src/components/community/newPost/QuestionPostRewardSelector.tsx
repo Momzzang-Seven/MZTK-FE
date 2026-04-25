@@ -1,12 +1,12 @@
 import { useState } from "react";
 // import { useTokenBalance } from "@hooks";
 
-interface TokenSelectProps {
+interface QuestionPostRewardSelectorProps {
   reward: number;
   setReward: (value: number) => void;
 }
 
-const TokenSelector = ({ reward, setReward }: TokenSelectProps) => {
+const QuestionPostRewardSelector = ({ reward, setReward }: QuestionPostRewardSelectorProps) => {
   // const { balance } = useTokenBalance();
   const dummyBalance = 80;
   const [customValue, setCustomValue] = useState("");
@@ -86,4 +86,4 @@ const TokenSelector = ({ reward, setReward }: TokenSelectProps) => {
   );
 };
 
-export default TokenSelector;
+export default QuestionPostRewardSelector;

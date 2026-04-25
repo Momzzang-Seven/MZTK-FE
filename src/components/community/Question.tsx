@@ -37,9 +37,9 @@ const Question = ({ post }: QuestionProps) => {
       )}
 
       {/* 이미지 */}
-      {post.imageUrls && (
+      {post.images && post.images.length > 0 && (
         <img
-          src={post.imageUrls}
+          src={post.images[0].imageUrl}
           alt="question"
           className="w-full rounded-lg object-cover"
         />

@@ -1,20 +1,24 @@
 import { useRef, useCallback } from "react";
-import { useCreatePostStore } from "@store/createPostStore";
-import {
-  getPresignedUrl,
-  uploadImageToS3,
-} from "@services/community";
+import { usePostStore } from "@store";
+import { useImageUpload } from "@hooks";
 
 interface MultiImageUploaderProps {
   maxImages?: number;
 }
 
-const MultiImageUploader = ({
-  maxImages = 5,
-}: MultiImageUploaderProps) => {
-  const images = useCreatePostStore((s) => s.images);
-  const addImage = useCreatePostStore((s) => s.addImage);
-  const removeImage = useCreatePostStore((s) => s.removeImage);
+const FreePostImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
+  const images = usePostStore((s) => s.images);
+  const addImage = usePostStore((s) => s.addImage);
+  const removeImage = usePostStore((s) => s.removeImage);
+  const incrementUploading = usePostStore((s) => s.incrementUploading);
+  const decrementUploading = usePostStore((s) => s.decrementUploading);
+
+  const { uploadImages } = useImageUpload("COMMUNITY_FREE", {
+    onUploaded: addImage,
+    onUploadStart: incrementUploading,
+    onUploadEnd: decrementUploading,
+  });
+
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSelectImages = useCallback(
@@ -25,20 +29,12 @@ const MultiImageUploader = ({
       const remaining = maxImages - images.length;
       const selected = Array.from(files).slice(0, remaining);
 
-      for (const file of selected) {
-        const previewUrl = URL.createObjectURL(file);
-        const { tmpObjectKey: imageId, presignedUrl: uploadUrl } = await getPresignedUrl(
-          file.name,
-        );
-        await uploadImageToS3(uploadUrl, file);
+      await uploadImages(selected);
 
-        addImage({ id: imageId, previewUrl });
-      }
-
-      // input 초기화 (같은 파일 재선택 허용)
+      // 같은 파일 재선택 허용
       if (inputRef.current) inputRef.current.value = "";
     },
-    [images.length, maxImages, addImage],
+    [images.length, maxImages, uploadImages],
   );
 
   return (
@@ -46,15 +42,15 @@ const MultiImageUploader = ({
       {/* 이미지 그리드 */}
       <div className="grid grid-cols-3 gap-2">
         {images.map((img) => (
-          <div key={img.id} className="relative aspect-square">
+          <div key={img.imageId} className="relative aspect-square">
             <img
-              src={img.previewUrl}
+              src={img.imageUrl}
               alt="업로드된 이미지"
               className="w-full h-full object-cover rounded-lg"
             />
             <button
               type="button"
-              onClick={() => removeImage(img.id)}
+              onClick={() => removeImage(img.imageId)}
               className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-black/50 text-white text-xs rounded-full"
             >
               ×
@@ -92,4 +88,4 @@ const MultiImageUploader = ({
   );
 };
 
-export default MultiImageUploader;
+export default FreePostImageUploader;

@@ -1,30 +1,31 @@
 import { useState } from "react";
 import { CommonModal } from "@components/common";
-import { useCreatePostStore } from "@store/createPostStore";
-import NewPostTitleInput from "./QuestionPostTitleInput";
-import TiptapEditor from "../tiptapEditor/TiptapEditor";
-import TagInput from "./TagInput";
-import RewardToken from "./QuestionPostRewardToken";
-import TokenSelector from "./QuestionPostRewardSelector";
+import { usePostStore } from "@store";
+import { TiptapEditor, QuestionPostTitle, TagInput, QuestionPostRewardToken, QuestionPostRewardSelector } from "@components/community";
 
-const QuestionPostForm = () => {
-  const tags = useCreatePostStore((s) => s.tags);
-  const reward = useCreatePostStore((s) => s.reward);
-  const setTitle = useCreatePostStore((s) => s.setTitle);
-  const setContent = useCreatePostStore((s) => s.setContent);
-  const setTags = useCreatePostStore((s) => s.setTags);
-  const setReward = useCreatePostStore((s) => s.setReward);
+interface QuestionPostFormProps {
+  initialTitle?: string;
+  initialContent?: string;
+}
+
+const QuestionPostForm = ({ initialTitle, initialContent }: QuestionPostFormProps) => {
+  const tags = usePostStore((s) => s.tags);
+  const reward = usePostStore((s) => s.reward);
+  const setTitle = usePostStore((s) => s.setTitle);
+  const setContent = usePostStore((s) => s.setContent);
+  const setTags = usePostStore((s) => s.setTags);
+  const setReward = usePostStore((s) => s.setReward);
 
   const [rewardModalOpen, setRewardModalOpen] = useState(false);
 
   return (
     <div className="flex flex-col">
-      <NewPostTitleInput onChange={setTitle} />
-      <TiptapEditor onChange={setContent} />
+      <QuestionPostTitle onChange={setTitle} initialValue={initialTitle} />
+      <TiptapEditor onChange={setContent} referenceType="COMMUNITY_QUESTION" initialContent={initialContent} />
       <TagInput tags={tags} onChange={setTags} />
 
       <div className="fixed bottom-10 w-full max-w-[420px] px-6">
-        <RewardToken
+        <QuestionPostRewardToken
           rewardToken={reward}
           onClick={() => setRewardModalOpen(true)}
         />
@@ -37,7 +38,7 @@ const QuestionPostForm = () => {
           confirmLabel="설정"
           onConfirmClick={() => setRewardModalOpen(false)}
         >
-          <TokenSelector reward={reward} setReward={setReward} />
+          <QuestionPostRewardSelector reward={reward} setReward={setReward} />
         </CommonModal>
       )}
     </div>

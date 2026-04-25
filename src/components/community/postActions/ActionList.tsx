@@ -10,6 +10,7 @@ import {
   EditComment,
 } from "@components/community";
 import type { ActionModalType } from "@types";
+import { usePostService, useCommentService } from "@hooks";
 
 const sizeMap = {
   xs: "w-3 h-3",
@@ -23,22 +24,28 @@ interface PostActionListProps {
   type: string;
   id?: number;
   authorId: number;
+  onDeletePostSuccess?: () => void;
   isSelectable?: boolean;
   commentId?: number;
   commentContent?: string;
+  onUpdateReplySuccess?: () => void;
 }
 
 const ActionList = ({
   size = "md",
   type,
   id,
+  onDeletePostSuccess,
   isSelectable = true,
   authorId,
   commentContent = "",
+  onUpdateReplySuccess
 }: PostActionListProps) => {
   const navigate = useNavigate();
-
   const [modalType, setModalType] = useState<ActionModalType>(null);
+  const [content, setContent] = useState(commentContent);
+  const { deletePost } = usePostService();
+  const { updateComment, deleteComment } = useCommentService(0); // 댓글 수정, 삭제는 postId가 필요 없으므로 0으로 고정
 
   const stored = localStorage.getItem("user-storage");
   const userId = stored ? JSON.parse(stored)?.state?.user?.userId : null;
@@ -50,13 +57,36 @@ const ActionList = ({
   const closeModal = () => setModalType(null);
 
   const handleEditClick = () => {
-    if (type === "free") navigate(`/community/free/edit/${id}`);
-    if (type === "question") navigate(`/community/question/edit/${id}`);
-    if (type === "answer") navigate(`/community/answer/edit/${id}`);
-    if (type === "comment") setModalType("EDIT_COMMENT");
+    if (type === "FREE") navigate(`/community/free/edit/${id}/select-image`);
+    if (type === "QUESTION") navigate(`/community/question/edit/${id}`);
+    if (type === "ANSWER") navigate(`/community/answer/edit/${id}`);
+    if (type === "COMMENT") setModalType("EDIT_COMMENT");
   };
 
-  const handleConfirmEditClick = () => {
+  const handleConfirmEditClick = async () => {
+    if (type === "COMMENT" && id) {
+      await updateComment(id, content);
+    }
+    closeModal();
+    onUpdateReplySuccess?.();
+  };
+  
+  const handleConfirmDeleteClick = async () => {
+    if (type === "COMMENT" && id) {
+      await deleteComment(id);
+    } else if (type === "FREE" &&id) {
+      await deletePost(id);
+    }
+    closeModal();
+    onUpdateReplySuccess?.();
+    onDeletePostSuccess?.();
+  };
+  
+  const handleConfirmSelectClick = () => {
+    closeModal();
+  };
+  
+  const handleConfirmReportClick = () => {
     closeModal();
   };
 
@@ -64,24 +94,13 @@ const ActionList = ({
     setModalType("DELETE_CONFIRM");
   };
 
-  const handleConfirmDeleteClick = () => {
-    closeModal();
-  };
-
   const handleReportClick = () => {
     setModalType("REPORT_CONFIRM");
   };
 
-  const handleConfirmReportClick = () => {
-    closeModal();
-  };
 
   const handleSelectClick = () => {
     setModalType("SELECT_CONFIRM");
-  };
-
-  const handleConfirmSelectClick = () => {
-    closeModal();
   };
 
   const renderModalContent = () => {
@@ -133,7 +152,8 @@ const ActionList = ({
       case "EDIT_COMMENT":
         return (
           <EditComment
-            commentContent={commentContent}
+            setCommentContent={setContent}
+            commentContent={content}
             handleEditClick={handleConfirmEditClick}
             handleCancelClick={closeModal}
           />

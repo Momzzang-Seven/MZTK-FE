@@ -1,20 +1,21 @@
-import type { CreatePostState, UploadedImage } from "@store/createPostStore";
-import type { PostPayload } from "@services/community";
+import type { CreatePostState } from "@store";
+import type { PostPayload, UploadedImage } from "@types";
 
 /**
- * HTML 문자열에서 <img data-uuid="..."> 속성을 등장 순서대로 수집.
- * 서버는 이 uuid 배열로 이미지 소유권 검증 및 src 매핑에 사용한다.
+ * HTML 문자열에서 <img imageId="..."> 속성을 등장 순서대로 수집.
+ * 서버는 이 imageId 배열로 이미지 소유권 검증 및 src 매핑에 사용한다.
  */
-const extractImageIdsFromHtml = (html: string): string[] => {
+const extractImageIdsFromHtml = (html: string): number[] => {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  return Array.from(doc.querySelectorAll("img[data-uuid]"))
-    .map((img) => img.getAttribute("data-uuid"))
-    .filter((uuid): uuid is string => uuid !== null);
+  return Array.from(doc.querySelectorAll("img[imageId]"))
+    .map((img) => img.getAttribute("imageId"))
+    .filter((id): id is string => id !== null)
+    .map((id) => Number(id));
 };
 
 /**
  * 스토어 상태를 백엔드 JSON 규격으로 변환.
- * content 필드는 HTML 문자열이며, 이미지는 <img data-uuid="..."> 형태로 포함된다.
+ * content 필드는 HTML 문자열이며, 이미지는 <img imageId="..."> 형태로 포함된다.
  */
 export const buildPostPayload = (
   state: Pick<
@@ -25,26 +26,26 @@ export const buildPostPayload = (
   const { postType, title, images, reward, tags } = state;
 
   switch (postType) {
-    case "free":
+    case "FREE":
       return {
         content: state.content,
-        images: images.map((img: UploadedImage) => img.id),
+        imageIds: images.map((img: UploadedImage) => img.imageId),
         tags,
       };
 
-    case "question":
+    case "QUESTION":
       return {
         title,
         content: state.content,
-        images: extractImageIdsFromHtml(state.content),
+        imageIds: extractImageIdsFromHtml(state.content),
         reward,
         tags,
       };
 
-    case "answer":
+    case "ANSWER":
       return {
         content: state.content,
-        images: extractImageIdsFromHtml(state.content),
+        imageIds: extractImageIdsFromHtml(state.content),
       };
   }
 };

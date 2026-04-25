@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import {
   describe,
   it,
@@ -20,6 +20,30 @@ vi.mock("@components/common", () => ({
   CommonModal: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="common-modal">{children}</div>
   ),
+}));
+
+vi.mock("@hooks", () => ({
+  usePostService: () => ({
+    deletePost: vi.fn().mockResolvedValue(undefined),
+    updatePost: vi.fn().mockResolvedValue(undefined),
+    createPost: vi.fn().mockResolvedValue(undefined),
+    getPost: vi.fn().mockResolvedValue(undefined),
+    isSubmitActive: true,
+    isLoading: false,
+    error: null,
+  }),
+  useCommentService: () => ({
+    updateComment: vi.fn().mockResolvedValue(undefined),
+    deleteComment: vi.fn().mockResolvedValue(undefined),
+    createComment: vi.fn().mockResolvedValue(undefined),
+    fetchComments: vi.fn().mockResolvedValue(undefined),
+    comments: [],
+    isLoading: false,
+    isLast: false,
+    error: null,
+    loadMore: vi.fn(),
+    refetch: vi.fn(),
+  }),
 }));
 
 vi.mock("@components/community", () => ({
@@ -88,7 +112,7 @@ describe("ActionList 컴포넌트", () => {
   });
 
   const setup = (props: Record<string, unknown> = {}) => {
-    return render(<ActionList type="free" id={1} authorId={100} {...props} />);
+    return render(<ActionList type="FREE" id={1} authorId={100} {...props} />);
   };
 
   const setLocalStorageUser = (userId: number | null) => {
@@ -142,16 +166,16 @@ describe("ActionList 컴포넌트", () => {
       setLocalStorageUser(100); // 내 단일 권한
     });
 
-    it('type이 "free"일 때 수정 클릭 시 navigate("/community/free/edit/{id}")가 호출된다', () => {
-      setup({ type: "free", id: 10 });
+    it('type이 "free"일 때 수정 클릭 시 navigate("/community/free/edit/{id}/select-image")가 호출된다', () => {
+      setup({ type: "FREE", id: 10 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/community/free/edit/10");
+      expect(mockNavigate).toHaveBeenCalledWith("/community/free/edit/10/select-image");
     });
 
     it('type이 "question"일 때 수정 클릭 시 navigate("/community/question/edit/{id}")가 호출된다', () => {
-      setup({ type: "question", id: 20 });
+      setup({ type: "QUESTION", id: 20 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
@@ -159,7 +183,7 @@ describe("ActionList 컴포넌트", () => {
     });
 
     it('type이 "answer"일 때 수정 클릭 시 navigate("/community/answer/edit/{id}")가 호출된다', () => {
-      setup({ type: "answer", id: 30 });
+      setup({ type: "ANSWER", id: 30 });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
@@ -170,7 +194,7 @@ describe("ActionList 컴포넌트", () => {
   describe("댓글 수정 케이스", () => {
     it('type이 "comment"일 때 수정 클릭 시 EditComment 모달이 렌더링된다', () => {
       setLocalStorageUser(100);
-      setup({ type: "comment", authorId: 100 });
+      setup({ type: "COMMENT", authorId: 100 });
 
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
@@ -181,7 +205,7 @@ describe("ActionList 컴포넌트", () => {
   });
 
   describe("삭제 플로우", () => {
-    it("삭제 클릭 시 ConfirmDelete 렌더링되고, 확인 클릭 시 모달이 닫힌다", () => {
+    it("삭제 클릭 시 ConfirmDelete 렌더링되고, 확인 클릭 시 모달이 닫힌다", async () => {
       setLocalStorageUser(100);
       setup({ authorId: 100 });
 
@@ -194,7 +218,9 @@ describe("ActionList 컴포넌트", () => {
       // 삭제 확인
       fireEvent.click(screen.getByText("삭제 확인"));
 
-      expect(screen.queryByTestId("common-modal")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByTestId("common-modal")).not.toBeInTheDocument();
+      });
     });
   });
 

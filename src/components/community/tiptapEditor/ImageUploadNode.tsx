@@ -10,12 +10,11 @@ const ImageUploadNode = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
-      uuid: {
+      imageId: {
         default: null,
-        parseHTML: (element) => element.getAttribute("data-uuid"),
-        // 서버 제출 시 src 대신 uuid로 이미지를 식별해야 하므로 data-uuid로 직렬화
+        parseHTML: (element) => element.getAttribute("imageId"),
         renderHTML: (attrs) =>
-          attrs.uuid ? { "data-uuid": attrs.uuid } : {},
+          attrs.imageId ? { "imageId": attrs.imageId } : {},
       },
       uploading: {
         default: false,
