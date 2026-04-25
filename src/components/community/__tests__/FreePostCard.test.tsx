@@ -26,9 +26,15 @@ const defaultPost = {
     nickname: "테스트유저",
     profileImage: "https://example.com/profile.png",
   },
+  updatedAt: "2023-10-01T10:00:00Z",
   createdAt: "2023-10-01T10:00:00Z",
   content: "테스트 게시글 내용입니다.",
-  imageUrls: "https://example.com/post.png",
+  images: [
+    {
+      imageId: 1,
+      imageUrl: "https://example.com/post.png",
+    }
+  ],
   tags: ["react", "frontend"],
   isLiked: false,
   likeCount: 10,
@@ -45,7 +51,7 @@ describe("FreePostCard", () => {
   describe("기본 렌더링", () => {
     it("작성자 닉네임, 게시글 내용, 댓글 수, 작성 시간이 정상적으로 렌더링된다", () => {
       // any 타입을 사용하여 타입 에러 방지 (실제 FreePost 타입의 필수 속성이 다를 수 있으므로)
-      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(<FreePostCard post={defaultPost} />);
 
       expect(screen.getByText("테스트유저")).toBeInTheDocument();
       expect(screen.getByText("테스트 게시글 내용입니다.")).toBeInTheDocument();
@@ -56,7 +62,7 @@ describe("FreePostCard", () => {
 
   describe("프로필 이미지 분기", () => {
     it("profileImage가 있을 때 해당 이미지를 렌더링한다", () => {
-      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(<FreePostCard post={defaultPost} />);
       const profileImage = screen.getByAltText("테스트유저");
 
       expect(profileImage).toHaveAttribute(
@@ -78,25 +84,25 @@ describe("FreePostCard", () => {
   });
 
   describe("게시물 이미지 분기", () => {
-    it("imageUrls가 있을 때 이미지를 렌더링한다", () => {
-      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
-      const postImage = screen.getByAltText("post");
+    it("images가 있을 때 이미지를 렌더링한다", () => {
+      render(<FreePostCard post={defaultPost} />);
+      const postImage = screen.getByAltText(defaultPost.images[0].imageUrl);
 
       expect(postImage).toBeInTheDocument();
       expect(postImage).toHaveAttribute("src", "https://example.com/post.png");
     });
 
-    it("imageUrls가 없을 때 이미지를 렌더링하지 않는다", () => {
-      const postWithoutImage = { ...defaultPost, imageUrls: null };
+    it("images가 없을 때 이미지를 렌더링하지 않는다", () => {
+      const postWithoutImage = { ...defaultPost, images: [] };
       render(<FreePostCard post={postWithoutImage as unknown as Parameters<typeof FreePostCard>[0]["post"]} />);
 
-      expect(screen.queryByAltText("post")).not.toBeInTheDocument();
+      expect(screen.queryByAltText(defaultPost.images[0].imageUrl)).not.toBeInTheDocument();
     });
   });
 
   describe("좋아요 동작", () => {
     it("기본적으로 isLiked 상태에 따라 빈 하트 아이콘이 렌더링된다", () => {
-      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(<FreePostCard post={defaultPost} />);
       const likeIcon = screen.getByAltText("like");
 
       expect(likeIcon).toHaveAttribute("src", "/icon/like.svg");
@@ -112,7 +118,7 @@ describe("FreePostCard", () => {
     });
 
     it("좋아요를 클릭하면 아이콘이 변경되고 likeCount가 증가/감소한다", () => {
-      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(<FreePostCard post={defaultPost} />);
 
       const likeIcon = screen.getByAltText("like");
 
@@ -132,7 +138,7 @@ describe("FreePostCard", () => {
 
   describe("댓글 클릭", () => {
     it("댓글 영역 클릭 시 상세 페이지로 이동한다", () => {
-      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(<FreePostCard post={defaultPost} />);
 
       const commentIcon = screen.getByAltText("comment");
       fireEvent.click(commentIcon);
@@ -143,14 +149,14 @@ describe("FreePostCard", () => {
 
   describe("태그 클릭", () => {
     it("태그가 정상적으로 렌더링된다", () => {
-      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(<FreePostCard post={defaultPost} />);
 
       expect(screen.getByText("#react")).toBeInTheDocument();
       expect(screen.getByText("#frontend")).toBeInTheDocument();
     });
 
     it("태그 클릭 시 해당 태그 검색 결과 페이지로 이동한다", () => {
-      render(<FreePostCard post={defaultPost as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(<FreePostCard post={defaultPost} />);
 
       const reactTag = screen.getByText("#react");
       fireEvent.click(reactTag);

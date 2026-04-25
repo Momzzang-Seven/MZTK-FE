@@ -195,6 +195,10 @@ export const getTrainerStatus = async () => {
 export const getTrainerStore = async (): Promise<TrainerStoreResponse> => {
   const response = await api.get("/marketplace/trainer/store", {
     _skipNotFoundRedirect: true,
+    headers: {
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache",
+    },
   });
   return response.data.data;
 };

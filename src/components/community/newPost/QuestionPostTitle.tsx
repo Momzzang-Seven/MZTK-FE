@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 
-interface NewPostTitleInputProps {
+interface QuestionPostTitleInputProps {
   maxLength?: number;
   onChange?: (value: string) => void;
+  initialValue?: string;
 }
 
-const NewPostTitleInput = ({
+const QuestionPostTitle = ({
   maxLength = 50,
   onChange,
-}: NewPostTitleInputProps) => {
-  const [value, setValue] = useState("");
+  initialValue = "",
+}: QuestionPostTitleInputProps) => {
+  const [value, setValue] = useState(initialValue);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -48,4 +50,4 @@ const NewPostTitleInput = ({
   );
 };
 
-export default NewPostTitleInput;
+export default QuestionPostTitle;

@@ -81,7 +81,7 @@ const LocationRegister = () => {
             />
 
             {/* Action Button - Moved outside map area for guaranteed visibility */}
-            <div className="absolute bottom-[100px] left-0 right-0 px-5 z-50">
+            <div className="absolute bottom-[50px] left-0 right-0 px-5 z-50">
                 <CommonButton
                     label={isRegistering ? UI_TEXT.REGISTERING_BTN : UI_TEXT.REGISTER_BTN}
                     onClick={handleRegister}

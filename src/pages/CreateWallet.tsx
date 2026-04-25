@@ -7,16 +7,21 @@ import { PinPad } from "../components/auth/PinPad";
 import { CommonModal } from "../components/common";
 import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
+import { useUserStore } from "@store";
 
-type Step = "SHOW" | "VERIFY" | "PIN_SET" | "PIN_CONFIRM" | "SUCCESS";
+type Step = "AUTH_PIN" | "SHOW" | "VERIFY" | "PIN_SET" | "PIN_CONFIRM" | "SUCCESS";
 
 const CreateWallet = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("SHOW");
+  const setWalletAddress = useUserStore((state) => state.setWalletAddress);
+  const [step, setStep] = useState<Step>(() => {
+    return localStorage.getItem("encrypted_wallet") ? "AUTH_PIN" : "SHOW";
+  });
 
   const [wallet, setWallet] = useState<HDNodeWallet | null>(null);
   const [mnemonics, setMnemonics] = useState<string[]>([]);
   const [userInputs, setUserInputs] = useState<string[]>([]);
+  const [authPin, setAuthPin] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [modal, setModal] = useState<{ title: string; desc: string } | null>(
@@ -52,16 +57,38 @@ const CreateWallet = () => {
       const encrypted = await wallet.encrypt(pin);
       localStorage.setItem("encrypted_wallet", encrypted);
       localStorage.setItem("wallet_address", wallet.address);
+      setWalletAddress(wallet.address);
       setStep("SUCCESS");
     } catch {
       alert("보안 저장 중 오류가 발생했습니다.");
     }
-  }, [wallet, pin]);
+  }, [wallet, pin, setWalletAddress]);
 
   useEffect(() => {
+    const verifyPin = async () => {
+      if (authPin.length === 6 && step === "AUTH_PIN") {
+        try {
+          const encryptedJson = localStorage.getItem("encrypted_wallet");
+          if (!encryptedJson) {
+             setStep("SHOW");
+             return;
+          }
+          await ethers.Wallet.fromEncryptedJson(encryptedJson, authPin);
+          setStep("SHOW");
+        } catch {
+          setModal({
+            title: "PIN 번호 인증 실패",
+            desc: "잘못된 PIN 번호입니다. 다시 시도해주세요.",
+          });
+          setAuthPin("");
+        }
+      }
+    };
+    void verifyPin();
+
     if (pin.length === 6 && step === "PIN_SET") setStep("PIN_CONFIRM");
     if (confirmPin.length === 6 && step === "PIN_CONFIRM") {
-      if (pin === confirmPin) finalize();
+      if (pin === confirmPin) void finalize();
       else {
         setModal({
           title: "PIN 번호 확인에 실패했습니다.",
@@ -69,10 +96,20 @@ const CreateWallet = () => {
         });
       }
     }
-  }, [pin, confirmPin, step, finalize]);
+  }, [authPin, pin, confirmPin, step, finalize]);
 
   return (
     <FullScreenPage className="overflow-hidden">
+      {step === "AUTH_PIN" && (
+        <PinPad
+          title="기존 PIN 번호 인증"
+          desc="새 지갑을 생성하기 위해 기존에 설정한 PIN 번호를 입력해주세요"
+          pin={authPin}
+          onInput={(n) => setAuthPin((p) => p + n)}
+          onDelete={() => setAuthPin((p) => p.slice(0, -1))}
+        />
+      )}
+
       {step === "SHOW" && (
         <MnemonicDisplay
           mnemonics={mnemonics}
@@ -143,6 +180,7 @@ const CreateWallet = () => {
           onConfirmClick={() => {
             setModal(null);
             if (step === "PIN_CONFIRM") setConfirmPin("");
+            if (step === "AUTH_PIN") setAuthPin("");
           }}
         />
       )}

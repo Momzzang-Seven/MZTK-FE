@@ -93,7 +93,7 @@ const Answer = ({ answer, isSelectable }: AnswerProps) => {
         </div>
         <ActionList
           size="sm"
-          type="answer"
+          type="ANSWER"
           id={answer.answerId}
           authorId={answer.writer.userId}
           isSelectable={isSelectable}
@@ -106,9 +106,9 @@ const Answer = ({ answer, isSelectable }: AnswerProps) => {
       </p>
 
       {/* 이미지 */}
-      {answer.imageUrls && (
+      {answer.images && answer.images.length > 0 && (
         <img
-          src={answer.imageUrls}
+          src={answer.images[0].imageUrl}
           alt="answer"
           className="w-full rounded-lg object-cover"
         />
@@ -127,10 +127,12 @@ const Answer = ({ answer, isSelectable }: AnswerProps) => {
       {isCommentsOpen && (
         <div className="flex flex-col">
           <CommentInput
+            setParentId={() => {}}
+            parentNickname={null}
+            setParentNickname={() => {}}
             isAnswerPost={true}
-            postId={answer.answerId}
-            comment={writingComment}
-            setComment={setWritingComment}
+            writingComment={writingComment}
+            setWritingComment={setWritingComment}
             handleCommentSubmit={handleCommentSubmit}
           />
 

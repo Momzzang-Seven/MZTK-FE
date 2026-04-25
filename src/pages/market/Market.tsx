@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MARKET_TEXT } from "@constant";
+import { useTokenBalance } from "@hooks";
+import { getMarketClasses, type MarketClassItem } from "@services";
 import { useUserStore } from "@store/userStore";
-import { getMarketplaceClasses, type MarketplaceClassListItem } from "@services";
 
 const IMAGE_BASE_URL =
     (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
@@ -32,6 +33,10 @@ const formatCategory = (category: string) => {
             return "필라테스";
         case "YOGA":
             return "요가";
+        case "GOLF":
+            return "골프";
+        case "TENNIS":
+            return "테니스";
         case "CROSSFIT":
             return "크로스핏";
         case "BOXING":
@@ -45,11 +50,37 @@ const formatCategory = (category: string) => {
     }
 };
 
+const formatBalance = (balance: string) => {
+    const numericBalance = Number(balance);
+    return Number.isFinite(numericBalance) ? numericBalance.toLocaleString() : balance;
+};
+
+const matchesCategoryTab = (category: string, activeTab: string) => {
+    if (activeTab === MARKET_TEXT.TABS.ALL) {
+        return true;
+    }
+
+    if (activeTab === MARKET_TEXT.TABS.PT) {
+        return category === "PT";
+    }
+
+    if (activeTab === MARKET_TEXT.TABS.PILATES) {
+        return category === "PILATES" || category === "YOGA";
+    }
+
+    if (activeTab === MARKET_TEXT.TABS.GOLF) {
+        return category === "GOLF" || category === "TENNIS";
+    }
+
+    return formatCategory(category).includes(activeTab);
+};
+
 const Market = () => {
     const { gymLocation } = useUserStore();
+    const { balance } = useTokenBalance();
     const [activeTab, setActiveTab] = useState(MARKET_TEXT.TABS.ALL);
     const [searchQuery, setSearchQuery] = useState("");
-    const [classes, setClasses] = useState<MarketplaceClassListItem[]>([]);
+    const [classes, setClasses] = useState<MarketClassItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState("");
     const navigate = useNavigate();
@@ -65,7 +96,7 @@ const Market = () => {
         const loadClasses = async () => {
             try {
                 setIsLoading(true);
-                const response = await getMarketplaceClasses({
+                const response = await getMarketClasses({
                     lat: gymLocation?.lat,
                     lng: gymLocation?.lng,
                     page: 0,
@@ -73,7 +104,7 @@ const Market = () => {
 
                 if (!isMounted) return;
 
-                setClasses(response.items);
+                setClasses(response.items ?? []);
                 setLoadError("");
             } catch (error) {
                 console.error("Failed to load marketplace classes", error);
@@ -118,16 +149,13 @@ const Market = () => {
 
     const filteredClasses = classes
         .filter((cls) => {
-            const formattedCategory = formatCategory(cls.category);
-            const matchesTab =
-                activeTab === MARKET_TEXT.TABS.ALL
-                    ? true
-                    : formattedCategory.includes(activeTab);
+            const matchesTab = matchesCategoryTab(cls.category, activeTab);
             const normalizedQuery = searchQuery.trim().toLowerCase();
+            const tags = cls.tags ?? [];
             const matchesSearch =
                 normalizedQuery.length === 0 ||
                 cls.title.toLowerCase().includes(normalizedQuery) ||
-                cls.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery));
+                tags.some((tag) => tag.toLowerCase().includes(normalizedQuery));
 
             return matchesTab && matchesSearch;
         })
@@ -146,7 +174,9 @@ const Market = () => {
 
                     <div className="absolute top-10 right-5 bg-main text-white px-4 py-2 rounded-2xl shadow-md flex items-center gap-2 active:scale-95 transition-transform cursor-pointer select-none">
                         <img src="/icon/token.svg" alt="token" className="w-5 h-5 brightness-0 invert drop-shadow-sm" />
-                        <span className="font-bold text-[17px] tabular-nums tracking-wide mt-[1px]">2,450</span>
+                        <span className="font-bold text-[17px] tabular-nums tracking-wide mt-[1px]">
+                            {formatBalance(balance)}
+                        </span>
                     </div>
                 </div>
 
@@ -239,7 +269,7 @@ const Market = () => {
                                     </div>
 
                                     <div className="flex gap-1.5 flex-wrap">
-                                        {cls.tags.map((tag) => (
+                                        {(cls.tags ?? []).map((tag) => (
                                             <span key={tag} className="text-[10px] font-bold text-main bg-main/10 px-2 py-1 rounded">
                                                 #{tag}
                                             </span>
@@ -267,7 +297,7 @@ const Market = () => {
                                             <div className="w-[18px] h-[18px] rounded-full bg-main flex items-center justify-center text-white text-[10px] font-bold">
                                                 {MARKET_TEXT.TICKET.PRICE_UNIT}
                                             </div>
-                                            <span className="font-bold text-[17px] text-gray-800">{cls.priceAmount}</span>
+                                            <span className="font-bold text-[17px] text-gray-800">{cls.priceAmount.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>

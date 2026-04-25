@@ -1,9 +1,9 @@
-interface NewQuestionRewardTokenProps {
+interface QuestionPostRewardTokenProps {
   rewardToken: number;
   onClick?: () => void;
 }
 
-const RewardToken = ({ rewardToken, onClick }: NewQuestionRewardTokenProps) => {
+const QuestionPostRewardToken = ({ rewardToken, onClick }: QuestionPostRewardTokenProps) => {
   return (
     <div
       className="flex flex-row rounded-xl p-4 bg-gradient-to-r from-main to-sub w-full h-20 items-center justify-between text-white cursor-pointer"
@@ -21,4 +21,4 @@ const RewardToken = ({ rewardToken, onClick }: NewQuestionRewardTokenProps) => {
   );
 };
 
-export default RewardToken;
+export default QuestionPostRewardToken;

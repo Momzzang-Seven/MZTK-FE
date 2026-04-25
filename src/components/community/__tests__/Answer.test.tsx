@@ -11,12 +11,12 @@ vi.mock("@components/community", () => ({
   CommentItem: ({ comment }: { comment: { content: string } }) => (
     <div data-testid="mock-comment-item">{comment.content}</div>
   ),
-  CommentInput: ({ comment, setComment, handleCommentSubmit }: { comment: string, setComment: (c: string) => void, handleCommentSubmit: () => void }) => (
+  CommentInput: ({ writingComment, setWritingComment, handleCommentSubmit }: { writingComment: string, setWritingComment: (c: string) => void, handleCommentSubmit: () => void }) => (
     <div data-testid="mock-comment-input">
       <input
         aria-label="comment input"
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
+        value={writingComment}
+        onChange={(e) => setWritingComment(e.target.value)}
       />
       <button onClick={handleCommentSubmit}>등록</button>
     </div>

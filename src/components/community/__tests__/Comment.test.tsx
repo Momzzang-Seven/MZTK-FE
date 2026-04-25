@@ -91,7 +91,7 @@ describe("Comment", () => {
   it("ActionList 컴포넌트가 렌더링된다", () => {
     render(<CommentItem comment={mockComment} />);
 
-    expect(screen.getByTestId("action-list-comment-1")).toBeInTheDocument();
+    expect(screen.getByTestId("action-list-COMMENT-1")).toBeInTheDocument();
   });
 
   it("댓글 레이아웃이 올바르게 구성된다", () => {

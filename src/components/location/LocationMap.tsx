@@ -33,7 +33,6 @@ interface LocationMapProps {
 export const LocationMap = ({
     center,
     panTarget,
-    address,
     onCameraChanged,
     onPanComplete,
     onCurrentLocationClick
@@ -58,7 +57,6 @@ export const LocationMap = ({
                 </Map>
 
                 <LocationMapOverlay
-                    address={address}
                     onCurrentLocationClick={onCurrentLocationClick}
                 />
             </APIProvider>

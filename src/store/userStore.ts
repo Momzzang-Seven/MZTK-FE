@@ -40,6 +40,7 @@ interface UserState {
     setGymLocation: (location: { locationId?: number; lat: number, lng: number; address: string } | null) => void;
     registerGymLocation: (location: { lat: number; lng: number; address: string }) => Promise<void>;
     clearUser: () => void;
+    setWalletAddress: (address: string) => void;
 
     // Actions
     addXp: (amount: number) => void;
@@ -56,6 +57,7 @@ interface UserState {
     // Async Analysis Actions
     startAnalysis: (type: 'exercise' | 'record') => void;
     checkAnalysisCompletion: () => void;
+    showSnackbar: (message: string) => void;
     closeSnackbar: () => void;
     levelUp: () => Promise<{ success: boolean; message: string }>;
     initAttendance: () => Promise<void>;
@@ -91,6 +93,9 @@ export const useUserStore = create<UserState>()(
             setUser: (user) => set({ user, isAuthenticated: true }),
             setAccessToken: (token) => set({ accessToken: token }),
             setGymLocation: (location) => set({ gymLocation: location }),
+            setWalletAddress: (address) => set((state) => ({ 
+                user: state.user ? { ...state.user, walletAddress: address } : null 
+            })),
 
             registerGymLocation: async (location) => {
                 try {
@@ -136,7 +141,8 @@ export const useUserStore = create<UserState>()(
                             attendanceStreak: result.streakDays, 
                             hasAttendedToday: true,
                             weeklyAttendance: state.weeklyAttendance ? { attendedCount: state.weeklyAttendance.attendedCount + 1 } : { attendedCount: result.streakDays > 7 ? 1 : result.streakDays },
-                            xp: state.xp + result.grantedXp + result.bonusXp 
+                            xp: state.xp + result.grantedXp + result.bonusXp,
+                            snackbar: { isOpen: true, message: result.message }
                         }));
                         return { 
                             success: true, 
@@ -148,6 +154,7 @@ export const useUserStore = create<UserState>()(
                 } catch (error: unknown) {
                     const err = error as { response?: { data?: { message?: string } }, message?: string };
                     console.error("출석 API 호출 실패:", err);
+                    set({ snackbar: { isOpen: true, message: "서버 통신 실패" } });
                     return { success: false, message: "서버 통신 실패", rewardedXp: 0 };
                 }
             },
@@ -204,6 +211,10 @@ export const useUserStore = create<UserState>()(
                         }
                     });
                 }
+            },
+
+            showSnackbar: (message: string) => {
+                set({ snackbar: { isOpen: true, message } });
             },
 
             closeSnackbar: () => {
