@@ -13,8 +13,9 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:ci": "vitest run",
-    "test:integration": "vitest run --reporter=verbose src/**/*.integration.test.*",
+    "test:integration": "vitest run integration",
     "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test -c playwright.prod.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
     "prepare": "husky"

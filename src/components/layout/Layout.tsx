@@ -1,13 +1,12 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuthModalStore } from "@store";
-import { CommonModal } from "@components/common";
+import { useLocation } from "react-router-dom";
+import { AuthStatusModal } from "@components/auth/AuthStatusModal";
+import { useButtonClickGuard } from "@hooks";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { unauthorized, setUnauthorized } = useAuthModalStore();
+  const handleButtonClickCapture = useButtonClickGuard();
 
   const hideFooterPages = [
     "/login",
@@ -41,6 +40,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div
+      onClickCapture={handleButtonClickCapture}
       className={`bg-white w-full min-h-screen mx-auto flex flex-col max-w-[420px] items-center`}
     >
       {shouldShowHeader && <Header />}
@@ -51,18 +51,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           `}
       >
         {children}
-
-        {unauthorized && (
-          <CommonModal
-            title="로그인이 필요해요"
-            desc="  서비스를 이용하시려면 로그인이 필요해요. <br /> 로그인 페이지로 이동할까요?"
-            confirmLabel="로그인 페이지로 이동"
-            onConfirmClick={() => {
-              setUnauthorized(false);
-              navigate("/login");
-            }}
-          />
-        )}
+        <AuthStatusModal />
       </div>
       {!shouldHideFooter && <Footer />}
     </div>

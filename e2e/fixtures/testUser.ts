@@ -17,6 +17,9 @@ export async function loginAsTestUser(page: Page) {
   await mockLoginBtn.click();
   // 홈으로 이동할 때까지 대기
   await page.waitForURL('/');
+  await page.evaluate((walletAddress) => {
+    localStorage.setItem('wallet_address', walletAddress);
+  }, MOCK_WALLET.address);
   // 네트워크가 어느 정도 안정될 때까지 대기하여 초기화 API 호출이 완료되도록 함
   await page.waitForLoadState('networkidle');
 }

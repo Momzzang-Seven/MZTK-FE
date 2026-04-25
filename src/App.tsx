@@ -26,7 +26,6 @@ import {
   TokenLog,
   UserManagement,
   PostManagement,
-  InquiryManagement,
   TrainerDashboard,
   CreateTicket,
   EditTicket,
@@ -41,6 +40,7 @@ import {
   MarketReservation,
   ReviewWrite,
   RegisterTicket,
+  MyTknHistory,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -73,7 +73,6 @@ function App() {
                 <Route path="users" element={<UserManagement />} />
                 <Route path="posts" element={<PostManagement />} />
                 <Route path="token-logs" element={<TokenLog />} />
-                <Route path="inquiries" element={<InquiryManagement />} />
 
                 <Route path="/404" element={<Err404 />} />
                 <Route
@@ -141,6 +140,7 @@ function App() {
                     />  
                     <Route path="/my" element={<My />} />
                     <Route path="/myTknTx" element={<MyTx />} />
+                    <Route path="/my-tkn-history" element={<MyTknHistory />} />
                     <Route path="/exercise-auth" element={<ExerciseAuth />} />
                     <Route path="/record-auth" element={<RecordAuth />} />
                     <Route

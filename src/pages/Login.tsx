@@ -1,17 +1,26 @@
 import { CommonButton } from "@components/common";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useUserStore } from "@store";
-import { PostLogin } from "@services/auth";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@hooks/auth/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { setUser, setAccessToken } = useUserStore();
+  const { isAuthenticated, login } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [localEmail, setLocalEmail] = useState("");
+  const [localPassword, setLocalPassword] = useState("");
+  const [localError, setLocalError] = useState("");
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const slides = [
     {
@@ -77,8 +86,18 @@ const Login = () => {
           xmlns="http://www.w3.org/2000/svg"
           className="text-[#FAB12F]"
         >
-          <path d="M12.5 10L15.5 13L21.5 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M5 26.5V23.5C5 21.8431 6.34315 20.5 8 20.5H16C17.6569 20.5 19 21.8431 19 23.5V26.5" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M12.5 10L15.5 13L21.5 7"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M5 26.5V23.5C5 21.8431 6.34315 20.5 8 20.5H16C17.6569 20.5 19 21.8431 19 23.5V26.5"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
           <circle cx="12" cy="11.5" r="4" stroke="currentColor" strokeWidth="2" />
           <rect x="3" y="27" width="25" height="1" fill="currentColor" />
         </svg>
@@ -86,7 +105,6 @@ const Login = () => {
     },
   ];
 
-  // Auto-slide logic
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -101,7 +119,6 @@ const Login = () => {
     };
   }, [resetTimer]);
 
-  // Swipe logic
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0].clientX;
   };
@@ -116,11 +133,9 @@ const Login = () => {
     const threshold = 50;
 
     if (distance > threshold) {
-      // Swipe Left (Next)
       setCurrentSlide((prev) => (prev + 1) % slides.length);
       resetTimer();
     } else if (distance < -threshold) {
-      // Swipe Right (Prev)
       setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
       resetTimer();
     }
@@ -129,95 +144,97 @@ const Login = () => {
     touchEndX.current = 0;
   };
 
-  const handleLogin = async (type: "kakao" | "google" | "local") => {
-    const redirectUri = window.location.origin + "/callback";
+  const handleLogin = (type: "kakao" | "google") => {
+    const redirectUri = `${window.location.origin}/callback`;
     let url = "";
 
     if (type === "kakao") {
       const clientId =
         import.meta.env.VITE_KAKAO_CLIENT_ID || "YOUR_KAKAO_CLIENT_ID";
       url = `https://kauth.kakao.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&state=kakao`;
-    } else if (type === "google") {
+    } else {
       const clientId =
         import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
       url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=email profile&state=google`;
-    } else if (type === "local") {
-      try {
-        const response = await PostLogin({ provider: "LOCAL", email: "testuser1@example.com", password: "StrongPassword123!" })
-        if (response) {
-          const { userInfo, accessToken } = response;
-          setUser(userInfo);
-          setAccessToken(accessToken);
-          navigate("/register");
-        }
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-          console.error("Login failed", err.message);
-        } else {
-          console.error("Login failed: Unknown error");
-        }
-        navigate("/login");
-      }
     }
 
     window.location.href = url;
   };
 
-  // Mock Login for Test
-  const handleMockLogin = (role: "TRAINER" | "MEMBER") => {
-    const mockUser = {
-      userId: role === "TRAINER" ? 100 : 200,
-      email: `${role.toLowerCase()}@example.com`,
-      nickname: `가짜${role === "TRAINER" ? "트레이너" : "회원"}`,
-      profileImage: "",
-      role: role,
-      walletAddress: "0x1234567890123456789012345678901234567890",
-    };
+  const navigateByRole = useCallback(
+    (role?: string, isNewUser?: boolean) => {
+      if (isNewUser) {
+        navigate("/register");
+        return;
+      }
 
-    setUser(mockUser);
-    setAccessToken("mock_access_token");
+      navigate(role === "TRAINER" ? "/trainer" : "/");
+    },
+    [navigate]
+  );
 
-    // If role is already set, go to home, else go to register
-    if (role) {
-      navigate("/");
-    } else {
-      navigate("/register");
+  const handleLocalLogin = async () => {
+    const email = localEmail.trim();
+
+    if (!email || !localPassword) {
+      setLocalError("이메일과 비밀번호를 입력해 주세요.");
+      return;
+    }
+
+    try {
+      setIsLocalSubmitting(true);
+      setLocalError("");
+
+      const response = await login({
+        provider: "LOCAL",
+        email,
+        password: localPassword,
+      });
+
+      navigateByRole(response.userInfo.role, response.isNewUser);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setLocalError(
+          error.response?.data?.message ??
+            "로그인에 실패했습니다. 입력값을 다시 확인해 주세요."
+        );
+      } else {
+        setLocalError("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      }
+    } finally {
+      setIsLocalSubmitting(false);
     }
   };
 
   return (
     <div className="flex flex-col h-full items-center bg-white px-5 pt-16 pb-10 overflow-y-auto">
-      {/* 1. Logo Title */}
       <div className="font-gmarket text-[52px] leading-tight text-[#FAB12F] text-center mb-10 shrink-0">
         몸짱
         <br />
         코인
       </div>
 
-      {/* 2. Slider Area (Flexible Height) */}
       <div
         className="flex-1 w-full flex flex-col items-center justify-center max-w-sm mb-8"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Indicators */}
         <div className="flex justify-center gap-2 mb-8">
           {slides.map((_, index) => (
             <div
               key={index}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentSlide ? "bg-[#FAB12F] w-6" : "bg-gray-200"
-                }`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentSlide ? "bg-[#FAB12F] w-6" : "bg-gray-200"
+              }`}
             />
           ))}
         </div>
 
-        {/* Icon */}
         <div className="mb-8 p-6 bg-yellow-50 rounded-full shrink-0 transition-all duration-500 ease-in-out">
           {slides[currentSlide].icon}
         </div>
 
-        {/* Text */}
         <h2 className="text-2xl font-bold text-gray-900 text-center whitespace-pre-line mb-4 h-16 flex items-center justify-center">
           {slides[currentSlide].title}
         </h2>
@@ -226,16 +243,7 @@ const Login = () => {
         </p>
       </div>
 
-      {/* 3. Action Buttons (Fixed Bottom Area) */}
       <div className="w-full max-w-sm flex flex-col gap-3 shrink-0">
-        <CommonButton
-          label="로컬 시작하기"
-          img="/icon/email.svg"
-          bgColor="bg-white border border-gray-200"
-          textColor="text-black"
-          onClick={() => handleLogin("local")}
-          className="w-full title h-[56px] shadow-sm rounded-xl"
-        />
         <CommonButton
           label="카카오로 시작하기"
           img="/icon/kakao.svg"
@@ -253,22 +261,47 @@ const Login = () => {
           className="w-full title h-[56px] shadow-sm rounded-xl"
         />
 
-        {/* Mock Login Section - Subtle dev shortcut */}
-        <div className="mt-6 flex flex-col gap-2 border-t border-gray-100 pt-6">
-          <p className="text-center text-[11px] text-gray-300 font-medium tracking-tight mb-1 uppercase">Development Testing Only</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleMockLogin("TRAINER")}
-              className="flex-1 h-9 rounded-lg bg-gray-50 text-gray-400 text-xs font-bold hover:bg-gray-100 hover:text-main transition-colors"
-            >
-              트레이너 목업로그인
-            </button>
-            <button
-              onClick={() => handleMockLogin("MEMBER")}
-              className="flex-1 h-9 rounded-lg bg-gray-50 text-gray-400 text-xs font-bold hover:bg-gray-100 hover:text-main transition-colors"
-            >
-              회원 목업로그인
-            </button>
+        <div className="mt-4 rounded-2xl border border-[#FAB12F]/20 bg-[#FFF9EC] px-4 py-4 shadow-sm">
+          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#C99924]">
+            Local Account
+          </p>
+          <p className="mt-1 text-[13px] leading-relaxed text-gray-500">
+            백엔드에 등록된 로컬 계정으로 바로 로그인할 수 있습니다.
+          </p>
+
+          <div className="mt-3 flex flex-col gap-2.5">
+            <input
+              type="email"
+              value={localEmail}
+              onChange={(event) => setLocalEmail(event.target.value)}
+              placeholder="이메일"
+              autoComplete="username"
+              className="h-11 rounded-xl border border-white bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#FAB12F]/40 focus:ring-2 focus:ring-[#FAB12F]/20"
+            />
+            <input
+              type="password"
+              value={localPassword}
+              onChange={(event) => setLocalPassword(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  void handleLocalLogin();
+                }
+              }}
+              placeholder="비밀번호"
+              autoComplete="current-password"
+              className="h-11 rounded-xl border border-white bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#FAB12F]/40 focus:ring-2 focus:ring-[#FAB12F]/20"
+            />
+            {localError && (
+              <p className="px-1 text-[12px] font-medium text-red-500">{localError}</p>
+            )}
+            <CommonButton
+              label={isLocalSubmitting ? "로그인 중..." : "로컬 계정 로그인"}
+              bgColor="bg-[#FAB12F]"
+              textColor="text-white"
+              onClick={handleLocalLogin}
+              disabled={isLocalSubmitting}
+              className="h-[48px] rounded-xl text-sm font-bold shadow-sm"
+            />
           </div>
         </div>
       </div>

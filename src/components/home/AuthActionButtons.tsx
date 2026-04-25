@@ -1,31 +1,19 @@
 import { useUserStore } from "@store";
-import { useEffect, useState } from "react";
 import { HOME_TEXT } from "@constant/home";
 import { CommonButton } from "@components/common";
 
 interface AuthActionButtonsProps {
     onExerciseClick: () => void;
-    onLocationClick: () => void;
 }
 
 export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) => {
     const { checkAttendance, hasAttendedToday, lastExerciseDate } = useUserStore();
-    const [isAttended, setIsAttended] = useState(false);
-    const [isExerciseDone, setIsExerciseDone] = useState(false);
-
-    useEffect(() => {
-        setIsAttended(hasAttendedToday);
-        const today = new Date().toISOString().split("T")[0];
-        setIsExerciseDone(lastExerciseDate === today);
-    }, [hasAttendedToday, lastExerciseDate]);
+    const today = new Date().toISOString().split("T")[0];
+    const isAttended = hasAttendedToday;
+    const isExerciseDone = lastExerciseDate === today;
 
     const handleAttendance = async () => {
-        const result = await checkAttendance();
-        if (result.success) {
-            alert(result.message);
-        } else {
-            alert(result.message);
-        }
+        await checkAttendance();
     };
 
     const activeStyle = "bg-[#FFC107] text-white shadow-lg active:scale-95 border-none cursor-pointer";
@@ -35,6 +23,7 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
         <div className="w-full flex flex-col gap-4">
             {/* Attendance Button */}
             <CommonButton
+                ariaLabel="출석 인증"
                 onClick={isAttended ? undefined : handleAttendance}
                 className={`w-full !justify-start gap-4 p-5 rounded-[20px] transition-all text-left ${isAttended ? inactiveStyle : activeStyle}`}
                 bgColor=" " // Override default
@@ -63,6 +52,7 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
 
             {/* Exercise Button */}
             <CommonButton
+                ariaLabel="운동 인증"
                 onClick={isExerciseDone ? undefined : onExerciseClick}
                 className={`w-full !justify-start gap-4 p-5 rounded-[20px] transition-all text-left ${isExerciseDone ? inactiveStyle : activeStyle}`}
                 bgColor=" " // Override default
@@ -93,3 +83,4 @@ export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) =
 };
 
 export default AuthActionButtons;
+

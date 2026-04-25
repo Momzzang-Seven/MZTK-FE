@@ -34,6 +34,7 @@ export { default as MarketPurchase } from "./market/MarketPurchase";
 export { default as MarketPurchaseFail } from "./market/MarketPurchaseFail";
 export { default as MarketReservation } from "./market/MarketReservation";
 export { default as ReviewWrite } from "./market/ReviewWrite";
+export { default as MyTknHistory } from "./MyTknHistory";
 
 // admin page
 export { default as AdminDashboard } from "./admin/Dashboard";
@@ -41,4 +42,3 @@ export { default as AdminLogin } from "./admin/Login";
 export { default as TokenLog } from "./admin/TokenLog";
 export { default as UserManagement } from "./admin/UserManagement";
 export { default as PostManagement } from "./admin/PostManagement";
-export { default as InquiryManagement } from "./admin/InquiryManagement";
