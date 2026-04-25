@@ -54,7 +54,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
       accessToken: "mock-token",
       grantType: "Bearer",
       expiresIn: 3600,
-      isNewUser: true,
+      isNewUser: false,
     });
 
     render(

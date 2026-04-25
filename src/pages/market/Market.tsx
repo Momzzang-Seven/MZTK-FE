@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { MARKET_TEXT } from "@constant";
 import { useUserStore } from "@store/userStore";
 import { getDistanceFromLatLonInMeters } from "@utils";
+import { useTokenBalance } from "@hooks";
+
 // 임시 더미 데이터 (마켓 클래스 목록)
 const DUMMY_CLASSES = [
     {
@@ -54,6 +56,7 @@ const DUMMY_CLASSES = [
 
 const Market = () => {
     const { gymLocation } = useUserStore();
+    const { balance } = useTokenBalance();
     const [activeTab, setActiveTab] = useState(MARKET_TEXT.TABS.ALL);
     const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
@@ -114,7 +117,9 @@ const Market = () => {
                     {/* 잔여 MZT 표시 (우측 배치) */}
                     <div className="absolute top-10 right-5 bg-main text-white px-4 py-2 rounded-2xl shadow-md flex items-center gap-2 active:scale-95 transition-transform cursor-pointer select-none">
                         <img src="/icon/token.svg" alt="token" className="w-5 h-5 brightness-0 invert drop-shadow-sm" />
-                        <span className="font-bold text-[17px] tabular-nums tracking-wide mt-[1px]">2,450</span>
+                        <span className="font-bold text-[17px] tabular-nums tracking-wide mt-[1px]">
+                            {balance.toLocaleString()}
+                        </span>
                     </div>
                 </div>
 

@@ -40,6 +40,7 @@ interface UserState {
     setGymLocation: (location: { locationId?: number; lat: number, lng: number; address: string } | null) => void;
     registerGymLocation: (location: { lat: number; lng: number; address: string }) => Promise<void>;
     clearUser: () => void;
+    setWalletAddress: (address: string) => void;
 
     // Actions
     addXp: (amount: number) => void;
@@ -92,6 +93,9 @@ export const useUserStore = create<UserState>()(
             setUser: (user) => set({ user, isAuthenticated: true }),
             setAccessToken: (token) => set({ accessToken: token }),
             setGymLocation: (location) => set({ gymLocation: location }),
+            setWalletAddress: (address) => set((state) => ({ 
+                user: state.user ? { ...state.user, walletAddress: address } : null 
+            })),
 
             registerGymLocation: async (location) => {
                 try {
