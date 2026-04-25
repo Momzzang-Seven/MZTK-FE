@@ -32,7 +32,8 @@ interface TicketFormProps {
     handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     triggerFileInput: () => void;
     isSubmitDisabled: boolean;
-    onSubmitSuccess: () => void;
+    onSubmit: () => Promise<void> | void;
+    isSubmitting?: boolean;
 }
 
 /**
@@ -53,7 +54,8 @@ const TicketForm = ({
     handleImageChange,
     triggerFileInput,
     isSubmitDisabled,
-    onSubmitSuccess
+    onSubmit,
+    isSubmitting = false,
 }: TicketFormProps) => {
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
@@ -75,8 +77,7 @@ const TicketForm = ({
         }
 
         try {
-            // [TODO] 실제 서버 API 연동 구현
-            onSubmitSuccess();
+            await onSubmit();
         } catch (error: unknown) {
             const err = error as { response?: { data?: { message?: string } }, message?: string };
             const backendErrorMessage = err?.response?.data?.message || err?.message || "서버 요청 중 오류가 발생했습니다. 다시 시도해주세요.";
@@ -330,10 +331,10 @@ const TicketForm = ({
             {/* 하단 버튼 섹션 - Sticky */}
             <div className="p-5 border-t border-gray-100 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.02)] fixed bottom-[82px] left-0 right-0 z-50 w-full max-w-[420px] mx-auto">
                 <CommonButton
-                    label={texts.SUBMIT}
+                    label={isSubmitting ? "저장 중..." : texts.SUBMIT}
                     className="h-[60px] rounded-2xl title shadow-sm active:scale-95 transition-all font-bold"
                     onClick={handleSubmit}
-                    disabled={isSubmitDisabled}
+                    disabled={isSubmitDisabled || isSubmitting}
                 />
             </div>
 

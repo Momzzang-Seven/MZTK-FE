@@ -7,11 +7,20 @@ import { useTicketForm } from "@hooks/trainer/useTicketForm";
 const EditTicket = () => {
     const ticketFormProps = useTicketForm("edit");
 
+    if (ticketFormProps.isLoading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-sm font-medium text-gray-500">
+                클래스 정보를 불러오는 중입니다...
+            </div>
+        );
+    }
+
     return (
         <TicketForm 
             mode="edit" 
             {...ticketFormProps} 
-            onSubmitSuccess={ticketFormProps.handleSubmitSuccess} 
+            onSubmit={ticketFormProps.handleSubmit}
+            isSubmitting={ticketFormProps.isSubmitting}
         />
     );
 };

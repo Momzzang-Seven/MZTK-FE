@@ -117,7 +117,7 @@ const TrainerList = () => {
 
     return (
         <div className="flex flex-col h-full bg-gray-50 min-h-screen">
-            <TrainerHeader title="내 클래스 목록" showBack />
+            <TrainerHeader title="내 클래스 목록" showBack backTo="/trainer" />
 
             <div className="px-5 pt-6 pb-20 flex flex-col gap-4">
                 <div className="bg-main/5 border border-main/10 text-gray-700 px-4 py-3.5 rounded-xl text-[13.5px] leading-relaxed font-medium shadow-sm mb-1">
