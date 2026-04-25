@@ -40,6 +40,7 @@ import {
   MarketReservation,
   ReviewWrite,
   RegisterTicket,
+  MyTknHistory,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -139,6 +140,7 @@ function App() {
                     />  
                     <Route path="/my" element={<My />} />
                     <Route path="/myTknTx" element={<MyTx />} />
+                    <Route path="/my-tkn-history" element={<MyTknHistory />} />
                     <Route path="/exercise-auth" element={<ExerciseAuth />} />
                     <Route path="/record-auth" element={<RecordAuth />} />
                     <Route

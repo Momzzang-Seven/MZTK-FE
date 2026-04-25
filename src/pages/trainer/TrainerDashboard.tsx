@@ -6,12 +6,14 @@ import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonModal } from "@components/common";
 import { useTrainerStatus } from "@hooks";
 import { getTrainerStore } from "@services";
+import { useUserStore } from "@store";
 
 const TrainerDashboard = () => {
   const navigate = useNavigate();
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [isCheckingStore, setIsCheckingStore] = useState(true);
   const { isRestricted, handleAppeal } = useTrainerStatus();
+  const user = useUserStore((state) => state.user);
 
   useEffect(() => {
     if (isRestricted) {
@@ -32,12 +34,7 @@ const TrainerDashboard = () => {
           error.response?.data?.code === "MARKETPLACE_001"
         ) {
           if (!isMounted) return;
-
-          const hasVisited = localStorage.getItem("hasVisitedTrainerDashboard");
-          if (!hasVisited) {
-            setShowRegisterModal(true);
-            localStorage.setItem("hasVisitedTrainerDashboard", "true");
-          }
+          setShowRegisterModal(true);
         } else {
           console.error("Failed to check trainer store", error);
         }
@@ -66,7 +63,7 @@ const TrainerDashboard = () => {
 
       <div className="px-5 pt-8 pb-4">
         <h2 className="text-[20px] font-bold text-gray-900 tracking-tight">
-          {TRAINER_DASHBOARD_TEXT.GREETING}
+          {TRAINER_DASHBOARD_TEXT.GREETING(user?.nickname || "oo")}
         </h2>
         <p className="text-gray-500 text-[14px] mt-1">
           오늘도 회원님들의 운동을 준비해 주세요.
@@ -126,6 +123,8 @@ const TrainerDashboard = () => {
           desc="클래스 등록 및 관리를 위해<br/>먼저 매장 정보를 등록해 주세요."
           confirmLabel="매장 등록하러 가기"
           onConfirmClick={handleGoToRegister}
+          cancelLabel="다음에 하기"
+          onCancelClick={() => setShowRegisterModal(false)}
         />
       )}
 

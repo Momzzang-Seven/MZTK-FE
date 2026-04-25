@@ -6,7 +6,7 @@ import { useAuth } from "@hooks/auth/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [localEmail, setLocalEmail] = useState("");
   const [localPassword, setLocalPassword] = useState("");
@@ -15,6 +15,12 @@ const Login = () => {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const slides = [
     {
