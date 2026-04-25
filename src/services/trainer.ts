@@ -71,6 +71,30 @@ export interface RegisterTrainerClassResponse {
   classId: number;
 }
 
+export interface UpdateTrainerClassTimePayload {
+  timeId?: number;
+  daysOfWeek: MarketplaceDayOfWeek[];
+  startTime: string;
+  capacity: number;
+}
+
+export interface UpdateTrainerClassPayload {
+  title: string;
+  category: MarketplaceClassCategory;
+  description: string;
+  priceAmount: number;
+  durationMinutes: number;
+  tags?: string[];
+  features?: string[];
+  personalItems?: string | null;
+  imageIds?: number[];
+  classTimes: UpdateTrainerClassTimePayload[];
+}
+
+export interface UpdateTrainerClassResponse {
+  classId: number;
+}
+
 export interface TrainerClassItem {
   classId: number;
   title: string;
@@ -93,6 +117,63 @@ export interface GetTrainerClassesResponse {
 export interface ToggleTrainerClassStatusResponse {
   classId: number;
   active: boolean;
+}
+
+export interface MarketplaceClassListItem {
+  classId: number;
+  title: string;
+  category: string;
+  priceAmount: number;
+  durationMinutes: number;
+  thumbnailFinalObjectKey: string | null;
+  tags: string[];
+  distance: number | null;
+}
+
+export interface GetMarketplaceClassesResponse {
+  items: MarketplaceClassListItem[];
+  currentPage: number;
+  totalPages: number;
+  totalElements: number;
+}
+
+export interface MarketplaceClassDetailImage {
+  imageId: number;
+  finalObjectKey: string;
+  imgOrder: number;
+}
+
+export interface MarketplaceClassDetailTime {
+  timeId: number;
+  daysOfWeek: MarketplaceDayOfWeek[];
+  startTime: string;
+  capacity: number;
+}
+
+export interface MarketplaceClassDetailStore {
+  storeId: number;
+  storeName: string;
+  address: string;
+  detailAddress: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface MarketplaceClassDetailResponse {
+  classId: number;
+  trainerId: number;
+  store: MarketplaceClassDetailStore | null;
+  title: string;
+  category: string;
+  description: string;
+  priceAmount: number;
+  thumbnailFinalObjectKey: string | null;
+  images: MarketplaceClassDetailImage[];
+  tags: string[];
+  features: string[];
+  durationMinutes: number;
+  personalItems: string | null;
+  classTimes: MarketplaceClassDetailTime[];
 }
 
 /**
@@ -132,6 +213,14 @@ export const registerTrainerClass = async (
   return response.data.data;
 };
 
+export const updateTrainerClass = async (
+  classId: number,
+  payload: UpdateTrainerClassPayload
+): Promise<UpdateTrainerClassResponse> => {
+  const response = await api.put(`/marketplace/trainer/classes/${classId}`, payload);
+  return response.data.data;
+};
+
 export const getTrainerClasses = async (
   page = 0
 ): Promise<GetTrainerClassesResponse> => {
@@ -145,5 +234,28 @@ export const toggleTrainerClassStatus = async (
   classId: number
 ): Promise<ToggleTrainerClassStatusResponse> => {
   const response = await api.patch(`/marketplace/trainer/classes/${classId}/status`);
+  return response.data.data;
+};
+
+export const getMarketplaceClasses = async (
+  params?: {
+    lat?: number;
+    lng?: number;
+    category?: MarketplaceClassCategory;
+    sort?: string;
+    trainerId?: number;
+    startTime?: string;
+    endTime?: string;
+    page?: number;
+  }
+): Promise<GetMarketplaceClassesResponse> => {
+  const response = await api.get("/marketplace/classes", { params });
+  return response.data.data;
+};
+
+export const getMarketplaceClassDetail = async (
+  classId: number
+): Promise<MarketplaceClassDetailResponse> => {
+  const response = await api.get(`/marketplace/classes/${classId}`);
   return response.data.data;
 };
