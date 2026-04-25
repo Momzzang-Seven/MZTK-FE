@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 
-interface NewPostContentInputProps {
+interface FreePostContentInputProps {
   maxLength?: number;
   onChange?: (value: string) => void;
+  initialValue?: string;
 }
 
-const NewPostContentInput = ({
+const FreePostContentInput = ({
   maxLength = 1000,
   onChange,
-}: NewPostContentInputProps) => {
-  const [value, setValue] = useState("");
+  initialValue = "",
+}: FreePostContentInputProps) => {
+  const [value, setValue] = useState(initialValue);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // 내용 길이에 따라 height 자동 조절
@@ -56,4 +58,4 @@ const NewPostContentInput = ({
   );
 };
 
-export default NewPostContentInput;
+export default FreePostContentInput;

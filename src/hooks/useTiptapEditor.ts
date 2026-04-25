@@ -9,6 +9,7 @@ import ImageUploadNode from "@components/community/tiptapEditor/ImageUploadNode"
 export const useTiptapEditor = (
   onChange: (html: string) => void,
   referenceType: ImageReferenceType,
+  initialContent?: string,
 ) => {
   const addImage = usePostStore((s) => s.addImage);
   const removeImage = usePostStore((s) => s.removeImage);
@@ -27,6 +28,7 @@ export const useTiptapEditor = (
 
   const editor = useEditor({
     extensions: [StarterKit, ImageUploadNode],
+    content: initialContent ?? "",
     editorProps: {
       attributes: {
         class:

@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { PostType, PostPayload, PagedResponse, FreePost, QuestionPost } from "@types";
+import type { PostType, PostPayload, GetPostsResponse, FreePost, QuestionPost } from "@types";
 
 export const postService = {
   /**
@@ -27,7 +27,7 @@ export const postService = {
     search?: string,
     page?: number,
     size?: number
-  ): Promise<PagedResponse<FreePost | QuestionPost>> {
+  ): Promise<GetPostsResponse> {
     const response = await api.get("/posts", {
       params: {
         type,
@@ -45,7 +45,7 @@ export const postService = {
    */
   async getPost(postId: number): Promise<FreePost | QuestionPost> {
     const response = await api.get(`/posts/${postId}`)
-    return response.data;
+    return response.data.data;
   },
 
   /**
@@ -53,7 +53,7 @@ export const postService = {
    */
   async updatePost(postId: number, payload: PostPayload): Promise<void> {
     const response = await api.patch(`/posts/${postId}`, payload)
-    return response.data;
+    return response.data.data;
   },
 
   /**

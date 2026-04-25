@@ -56,7 +56,7 @@ export const useImageUpload = (
               const { imageId, presignedUrl } = presignedResults[i];
               await imageService.uploadImageToS3(presignedUrl, file);
 
-              onUploaded?.({ id: imageId, previewUrl });
+              onUploaded?.({ imageId: imageId, imageUrl: previewUrl });
             } finally {
               onUploadEnd?.();
             }
@@ -92,7 +92,7 @@ export const useImageUpload = (
 
           URL.revokeObjectURL(previewUrl);
           blobUrlsRef.current.delete(previewUrl);
-          onUploaded?.({ id: imageId, previewUrl });
+          onUploaded?.({ imageId: imageId, imageUrl: previewUrl });
 
           return { imageId };
         } catch (err) {

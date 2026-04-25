@@ -1,11 +1,7 @@
 import { create } from "zustand";
+import type { UploadedImage } from "@types";
 
-export type CreatePostType = "free" | "question" | "answer";
-
-export interface UploadedImage {
-  id: number;
-  previewUrl: string;
-}
+export type CreatePostType = "FREE" | "QUESTION" | "ANSWER";
 
 export interface CreatePostState {
   postType: CreatePostType;
@@ -21,6 +17,7 @@ export interface CreatePostState {
   addImage: (image: UploadedImage) => void;
   removeImage: (id: number) => void;
   reorderImages: (images: UploadedImage[]) => void;
+  setImages: (images: UploadedImage[]) => void;
   incrementUploading: () => void;
   decrementUploading: () => void;
   setTitle: (title: string) => void;
@@ -32,7 +29,7 @@ export interface CreatePostState {
 }
 
 const initialState = {
-  postType: "free" as CreatePostType,
+  postType: "FREE" as CreatePostType,
   images: [] as UploadedImage[],
   uploadingCount: 0,
   title: "",
@@ -52,10 +49,12 @@ export const usePostStore = create<CreatePostState>()((set) => ({
 
   removeImage: (id) =>
     set((state) => ({
-      images: state.images.filter((img) => img.id !== id),
+      images: state.images.filter((img) => img.imageId !== id),
     })),
 
   reorderImages: (images) => set({ images }),
+
+  setImages: (images) => set({ images }),
 
   incrementUploading: () =>
     set((state) => ({ uploadingCount: state.uploadingCount + 1 })),

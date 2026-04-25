@@ -5,18 +5,19 @@ import { ActionList } from "@components/community";
 interface Props {
   comment: Comment;
   showProfileImage?: boolean;
+  onUpdateReplySuccess?: () => void;
 }
 
-const CommentItem = ({ comment, showProfileImage = true }: Props) => {
+const CommentItem = ({ comment, showProfileImage = true, onUpdateReplySuccess }: Props) => {
   return (
     <div className={"flex gap-3 p-2"}>
       {/* 프로필 사진*/}
       {showProfileImage && (
         <img
-          src={comment.writer.profileImage || "/icon/defaultUser.svg"}
-          alt={comment.writer.nickname}
-          className={`h-10 w-10 rounded-full ${
-            comment.writer.profileImage ? "object-cover" : "bg-main pt-2"
+          src={comment.writer?.profileImage || "/icon/defaultUser.svg"}
+          alt={comment.writer?.nickname || "알 수 없는 사용자"}
+          className={`h-10 w-10 rounded-full mt-1 ${
+            comment.writer?.profileImage ? "object-cover" : "bg-main pt-2"
           }`}
         />
       )}
@@ -26,7 +27,7 @@ const CommentItem = ({ comment, showProfileImage = true }: Props) => {
         <div className="flex items-center justify-between">
           <div className="flex gap-2 items-center">
             <span className="text-sm font-medium">
-              {comment.writer.nickname}
+              {comment.writer?.nickname || "알 수 없는 사용자"}
             </span>
             <span className="text-xs text-gray-400">
               {formatTimeAgo(comment.createdAt)}
@@ -36,8 +37,9 @@ const CommentItem = ({ comment, showProfileImage = true }: Props) => {
             size="xs"
             type="COMMENT"
             id={comment.commentId}
-            authorId={comment.writer.userId}
+            authorId={comment.writer?.userId}
             commentContent={comment.content}
+            onUpdateReplySuccess={onUpdateReplySuccess}
           />
         </div>
 

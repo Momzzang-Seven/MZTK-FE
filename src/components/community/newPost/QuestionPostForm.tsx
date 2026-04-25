@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { CommonModal } from "@components/common";
 import { usePostStore } from "@store";
-import NewPostTitleInput from "./QuestionPostTitleInput";
-import TiptapEditor from "../tiptapEditor/TiptapEditor";
-import TagInput from "./TagInput";
-import RewardToken from "./QuestionPostRewardToken";
-import TokenSelector from "./QuestionPostRewardSelector";
+import { TiptapEditor, QuestionPostTitle, TagInput, QuestionPostRewardToken, QuestionPostRewardSelector } from "@components/community";
 
-const QuestionPostForm = () => {
+interface QuestionPostFormProps {
+  initialTitle?: string;
+  initialContent?: string;
+}
+
+const QuestionPostForm = ({ initialTitle, initialContent }: QuestionPostFormProps) => {
   const tags = usePostStore((s) => s.tags);
   const reward = usePostStore((s) => s.reward);
   const setTitle = usePostStore((s) => s.setTitle);
@@ -19,12 +20,12 @@ const QuestionPostForm = () => {
 
   return (
     <div className="flex flex-col">
-      <NewPostTitleInput onChange={setTitle} />
-      <TiptapEditor onChange={setContent} referenceType="COMMUNITY_QUESTION" />
+      <QuestionPostTitle onChange={setTitle} initialValue={initialTitle} />
+      <TiptapEditor onChange={setContent} referenceType="COMMUNITY_QUESTION" initialContent={initialContent} />
       <TagInput tags={tags} onChange={setTags} />
 
       <div className="fixed bottom-10 w-full max-w-[420px] px-6">
-        <RewardToken
+        <QuestionPostRewardToken
           rewardToken={reward}
           onClick={() => setRewardModalOpen(true)}
         />
@@ -37,7 +38,7 @@ const QuestionPostForm = () => {
           confirmLabel="설정"
           onConfirmClick={() => setRewardModalOpen(false)}
         >
-          <TokenSelector reward={reward} setReward={setReward} />
+          <QuestionPostRewardSelector reward={reward} setReward={setReward} />
         </CommonModal>
       )}
     </div>

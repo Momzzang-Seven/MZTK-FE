@@ -1,16 +1,16 @@
 export type PostType = "FREE" | "QUESTION";
 
-export interface PagedResponse<T> {
-  posts: T[];
-  hasNext: boolean;
-}
-
 export interface PostPayload {
   title?: string;
   content: string;
   imageIds: number[];
   reward?: number;
   tags?: string[];
+}
+
+export interface CommentPayload {
+  content: string;
+  parentId?: number;
 }
 
 export type ActionModalType =
@@ -28,13 +28,18 @@ export interface Writer {
   profileImage?: string;
 }
 
+export interface Image {
+  imageId: number;
+  imageUrl: string;
+}
+
 export interface Post {
-  type: PostType;
+  type?: PostType;
   content: string;
   writer: Writer;
   createdAt: string;
   updatedAt: string;
-  imageUrls: string;
+  images: Image[];
   commentCount: number;
   tags: string[];
 }
@@ -71,4 +76,14 @@ export interface Comment {
 
 export interface Reply extends Comment {
   replyId: number;
+}
+
+export interface GetPostsResponse {
+  posts: FreePost[] | QuestionPost[];
+  hasNext: boolean;
+}
+
+export interface GetCommentsResponse {
+  content: Comment[];
+  last: boolean;
 }

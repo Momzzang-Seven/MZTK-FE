@@ -42,15 +42,15 @@ const FreePostImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
       {/* 이미지 그리드 */}
       <div className="grid grid-cols-3 gap-2">
         {images.map((img) => (
-          <div key={img.id} className="relative aspect-square">
+          <div key={img.imageId} className="relative aspect-square">
             <img
-              src={img.previewUrl}
+              src={img.imageUrl}
               alt="업로드된 이미지"
               className="w-full h-full object-cover rounded-lg"
             />
             <button
               type="button"
-              onClick={() => removeImage(img.id)}
+              onClick={() => removeImage(img.imageId)}
               className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-black/50 text-white text-xs rounded-full"
             >
               ×

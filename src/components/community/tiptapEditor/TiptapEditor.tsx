@@ -6,10 +6,11 @@ import Toolbar from "./Toolbar";
 interface TiptapEditorProps {
   onChange: (html: string) => void;
   referenceType: ImageReferenceType;
+  initialContent?: string;
 }
 
-const TiptapEditor = ({ onChange, referenceType }: TiptapEditorProps) => {
-  const { editor, handleImageSelect } = useTiptapEditor(onChange, referenceType);
+const TiptapEditor = ({ onChange, referenceType, initialContent }: TiptapEditorProps) => {
+  const { editor, handleImageSelect } = useTiptapEditor(onChange, referenceType, initialContent);
 
   return (
     <div className="w-full">

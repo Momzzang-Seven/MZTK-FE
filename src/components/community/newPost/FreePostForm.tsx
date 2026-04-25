@@ -1,8 +1,11 @@
 import { usePostStore } from "@store";
-import NewPostContentInput from "./FreePostContentInput";
-import TagInput from "./TagInput";
+import { FreePostContentInput, TagInput } from "@components/community";
 
-const FreePostForm = () => {
+interface FreePostFormProps {
+  initialContent?: string;
+}
+
+const FreePostForm = ({ initialContent }: FreePostFormProps) => {
   const images = usePostStore((s) => s.images);
   const tags = usePostStore((s) => s.tags);
   const setContent = usePostStore((s) => s.setContent);
@@ -16,9 +19,9 @@ const FreePostForm = () => {
           <div className="flex gap-1">
             {images.map((img) => (
               <img
-                key={img.id}
-                src={img.previewUrl}
-                alt="업로드된 이미지"
+                key={img.imageId}
+                src={img.imageUrl}
+                alt={img.imageUrl}
                 className="w-full max-h-[400px] object-cover"
               />
             ))}
@@ -26,7 +29,7 @@ const FreePostForm = () => {
         </div>
       )}
 
-      <NewPostContentInput onChange={setContent} />
+      <FreePostContentInput onChange={setContent} initialValue={initialContent} />
       <TagInput tags={tags} onChange={setTags} />
     </div>
   );

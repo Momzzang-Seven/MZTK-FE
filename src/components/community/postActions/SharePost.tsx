@@ -6,7 +6,7 @@ interface SharePostProps {
 }
 
 const SharePost = ({ type, postId }: SharePostProps) => {
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const BASE_URL = window.location.origin;
   const COMMUNITY_BASE = `${BASE_URL}/community`;
 
   const basePathByType: Record<PostType, string> = {

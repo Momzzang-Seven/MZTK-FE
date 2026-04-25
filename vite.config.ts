@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => {
         '/levels': { target: env.VITE_API_BASE_URL, changeOrigin: true },
         '/images': { target: env.VITE_API_BASE_URL, changeOrigin: true },
         '/posts': { target: env.VITE_API_BASE_URL, changeOrigin: true },
+        '/comments': { target: env.VITE_API_BASE_URL, changeOrigin: true },
       },
     },
     test: {

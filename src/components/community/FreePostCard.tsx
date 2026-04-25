@@ -6,9 +6,10 @@ import { SharePost, ActionList } from "@components/community";
 
 interface Props {
   post: FreePost;
+  onDeletePostSuccess?: () => void;
 }
 
-const FreePostCard = ({ post }: Props) => {
+const FreePostCard = ({ post, onDeletePostSuccess }: Props) => {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(post.isLiked);
   const [likeCount, setLikeCount] = useState(post.likeCount);
@@ -49,16 +50,22 @@ const FreePostCard = ({ post }: Props) => {
           type="FREE"
           authorId={post.writer.userId}
           size="sm"
+          onDeletePostSuccess={onDeletePostSuccess}
         />
       </div>
 
-      {post.imageUrls && (
-        <div className="mt-3 w-full">
-          <img
-            src={post.imageUrls}
-            alt="post"
-            className="w-full h-auto object-cover"
-          />
+      {post.images.length > 0 && (
+        <div className="w-full overflow-x-auto mt-3">
+          <div className="flex gap-1">
+            {post.images.map((img) => (
+              <img
+                key={img.imageId}
+                src={img.imageUrl}
+                alt={img.imageUrl}
+                className="w-full max-h-[400px] object-cover"
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -95,7 +102,7 @@ const FreePostCard = ({ post }: Props) => {
           {post.tags.map((tag) => (
             <span
               key={tag}
-              className="text-blue-600 cursor-pointer"
+              className="cursor-pointer text-blue-400 cursor-pointer"
               onClick={() => navigate(`/community/free?tag=${tag}`)}
             >
               #{tag}
