@@ -66,7 +66,7 @@ describe("ExerciseAuth Page", () => {
     ).toBeDisabled();
   });
 
-  it("운동 사진 인증 성공 시 업로드 후 홈으로 이동한다", async () => {
+  it("운동 사진 인증 성공 시 홈으로 이동한다", async () => {
     mockIssuePresignedUrls.mockResolvedValue({
       items: [
         {
@@ -126,7 +126,7 @@ describe("ExerciseAuth Page", () => {
     });
   });
 
-  it("운동 사진 인증이 거절되면 오류 문구를 표시한다", async () => {
+  it("운동 사진 인증이 거절되면 한글 오류 문구를 표시한다", async () => {
     mockIssuePresignedUrls.mockResolvedValue({
       items: [
         {
@@ -166,9 +166,53 @@ describe("ExerciseAuth Page", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("화면이나 앱 UI가 아닌 실제 운동 사진을 올려 주세요."),
+        screen.getByText("화면이나 UI가 아닌 실제 운동 사진을 올려 주세요."),
       ).toBeInTheDocument();
     });
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("요청 실패 메시지를 한글로 표시한다", async () => {
+    mockIssuePresignedUrls.mockResolvedValue({
+      items: [
+        {
+          imageId: 1,
+          presignedUrl: "https://upload.example.com/test",
+          tmpObjectKey: "private/workout/test.jpg",
+        },
+      ],
+    });
+    mockUploadFileToPresignedUrl.mockResolvedValue(undefined);
+    mockSubmitWorkoutPhoto.mockRejectedValue({
+      isAxiosError: true,
+      response: {
+        data: {
+          code: "VERIFICATION_002",
+          message: "Invalid image extension for verification",
+        },
+      },
+      message: "Request failed with status code 400",
+    });
+
+    render(
+      <BrowserRouter>
+        <ExerciseAuth />
+      </BrowserRouter>,
+    );
+
+    fireEvent.change(screen.getByTestId("photo-input"), {
+      target: { files: [new File(["test"], "exercise.png", { type: "image/png" })] },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: EXERCISE_TEXT.BTN_REGISTER }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "인증에 사용할 수 없는 이미지 형식입니다. 다른 파일로 다시 시도해 주세요.",
+        ),
+      ).toBeInTheDocument();
+    });
   });
 });

@@ -100,6 +100,8 @@ const initialState = {
   analysisTargetTime: null as number | null,
 };
 
+let initWorkoutCompletionRequest: Promise<void> | null = null;
+
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
@@ -378,20 +380,30 @@ export const useUserStore = create<UserState>()(
       },
 
       initWorkoutCompletion: async () => {
-        try {
-          const result = await verificationService.getTodayWorkoutCompletion();
-          const today = new Date().toISOString().split("T")[0];
-
-          set((state) => ({
-            lastExerciseDate: result.todayCompleted
-              ? result.earnedDate || today
-              : state.lastExerciseDate === today
-                ? null
-                : state.lastExerciseDate,
-          }));
-        } catch (error) {
-          console.error("운동 인증 완료 상태 초기화 실패:", error);
+        if (initWorkoutCompletionRequest) {
+          return initWorkoutCompletionRequest;
         }
+
+        initWorkoutCompletionRequest = (async () => {
+          try {
+            const result = await verificationService.getTodayWorkoutCompletion();
+            const today = new Date().toISOString().split("T")[0];
+
+            set((state) => ({
+              lastExerciseDate: result.todayCompleted
+                ? result.earnedDate || today
+                : state.lastExerciseDate === today
+                  ? null
+                  : state.lastExerciseDate,
+            }));
+          } catch (error) {
+            console.error("운동 인증 완료 상태 초기화 실패:", error);
+          } finally {
+            initWorkoutCompletionRequest = null;
+          }
+        })();
+
+        return initWorkoutCompletionRequest;
       },
     }),
     {
