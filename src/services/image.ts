@@ -1,24 +1,37 @@
-import { api } from "./client";
 import axios from "axios";
 import type { PresignedUrlRequest, PresignedUrlResponse } from "@types";
+import { api } from "./client";
+
+export type IssuePresignedUrlsRequest = PresignedUrlRequest;
+
+export interface IssuePresignedUrlsResponse {
+  items: PresignedUrlResponse[];
+}
 
 export const imageService = {
-    /**
-     * Presigned URL 요청
-     */
-    async getPresignedUrl(request: PresignedUrlRequest): Promise<PresignedUrlResponse[]> {
-        const response = await api.post("/images/presigned-urls", request);
-        return response.data.data.items as PresignedUrlResponse[];
-    },
+  async getPresignedUrl(
+    request: PresignedUrlRequest,
+  ): Promise<PresignedUrlResponse[]> {
+    const response = await api.post("/images/presigned-urls", request);
+    return response.data.data.items as PresignedUrlResponse[];
+  },
 
-    /**
-     * S3 Presigned URL로 이미지 직접 업로드
-     */
-    async uploadImageToS3(url: string, file: File): Promise<void> {
+  async issuePresignedUrls(
+    request: IssuePresignedUrlsRequest,
+  ): Promise<IssuePresignedUrlsResponse> {
+    const response = await api.post("/images/presigned-urls", request);
+    return response.data.data;
+  },
+
+  async uploadImageToS3(url: string, file: File): Promise<void> {
     await axios.put(url, file, {
       headers: {
         "Content-Type": file.type,
       },
     });
   },
-}
+
+  async uploadFileToPresignedUrl(url: string, file: File): Promise<void> {
+    await imageService.uploadImageToS3(url, file);
+  },
+};
