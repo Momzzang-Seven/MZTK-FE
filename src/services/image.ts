@@ -2,7 +2,7 @@ import axios from "axios";
 import type { PresignedUrlRequest, PresignedUrlResponse } from "@types";
 import { api } from "./client";
 
-export interface IssuePresignedUrlsRequest extends PresignedUrlRequest {}
+export type IssuePresignedUrlsRequest = PresignedUrlRequest;
 
 export interface IssuePresignedUrlsResponse {
   items: PresignedUrlResponse[];
