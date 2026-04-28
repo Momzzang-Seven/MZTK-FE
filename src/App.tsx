@@ -1,4 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { useUserStore } from "@store/userStore";
 import { AdminLayout, Layout } from "@components/layout"; // AdminLayout 추가
 import GlobalSnackbar from "@components/common/GlobalSnackbar";
 import {
@@ -48,6 +50,16 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
+  const { checkAnalysisCompletion } = useUserStore();
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void checkAnalysisCompletion();
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [checkAnalysisCompletion]);
+
   return (
     <BrowserRouter>
       <Routes>

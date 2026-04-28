@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { useUserStore } from "@store/userStore";
 import { createPortal } from "react-dom";
-
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUserStore } from "@store/userStore";
 
 const GlobalSnackbar = () => {
     const { snackbar, closeSnackbar } = useUserStore();
@@ -20,10 +19,18 @@ const GlobalSnackbar = () => {
         }
     }, [snackbar.isOpen, closeSnackbar]);
 
-    const handleAction = () => {
-        navigate("/my");
+    const hideSnackbar = () => {
         setVisible(false);
-        closeSnackbar();
+        setTimeout(closeSnackbar, 300);
+    };
+
+    const handleAction = () => {
+        if (!snackbar.action) {
+            return;
+        }
+
+        navigate(snackbar.action.path);
+        hideSnackbar();
     };
 
     if (!snackbar.isOpen && !visible) return null;
@@ -33,7 +40,7 @@ const GlobalSnackbar = () => {
             <div className="bg-[#FAB12F] rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center relative overflow-hidden">
                 {/* Close Button X (Optional, but good for UX) */}
                 <button
-                    onClick={() => { setVisible(false); setTimeout(closeSnackbar, 300); }}
+                    onClick={hideSnackbar}
                     className="absolute top-2 right-3 text-white/80 hover:text-white text-xl font-bold"
                 >
                     &times;
@@ -47,12 +54,14 @@ const GlobalSnackbar = () => {
                     ))}
                 </p>
 
-                <button
-                    onClick={handleAction}
-                    className="mt-3 bg-white text-gray-900 text-sm font-bold py-3 px-6 rounded-full shadow-sm hover:bg-gray-50 active:scale-95 transition-transform w-full"
-                >
-                    » 마이페이지에서 확인하기
-                </button>
+                {snackbar.action && (
+                    <button
+                        onClick={handleAction}
+                        className="mt-3 bg-white text-gray-900 text-sm font-bold py-3 px-6 rounded-full shadow-sm hover:bg-gray-50 active:scale-95 transition-transform w-full"
+                    >
+                        » {snackbar.action.label}
+                    </button>
+                )}
             </div>
         </div>,
         document.body

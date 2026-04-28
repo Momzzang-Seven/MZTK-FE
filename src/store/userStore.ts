@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { verificationService } from "@services/verification";
+import { getWorkoutVerificationLatestErrorMessage } from "@utils/workoutVerificationMessages";
+import { getKstDateString } from "@utils/time";
 
 export interface UserInfo {
   userId: number;
@@ -28,6 +30,10 @@ interface UserState {
   snackbar: {
     isOpen: boolean;
     message: string;
+    action?: {
+      label: string;
+      path: string;
+    };
   };
   analysisStatus: "idle" | "analyzing" | "completed";
   analysisType: "exercise" | "record" | null;
@@ -70,7 +76,8 @@ interface UserState {
   hasAttendedToday: boolean;
 
   startAnalysis: (type: "exercise" | "record") => void;
-  checkAnalysisCompletion: () => void;
+  finishAnalysis: () => void;
+  checkAnalysisCompletion: () => Promise<void>;
   showSnackbar: (message: string) => void;
   closeSnackbar: () => void;
   levelUp: () => Promise<{ success: boolean; message: string }>;
@@ -101,6 +108,7 @@ const initialState = {
 };
 
 let initWorkoutCompletionRequest: Promise<void> | null = null;
+let checkAnalysisCompletionRequest: Promise<void> | null = null;
 
 export const useUserStore = create<UserState>()(
   persist(
@@ -153,7 +161,7 @@ export const useUserStore = create<UserState>()(
 
       checkAttendance: async () => {
         const { lastAttendanceDate } = get();
-        const today = new Date().toISOString().split("T")[0];
+        const today = getKstDateString();
 
         if (lastAttendanceDate === today) {
           return {
@@ -204,7 +212,7 @@ export const useUserStore = create<UserState>()(
 
       completeExercise: (rewardAmount = 100) => {
         const { lastExerciseDate } = get();
-        const today = new Date().toISOString().split("T")[0];
+        const today = getKstDateString();
 
         if (lastExerciseDate === today) {
           return {
@@ -227,18 +235,29 @@ export const useUserStore = create<UserState>()(
       },
 
       applyWorkoutVerificationSuccess: ({ mode, grantedXp, exerciseDate }) => {
-        const completedDate = exerciseDate || new Date().toISOString().split("T")[0];
+        const completedDate = exerciseDate || getKstDateString();
         const verificationLabel =
           mode === "record" ? "운동 기록 인증이 완료되었어요" : "운동 사진 인증이 완료되었어요";
 
-        set((state) => ({
-          lastExerciseDate: completedDate,
-          xp: state.xp + grantedXp,
-          snackbar: {
-            isOpen: true,
-            message: `${verificationLabel}! 오늘의 운동 성공 +${grantedXp}EXP`,
-          },
-        }));
+        set((state) => {
+          const shouldApplyReward = state.lastExerciseDate !== completedDate;
+
+          return {
+            analysisStatus: "idle",
+            analysisTargetTime: null,
+            analysisType: null,
+            lastExerciseDate: completedDate,
+            xp: shouldApplyReward ? state.xp + grantedXp : state.xp,
+            snackbar: {
+              isOpen: true,
+              message: `${verificationLabel}! 오늘의 운동 성공 +${grantedXp}EXP`,
+              action: {
+                label: "마이페이지에서 확인하기",
+                path: "/my",
+              },
+            },
+          };
+        });
       },
 
       startAnalysis: (type) => {
@@ -250,33 +269,88 @@ export const useUserStore = create<UserState>()(
         });
       },
 
-      checkAnalysisCompletion: () => {
+      finishAnalysis: () => {
+        set({
+          analysisStatus: "idle",
+          analysisTargetTime: null,
+          analysisType: null,
+        });
+      },
+
+      checkAnalysisCompletion: async () => {
         const { analysisStatus, analysisTargetTime, analysisType } = get();
 
-        if (
-          analysisStatus === "analyzing" &&
-          analysisTargetTime &&
-          Date.now() >= analysisTargetTime
-        ) {
-          const today = new Date().toISOString().split("T")[0];
-          const reward = 100;
-          const prefix =
-            analysisType === "record"
-              ? "운동 기록 인증 분석이 완료되었어요"
-              : "운동 인증 분석이 완료되었어요";
-
-          set({
-            analysisStatus: "idle",
-            analysisTargetTime: null,
-            analysisType: null,
-            lastExerciseDate: today,
-            xp: get().xp + reward,
-            snackbar: {
-              isOpen: true,
-              message: `${prefix}! 오늘의 운동 성공 +${reward}EXP`,
-            },
-          });
+        if (analysisStatus !== "analyzing") {
+          return;
         }
+
+        if (analysisTargetTime && Date.now() < analysisTargetTime) {
+          return;
+        }
+
+        if (checkAnalysisCompletionRequest) {
+          return checkAnalysisCompletionRequest;
+        }
+
+        checkAnalysisCompletionRequest = (async () => {
+          try {
+            const result = await verificationService.getTodayWorkoutCompletion();
+
+            if (result.todayCompleted && result.rewardGrantedToday) {
+              get().applyWorkoutVerificationSuccess({
+                mode: analysisType ?? "exercise",
+                grantedXp: result.grantedXp,
+                exerciseDate: result.earnedDate,
+              });
+              return;
+            }
+
+            const latestStatus = result.latestVerification?.verificationStatus;
+
+            if (latestStatus === "REJECTED" || latestStatus === "FAILED") {
+              const latestVerification = result.latestVerification;
+
+              set({
+                analysisStatus: "idle",
+                analysisTargetTime: null,
+                analysisType: null,
+                snackbar: {
+                  isOpen: true,
+                  message: latestVerification
+                    ? getWorkoutVerificationLatestErrorMessage(latestVerification)
+                    : "운동 인증 분석이 완료되지 않았어요. 다시 업로드해 주세요.",
+                },
+              });
+              return;
+            }
+
+            if (
+              latestStatus === "VERIFIED" &&
+              result.latestVerification?.rewardStatus !== "SUCCEEDED"
+            ) {
+              set({
+                analysisStatus: "idle",
+                analysisTargetTime: null,
+                analysisType: null,
+                snackbar: {
+                  isOpen: true,
+                  message:
+                    "운동 인증은 완료되었지만 보상 반영에 실패했어요. 잠시 후 다시 확인해 주세요.",
+                },
+              });
+              return;
+            }
+
+            set({ analysisTargetTime: Date.now() + 5000 });
+          } catch (error) {
+            console.error("운동 인증 완료 상태 확인 실패:", error);
+            set({ analysisTargetTime: Date.now() + 10000 });
+          } finally {
+            checkAnalysisCompletionRequest = null;
+          }
+        })();
+
+        return checkAnalysisCompletionRequest;
       },
 
       showSnackbar: (message) => {
@@ -327,7 +401,7 @@ export const useUserStore = create<UserState>()(
             hasAttendedToday: statusRes.hasAttendedToday,
             weeklyAttendance: { attendedCount: weeklyRes.attendedCount },
             lastAttendanceDate: statusRes.hasAttendedToday
-              ? new Date().toISOString().split("T")[0]
+              ? getKstDateString()
               : state.lastAttendanceDate,
           }));
         } catch (error) {
@@ -387,7 +461,7 @@ export const useUserStore = create<UserState>()(
         initWorkoutCompletionRequest = (async () => {
           try {
             const result = await verificationService.getTodayWorkoutCompletion();
-            const today = new Date().toISOString().split("T")[0];
+            const today = getKstDateString();
 
             set((state) => ({
               lastExerciseDate: result.todayCompleted

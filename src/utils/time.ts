@@ -33,3 +33,18 @@ export const calculateEndTime = (startTime: string, durationStr: string): string
 
     return `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
 };
+
+export const getKstDateString = (date = new Date()): string => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).formatToParts(date);
+
+    const year = parts.find((part) => part.type === "year")?.value;
+    const month = parts.find((part) => part.type === "month")?.value;
+    const day = parts.find((part) => part.type === "day")?.value;
+
+    return `${year}-${month}-${day}`;
+};

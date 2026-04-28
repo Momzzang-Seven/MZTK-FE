@@ -7,13 +7,19 @@ import { RECORD_TEXT } from "@constant/record";
 const {
   mockNavigate,
   mockApplyWorkoutVerificationSuccess,
+  mockFinishAnalysis,
   mockIssuePresignedUrls,
+  mockShowSnackbar,
+  mockStartAnalysis,
   mockUploadFileToPresignedUrl,
   mockSubmitWorkoutRecord,
 } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
   mockApplyWorkoutVerificationSuccess: vi.fn(),
+  mockFinishAnalysis: vi.fn(),
   mockIssuePresignedUrls: vi.fn(),
+  mockShowSnackbar: vi.fn(),
+  mockStartAnalysis: vi.fn(),
   mockUploadFileToPresignedUrl: vi.fn(),
   mockSubmitWorkoutRecord: vi.fn(),
 }));
@@ -29,6 +35,9 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@store/userStore", () => ({
   useUserStore: () => ({
     applyWorkoutVerificationSuccess: mockApplyWorkoutVerificationSuccess,
+    finishAnalysis: mockFinishAnalysis,
+    showSnackbar: mockShowSnackbar,
+    startAnalysis: mockStartAnalysis,
   }),
 }));
 
@@ -112,6 +121,7 @@ describe("RecordAuth Page", () => {
       expect(mockSubmitWorkoutRecord).toHaveBeenCalledWith({
         tmpObjectKey: "private/workout/test.jpg",
       });
+      expect(mockStartAnalysis).toHaveBeenCalledWith("record");
       expect(mockApplyWorkoutVerificationSuccess).toHaveBeenCalledWith({
         mode: "record",
         grantedXp: 100,
@@ -160,12 +170,10 @@ describe("RecordAuth Page", () => {
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          "오늘 운동 기록 화면이 맞는지 다시 확인해 주세요. 오늘 날짜가 보이는 기록 화면으로 다시 업로드해 주세요.",
-        ),
-      ).toBeInTheDocument();
+      expect(mockFinishAnalysis).toHaveBeenCalled();
+      expect(mockShowSnackbar).toHaveBeenCalledWith(
+        "오늘 운동 기록 화면이 맞는지 다시 확인해 주세요. 오늘 날짜가 보이는 기록 화면으로 다시 업로드해 주세요.",
+      );
     });
-    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

@@ -7,13 +7,19 @@ import { EXERCISE_TEXT } from "@constant/exercise";
 const {
   mockNavigate,
   mockApplyWorkoutVerificationSuccess,
+  mockFinishAnalysis,
   mockIssuePresignedUrls,
+  mockShowSnackbar,
+  mockStartAnalysis,
   mockUploadFileToPresignedUrl,
   mockSubmitWorkoutPhoto,
 } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
   mockApplyWorkoutVerificationSuccess: vi.fn(),
+  mockFinishAnalysis: vi.fn(),
   mockIssuePresignedUrls: vi.fn(),
+  mockShowSnackbar: vi.fn(),
+  mockStartAnalysis: vi.fn(),
   mockUploadFileToPresignedUrl: vi.fn(),
   mockSubmitWorkoutPhoto: vi.fn(),
 }));
@@ -29,6 +35,9 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@store/userStore", () => ({
   useUserStore: () => ({
     applyWorkoutVerificationSuccess: mockApplyWorkoutVerificationSuccess,
+    finishAnalysis: mockFinishAnalysis,
+    showSnackbar: mockShowSnackbar,
+    startAnalysis: mockStartAnalysis,
   }),
 }));
 
@@ -117,6 +126,7 @@ describe("ExerciseAuth Page", () => {
       expect(mockSubmitWorkoutPhoto).toHaveBeenCalledWith({
         tmpObjectKey: "private/workout/test.jpg",
       });
+      expect(mockStartAnalysis).toHaveBeenCalledWith("exercise");
       expect(mockApplyWorkoutVerificationSuccess).toHaveBeenCalledWith({
         mode: "exercise",
         grantedXp: 100,
@@ -165,11 +175,11 @@ describe("ExerciseAuth Page", () => {
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText("화면이나 UI가 아닌 실제 운동 사진을 올려 주세요."),
-      ).toBeInTheDocument();
+      expect(mockFinishAnalysis).toHaveBeenCalled();
+      expect(mockShowSnackbar).toHaveBeenCalledWith(
+        "화면이나 UI가 아닌 실제 운동 사진을 올려 주세요.",
+      );
     });
-    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("요청 실패 메시지를 한글로 표시한다", async () => {
@@ -208,11 +218,10 @@ describe("ExerciseAuth Page", () => {
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          "인증에 사용할 수 없는 이미지 형식입니다. 다른 파일로 다시 시도해 주세요.",
-        ),
-      ).toBeInTheDocument();
+      expect(mockFinishAnalysis).toHaveBeenCalled();
+      expect(mockShowSnackbar).toHaveBeenCalledWith(
+        "인증에 사용할 수 없는 이미지 형식입니다. 다른 파일로 다시 시도해 주세요.",
+      );
     });
   });
 });

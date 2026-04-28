@@ -1,6 +1,7 @@
 import { useUserStore } from "@store";
 import { HOME_TEXT } from "@constant/home";
 import { CommonButton } from "@components/common";
+import { getKstDateString } from "@utils/time";
 
 interface AuthActionButtonsProps {
     onExerciseClick: () => void;
@@ -8,7 +9,7 @@ interface AuthActionButtonsProps {
 
 export const AuthActionButtons = ({ onExerciseClick }: AuthActionButtonsProps) => {
     const { checkAttendance, hasAttendedToday, lastExerciseDate } = useUserStore();
-    const today = new Date().toISOString().split("T")[0];
+    const today = getKstDateString();
     const isAttended = hasAttendedToday;
     const isExerciseDone = lastExerciseDate === today;
 
