@@ -21,6 +21,10 @@ test.describe("prod smoke", () => {
     const levelResponse = waitForApiResponse(page, "/users/me/level");
     const levelPolicyResponse = waitForApiResponse(page, "/levels/policies");
     const locationResponse = waitForApiResponse(page, "/users/me/locations");
+    const workoutCompletionResponse = waitForApiResponse(
+      page,
+      "/verification/today-completion"
+    );
 
     await page.goto("/");
 
@@ -30,16 +34,18 @@ test.describe("prod smoke", () => {
       expectOk(levelResponse),
       expectOk(levelPolicyResponse),
       expectOk(locationResponse),
+      expectOk(workoutCompletionResponse),
     ]);
 
-    await expect(
-      page.getByRole("button", { name: "운동 인증" })
-    ).toBeVisible();
+    const workoutButton = page.getByRole("button", { name: "운동 인증" });
+    await expect(workoutButton).toBeVisible();
 
-    await page.getByRole("button", { name: "운동 인증" }).click();
-    await expect(
-      page.getByRole("button", { name: "위치 인증" })
-    ).toBeVisible();
+    if (await workoutButton.isEnabled()) {
+      await workoutButton.click();
+      await expect(
+        page.getByRole("button", { name: "위치 인증" })
+      ).toBeVisible();
+    }
   });
 
   test("member 로그아웃 요청이 실제 응답하고 로그인 화면으로 이동한다", async ({

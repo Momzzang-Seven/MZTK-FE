@@ -26,6 +26,7 @@ interface UserState {
   attendanceStreak: number;
   lastAttendanceDate: string | null;
   lastExerciseDate: string | null;
+  lastWorkoutRewardAppliedDate: string | null;
 
   snackbar: {
     isOpen: boolean;
@@ -98,6 +99,7 @@ const initialState = {
   attendanceStreak: 0,
   lastAttendanceDate: null,
   lastExerciseDate: null,
+  lastWorkoutRewardAppliedDate: null,
   gymLocation: null,
   weeklyAttendance: null,
   hasAttendedToday: false,
@@ -150,6 +152,10 @@ export const useUserStore = create<UserState>()(
           attendanceStreak: 0,
           lastAttendanceDate: null,
           lastExerciseDate: null,
+          lastWorkoutRewardAppliedDate: null,
+          analysisStatus: "idle",
+          analysisTargetTime: null,
+          analysisType: null,
         }),
 
       reset: () => set(initialState),
@@ -224,6 +230,7 @@ export const useUserStore = create<UserState>()(
 
         set((state) => ({
           lastExerciseDate: today,
+          lastWorkoutRewardAppliedDate: today,
           xp: state.xp + rewardAmount,
         }));
 
@@ -240,13 +247,15 @@ export const useUserStore = create<UserState>()(
           mode === "record" ? "운동 기록 인증이 완료되었어요" : "운동 사진 인증이 완료되었어요";
 
         set((state) => {
-          const shouldApplyReward = state.lastExerciseDate !== completedDate;
+          const shouldApplyReward =
+            state.lastWorkoutRewardAppliedDate !== completedDate;
 
           return {
             analysisStatus: "idle",
             analysisTargetTime: null,
             analysisType: null,
             lastExerciseDate: completedDate,
+            lastWorkoutRewardAppliedDate: completedDate,
             xp: shouldApplyReward ? state.xp + grantedXp : state.xp,
             snackbar: {
               isOpen: true,
@@ -279,6 +288,9 @@ export const useUserStore = create<UserState>()(
 
       checkAnalysisCompletion: async () => {
         const { analysisStatus, analysisTargetTime, analysisType } = get();
+        const analysisMode = analysisType ?? "exercise";
+        const expectedCompletedMethod =
+          analysisMode === "record" ? "WORKOUT_RECORD" : "WORKOUT_PHOTO";
 
         if (analysisStatus !== "analyzing") {
           return;
@@ -296,9 +308,13 @@ export const useUserStore = create<UserState>()(
           try {
             const result = await verificationService.getTodayWorkoutCompletion();
 
-            if (result.todayCompleted && result.rewardGrantedToday) {
+            if (
+              result.todayCompleted &&
+              result.rewardGrantedToday &&
+              result.completedMethod === expectedCompletedMethod
+            ) {
               get().applyWorkoutVerificationSuccess({
-                mode: analysisType ?? "exercise",
+                mode: analysisMode,
                 grantedXp: result.grantedXp,
                 exerciseDate: result.earnedDate,
               });
@@ -469,6 +485,11 @@ export const useUserStore = create<UserState>()(
                 : state.lastExerciseDate === today
                   ? null
                   : state.lastExerciseDate,
+              lastWorkoutRewardAppliedDate: result.todayCompleted
+                ? state.lastWorkoutRewardAppliedDate
+                : state.lastWorkoutRewardAppliedDate === today
+                  ? null
+                  : state.lastWorkoutRewardAppliedDate,
             }));
           } catch (error) {
             console.error("운동 인증 완료 상태 초기화 실패:", error);
@@ -491,6 +512,7 @@ export const useUserStore = create<UserState>()(
         attendanceStreak: state.attendanceStreak,
         lastAttendanceDate: state.lastAttendanceDate,
         lastExerciseDate: state.lastExerciseDate,
+        lastWorkoutRewardAppliedDate: state.lastWorkoutRewardAppliedDate,
         gymLocation: state.gymLocation,
         analysisStatus: state.analysisStatus,
         analysisType: state.analysisType,
