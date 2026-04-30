@@ -5,3 +5,4 @@ export * from "./post";
 export * from "./comment";
 export * from "./market";
 export * from "./verification";
+export * from "./leaderboard";

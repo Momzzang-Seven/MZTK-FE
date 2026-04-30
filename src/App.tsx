@@ -9,6 +9,7 @@ import {
   Home,
   Login,
   My,
+  MyActivity,
   MyTx,
   Verify,
   Community,
@@ -140,6 +141,7 @@ function App() {
                       element={<QuestionDetail />}
                     />  
                     <Route path="/my" element={<My />} />
+                    <Route path="/my/activity/:tab" element={<MyActivity />} />
                     <Route path="/myTknTx" element={<MyTx />} />
                     <Route path="/my-tkn-history" element={<MyTknHistory />} />
                     <Route path="/exercise-auth" element={<ExerciseAuth />} />

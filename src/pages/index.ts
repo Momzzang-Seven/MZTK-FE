@@ -1,6 +1,7 @@
 export { default as Home } from "./Home";
 export { default as Verify } from "./Verify";
 export { default as My } from "./My";
+export { default as MyActivity } from "./MyActivity";
 export { default as MyTx } from "./MyTx";
 export { default as Login } from "./Login";
 export { default as Callback } from "./Callback";

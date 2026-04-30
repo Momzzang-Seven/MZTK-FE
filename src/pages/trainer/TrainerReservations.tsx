@@ -1,74 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonModal } from "@components/common";
 import { RESERVATION_STATUS } from "@constant/reservation";
 import type { ReservationStatus } from "@constant/reservation";
 
-const MOCK_TRAINER_RESERVATIONS = [
-    {
-        id: "tr1",
-        status: RESERVATION_STATUS.PENDING as ReservationStatus,
-        className: "1:1 집중 웨이트 트레이닝",
-        customerName: "초보헬린이",
-        date: "2026-03-05",
-        day: "목",
-        time: "19:00",
-        remainingTime: "71시간 58분",
-        requestMsg: "오른쪽 무릎이 조금 안 좋습니다.",
-        txHash: null
-    },
-    {
-        id: "tr2",
-        status: RESERVATION_STATUS.CONFIRMED as ReservationStatus,
-        className: "1:1 집중 웨이트 트레이닝",
-        customerName: "열혈다이어터",
-        date: "2026-03-06",
-        day: "금",
-        time: "09:00",
-        requestMsg: "살 엄청 빼고 싶어요 ㅠㅠ",
-        txHash: "0x7a8b9c1d2e3f4g5h6i7j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z",
-        autoConfirmDDay: 3
-    },
-    {
-        id: "tr3",
-        status: RESERVATION_STATUS.ADMIN_SETTLED as ReservationStatus,
-        className: "바디프로필 준비반 (식단방 포함)",
-        customerName: "몸짱도전기",
-        date: "2026-02-15",
-        day: "일",
-        time: "10:00",
-        requestMsg: "식단 점검 부탁드립니다.",
-        txHash: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z"
-    },
-    {
-        id: "tr4",
-        status: RESERVATION_STATUS.CANCELLATION_REQUESTED as ReservationStatus,
-        className: "체형 교정 & 코어 강화 소그룹 PT",
-        customerName: "거북목탈출",
-        date: "2026-03-10",
-        day: "화",
-        time: "14:00",
-        requestMsg: "갑작스러운 출장이 잡혀 취소 부탁드립니다.",
-        txHash: "0x4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5f6g7h8i9j"
-    }
-];
+// TODO: API 연동 시 실제 데이터로 교체
+const MOCK_TRAINER_RESERVATIONS: {
+    id: string;
+    status: ReservationStatus;
+    className: string;
+    customerName: string;
+    date: string;
+    day: string;
+    time: string;
+    requestMsg: string;
+    txHash: string | null;
+    remainingTime?: string;
+    autoConfirmDDay?: number;
+}[] = [];
 
 const TrainerReservations = () => {
     const [activeTab, setActiveTab] = useState<"pending" | "confirmed" | "completed" | "cancellation">("pending");
     const [reservations, setReservations] = useState(MOCK_TRAINER_RESERVATIONS);
 
-    // 과거 클래스 자동 정산 처리 (수강생 앱과 로직 통일)
-    useEffect(() => {
-        // 실제 운영 시에는 현재 날짜를 사용: new Date().toISOString().split('T')[0]
-        const today = "2026-03-01"; 
-        setReservations(prev => prev.map(res => {
-            // 날짜가 지났고 확정된 상태인 클래스는 자동으로 정산 완료 처리
-            if (res.date < today && res.status === RESERVATION_STATUS.CONFIRMED) {
-                return { ...res, status: RESERVATION_STATUS.ADMIN_SETTLED };
-            }
-            return res;
-        }));
-    }, []);
+    // TODO: API 연동 시 과거 클래스 자동 정산은 서버에서 처리 예정
 
     // 모달 관리 상태 (알림/확인용)
     const [modal, setModal] = useState<{

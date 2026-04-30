@@ -410,11 +410,11 @@ describe("주요 페이지 smoke test", () => {
     }
   });
 
-  it("마켓 예약 내역 화면이 예정된 클래스를 렌더링한다", () => {
+  it("마켓 예약 내역 화면이 탭과 빈 상태를 렌더링한다", () => {
     renderWithRouter(<MarketReservation />, "/market/reservations");
 
     expect(screen.getByText("다가오는 클래스")).toBeInTheDocument();
-    expect(screen.getByText("바디프로필 챌린지 (입문반)")).toBeInTheDocument();
+    expect(screen.getByText("지난 클래스")).toBeInTheDocument();
   });
 
   it("관리자 대시보드가 주요 카드와 차트 영역을 렌더링한다", () => {
