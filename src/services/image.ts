@@ -31,6 +31,13 @@ export const imageService = {
     });
   },
 
+  /**
+   * S3 업로드 완료 후 백엔드에 PENDING → COMPLETED 전환 요청
+   */
+  async confirmImageUpload(imageId: number): Promise<void> {
+    await api.patch(`/images/${imageId}/confirm`);
+  },
+
   async uploadFileToPresignedUrl(url: string, file: File): Promise<void> {
     await imageService.uploadImageToS3(url, file);
   },

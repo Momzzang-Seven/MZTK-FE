@@ -55,6 +55,8 @@ export const useImageUpload = (
 
               const { imageId, presignedUrl } = presignedResults[i];
               await imageService.uploadImageToS3(presignedUrl, file);
+              // S3 업로드 완료 후 백엔드에 상태 전환 통보
+              await imageService.confirmImageUpload(imageId);
 
               onUploaded?.({ imageId: imageId, imageUrl: previewUrl });
             } finally {
@@ -89,6 +91,8 @@ export const useImageUpload = (
             images: [file.name],
           });
           await imageService.uploadImageToS3(presignedUrl, file);
+          // S3 업로드 완료 후 백엔드에 상태 전환 통보
+          await imageService.confirmImageUpload(imageId);
 
           URL.revokeObjectURL(previewUrl);
           blobUrlsRef.current.delete(previewUrl);
