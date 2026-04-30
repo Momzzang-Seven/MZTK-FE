@@ -18,7 +18,12 @@ interface UserState {
   isAuthenticated: boolean;
   accessToken: string | null;
 
-  gymLocation: { locationId?: number; lat: number; lng: number; address: string } | null;
+  gymLocation: {
+    locationId?: number;
+    lat: number;
+    lng: number;
+    address: string;
+  } | null;
 
   level: number;
   xp: number;
@@ -39,11 +44,17 @@ interface UserState {
   analysisStatus: "idle" | "analyzing" | "completed";
   analysisType: "exercise" | "record" | null;
   analysisTargetTime: number | null;
+  analysisStartedAt: number | null;
 
   setUser: (user: UserInfo) => void;
   setAccessToken: (token: string) => void;
   setGymLocation: (
-    location: { locationId?: number; lat: number; lng: number; address: string } | null,
+    location: {
+      locationId?: number;
+      lat: number;
+      lng: number;
+      address: string;
+    } | null
   ) => void;
   registerGymLocation: (location: {
     lat: number;
@@ -107,10 +118,15 @@ const initialState = {
   analysisStatus: "idle" as const,
   analysisType: null as "exercise" | "record" | null,
   analysisTargetTime: null as number | null,
+  analysisStartedAt: null as number | null,
 };
 
 let initWorkoutCompletionRequest: Promise<void> | null = null;
 let checkAnalysisCompletionRequest: Promise<void> | null = null;
+
+const WORKOUT_ANALYSIS_POLL_INTERVAL_MS = 5000;
+const WORKOUT_ANALYSIS_ERROR_RETRY_MS = 10000;
+const WORKOUT_ANALYSIS_STALE_TIMEOUT_MS = 2 * 60 * 1000;
 
 export const useUserStore = create<UserState>()(
   persist(
@@ -156,6 +172,7 @@ export const useUserStore = create<UserState>()(
           analysisStatus: "idle",
           analysisTargetTime: null,
           analysisType: null,
+          analysisStartedAt: null,
         }),
 
       reset: () => set(initialState),
@@ -188,7 +205,10 @@ export const useUserStore = create<UserState>()(
               hasAttendedToday: true,
               weeklyAttendance: state.weeklyAttendance
                 ? { attendedCount: state.weeklyAttendance.attendedCount + 1 }
-                : { attendedCount: result.streakDays > 7 ? 1 : result.streakDays },
+                : {
+                    attendedCount:
+                      result.streakDays > 7 ? 1 : result.streakDays,
+                  },
               xp: state.xp + result.grantedXp + result.bonusXp,
               snackbar: { isOpen: true, message: result.message },
             }));
@@ -244,7 +264,9 @@ export const useUserStore = create<UserState>()(
       applyWorkoutVerificationSuccess: ({ mode, grantedXp, exerciseDate }) => {
         const completedDate = exerciseDate || getKstDateString();
         const verificationLabel =
-          mode === "record" ? "운동 기록 인증이 완료되었어요" : "운동 사진 인증이 완료되었어요";
+          mode === "record"
+            ? "운동 기록 인증이 완료되었어요"
+            : "운동 사진 인증이 완료되었어요";
 
         set((state) => {
           const shouldApplyReward =
@@ -254,6 +276,7 @@ export const useUserStore = create<UserState>()(
             analysisStatus: "idle",
             analysisTargetTime: null,
             analysisType: null,
+            analysisStartedAt: null,
             lastExerciseDate: completedDate,
             lastWorkoutRewardAppliedDate: completedDate,
             xp: shouldApplyReward ? state.xp + grantedXp : state.xp,
@@ -270,10 +293,11 @@ export const useUserStore = create<UserState>()(
       },
 
       startAnalysis: (type) => {
-        const targetTime = Date.now() + 5000;
+        const startedAt = Date.now();
         set({
           analysisStatus: "analyzing",
-          analysisTargetTime: targetTime,
+          analysisTargetTime: startedAt + WORKOUT_ANALYSIS_POLL_INTERVAL_MS,
+          analysisStartedAt: startedAt,
           analysisType: type,
         });
       },
@@ -283,14 +307,25 @@ export const useUserStore = create<UserState>()(
           analysisStatus: "idle",
           analysisTargetTime: null,
           analysisType: null,
+          analysisStartedAt: null,
         });
       },
 
       checkAnalysisCompletion: async () => {
-        const { analysisStatus, analysisTargetTime, analysisType } = get();
+        const {
+          analysisStatus,
+          analysisTargetTime,
+          analysisType,
+          analysisStartedAt,
+        } = get();
         const analysisMode = analysisType ?? "exercise";
         const expectedCompletedMethod =
           analysisMode === "record" ? "WORKOUT_RECORD" : "WORKOUT_PHOTO";
+        const inferredStartedAt =
+          analysisStartedAt ??
+          (analysisTargetTime
+            ? analysisTargetTime - WORKOUT_ANALYSIS_POLL_INTERVAL_MS
+            : Date.now());
 
         if (analysisStatus !== "analyzing") {
           return;
@@ -304,9 +339,14 @@ export const useUserStore = create<UserState>()(
           return checkAnalysisCompletionRequest;
         }
 
+        if (!analysisStartedAt) {
+          set({ analysisStartedAt: inferredStartedAt });
+        }
+
         checkAnalysisCompletionRequest = (async () => {
           try {
-            const result = await verificationService.getTodayWorkoutCompletion();
+            const result =
+              await verificationService.getTodayWorkoutCompletion();
 
             if (
               result.todayCompleted &&
@@ -323,6 +363,25 @@ export const useUserStore = create<UserState>()(
 
             const latestStatus = result.latestVerification?.verificationStatus;
 
+            if (
+              !result.todayCompleted &&
+              !result.latestVerification &&
+              Date.now() - inferredStartedAt > WORKOUT_ANALYSIS_STALE_TIMEOUT_MS
+            ) {
+              set({
+                analysisStatus: "idle",
+                analysisTargetTime: null,
+                analysisType: null,
+                analysisStartedAt: null,
+                snackbar: {
+                  isOpen: true,
+                  message:
+                    "운동 인증 요청을 확인하지 못했어요. 다시 업로드해 주세요.",
+                },
+              });
+              return;
+            }
+
             if (latestStatus === "REJECTED" || latestStatus === "FAILED") {
               const latestVerification = result.latestVerification;
 
@@ -330,10 +389,13 @@ export const useUserStore = create<UserState>()(
                 analysisStatus: "idle",
                 analysisTargetTime: null,
                 analysisType: null,
+                analysisStartedAt: null,
                 snackbar: {
                   isOpen: true,
                   message: latestVerification
-                    ? getWorkoutVerificationLatestErrorMessage(latestVerification)
+                    ? getWorkoutVerificationLatestErrorMessage(
+                        latestVerification
+                      )
                     : "운동 인증 분석이 완료되지 않았어요. 다시 업로드해 주세요.",
                 },
               });
@@ -342,12 +404,13 @@ export const useUserStore = create<UserState>()(
 
             if (
               latestStatus === "VERIFIED" &&
-              result.latestVerification?.rewardStatus !== "SUCCEEDED"
+              result.latestVerification?.rewardStatus === "FAILED"
             ) {
               set({
                 analysisStatus: "idle",
                 analysisTargetTime: null,
                 analysisType: null,
+                analysisStartedAt: null,
                 snackbar: {
                   isOpen: true,
                   message:
@@ -357,10 +420,15 @@ export const useUserStore = create<UserState>()(
               return;
             }
 
-            set({ analysisTargetTime: Date.now() + 5000 });
+            set({
+              analysisTargetTime:
+                Date.now() + WORKOUT_ANALYSIS_POLL_INTERVAL_MS,
+            });
           } catch (error) {
             console.error("운동 인증 완료 상태 확인 실패:", error);
-            set({ analysisTargetTime: Date.now() + 10000 });
+            set({
+              analysisTargetTime: Date.now() + WORKOUT_ANALYSIS_ERROR_RETRY_MS,
+            });
           } finally {
             checkAnalysisCompletionRequest = null;
           }
@@ -476,17 +544,21 @@ export const useUserStore = create<UserState>()(
 
         initWorkoutCompletionRequest = (async () => {
           try {
-            const result = await verificationService.getTodayWorkoutCompletion();
+            const result =
+              await verificationService.getTodayWorkoutCompletion();
             const today = getKstDateString();
+            const completedDate = result.earnedDate || today;
 
             set((state) => ({
               lastExerciseDate: result.todayCompleted
-                ? result.earnedDate || today
+                ? completedDate
                 : state.lastExerciseDate === today
                   ? null
                   : state.lastExerciseDate,
               lastWorkoutRewardAppliedDate: result.todayCompleted
-                ? state.lastWorkoutRewardAppliedDate
+                ? result.rewardGrantedToday
+                  ? completedDate
+                  : state.lastWorkoutRewardAppliedDate
                 : state.lastWorkoutRewardAppliedDate === today
                   ? null
                   : state.lastWorkoutRewardAppliedDate,
@@ -517,7 +589,8 @@ export const useUserStore = create<UserState>()(
         analysisStatus: state.analysisStatus,
         analysisType: state.analysisType,
         analysisTargetTime: state.analysisTargetTime,
+        analysisStartedAt: state.analysisStartedAt,
       }),
-    },
-  ),
+    }
+  )
 );

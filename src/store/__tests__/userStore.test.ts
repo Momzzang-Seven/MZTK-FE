@@ -6,7 +6,7 @@ import {
 import { useUserStore } from "@store/userStore";
 import { getKstDateString } from "@utils/time";
 
-const createDeferred = <T,>() => {
+const createDeferred = <T>() => {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
 
@@ -49,13 +49,19 @@ describe("useUserStore.initWorkoutCompletion", () => {
     await Promise.all([firstCall, secondCall]);
 
     expect(useUserStore.getState().lastExerciseDate).toBe("2026-04-25");
+    expect(useUserStore.getState().lastWorkoutRewardAppliedDate).toBe(
+      "2026-04-25"
+    );
 
     await useUserStore.getState().initWorkoutCompletion();
     expect(getTodayWorkoutCompletionSpy).toHaveBeenCalledTimes(2);
   });
 
   it("clears stale local workout reward state when the server says today is incomplete", async () => {
-    vi.spyOn(verificationService, "getTodayWorkoutCompletion").mockResolvedValue({
+    vi.spyOn(
+      verificationService,
+      "getTodayWorkoutCompletion"
+    ).mockResolvedValue({
       todayCompleted: false,
       completedMethod: null,
       rewardGrantedToday: false,
@@ -122,7 +128,10 @@ describe("useUserStore.checkAnalysisCompletion", () => {
   });
 
   it("applies reward when completion was already initialized for today", async () => {
-    vi.spyOn(verificationService, "getTodayWorkoutCompletion").mockResolvedValue({
+    vi.spyOn(
+      verificationService,
+      "getTodayWorkoutCompletion"
+    ).mockResolvedValue({
       todayCompleted: true,
       completedMethod: "WORKOUT_RECORD",
       rewardGrantedToday: true,
@@ -151,12 +160,15 @@ describe("useUserStore.checkAnalysisCompletion", () => {
 
     expect(useUserStore.getState().xp).toBe(100);
     expect(useUserStore.getState().lastWorkoutRewardAppliedDate).toBe(
-      "2026-04-28",
+      "2026-04-28"
     );
   });
 
   it("does not treat location completion as workout verification success", async () => {
-    vi.spyOn(verificationService, "getTodayWorkoutCompletion").mockResolvedValue({
+    vi.spyOn(
+      verificationService,
+      "getTodayWorkoutCompletion"
+    ).mockResolvedValue({
       todayCompleted: true,
       completedMethod: "LOCATION",
       rewardGrantedToday: true,
@@ -207,7 +219,10 @@ describe("useUserStore.checkAnalysisCompletion", () => {
   });
 
   it("shows a rejection reason message when background analysis is rejected", async () => {
-    vi.spyOn(verificationService, "getTodayWorkoutCompletion").mockResolvedValue({
+    vi.spyOn(
+      verificationService,
+      "getTodayWorkoutCompletion"
+    ).mockResolvedValue({
       todayCompleted: false,
       completedMethod: null,
       rewardGrantedToday: false,
@@ -239,7 +254,10 @@ describe("useUserStore.checkAnalysisCompletion", () => {
   });
 
   it("shows a failure code message when background analysis fails", async () => {
-    vi.spyOn(verificationService, "getTodayWorkoutCompletion").mockResolvedValue({
+    vi.spyOn(
+      verificationService,
+      "getTodayWorkoutCompletion"
+    ).mockResolvedValue({
       todayCompleted: false,
       completedMethod: null,
       rewardGrantedToday: false,
@@ -271,7 +289,10 @@ describe("useUserStore.checkAnalysisCompletion", () => {
   });
 
   it("stops polling when verification succeeds but reward does not", async () => {
-    vi.spyOn(verificationService, "getTodayWorkoutCompletion").mockResolvedValue({
+    vi.spyOn(
+      verificationService,
+      "getTodayWorkoutCompletion"
+    ).mockResolvedValue({
       todayCompleted: false,
       completedMethod: null,
       rewardGrantedToday: false,
@@ -302,6 +323,75 @@ describe("useUserStore.checkAnalysisCompletion", () => {
         "운동 인증은 완료되었지만 보상 반영에 실패했어요. 잠시 후 다시 확인해 주세요.",
     });
   });
+
+  it("keeps polling while verification reward is still pending", async () => {
+    vi.spyOn(
+      verificationService,
+      "getTodayWorkoutCompletion"
+    ).mockResolvedValue({
+      todayCompleted: false,
+      completedMethod: null,
+      rewardGrantedToday: false,
+      grantedXp: 0,
+      earnedDate: null,
+      latestVerification: {
+        verificationId: "verification-pending-reward",
+        verificationKind: "WORKOUT_PHOTO",
+        verificationStatus: "VERIFIED",
+        rewardStatus: "PENDING",
+        rejectionReasonCode: null,
+        failureCode: null,
+      },
+    });
+
+    const now = Date.now();
+    useUserStore.setState({
+      analysisStatus: "analyzing",
+      analysisTargetTime: now - 1,
+      analysisStartedAt: now - 5000,
+      analysisType: "exercise",
+    });
+
+    await useUserStore.getState().checkAnalysisCompletion();
+
+    expect(useUserStore.getState().analysisStatus).toBe("analyzing");
+    expect(useUserStore.getState().snackbar).toEqual({
+      isOpen: false,
+      message: "",
+    });
+    expect(useUserStore.getState().analysisTargetTime).toBeGreaterThan(now);
+  });
+
+  it("clears stale analysis when no verification request is found for too long", async () => {
+    vi.spyOn(
+      verificationService,
+      "getTodayWorkoutCompletion"
+    ).mockResolvedValue({
+      todayCompleted: false,
+      completedMethod: null,
+      rewardGrantedToday: false,
+      grantedXp: 0,
+      earnedDate: null,
+      latestVerification: null,
+    });
+
+    useUserStore.setState({
+      analysisStatus: "analyzing",
+      analysisTargetTime: Date.now() - 1,
+      analysisStartedAt: Date.now() - 121000,
+      analysisType: "exercise",
+    });
+
+    await useUserStore.getState().checkAnalysisCompletion();
+
+    expect(useUserStore.getState().analysisStatus).toBe("idle");
+    expect(useUserStore.getState().analysisTargetTime).toBeNull();
+    expect(useUserStore.getState().analysisStartedAt).toBeNull();
+    expect(useUserStore.getState().snackbar).toEqual({
+      isOpen: true,
+      message: "운동 인증 요청을 확인하지 못했어요. 다시 업로드해 주세요.",
+    });
+  });
 });
 
 describe("useUserStore.clearUser", () => {
@@ -309,6 +399,7 @@ describe("useUserStore.clearUser", () => {
     useUserStore.setState({
       analysisStatus: "analyzing",
       analysisTargetTime: Date.now() + 5000,
+      analysisStartedAt: Date.now(),
       analysisType: "exercise",
       lastWorkoutRewardAppliedDate: "2026-04-28",
     });
@@ -317,6 +408,7 @@ describe("useUserStore.clearUser", () => {
 
     expect(useUserStore.getState().analysisStatus).toBe("idle");
     expect(useUserStore.getState().analysisTargetTime).toBeNull();
+    expect(useUserStore.getState().analysisStartedAt).toBeNull();
     expect(useUserStore.getState().analysisType).toBeNull();
     expect(useUserStore.getState().lastWorkoutRewardAppliedDate).toBeNull();
   });

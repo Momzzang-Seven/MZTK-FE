@@ -79,7 +79,7 @@ export const useWorkoutVerification = ({
 
       await imageService.uploadFileToPresignedUrl(
         uploadTarget.presignedUrl,
-        selectedFile,
+        selectedFile
       );
 
       startAnalysis(mode);
@@ -113,7 +113,8 @@ export const useWorkoutVerification = ({
           if (
             result.verificationStatus === "REJECTED" ||
             result.verificationStatus === "FAILED" ||
-            result.verificationStatus === "VERIFIED"
+            (result.verificationStatus === "VERIFIED" &&
+              result.rewardStatus === "FAILED")
           ) {
             finishAnalysis();
             showSnackbar(getWorkoutVerificationErrorMessage(mode, result));
