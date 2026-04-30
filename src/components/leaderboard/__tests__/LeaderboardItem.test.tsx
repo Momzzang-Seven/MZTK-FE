@@ -44,8 +44,9 @@ describe('LeaderboardItem', () => {
 
   it('랭킹 번호가 표시된다', () => {
     render(<LeaderboardItem user={mockUser} />);
-    
-    expect(screen.getByText('1')).toBeInTheDocument();
+
+    // rank=1은 메달 이모지로 표시됨
+    expect(screen.getByText('🥇')).toBeInTheDocument();
   });
 
   it('레벨 및 XP 정보가 표시된다', () => {
@@ -59,8 +60,9 @@ describe('LeaderboardItem', () => {
     const { container: container1 } = render(<LeaderboardItem user={mockUser} isMe={false} />);
     const { container: container2 } = render(<LeaderboardItem user={mockUser} isMe={true} />);
     
-    const nickname1 = container1.querySelector('.font-bold');
-    const nickname2 = container2.querySelector('.font-bold');
+    // nickname span은 font-bold + truncate로 특정
+    const nickname1 = container1.querySelector('.font-bold.truncate');
+    const nickname2 = container2.querySelector('.font-bold.truncate');
     
     expect(nickname1).toHaveClass('text-gray-800');
     expect(nickname2).toHaveClass('text-white');
