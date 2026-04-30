@@ -1,0 +1,449 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import Home from "@pages/Home";
+import ExerciseAuth from "@pages/ExerciseAuth";
+import RecordAuth from "@pages/RecordAuth";
+import Verify from "@pages/Verify";
+import Market from "@pages/market/Market";
+import MarketDetail from "@pages/market/MarketDetail";
+import MarketPurchase from "@pages/market/MarketPurchase";
+import MarketReservation from "@pages/market/MarketReservation";
+import AdminDashboard from "@pages/admin/Dashboard";
+import UserManagement from "@pages/admin/UserManagement";
+import PostManagement from "@pages/admin/PostManagement";
+import { EXERCISE_TEXT } from "@constant/exercise";
+import { RECORD_TEXT } from "@constant/record";
+import { VERIFY_TEXT } from "@constant/location";
+
+const {
+  mockFetchPosts,
+  mockFetchUsers,
+  mockGetMarketClasses,
+  mockGetMarketplaceClassDetail,
+  mockLocationStoreState,
+  mockLevelUp,
+  mockSearchPosts,
+  mockSearchUsers,
+  mockSetPostStatusFilter,
+  mockSetRoleFilter,
+  mockSetCoor,
+  mockSetStatusFilter,
+  mockBanUser,
+  mockUnbanUser,
+} = vi.hoisted(() => ({
+  mockFetchPosts: vi.fn(),
+  mockFetchUsers: vi.fn(),
+  mockGetMarketClasses: vi.fn(),
+  mockGetMarketplaceClassDetail: vi.fn(),
+  mockLocationStoreState: {
+    coor: null as { lat: number; lng: number } | null,
+  },
+  mockLevelUp: vi.fn(),
+  mockSearchPosts: vi.fn(),
+  mockSearchUsers: vi.fn(),
+  mockSetPostStatusFilter: vi.fn(),
+  mockSetRoleFilter: vi.fn(),
+  mockSetCoor: vi.fn(),
+  mockSetStatusFilter: vi.fn(),
+  mockBanUser: vi.fn(),
+  mockUnbanUser: vi.fn(),
+}));
+
+const mockUserStoreState = {
+  gymLocation: {
+    locationId: 1,
+    lat: 37.5665,
+    lng: 126.978,
+    address: "서울시 중구",
+  },
+  initAttendance: vi.fn().mockResolvedValue(undefined),
+  initLevel: vi.fn().mockResolvedValue(undefined),
+  initLocation: vi.fn().mockResolvedValue(undefined),
+  initWorkoutCompletion: vi.fn().mockResolvedValue(undefined),
+  level: 5,
+  xp: 80,
+  maxXp: 100,
+  levelUp: mockLevelUp,
+  attendanceStreak: 3,
+  hasAttendedToday: false,
+  weeklyAttendance: { attendedCount: 3 },
+  checkAttendance: vi.fn().mockResolvedValue(undefined),
+  lastExerciseDate: null,
+  analysisStatus: "idle",
+  applyWorkoutVerificationSuccess: vi.fn(),
+  completeExercise: vi.fn(),
+  finishAnalysis: vi.fn(),
+  showSnackbar: vi.fn(),
+  startAnalysis: vi.fn(),
+};
+
+const sampleMarketClass = {
+  classId: 101,
+  title: "아침 PT 클래스",
+  category: "PT",
+  priceAmount: 300,
+  durationMinutes: 50,
+  thumbnailFinalObjectKey: null,
+  tags: ["근력", "초보"],
+  distance: 1200,
+};
+
+const sampleClassDetail = {
+  classId: 101,
+  trainerId: 7,
+  store: {
+    storeId: 1,
+    storeName: "MZ 피트니스",
+    address: "서울시 중구",
+    detailAddress: "2층",
+    latitude: 37.5665,
+    longitude: 126.978,
+  },
+  title: "아침 PT 클래스",
+  category: "PT",
+  description: "기초 근력과 자세를 함께 잡는 수업입니다.",
+  priceAmount: 300,
+  thumbnailFinalObjectKey: null,
+  images: [],
+  tags: ["근력", "초보"],
+  features: ["1:1 자세 교정", "초보자 가능"],
+  durationMinutes: 50,
+  personalItems: "운동복",
+  classTimes: [
+    {
+      timeId: 1,
+      daysOfWeek: ["MONDAY", "WEDNESDAY"],
+      startTime: "10:00:00",
+      capacity: 4,
+    },
+  ],
+};
+
+const sampleAdminPost = {
+  id: 1,
+  title: "관리자 테스트 게시글",
+  content: "게시글 본문",
+  author: "tester",
+  profileColor: "#000000",
+  date: "2026-04-30",
+  category: "자유게시판",
+  isBanned: false,
+  likeCount: 0,
+  commentCount: 0,
+  comments: [],
+};
+
+const sampleAdminUser = {
+  id: 1,
+  nickname: "테스트회원",
+  email: "fitness_lover@test.com",
+  joinDate: "2026-04-30",
+  status: "ACTIVE",
+  role: "MEMBER",
+  postCount: 3,
+  commentCount: 7,
+  profileColor: "#FAB12F",
+};
+
+vi.mock("@services", () => ({
+  getMarketClasses: mockGetMarketClasses,
+  getMarketplaceClassDetail: mockGetMarketplaceClassDetail,
+}));
+
+vi.mock("@hooks", () => ({
+  useTokenBalance: () => ({ balance: "1200" }),
+  useAdminDashboardData: () => ({
+    tokenLogs: [
+      {
+        id: "사용자 #0x1234",
+        desc: "MZTK 전송",
+        amount: "+100 MZTK",
+      },
+    ],
+    ethBalance: "1.25",
+    mztkBalance: "5000",
+    loading: false,
+    error: null,
+  }),
+}));
+
+vi.mock("@store", () => ({
+  useUserStore: () => mockUserStoreState,
+  useAuthModalStore: () => ({ isUnauthorized: false }),
+  useLocationStore: () => ({
+    ...mockLocationStoreState,
+    setCoor: mockSetCoor,
+  }),
+}));
+
+vi.mock("@store/userStore", () => ({
+  useUserStore: () => mockUserStoreState,
+}));
+
+vi.mock("@store/adminStore", () => ({
+  useAdminStore: () => ({
+    fetchUsers: mockFetchUsers,
+    totalUsers: 100,
+    bannedUsers: 5,
+    searchUsers: mockSearchUsers,
+    statusFilter: "ALL",
+    setStatusFilter: mockSetStatusFilter,
+    roleFilter: "ALL",
+    setRoleFilter: mockSetRoleFilter,
+    filteredUsers: [sampleAdminUser],
+    isLoading: false,
+    banUser: mockBanUser,
+    unbanUser: mockUnbanUser,
+    filteredPosts: [sampleAdminPost],
+    fetchPosts: mockFetchPosts,
+    searchPosts: mockSearchPosts,
+    banPost: vi.fn().mockResolvedValue(undefined),
+    unbanPost: vi.fn().mockResolvedValue(undefined),
+    deleteComment: vi.fn().mockResolvedValue(undefined),
+    restoreComment: vi.fn().mockResolvedValue(undefined),
+    hasMore: false,
+    isFetchingPosts: false,
+    postStatusFilter: "ALL",
+    setPostStatusFilter: mockSetPostStatusFilter,
+  }),
+}));
+
+vi.mock("react-chartjs-2", () => ({
+  Pie: () => <div data-testid="mock-pie-chart" />,
+}));
+
+const renderWithRouter = (ui: React.ReactNode, route = "/") =>
+  render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>);
+
+const renderRoute = (route: string, path: string, element: React.ReactNode) =>
+  render(
+    <MemoryRouter initialEntries={[route]}>
+      <Routes>
+        <Route path={path} element={element} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+const getGuideText = (text: string) =>
+  screen.getByText((_, element) => {
+    return (
+      element?.tagName.toLowerCase() === "p" &&
+      (element.textContent?.includes(text) ?? false)
+    );
+  });
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockLocationStoreState.coor = null;
+  mockLevelUp.mockResolvedValue({
+    success: true,
+    message: "레벨업 완료",
+  });
+  mockGetMarketClasses.mockResolvedValue({
+    items: [sampleMarketClass],
+    currentPage: 0,
+    totalPages: 1,
+    totalElements: 1,
+  });
+  mockGetMarketplaceClassDetail.mockResolvedValue(sampleClassDetail);
+});
+
+describe("주요 페이지 smoke test", () => {
+  it("홈 화면이 핵심 CTA까지 렌더링된다", async () => {
+    renderWithRouter(<Home />);
+
+    expect(screen.getByText("이번 주 출석 챌린지")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "운동 인증" })
+    ).toBeInTheDocument();
+  });
+
+  it("운동 사진 인증 화면이 업로드 CTA까지 렌더링된다", () => {
+    renderWithRouter(<ExerciseAuth />, "/exercise-auth");
+
+    expect(screen.getByText(EXERCISE_TEXT.TITLE)).toBeInTheDocument();
+    expect(getGuideText(EXERCISE_TEXT.GUIDE_TITLE)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: EXERCISE_TEXT.BTN_REGISTER })
+    ).toBeDisabled();
+  });
+
+  it("운동 기록 인증 화면이 업로드 CTA까지 렌더링된다", () => {
+    renderWithRouter(<RecordAuth />, "/record-auth");
+
+    expect(screen.getByText(RECORD_TEXT.TITLE)).toBeInTheDocument();
+    expect(getGuideText(RECORD_TEXT.GUIDE_TITLE)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: RECORD_TEXT.BTN_REGISTER })
+    ).toBeDisabled();
+  });
+
+  it("위치 인증 화면이 거리 상태와 인증 CTA를 렌더링한다", async () => {
+    mockLocationStoreState.coor = { lat: 37.5665, lng: 126.978 };
+
+    renderWithRouter(<Verify />, "/verify");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(`${VERIFY_TEXT.DISTANCE_PREFIX}0${VERIFY_TEXT.DISTANCE_UNIT}`)
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("button", { name: VERIFY_TEXT.BTN_VERIFY })
+    ).toBeInTheDocument();
+  });
+
+  it("마켓 목록 화면이 API 응답으로 클래스 카드를 렌더링한다", async () => {
+    renderWithRouter(<Market />, "/market");
+
+    expect(screen.getByText("운동 클래스 찾기")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("아침 PT 클래스")).toBeInTheDocument();
+    });
+  });
+
+  it("마켓 목록 화면이 빈 응답을 빈 상태로 렌더링한다", async () => {
+    mockGetMarketClasses.mockResolvedValueOnce({
+      items: [],
+      currentPage: 0,
+      totalPages: 0,
+      totalElements: 0,
+    });
+
+    renderWithRouter(<Market />, "/market");
+
+    await waitFor(() => {
+      expect(screen.getByText("등록된 클래스가 없습니다")).toBeInTheDocument();
+    });
+  });
+
+  it("마켓 목록 API 실패 시 에러 상태를 렌더링한다", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    mockGetMarketClasses.mockRejectedValueOnce(new Error("network error"));
+
+    try {
+      renderWithRouter(<Market />, "/market");
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("클래스 목록을 불러오지 못했습니다.")
+        ).toBeInTheDocument();
+      });
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("마켓 상세 화면이 클래스 상세 정보를 렌더링한다", async () => {
+    renderRoute("/market/101", "/market/:id", <MarketDetail />);
+
+    await waitFor(() => {
+      expect(screen.getByText("아침 PT 클래스")).toBeInTheDocument();
+    });
+    expect(screen.getByText("프로그램 소개")).toBeInTheDocument();
+    expect(screen.getByText("클래스 구매하기")).toBeInTheDocument();
+  });
+
+  it("마켓 상세 API 실패 시 에러 상태를 렌더링한다", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    mockGetMarketplaceClassDetail.mockRejectedValueOnce(
+      new Error("detail network error")
+    );
+
+    try {
+      renderRoute("/market/101", "/market/:id", <MarketDetail />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("클래스 상세를 불러오지 못했습니다.")
+        ).toBeInTheDocument();
+      });
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("마켓 구매 화면이 예약 날짜와 결제 버튼을 렌더링한다", async () => {
+    renderRoute(
+      "/market/purchase/101",
+      "/market/purchase/:id",
+      <MarketPurchase />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("아침 PT 클래스")).toBeInTheDocument();
+    });
+    expect(screen.getByText(/예약 날짜/)).toBeInTheDocument();
+    expect(
+      screen.getByText("총 300 MZTK 결제 및 예약 확정")
+    ).toBeInTheDocument();
+  });
+
+  it("마켓 구매 API 실패 시 에러 상태를 렌더링한다", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    mockGetMarketplaceClassDetail.mockRejectedValueOnce(
+      new Error("purchase network error")
+    );
+
+    try {
+      renderRoute(
+        "/market/purchase/101",
+        "/market/purchase/:id",
+        <MarketPurchase />
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("구매할 클래스 정보를 불러오지 못했습니다.")
+        ).toBeInTheDocument();
+      });
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("마켓 예약 내역 화면이 예정된 클래스를 렌더링한다", () => {
+    renderWithRouter(<MarketReservation />, "/market/reservations");
+
+    expect(screen.getByText("다가오는 클래스")).toBeInTheDocument();
+    expect(screen.getByText("바디프로필 챌린지 (입문반)")).toBeInTheDocument();
+  });
+
+  it("관리자 대시보드가 주요 카드와 차트 영역을 렌더링한다", () => {
+    renderWithRouter(<AdminDashboard />, "/admin/dashboard");
+
+    expect(screen.getByText("서버 상태")).toBeInTheDocument();
+    expect(screen.getByText("MZTK 지급 기록")).toBeInTheDocument();
+    expect(screen.getByTestId("mock-pie-chart")).toBeInTheDocument();
+  });
+
+  it("관리자 사용자 관리 화면이 통계와 필터를 렌더링한다", () => {
+    renderWithRouter(<UserManagement />, "/admin/users");
+
+    expect(mockFetchUsers).toHaveBeenCalled();
+    expect(screen.getByText("총 사용자")).toBeInTheDocument();
+    expect(screen.getByText("정지된 사용자")).toBeInTheDocument();
+    expect(screen.getAllByRole("combobox")).toHaveLength(2);
+    expect(screen.getByText("fitness_lover@test.com")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "fitness_lover@test.com 사용자 제한",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("관리자 게시글 관리 화면이 게시글 목록을 렌더링한다", () => {
+    renderWithRouter(<PostManagement />, "/admin/posts");
+
+    expect(mockFetchPosts).toHaveBeenCalledWith(true);
+    expect(screen.getByText("관리자 테스트 게시글")).toBeInTheDocument();
+  });
+});
