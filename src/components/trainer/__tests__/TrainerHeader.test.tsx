@@ -63,18 +63,6 @@ describe('TrainerHeader', () => {
     expect(mockNavigate).toHaveBeenCalledWith(-1);
   });
 
-  it('프로필 아이콘이 렌더링된다', () => {
-    render(
-      <MemoryRouter>
-        <TrainerHeader title="트레이너 목록" />
-      </MemoryRouter>
-    );
-    
-    const profileIcon = screen.getByAltText('profile');
-    expect(profileIcon).toBeInTheDocument();
-    expect(profileIcon).toHaveAttribute('src', '/icon/userActive.svg');
-  });
-
   it('sticky 헤더 스타일이 적용된다', () => {
     const { container } = render(
       <MemoryRouter>

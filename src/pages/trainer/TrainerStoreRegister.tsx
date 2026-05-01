@@ -1,317 +1,544 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import DaumPostcode from 'react-daum-postcode';
+import DaumPostcode from "react-daum-postcode";
+import {
+  APIProvider,
+  AdvancedMarker,
+  Map,
+  Pin,
+  useApiIsLoaded,
+  useMap,
+} from "@vis.gl/react-google-maps";
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonButton } from "@components/common";
+import { getTrainerStore, upsertTrainerStore } from "@services";
+
+type Coordinates = {
+  latitude: number;
+  longitude: number;
+};
+
+type PostcodeData = {
+  address: string;
+  addressType: string;
+  bname: string;
+  buildingName: string;
+};
+
+const DEFAULT_COORDINATES: Coordinates = {
+  latitude: 37.5666805,
+  longitude: 126.9784147,
+};
+
+const DEFAULT_ZOOM = 15;
+
+const toMapPosition = (
+  coordinates: Coordinates = DEFAULT_COORDINATES
+): google.maps.LatLngLiteral => ({
+  lat: coordinates.latitude,
+  lng: coordinates.longitude,
+});
+
+const blankToNull = (value: string) => {
+  const trimmedValue = value.trim();
+  return trimmedValue ? trimmedValue : null;
+};
+
+const StoreMapController = ({ coordinates }: { coordinates: Coordinates }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+
+    map.panTo(toMapPosition(coordinates));
+  }, [coordinates, map]);
+
+  return null;
+};
+
+const StoreGeocoder = ({
+  address,
+  setMapCenter,
+  setCoordinates,
+  setIsResolvingCoordinates,
+}: {
+  address: string;
+  setMapCenter: Dispatch<SetStateAction<Coordinates>>;
+  setCoordinates: Dispatch<SetStateAction<Coordinates | null>>;
+  setIsResolvingCoordinates: Dispatch<SetStateAction<boolean>>;
+}) => {
+  const isApiLoaded = useApiIsLoaded();
+
+  useEffect(() => {
+    if (!address) {
+      setCoordinates(null);
+      setIsResolvingCoordinates(false);
+      return;
+    }
+
+    if (!isApiLoaded || !window.google?.maps?.Geocoder) {
+      return;
+    }
+
+    let isMounted = true;
+    const geocoder = new window.google.maps.Geocoder();
+
+    setIsResolvingCoordinates(true);
+
+    geocoder.geocode({ address, region: "KR" }, (results, status) => {
+      if (!isMounted) return;
+
+      const location = results?.[0]?.geometry?.location;
+
+      if (status !== window.google.maps.GeocoderStatus.OK || !location) {
+        setCoordinates(null);
+        setIsResolvingCoordinates(false);
+        return;
+      }
+
+      const nextCoordinates = {
+        latitude: location.lat(),
+        longitude: location.lng(),
+      };
+
+      setMapCenter(nextCoordinates);
+      setCoordinates(nextCoordinates);
+      setIsResolvingCoordinates(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [address, isApiLoaded, setCoordinates, setIsResolvingCoordinates, setMapCenter]);
+
+  return null;
+};
 
 const TrainerStoreRegister = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const mapKey = import.meta.env.VITE_GOOGLE_MAP_API || "";
+  const mapId = import.meta.env.VITE_GOOGLE_MAP_ID || "";
 
-    // 폼 상태
-    const [address, setAddress] = useState("");
-    const [detailAddress, setDetailAddress] = useState("");
-    const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
-    const [phone, setPhone] = useState("");
-    const [sns, setSns] = useState({ home: "", insta: "", x: "" });
+  const [storeName, setStoreName] = useState("");
+  const [address, setAddress] = useState("");
+  const [detailAddress, setDetailAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [sns, setSns] = useState({ home: "", insta: "", x: "" });
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+  const [mapCenter, setMapCenter] = useState<Coordinates>(DEFAULT_COORDINATES);
+  const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
+  const [isResolvingCoordinates, setIsResolvingCoordinates] = useState(false);
+  const [isLoadingStore, setIsLoadingStore] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasExistingStore, setHasExistingStore] = useState(false);
 
-    // 네이버 지도 스크립트 상태
-    const [isMapLoaded, setIsMapLoaded] = useState(false);
-    const mapRef = useRef<naver.maps.Map | null>(null);
-    const mapElement = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let isMounted = true;
 
-    // 네이버 지도 API 스크립트 비동기 로드
-    useEffect(() => {
-        const scriptId = 'naver-map-api';
-        if (!document.getElementById(scriptId)) {
-            const script = document.createElement('script');
-            // Mock clientId for Naver (ncpClientId)
-            script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=YOUR_CLIENT_ID&submodules=geocoder`;
-            script.id = scriptId;
-            script.async = true;
-            script.onload = () => setIsMapLoaded(true);
-            document.head.appendChild(script);
-        } else {
-            setIsMapLoaded(true);
-        }
-    }, []);
+    const loadStore = async () => {
+      try {
+        const store = await getTrainerStore();
 
-    // 맵 초기화
-    useEffect(() => {
-        if (isMapLoaded && mapElement.current && !mapRef.current) {
-            // 기본 위도, 경도 (서울시청 기준)
-            const mapOptions = {
-                center: new window.naver.maps.LatLng(37.5666805, 126.9784147),
-                zoom: 15,
-            };
-            mapRef.current = new window.naver.maps.Map(mapElement.current, mapOptions);
-        }
-    }, [isMapLoaded]);
+        if (!isMounted) return;
 
-    // 주소 검색 시 좌표 변경
-    useEffect(() => {
-        if (isMapLoaded && address && mapRef.current) {
-            try {
-                window.naver.maps.Service.geocode({ query: address }, (status: any, response: any) => {
-                    if (status !== window.naver.maps.Service.Status.OK) return;
+        const nextCoordinates = {
+          latitude: store.latitude,
+          longitude: store.longitude,
+        };
 
-                    if (response.v2.meta.totalCount > 0) {
-                        const item = response.v2.addresses[0];
-                        const point = new window.naver.maps.Point(Number(item.x), Number(item.y));
-                        mapRef.current!.setCenter(point);
-
-                        new window.naver.maps.Marker({
-                            position: point,
-                            map: mapRef.current!
-                        });
-                    }
-                });
-            } catch (e) {
-                console.warn("Geocoding failed, check client ID");
-            }
-        }
-    }, [address, isMapLoaded]);
-
-    const handleCompletePostcode = (data: any) => {
-        let fullAddress = data.address;
-        let extraAddress = '';
-
-        if (data.addressType === 'R') {
-            if (data.bname !== '') extraAddress += data.bname;
-            if (data.buildingName !== '') extraAddress += (extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName);
-            fullAddress += (extraAddress !== '' ? ` (${extraAddress})` : '');
-        }
-
-        setAddress(fullAddress);
-        setIsPostcodeOpen(false);
-    };
-
-    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
-
-        if (imagePreviews.length + files.length > 5) {
-            alert("이미지는 최대 5장까지 등록 가능합니다.");
-            return;
-        }
-
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreviews(prev => [...prev, reader.result as string]);
-            };
-            reader.readAsDataURL(file);
+        setHasExistingStore(true);
+        setStoreName(store.storeName);
+        setAddress(store.address);
+        setDetailAddress(store.detailAddress);
+        setPhone(store.phoneNumber);
+        setSns({
+          home: store.homepageUrl ?? "",
+          insta: store.instagramUrl ?? "",
+          x: store.xProfileUrl ?? "",
         });
-    };
-
-    const removeImage = (indexToRemove: number) => {
-        setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove));
-    };
-
-    const triggerFileInput = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleRegister = () => {
-        if (!address) {
-            alert("매장 위치(주소)를 입력해주세요.");
-            return;
+        setCoordinates(nextCoordinates);
+        setMapCenter(nextCoordinates);
+      } catch (error) {
+        if (
+          axios.isAxiosError(error) &&
+          error.response?.status === 404 &&
+          error.response?.data?.code === "MARKETPLACE_001"
+        ) {
+          if (!isMounted) return;
+          setHasExistingStore(false);
+        } else {
+          console.error("Failed to load trainer store", error);
+          window.alert("매장 정보를 불러오지 못했습니다.");
         }
-        if (!phone) {
-            alert("매장 전화번호를 입력해주세요.");
-            return;
+      } finally {
+        if (isMounted) {
+          setIsLoadingStore(false);
         }
-        localStorage.setItem("trainerStoreRegistered", "true");
-        alert("매장 및 클래스 장소가 성공적으로 등록되었습니다!");
-        navigate("/trainer");
+      }
     };
 
-    return (
-        <div className="flex flex-col h-full bg-white min-h-screen relative">
-            <TrainerHeader title="매장 및 클래스 장소 등록/수정" showBack />
+    void loadStore();
 
-            <div className="flex-1 px-5 py-6 flex flex-col gap-8 overflow-y-auto pb-32 focus-within:pb-40 transition-all">
-                {/* 1. 매장 사진 섹션 */}
-                <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                        <label className="text-sm font-bold text-gray-700">매장 및 시설 사진 <span className="text-gray-400 font-medium text-xs ml-1">(선택)</span></label>
-                        <span className="text-xs text-gray-400 font-medium">{imagePreviews.length}/5장</span>
-                    </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageChange}
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                    />
-                    <div className="flex gap-3 overflow-x-auto scrollbar-hide py-1">
-                        {imagePreviews.length < 5 && (
-                            <div
-                                onClick={triggerFileInput}
-                                className="w-24 h-24 flex-shrink-0 bg-grey-pale rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200 cursor-pointer active:scale-[0.99] transition-all hover:bg-gray-50"
-                            >
-                                <img src="/icon/camera.svg" alt="camera" className="w-6 h-6 opacity-30 mb-1" />
-                                <span className="text-[10px] text-gray-400 font-medium">사진 추가</span>
-                            </div>
-                        )}
-                        {imagePreviews.map((preview, index) => (
-                            <div key={index} className="w-24 h-24 flex-shrink-0 relative rounded-xl overflow-hidden border border-gray-100">
-                                <img src={preview} alt={`preview-${index}`} className="w-full h-full object-cover" />
-                                <button
-                                    onClick={() => removeImage(index)}
-                                    className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] font-bold"
-                                >
-                                    ✕
-                                </button>
-                                {index === 0 && (
-                                    <div className="absolute bottom-0 left-0 right-0 bg-main/80 text-white text-[9px] font-bold text-center py-0.5">
-                                        대표 이미지
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    <p className="text-[11px] text-gray-400 mt-1">권장 사이즈 1028x720 / 첫 번째 사진이 매장 대표 사진으로 설정됩니다.</p>
-                </div>
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-                {/* 2. 매장 위치 섹션 */}
-                <div className="flex flex-col gap-5">
-                    {/* 주소 검색 */}
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-bold text-gray-700">매장 위치 (주소) <span className="text-main">*</span></label>
-                        <div className="flex gap-2">
-                            <input
-                                readOnly
-                                value={address}
-                                placeholder="주소를 검색해주세요"
-                                onClick={() => setIsPostcodeOpen(true)}
-                                className="flex-1 bg-grey-pale rounded-xl py-4 px-4 text-[14px] outline-none cursor-pointer text-gray-800"
-                            />
-                            <button
-                                onClick={() => setIsPostcodeOpen(true)}
-                                className="bg-main text-white px-5 rounded-xl text-[14px] font-bold shadow-sm whitespace-nowrap active:brightness-95 transition-all"
-                            >
-                                주소 찾기
-                            </button>
-                        </div>
-                        {address && (
-                            <input
-                                type="text"
-                                value={detailAddress}
-                                onChange={(e) => setDetailAddress(e.target.value)}
-                                placeholder="상세 주소를 입력해주세요"
-                                className="w-full bg-grey-pale rounded-xl py-4 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20 mt-1"
-                            />
-                        )}
-                    </div>
+  const handleCompletePostcode = (data: PostcodeData) => {
+    let fullAddress = data.address;
+    let extraAddress = "";
 
-                    {/* 지도 표출 */}
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-bold text-gray-700">지도 위치</label>
-                        <div className="w-full h-[220px] bg-grey-pale rounded-xl overflow-hidden relative border border-gray-100">
-                            <div ref={mapElement} className="w-full h-full" />
-                            {!isMapLoaded && (
-                                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-[13px] font-medium">
-                                    지도를 불러오는 중입니다...
-                                </div>
-                            )}
-                            {isMapLoaded && !window.naver?.maps && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-[14px] font-bold bg-white/90 z-10 px-5 text-center leading-relaxed backdrop-blur-sm border border-gray-100">
-                                    네이버 Map 연동 필요
-                                    <span className="text-[12px] font-medium text-gray-400 mt-1">NCP Client ID를 적용하면<br />지도가 활성화됩니다.</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+    if (data.addressType === "R") {
+      if (data.bname) extraAddress += data.bname;
+      if (data.buildingName) {
+        extraAddress += extraAddress ? `, ${data.buildingName}` : data.buildingName;
+      }
+      fullAddress += extraAddress ? ` (${extraAddress})` : "";
+    }
 
-                {/* 2. 매장 연락처 섹션 */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-sm font-bold text-gray-700">매장 전화번호 <span className="text-main">*</span></label>
-                    <input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="예) 02-1234-5678"
-                        className="w-full bg-grey-pale rounded-xl py-4 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
-                    />
-                </div>
+    setAddress(fullAddress);
+    setCoordinates(null);
+    setIsPostcodeOpen(false);
+  };
 
-                {/* 3. 소셜 미디어 링크 섹션 (선택) */}
-                <div className="flex flex-col gap-3">
-                    <label className="text-sm font-bold text-gray-700 mb-1">SNS 계정 연동 <span className="text-gray-400 font-medium text-xs ml-1">(선택)</span></label>
+  const handleCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      window.alert("현재 위치를 불러올 수 없는 환경입니다.");
+      return;
+    }
 
-                    <div className="flex items-center gap-3">
-                        <div className="text-[13px] text-gray-600 font-bold w-[76px] flex items-center gap-1.5 opacity-80">
-                            <img src="/icon/user.svg" alt="home" className="w-4 h-4 grayscale" /> 홈페이지
-                        </div>
-                        <input
-                            type="text"
-                            value={sns.home}
-                            onChange={(e) => setSns({ ...sns, home: e.target.value })}
-                            placeholder="URL 입력"
-                            className="flex-1 bg-grey-pale rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
-                        />
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-[13px] text-gray-600 font-bold w-[76px] flex items-center gap-1.5 opacity-80">
-                            <img src="/icon/gallery.svg" alt="insta" className="w-4 h-4 grayscale" /> 인스타
-                        </div>
-                        <input
-                            type="text"
-                            value={sns.insta}
-                            onChange={(e) => setSns({ ...sns, insta: e.target.value })}
-                            placeholder="@아이디 입력"
-                            className="flex-1 bg-grey-pale rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
-                        />
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-[13px] text-gray-600 font-bold w-[76px] flex items-center gap-1.5 opacity-80">
-                            <img src="/icon/comment.svg" alt="x" className="w-4 h-4 grayscale" /> X (트위터)
-                        </div>
-                        <input
-                            type="text"
-                            value={sns.x}
-                            onChange={(e) => setSns({ ...sns, x: e.target.value })}
-                            placeholder="@아이디 입력"
-                            className="flex-1 bg-grey-pale rounded-xl py-3.5 px-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
-                        />
-                    </div>
-                </div>
-            </div>
+    setIsResolvingCoordinates(true);
 
-            {/* 하단 고정 버튼 */}
-            <div className="p-5 border-t border-gray-100 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-                <CommonButton
-                    label="매장 정보 등록/수정하기"
-                    onClick={handleRegister}
-                    disabled={!address || !phone}
-                    className="w-full h-[60px] rounded-2xl shadow-sm active:opacity-90 transition-all font-bold text-[16px]"
-                />
-            </div>
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextCoordinates = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
 
-            {/* Daum Postcode Modal */}
-            {isPostcodeOpen && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-5 px-4 w-full h-full max-w-[420px] mx-auto">
-                    <div className="bg-white w-full max-h-[80vh] rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
-                        <div className="flex justify-between items-center p-4 border-b border-gray-100">
-                            <h3 className="font-bold text-gray-900 text-[16px]">주소 검색</h3>
-                            <button onClick={() => setIsPostcodeOpen(false)} className="text-gray-400 font-bold p-1 text-[20px] leading-none mb-1">✕</button>
-                        </div>
-                        <div className="flex-1 w-full relative overflow-y-auto">
-                            <DaumPostcode
-                                onComplete={handleCompletePostcode}
-                                style={{ width: '100%', height: '450px' }}
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+        setMapCenter(nextCoordinates);
+        setCoordinates(nextCoordinates);
+        setIsResolvingCoordinates(false);
+      },
+      (error) => {
+        console.error("Failed to get current position", error);
+        setIsResolvingCoordinates(false);
+        window.alert("현재 위치를 가져오지 못했습니다. 위치 권한을 확인해 주세요.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+  };
+
+  const handleConfirmMapLocation = () => {
+    setCoordinates(mapCenter);
+  };
+
+  const handleRegister = async () => {
+    if (!storeName.trim()) {
+      window.alert("매장명을 입력해 주세요.");
+      return;
+    }
+
+    if (!address.trim()) {
+      window.alert("매장 주소를 입력해 주세요.");
+      return;
+    }
+
+    if (!detailAddress.trim()) {
+      window.alert("상세 주소를 입력해 주세요.");
+      return;
+    }
+
+    if (!phone.trim()) {
+      window.alert("매장 전화번호를 입력해 주세요.");
+      return;
+    }
+
+    if (!coordinates) {
+      window.alert("매장 위치 좌표를 먼저 설정해 주세요.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      await upsertTrainerStore({
+        storeName: storeName.trim(),
+        address: address.trim(),
+        detailAddress: detailAddress.trim(),
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        phoneNumber: phone.trim(),
+        homepageUrl: blankToNull(sns.home),
+        instagramUrl: blankToNull(sns.insta),
+        xProfileUrl: blankToNull(sns.x),
+      });
+
+      window.alert(
+        hasExistingStore ? "매장 정보가 수정되었습니다." : "매장 정보가 등록되었습니다."
+      );
+      navigate("/trainer");
+    } catch (error) {
+      console.error("Failed to upsert trainer store", error);
+      window.alert("매장 정보 저장에 실패했습니다. 입력값을 다시 확인해 주세요.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="relative flex min-h-screen flex-col bg-white">
+      <TrainerHeader
+        title={hasExistingStore ? "매장 정보 수정" : "매장 정보 등록"}
+        showBack
+      />
+
+      <div className="flex flex-1 flex-col gap-10 overflow-y-auto px-5 py-6 pb-32 focus-within:pb-40 transition-all">
+        {isLoadingStore ? (
+          <div className="flex flex-1 items-center justify-center text-sm font-medium text-gray-400">
+            매장 정보를 불러오는 중입니다...
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-gray-700">
+                매장명 <span className="text-main">*</span>
+              </label>
+              <input
+                type="text"
+                value={storeName}
+                onChange={(event) => setStoreName(event.target.value)}
+                placeholder="매장명을 입력해 주세요."
+                className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+              />
+            </div>
+
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-bold text-gray-700">
+                  매장 위치(주소) <span className="text-main">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={address}
+                    placeholder="주소를 검색해 주세요."
+                    onClick={() => setIsPostcodeOpen(true)}
+                    className="flex-1 cursor-pointer rounded-xl border border-gray-100 bg-gray-50 px-4 py-4 text-[14px] text-gray-800 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsPostcodeOpen(true)}
+                    className="whitespace-nowrap rounded-xl bg-main px-5 text-[14px] font-bold text-white shadow-sm transition-all active:brightness-95"
+                  >
+                    주소 찾기
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={detailAddress}
+                  onChange={(event) => setDetailAddress(event.target.value)}
+                  placeholder="상세 주소를 입력해 주세요."
+                  className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+                />
+                {isResolvingCoordinates && (
+                  <p className="text-[12px] text-gray-400">
+                    주소 좌표를 확인하는 중입니다...
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-bold text-gray-700">지도 위치</label>
+                <div className="relative h-[220px] w-full overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                  {mapKey ? (
+                    <APIProvider apiKey={mapKey}>
+                      <StoreGeocoder
+                        address={address}
+                        setMapCenter={setMapCenter}
+                        setCoordinates={setCoordinates}
+                        setIsResolvingCoordinates={setIsResolvingCoordinates}
+                      />
+                      <Map
+                        defaultCenter={toMapPosition(DEFAULT_COORDINATES)}
+                        defaultZoom={DEFAULT_ZOOM}
+                        gestureHandling="greedy"
+                        disableDefaultUI
+                        mapId={mapId || undefined}
+                        style={{ width: "100%", height: "100%" }}
+                        onCameraChanged={(event) =>
+                          setMapCenter({
+                            latitude: event.detail.center.lat,
+                            longitude: event.detail.center.lng,
+                          })
+                        }
+                      >
+                        <StoreMapController coordinates={coordinates ?? mapCenter} />
+                        <AdvancedMarker position={toMapPosition(mapCenter)}>
+                          <Pin
+                            background={coordinates ? "#fab12f" : "#6b7280"}
+                            glyphColor="#fff"
+                            borderColor={coordinates ? "#fab12f" : "#6b7280"}
+                          />
+                        </AdvancedMarker>
+                      </Map>
+                    </APIProvider>
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center border border-gray-100 bg-white/90 px-5 text-center text-[14px] font-bold leading-relaxed text-gray-500 backdrop-blur-sm">
+                      Google Map API Key 필요
+                      <span className="mt-1 text-[12px] font-medium text-gray-400">
+                        `.env`의 `VITE_GOOGLE_MAP_API`를 채우면 지도가 표시됩니다.
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCurrentLocation}
+                      className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-[13px] font-bold text-gray-700 active:opacity-90"
+                    >
+                      현재 위치 사용
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmMapLocation}
+                      className="flex-1 rounded-xl border border-main/20 bg-main/5 px-4 py-3 text-[13px] font-bold text-main active:opacity-90"
+                    >
+                      지도 중심으로 위치 설정
+                    </button>
+                  </div>
+                  {address && !isResolvingCoordinates && !coordinates && (
+                    <p className="text-[12px] text-gray-500">
+                      주소 좌표를 바로 찾지 못했습니다. 지도를 움직인 뒤 위치 설정 버튼을
+                      눌러 주세요.
+                    </p>
+                  )}
+                  {coordinates && (
+                    <p className="text-[12px] text-gray-500">
+                      선택된 좌표: {coordinates.latitude.toFixed(6)},{" "}
+                      {coordinates.longitude.toFixed(6)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-gray-700">
+                매장 전화번호 <span className="text-main">*</span>
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="예: 02-1234-5678"
+                className="w-full rounded-xl bg-grey-pale px-4 py-4 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+              />
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <label className="mb-1 text-sm font-bold text-gray-700">
+                SNS 계정 연동
+                <span className="ml-1 text-xs font-medium text-gray-400">(선택)</span>
+              </label>
+
+              <div className="flex items-center gap-3">
+                <div className="flex w-[100px] items-center text-[13px] font-bold text-gray-600 opacity-80">
+                  홈페이지
+                </div>
+                <input
+                  type="text"
+                  value={sns.home}
+                  onChange={(event) =>
+                    setSns((prev) => ({ ...prev, home: event.target.value }))
+                  }
+                  placeholder="https://example.com"
+                  className="flex-1 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3.5 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex w-[100px] items-center text-[13px] font-bold text-gray-600 opacity-80">
+                  인스타그램
+                </div>
+                <input
+                  type="text"
+                  value={sns.insta}
+                  onChange={(event) =>
+                    setSns((prev) => ({ ...prev, insta: event.target.value }))
+                  }
+                  placeholder="https://instagram.com/..."
+                  className="flex-1 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3.5 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex w-[100px] items-center text-[13px] font-bold text-gray-600 opacity-80">
+                  X
+                </div>
+                <input
+                  type="text"
+                  value={sns.x}
+                  onChange={(event) =>
+                    setSns((prev) => ({ ...prev, x: event.target.value }))
+                  }
+                  placeholder="https://x.com/..."
+                  className="flex-1 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3.5 text-[14px] outline-none focus:ring-2 focus:ring-main/20"
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="border-t border-gray-100 bg-white p-5 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+        <CommonButton
+          label={
+            isSaving
+              ? "저장 중..."
+              : hasExistingStore
+                ? "매장 정보 수정하기"
+                : "매장 정보 등록하기"
+          }
+          onClick={handleRegister}
+          disabled={
+            isLoadingStore ||
+            isSaving ||
+            !storeName.trim() ||
+            !address.trim() ||
+            !detailAddress.trim() ||
+            !phone.trim() ||
+            !coordinates
+          }
+          className="h-[60px] w-full rounded-2xl text-[16px] font-bold shadow-sm transition-all active:opacity-90"
+        />
+      </div>
+
+      {isPostcodeOpen && (
+        <div className="fixed inset-0 z-[1000] mx-auto flex h-full w-full max-w-[420px] items-center justify-center bg-black/60 p-5 px-4">
+          <div className="relative flex max-h-[80vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 p-4">
+              <h3 className="text-[16px] font-bold text-gray-900">주소 검색</h3>
+              <button
+                type="button"
+                onClick={() => setIsPostcodeOpen(false)}
+                className="mb-1 p-1 text-[20px] font-bold leading-none text-gray-400"
+              >
+                ×
+              </button>
+            </div>
+            <div className="relative w-full flex-1 overflow-y-auto">
+              <DaumPostcode
+                onComplete={handleCompletePostcode}
+                style={{ width: "100%", height: "450px" }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default TrainerStoreRegister;

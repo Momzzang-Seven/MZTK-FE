@@ -1,50 +1,48 @@
 import { useState } from "react";
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonModal } from "@components/common";
+import { RESERVATION_STATUS } from "@constant/reservation";
+import type { ReservationStatus } from "@constant/reservation";
 
-const MOCK_TRAINER_RESERVATIONS = [
-    {
-        id: "tr1",
-        status: "신규 예약",
-        className: "1:1 집중 웨이트 트레이닝",
-        customerName: "초보헬린이",
-        date: "2026-03-05",
-        day: "목",
-        time: "19:00",
-        remainingTime: "71시간 58분",
-        requestMsg: "오른쪽 무릎이 조금 안 좋습니다.",
-        txHash: null
-    },
-    {
-        id: "tr2",
-        status: "예약 확정",
-        className: "1:1 집중 웨이트 트레이닝",
-        customerName: "열혈다이어터",
-        date: "2026-03-06",
-        day: "금",
-        time: "09:00",
-        requestMsg: "살 엄청 빼고 싶어요 ㅠㅠ",
-        txHash: "0x7a8b9c1d2e3f4g5h6i7j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z",
-        autoConfirmDDay: 3
-    },
-    {
-        id: "tr3",
-        status: "수강 완료",
-        className: "바디프로필 준비반 (식단방 포함)",
-        customerName: "몸짱도전기",
-        date: "2026-02-15",
-        day: "일",
-        time: "10:00",
-        requestMsg: "식단 점검 부탁드립니다.",
-        txHash: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z",
-        completedAt: "2026-02-15 11:30"
-    }
-];
+// TODO: API 연동 시 실제 데이터로 교체
+const MOCK_TRAINER_RESERVATIONS: {
+    id: string;
+    status: ReservationStatus;
+    className: string;
+    customerName: string;
+    date: string;
+    day: string;
+    time: string;
+    requestMsg: string;
+    txHash: string | null;
+    remainingTime?: string;
+    autoConfirmDDay?: number;
+}[] = [];
 
 const TrainerReservations = () => {
-    const [activeTab, setActiveTab] = useState<"pending" | "confirmed" | "completed">("pending");
+    const [activeTab, setActiveTab] = useState<"pending" | "confirmed" | "completed" | "cancellation">("pending");
+    const [reservations, setReservations] = useState(MOCK_TRAINER_RESERVATIONS);
 
-    // 모달 상태
+    // TODO: API 연동 시 과거 클래스 자동 정산은 서버에서 처리 예정
+
+    // 모달 관리 상태 (알림/확인용)
+    const [modal, setModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        desc: string;
+        confirmLabel: string;
+        cancelLabel?: string;
+        onConfirm?: () => void;
+    }>({
+        isOpen: false,
+        title: "",
+        desc: "",
+        confirmLabel: "확인"
+    });
+
+    const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
+
+    // 입력/특수 모달 상태
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
     const [txModalOpen, setTxModalOpen] = useState(false);
     const [rejectReason, setRejectReason] = useState("");
@@ -61,23 +59,67 @@ const TrainerReservations = () => {
         setTxModalOpen(true);
     };
 
-    const handleRejectConfirm = () => {
-        if (!rejectReason.trim()) {
-            alert("반려 사유를 입력해주세요.");
-            return;
-        }
-        console.log("Rejecting:", selectedId);
-        alert(`예약이 반려되었습니다.\n사유: ${rejectReason}`);
-        setRejectModalOpen(false);
-        setSelectedId(null);
+    const handleAction = (id: string, nextStatus: ReservationStatus, message: string) => {
+        setModal({
+            isOpen: true,
+            title: "예약 상태 변경",
+            desc: message.replace("\n", "<br/>"),
+            confirmLabel: "승인",
+            cancelLabel: "취소",
+            onConfirm: () => {
+                setReservations(prev => prev.map(res =>
+                    res.id === id ? { ...res, status: nextStatus } : res
+                ));
+                closeModal();
+                
+                setTimeout(() => {
+                    setModal({
+                        isOpen: true,
+                        title: "처리 완료",
+                        desc: "요청하신 처리가 정상적으로 완료되었습니다.",
+                        confirmLabel: "확인",
+                        onConfirm: closeModal
+                    });
+                }, 100);
+            }
+        });
     };
 
-    const selectedReservation = MOCK_TRAINER_RESERVATIONS.find(r => r.id === selectedId);
+    const handleRejectConfirm = () => {
+        if (!rejectReason.trim()) {
+            setModal({
+                isOpen: true,
+                title: "알림",
+                desc: "반려 사유를 입력해주세요.",
+                confirmLabel: "확인",
+                onConfirm: closeModal
+            });
+            return;
+        }
+        setReservations(prev => prev.map(res => 
+            res.id === selectedId ? { ...res, status: RESERVATION_STATUS.CANCELLED } : res
+        ));
+        setRejectModalOpen(false);
+        setSelectedId(null);
 
-    const filteredReservations = MOCK_TRAINER_RESERVATIONS.filter(res => {
-        if (activeTab === "pending") return res.status === "신규 예약";
-        if (activeTab === "confirmed") return res.status === "예약 확정";
-        return res.status === "수강 완료";
+        setTimeout(() => {
+            setModal({
+                isOpen: true,
+                title: "반려 완료",
+                desc: `예약이 반려되었습니다.<br/>사유: ${rejectReason}`,
+                confirmLabel: "확인",
+                onConfirm: closeModal
+            });
+        }, 100);
+    };
+
+    const selectedReservation = reservations.find(r => r.id === selectedId);
+
+    const filteredReservations = reservations.filter(res => {
+        if (activeTab === "pending") return res.status === RESERVATION_STATUS.PENDING;
+        if (activeTab === "confirmed") return res.status === RESERVATION_STATUS.CONFIRMED;
+        if (activeTab === "cancellation") return res.status === RESERVATION_STATUS.CANCELLATION_REQUESTED;
+        return ([RESERVATION_STATUS.ADMIN_SETTLED, RESERVATION_STATUS.CANCELLED] as ReservationStatus[]).includes(res.status as ReservationStatus);
     });
 
     return (
@@ -85,23 +127,36 @@ const TrainerReservations = () => {
             <TrainerHeader title="예약 확인하기" showBack />
 
             {/* 탭 바 */}
-            <div className="flex w-full bg-white border-b border-gray-100 z-10 sticky top-0">
+            <div className="flex w-full bg-white border-b border-gray-100 z-10 sticky top-0 overflow-x-auto scrollbar-hide">
                 <button
                     onClick={() => setActiveTab("pending")}
-                    className={`flex-1 py-4 text-[14px] font-bold transition-all relative ${activeTab === "pending" ? "text-gray-900" : "text-gray-400"
+                    className={`flex-1 min-w-[80px] py-4 text-[13px] font-bold transition-all relative ${activeTab === "pending" ? "text-gray-900" : "text-gray-400"
                         }`}
                 >
                     승인 대기
                     <span className="ml-1.5 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 align-middle">
-                        {MOCK_TRAINER_RESERVATIONS.filter(r => r.status === "신규 예약").length}
+                        {reservations.filter(r => r.status === RESERVATION_STATUS.PENDING).length}
                     </span>
                     {activeTab === "pending" && (
                         <div className="absolute bottom-0 left-0 w-full h-[3px] bg-gray-900 rounded-t-full"></div>
                     )}
                 </button>
                 <button
+                    onClick={() => setActiveTab("cancellation")}
+                    className={`flex-1 min-w-[80px] py-4 text-[13px] font-bold transition-all relative ${activeTab === "cancellation" ? "text-gray-900" : "text-gray-400"
+                        }`}
+                >
+                    취소 요청
+                    <span className="ml-1.5 text-[10px] bg-orange-500 text-white rounded-full px-1.5 py-0.5 align-middle">
+                        {reservations.filter(r => r.status === RESERVATION_STATUS.CANCELLATION_REQUESTED).length}
+                    </span>
+                    {activeTab === "cancellation" && (
+                        <div className="absolute bottom-0 left-0 w-full h-[3px] bg-gray-900 rounded-t-full"></div>
+                    )}
+                </button>
+                <button
                     onClick={() => setActiveTab("confirmed")}
-                    className={`flex-1 py-4 text-[14px] font-bold transition-all relative ${activeTab === "confirmed" ? "text-gray-900" : "text-gray-400"
+                    className={`flex-1 min-w-[80px] py-4 text-[13px] font-bold transition-all relative ${activeTab === "confirmed" ? "text-gray-900" : "text-gray-400"
                         }`}
                 >
                     확정된 예약
@@ -111,10 +166,10 @@ const TrainerReservations = () => {
                 </button>
                 <button
                     onClick={() => setActiveTab("completed")}
-                    className={`flex-1 py-4 text-[14px] font-bold transition-all relative ${activeTab === "completed" ? "text-gray-900" : "text-gray-400"
+                    className={`flex-1 min-w-[80px] py-4 text-[13px] font-bold transition-all relative ${activeTab === "completed" ? "text-gray-900" : "text-gray-400"
                         }`}
                 >
-                    수강 완료
+                    완료 내역
                     {activeTab === "completed" && (
                         <div className="absolute bottom-0 left-0 w-full h-[3px] bg-gray-900 rounded-t-full"></div>
                     )}
@@ -134,17 +189,21 @@ const TrainerReservations = () => {
                         <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-4">
                             {/* 헤더: 상태 & 타이머 */}
                             <div className="flex justify-between items-center mb-1 border-b border-gray-100 pb-2">
-                                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-md ${item.status === "신규 예약"
+                                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-md ${item.status === RESERVATION_STATUS.PENDING
                                     ? "bg-red-50 text-red-500"
-                                    : item.status === "예약 확정"
+                                    : item.status === RESERVATION_STATUS.CONFIRMED
                                         ? "bg-main/10 text-main"
-                                        : "bg-gray-100 text-gray-500"
+                                        : item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED
+                                            ? "bg-orange-50 text-orange-500"
+                                            : item.status === RESERVATION_STATUS.ADMIN_SETTLED
+                                                ? "bg-blue-50 text-blue-600"
+                                                : "bg-gray-100 text-gray-500"
                                     }`}>
                                     {item.status}
                                 </span>
-                                {item.status === "신규 예약" && (
+                                {item.status === RESERVATION_STATUS.PENDING && (
                                     <span className="text-[12px] font-bold text-red-500 flex items-center gap-1">
-                                        <span className="text-[10px]">⏱</span> 자동 거절까지 <span className="underline">{item.remainingTime}</span>
+                                        <span className="text-[10px]">⏱</span> 자동 거절까지 <span className="underline">{(item as { remainingTime?: string }).remainingTime}</span>
                                     </span>
                                 )}
                             </div>
@@ -170,7 +229,9 @@ const TrainerReservations = () => {
                                 </div>
                                 {item.requestMsg && (
                                     <div className="flex flex-col gap-1.5 mt-1">
-                                        <span className="text-gray-400 text-[13px] font-medium">요청/특이사항</span>
+                                        <span className="text-gray-400 text-[13px] font-medium">
+                                            {item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED ? "취소 사유" : "요청/특이사항"}
+                                        </span>
                                         <div className="bg-gray-50 p-3 rounded-lg text-gray-700 text-[14px] leading-relaxed break-keep">
                                             {item.requestMsg}
                                         </div>
@@ -179,7 +240,7 @@ const TrainerReservations = () => {
                             </div>
 
                             {/* 액션 버튼 */}
-                            {item.status === "신규 예약" && (
+                            {item.status === RESERVATION_STATUS.PENDING && (
                                 <div className="flex gap-2 mt-2 pt-1 border-t border-gray-100">
                                     <button
                                         onClick={() => handleRejectClick(item.id)}
@@ -188,7 +249,7 @@ const TrainerReservations = () => {
                                         예약 반려
                                     </button>
                                     <button
-                                        onClick={() => alert("예약이 확정되었습니다.")}
+                                        onClick={() => handleAction(item.id, RESERVATION_STATUS.CONFIRMED, "예약을 승인하시겠습니까?")}
                                         className="flex-1 py-3.5 mt-2 rounded-xl font-bold text-[14px] bg-main text-white shadow-sm hover:brightness-95 transition-all"
                                     >
                                         예약 승인
@@ -196,22 +257,26 @@ const TrainerReservations = () => {
                                 </div>
                             )}
 
-                            {item.status === "예약 확정" && (
-                                <div className="mt-2 pt-1 border-t border-gray-100 flex flex-col gap-3">
+                            {item.status === RESERVATION_STATUS.CANCELLATION_REQUESTED && (
+                                <div className="mt-2 pt-1 border-t border-gray-100">
                                     <button
-                                        onClick={() => handleTxClick(item.id)}
-                                        className="w-full mt-2 py-4 rounded-xl font-bold text-[15px] bg-main/5 text-main border border-main/20 flex items-center justify-center gap-2 active:bg-main/10 transition-all shadow-sm"
+                                        onClick={() => handleAction(item.id, RESERVATION_STATUS.CANCELLED, "취소 요청을 승인하시겠습니까?")}
+                                        className="w-full py-3.5 mt-2 rounded-xl font-bold text-[14px] bg-orange-500 text-white shadow-sm hover:brightness-95 transition-all text-center"
                                     >
-                                        <span className="text-[12px] bg-main text-white px-2 py-0.5 rounded-md">D-{item.autoConfirmDDay}</span>
-                                        자동 정산까지 남은 시간
+                                        취소 승인
                                     </button>
-                                    <p className="text-[11px] text-gray-400 text-center font-medium">
-                                        * 예약 확정 후에는 반려가 불가능합니다.
+                                </div>
+                            )}
+
+                            {item.status === RESERVATION_STATUS.CONFIRMED && (
+                                <div className="mt-2 pt-1 border-t border-gray-100 flex flex-col gap-3">
+                                    <p className="text-[11px] text-gray-400 text-center font-medium mt-2">
+                                        * 예약 확정 후에는 직접 반려가 불가능하며, 수강자의 취소 요청 승인을 통해서만 취소됩니다.
                                     </p>
                                 </div>
                             )}
 
-                            {item.status === "수강 완료" && (
+                            {item.status === RESERVATION_STATUS.ADMIN_SETTLED && (
                                 <div className="mt-2 pt-1 border-t border-gray-100">
                                     <button
                                         onClick={() => handleTxClick(item.id)}
@@ -268,7 +333,7 @@ const TrainerReservations = () => {
                 </CommonModal>
             )}
 
-            {/* 트랜잭션 정보 모달 */}
+            {/* 트랜잭션 정보 모달 (기존 유지) */}
             {txModalOpen && selectedReservation && (
                 <CommonModal
                     title="트랜잭션 정보"
@@ -290,7 +355,7 @@ const TrainerReservations = () => {
                             <div className="flex justify-between items-center text-[12px]">
                                 <span className="text-gray-400 font-medium">상태</span>
                                 <span className="text-main font-bold">
-                                    {selectedReservation.status === "예약 확정" ? "스마트 컨트랙트 예치 중" : "정산 완료"}
+                                    {selectedReservation.status === RESERVATION_STATUS.CONFIRMED ? "스마트 컨트랙트 예치 중" : "정산 완료"}
                                 </span>
                             </div>
                         </div>
@@ -302,6 +367,18 @@ const TrainerReservations = () => {
                         </button>
                     </div>
                 </CommonModal>
+            )}
+
+            {/* 알림/확인용 통합 모달 */}
+            {modal.isOpen && (
+                <CommonModal
+                    title={modal.title}
+                    desc={modal.desc}
+                    confirmLabel={modal.confirmLabel}
+                    onConfirmClick={modal.onConfirm}
+                    cancelLabel={modal.cancelLabel}
+                    onCancelClick={closeModal}
+                />
             )}
         </div>
     );

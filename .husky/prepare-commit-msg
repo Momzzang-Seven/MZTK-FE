@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+# merge, squash, amend 커밋에서는 스킵
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ] || [ "$COMMIT_SOURCE" = "commit" ]; then
+  exit 0
+fi
+
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+if [ -z "$BRANCH_NAME" ]; then
+  exit 0
+fi
+
+# 브랜치명에서 Jira 티켓 번호 추출 (예: feat/JIRA-123-login → JIRA-123)
+TICKET=$(echo "$BRANCH_NAME" | grep -oE '[A-Z]+-[0-9]+' | head -1)
+
+if [ -z "$TICKET" ]; then
+  exit 0
+fi
+
+# 이미 티켓이 포함된 경우 스킵
+if grep -qE "^\[$TICKET\]" "$COMMIT_MSG_FILE"; then
+  exit 0
+fi
+
+# 커밋 메시지 앞에 [TICKET] 삽입
+sed -i.bak "1s/^/[$TICKET] /" "$COMMIT_MSG_FILE"
+rm -f "${COMMIT_MSG_FILE}.bak"

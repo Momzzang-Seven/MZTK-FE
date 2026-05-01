@@ -1,13 +1,16 @@
 import { useUserStore } from "@store/userStore";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@hooks/auth/useAuth";
 
 export const UserProfile = () => {
-  const { user, level, clearUser } = useUserStore();
+  const { user, level } = useUserStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
     if (window.confirm("로그아웃 하시겠습니까?")) {
-      clearUser();
+      await logout();
       navigate("/login");
     }
   };

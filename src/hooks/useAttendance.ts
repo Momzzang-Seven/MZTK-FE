@@ -45,9 +45,10 @@ export const useAttendance = () => {
       // 출석 성공 후 데이터 최신화
       await fetchData();
       return result;
-    } catch (err: any) {
+    } catch (err) {
       console.error("출석 체크 실패:", err);
-      const message = err.response?.data?.message || "출석 체크에 실패했습니다.";
+      const errorResponse = err as { response?: { data?: { message?: string } } };
+      const message = errorResponse.response?.data?.message || "출석 체크에 실패했습니다.";
       setError(message);
       return null;
     }

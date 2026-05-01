@@ -1,4 +1,17 @@
-export type PostType = "free" | "question";
+export type PostType = "FREE" | "QUESTION";
+
+export interface PostPayload {
+  title?: string;
+  content: string;
+  imageIds: number[];
+  reward?: number;
+  tags?: string[];
+}
+
+export interface CommentPayload {
+  content: string;
+  parentId?: number;
+}
 
 export type ActionModalType =
   | "MY"
@@ -15,13 +28,18 @@ export interface Writer {
   profileImage?: string;
 }
 
+export interface Image {
+  imageId: number;
+  imageUrl: string;
+}
+
 export interface Post {
-  type: PostType;
+  type?: PostType;
   content: string;
   writer: Writer;
   createdAt: string;
   updatedAt: string;
-  imageUrls: string;
+  images: Image[];
   commentCount: number;
   tags: string[];
 }
@@ -58,4 +76,41 @@ export interface Comment {
 
 export interface Reply extends Comment {
   replyId: number;
+}
+
+export interface GetPostsResponse {
+  posts: FreePost[] | QuestionPost[];
+  hasNext: boolean;
+}
+
+/** GET /v2/users/me/posts 단일 게시글 항목 */
+export interface MyPost {
+  postId: number;
+  type: PostType;
+  title: string;
+  content: string;
+  likeCount: number;
+  isLiked: boolean;
+  commentCount: number;
+  tags: string[];
+  images: Image[];
+  createdAt: string;
+  updatedAt: string;
+  writer: Writer;
+  question?: {
+    reward: number;
+    isSolved: boolean;
+  };
+}
+
+/** GET /v2/users/me/posts cursor 기반 응답 */
+export interface GetMyPostsResponse {
+  posts: MyPost[];
+  hasNext: boolean;
+  nextCursor: string | null;
+}
+
+export interface GetCommentsResponse {
+  content: Comment[];
+  last: boolean;
 }

@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 interface CommonButtonProps {
   textColor?: string;
   bgColor?: string;
@@ -9,8 +11,9 @@ interface CommonButtonProps {
   icon?: React.ReactNode;
   width?: string;
   padding?: string;
-  onClick?: () => void;
+  onClick?: () => void | Promise<void>;
   disabled?: boolean;
+  ariaLabel?: string;
 }
 export const CommonButton = ({
   textColor,
@@ -25,11 +28,46 @@ export const CommonButton = ({
   padding,
   onClick,
   disabled = false,
+  ariaLabel,
 }: CommonButtonProps) => {
+  const clickLockedRef = useRef(false);
+  const unlockTimerRef = useRef<number | null>(null);
+  const [isClickLocked, setIsClickLocked] = useState(false);
+  const isDisabled = disabled || isClickLocked;
+
+  useEffect(() => {
+    return () => {
+      if (unlockTimerRef.current) {
+        window.clearTimeout(unlockTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleClick = async () => {
+    if (!onClick || disabled || clickLockedRef.current) return;
+
+    clickLockedRef.current = true;
+    setIsClickLocked(true);
+
+    try {
+      await onClick();
+    } finally {
+      if (unlockTimerRef.current) {
+        window.clearTimeout(unlockTimerRef.current);
+      }
+
+      unlockTimerRef.current = window.setTimeout(() => {
+        clickLockedRef.current = false;
+        setIsClickLocked(false);
+      }, 300);
+    }
+  };
+
   return (
     <button
-      onClick={onClick}
-      disabled={disabled}
+      aria-label={ariaLabel}
+      onClick={handleClick}
+      disabled={isDisabled}
       className={`
         ${textColor ? textColor : "text-[#ffffff]"} 
         ${bgColor ? bgColor : "bg-[#fab12f]"}
@@ -39,11 +77,11 @@ export const CommonButton = ({
         ${padding ? padding : "p-[11.5px]"}
         ${className}
         flex flex-row items-center justify-center
-        ${disabled ? "cursor-not-allowed" : ""}
+        ${isDisabled ? "cursor-not-allowed" : ""}
         `}
     >
       {img && <img src={img} alt="buttonImage" width="20px" className="mr-3" />}
-      {icon && <span className="mr-2 flex items-center">{icon}</span>}
+      {icon && <span className="flex items-center">{icon}</span>}
       {label}
     </button>
   );

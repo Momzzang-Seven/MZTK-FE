@@ -28,7 +28,7 @@ const PostManagement = () => {
         modalData,
         openModal,
         closeModal
-    } = useModal<'POST' | 'COMMENT', any>();
+    } = useModal<'POST' | 'COMMENT', unknown>();
 
     const [deleteReason, setDeleteReason] = useState("");
 
@@ -80,7 +80,7 @@ const PostManagement = () => {
                         { label: ADMIN_TEXT.COMMON.FILTER.DELETED, value: "BANNED" },
                     ]}
                     currentFilter={postStatusFilter}
-                    onFilterChange={(value) => setPostStatusFilter(value as any)}
+                    onFilterChange={(value) => setPostStatusFilter(value as Parameters<typeof setPostStatusFilter>[0])}
                 />
             </div>
 

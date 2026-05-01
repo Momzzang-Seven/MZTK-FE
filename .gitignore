@@ -25,3 +25,13 @@ dist-ssr
 *.sw?
 
 .env
+
+# Playwright
+/playwright-report/
+/test-results/
+/blob-report/
+
+# Temporary logs and reports
+*.txt
+vitest_results.json
+lint_results.json

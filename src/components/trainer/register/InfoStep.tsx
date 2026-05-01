@@ -2,7 +2,19 @@ import { CREATE_TICKET_TEXT, EXERCISE_CATEGORIES } from "@constant";
 import { calculateEndTime } from "@utils";
 
 interface InfoStepProps {
-    formData: any;
+    formData: {
+        title: string;
+        description: string;
+        category: string;
+        price: string | number;
+        capacity: string | number;
+        duration: string;
+        supplies: string;
+        tags: string[];
+        features: string[];
+        operatingDays: string[];
+        operatingTimes: Record<string, string[]>;
+    };
     imagePreviews: string[];
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     handleFeatureChange: (index: number, value: string) => void;

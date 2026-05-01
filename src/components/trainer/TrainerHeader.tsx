@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 interface TrainerHeaderProps {
     title: string;
     showBack?: boolean;
+    backTo?: string;
 }
 
-const TrainerHeader = ({ title, showBack = false }: TrainerHeaderProps) => {
+const TrainerHeader = ({ title, showBack = false, backTo }: TrainerHeaderProps) => {
     const navigate = useNavigate();
 
     return (
@@ -13,7 +14,13 @@ const TrainerHeader = ({ title, showBack = false }: TrainerHeaderProps) => {
             <div className="flex items-center gap-3">
                 {showBack && (
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => {
+                            if (backTo) {
+                                navigate(backTo);
+                                return;
+                            }
+                            navigate(-1);
+                        }}
                         className="p-1 -ml-1 rounded-full hover:bg-gray-100 transition-colors"
                     >
                         <img src="/icon/backArrow.svg" alt="back" className="w-6 h-6" />

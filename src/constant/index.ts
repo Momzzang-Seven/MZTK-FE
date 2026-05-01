@@ -10,4 +10,4 @@ export * from "./token";
 export * from "./register";
 export * from "./trainer";
 export * from "./market";
-export * from "./marketData";
+export * from "./inquiry";

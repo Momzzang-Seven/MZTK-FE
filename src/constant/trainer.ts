@@ -1,6 +1,6 @@
 export const TRAINER_DASHBOARD_TEXT = {
     TITLE: "트레이너 센터",
-    GREETING: "안녕하세요, 트레이너 oo님",
+    GREETING: (name: string) => `안녕하세요, 트레이너 ${name}님`,
     MENU_GROUPS: [
         {
             groupName: "클래스 관리",

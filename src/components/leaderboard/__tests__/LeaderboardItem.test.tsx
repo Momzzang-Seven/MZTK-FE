@@ -5,19 +5,20 @@ import type { LeaderboardUser } from '@types';
 
 describe('LeaderboardItem', () => {
   const mockUser: LeaderboardUser = {
-    id: 1,
+    userId: 1,
     rank: 1,
     nickname: '테스트유저',
     level: 10,
-    xp: 5000,
+    lifetimeXp: 5000,
+    profileImageUrl: null,
   };
 
   it('기본 정보가 렌더링된다', () => {
     render(<LeaderboardItem user={mockUser} />);
     
-    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('🥇')).toBeInTheDocument();
     expect(screen.getByText('테스트유저')).toBeInTheDocument();
-    expect(screen.getByText('레벨 10 / 5000XP')).toBeInTheDocument();
+    expect(screen.getByText('Lv.10 · 5,000 XP')).toBeInTheDocument();
   });
 
   it('isMe=false일 때 기본 스타일이 적용된다', () => {
@@ -43,25 +44,27 @@ describe('LeaderboardItem', () => {
 
   it('랭킹 번호가 표시된다', () => {
     render(<LeaderboardItem user={mockUser} />);
-    
-    expect(screen.getByText('1')).toBeInTheDocument();
+
+    // rank=1은 메달 이모지로 표시됨
+    expect(screen.getByText('🥇')).toBeInTheDocument();
   });
 
   it('레벨 및 XP 정보가 표시된다', () => {
     render(<LeaderboardItem user={mockUser} />);
     
-    expect(screen.getByText(/레벨 10/)).toBeInTheDocument();
-    expect(screen.getByText(/5000XP/)).toBeInTheDocument();
+    expect(screen.getByText(/Lv.10/)).toBeInTheDocument();
+    expect(screen.getByText(/5,000 XP/)).toBeInTheDocument();
   });
 
   it('isMe에 따라 텍스트 색상이 변경된다', () => {
     const { container: container1 } = render(<LeaderboardItem user={mockUser} isMe={false} />);
     const { container: container2 } = render(<LeaderboardItem user={mockUser} isMe={true} />);
     
-    const nickname1 = container1.querySelector('.font-semibold');
-    const nickname2 = container2.querySelector('.font-semibold');
+    // nickname span은 font-bold + truncate로 특정
+    const nickname1 = container1.querySelector('.font-bold.truncate');
+    const nickname2 = container2.querySelector('.font-bold.truncate');
     
-    expect(nickname1).toHaveClass('text-main');
+    expect(nickname1).toHaveClass('text-gray-800');
     expect(nickname2).toHaveClass('text-white');
   });
 
@@ -72,7 +75,7 @@ describe('LeaderboardItem', () => {
     const circle1 = container1.querySelector('.w-10.h-10.rounded-full');
     const circle2 = container2.querySelector('.w-10.h-10.rounded-full');
     
-    expect(circle1).toHaveClass('bg-main');
-    expect(circle2).toHaveClass('bg-white');
+    expect(circle1).not.toHaveClass('bg-white');
+    expect(circle2).toHaveClass('bg-main/20');
   });
 });

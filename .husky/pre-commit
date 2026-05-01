@@ -1,0 +1,3 @@
+echo "Running pre-commit hooks (Lint)..."
+pnpm lint-staged
+echo "Passed"

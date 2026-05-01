@@ -49,7 +49,7 @@ const UserManagement = () => {
                         <select
                             className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-4 pl-4 pr-10 rounded-xl focus:outline-none focus:border-main text-sm font-bold min-w-[130px] cursor-pointer"
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            onChange={(e) => setStatusFilter(e.target.value as Parameters<typeof setStatusFilter>[0])}
                         >
                             <option value="ALL">{ADMIN_TEXT.COMMON.FILTER.ALL}</option>
                             <option value="ACTIVE">{ADMIN_TEXT.COMMON.FILTER.ACTIVE}</option>
@@ -67,7 +67,7 @@ const UserManagement = () => {
                         <select
                             className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-4 pl-4 pr-10 rounded-xl focus:outline-none focus:border-main text-sm font-bold min-w-[130px] cursor-pointer"
                             value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value as any)}
+                            onChange={(e) => setRoleFilter(e.target.value as Parameters<typeof setRoleFilter>[0])}
                         >
                             <option value="ALL">{ADMIN_TEXT.COMMON.FILTER.ALL_ROLES}</option>
                             <option value="TRAINER">{ADMIN_TEXT.COMMON.FILTER.TRAINER}</option>

@@ -30,7 +30,7 @@ export const useLevel = () => {
       // 유저 스토어 동기화
       setLevel(data.level);
       setXp(data.availableXp);
-      setMaxXp(data.availableXp + data.requiredXpForNext);
+      setMaxXp(data.requiredXpForNext); // Fix: use total requirement directly
     } catch (err) {
       console.error("레벨 정보 조회 실패:", err);
       setError("레벨 정보를 불러오는 데 실패했습니다.");
@@ -49,9 +49,10 @@ export const useLevel = () => {
       // 레벨업 성공 후 정보 갱신
       await fetchLevelInfo();
       return result;
-    } catch (err: any) {
+    } catch (err) {
       console.error("레벨업 실패:", err);
-      const message = err.response?.data?.message || "레벨업에 실패했습니다.";
+      const errorResponse = err as { response?: { data?: { message?: string } } };
+      const message = errorResponse.response?.data?.message || "레벨업에 실패했습니다.";
       setError(message);
       return null;
     } finally {

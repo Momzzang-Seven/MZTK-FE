@@ -1,61 +1,51 @@
 import { UI_TEXT } from "@constant/index";
 import { CommonButton } from "@components/common";
+import { LocateFixed } from "lucide-react";
 
 interface LocationMapOverlayProps {
-  address: string;
   onCurrentLocationClick: () => void;
 }
 
 export const LocationMapOverlay = ({
-  address,
   onCurrentLocationClick,
 }: LocationMapOverlayProps) => {
   return (
     <>
+      {/* 20m Radius Indicator */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none 
+                    w-[360px] h-[360px] rounded-full border-2 border-main bg-white/30" />
+
       {/* Fixed Center Pin (Visual) */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none pb-[38px]">
         <img
           src="/icon/pin_center.svg"
           alt="Center Pin"
-          width={40}
-          height={40}
+          width={50}
+          height={50}
           className="drop-shadow-lg"
         />
       </div>
-
       {/* Current Location Button with Tooltip */}
-      <div className="absolute bottom-[180px] right-5 z-40 flex items-center gap-3 select-none">
+      <div className="absolute bottom-[130px] right-5 z-40 flex items-center gap-3 select-none">
         {/* Tooltip */}
-        <div className="bg-gray-700 text-white text-xs font-bold px-2 py-1.5 rounded-md relative shadow-md animate-fade-in-right">
+        <div className="bg-main text-white text-xs font-bold px-2 py-1.5 rounded-md relative shadow-md animate-fade-in-right">
           {UI_TEXT.MY_LOCATION_TOOLTIP}
           <div
             className="absolute top-1/2 -right-1.5 transform -translate-y-1/2 w-0 h-0 
                           border-t-[6px] border-t-transparent
-                          border-l-[8px] border-l-gray-700
+                          border-l-[8px] border-l-main
                           border-b-[6px] border-b-transparent"
           ></div>
         </div>
 
         {/* Button */}
-        {/* Button */}
         <CommonButton
           label=""
           onClick={onCurrentLocationClick}
-          className="p-3 rounded-xl shadow-lg active:bg-gray-50 transition-all active:scale-95 w-auto" // w-auto override
+          className="rounded-xl shadow-lg active:bg-gray-50 transition-all active:scale-95 w-auto"
           bgColor="bg-white"
-          img="/icon/aim.svg"
+          icon={<LocateFixed size={22} className="text-main" />}
         />
-      </div>
-
-      {/* Address Info Card (Floating) */}
-      <div className="absolute top-[180px] left-5 right-5 z-20 pointer-events-none flex justify-center">
-        <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-gray-100 flex items-center gap-2">
-          {/* Pin Icon */}
-          <img src="/icon/pin.svg" alt="Pin" className="w-5 h-5" />
-          <span className="text-sm font-bold text-gray-700 truncate max-w-[200px]">
-            {address}
-          </span>
-        </div>
       </div>
     </>
   );

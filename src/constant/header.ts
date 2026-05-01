@@ -14,32 +14,32 @@ export const headerByPath: HeaderByPathType[] = [
   },
   { label: "리더보드", path: "/leaderboard" },
   {
+    label: "새 게시물",
+    path: "/community/free/new",
+  },
+  {
     label: "댓글",
     path: "/community/free",
   },
   {
-    label: "새 게시물",
-    path: "/community/new/free",
-  },
-  {
     label: "새 질문",
-    path: "/community/new/question",
+    path: "/community/question/new",
   },
   {
     label: "답변 쓰기",
-    path: "/community/new/answer",
+    path: "/community/answer/new",
   },
   {
     label: "게시물 수정",
-    path: "/community/edit/free",
+    path: "/community/free/edit",
   },
   {
     label: "질문 수정",
-    path: "/community/edit/question",
+    path: "/community/question/edit",
   },
   {
     label: "답변 수정",
-    path: "/community/edit/answer",
+    path: "/community/answer/edit",
   },
   {
     label: "예약/수강 내역",

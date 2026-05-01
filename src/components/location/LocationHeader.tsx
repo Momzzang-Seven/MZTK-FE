@@ -6,7 +6,7 @@ export const LocationHeader = () => {
       <h1 className="text-3xl font-bold text-main mb-2">
         {UI_TEXT.HEADER_TITLE}
       </h1>
-      <div className="bg-main text-white px-4 py-3 rounded-xl shadow-md">
+      <div className="mt-3 bg-main text-white px-4 py-3 rounded-xl shadow-md">
         <p className="font-bold text-xs leading-relaxed">
           {UI_TEXT.HEADER_TIP}
         </p>

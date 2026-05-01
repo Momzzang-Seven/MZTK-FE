@@ -1,6 +1,7 @@
 export { default as Home } from "./Home";
 export { default as Verify } from "./Verify";
 export { default as My } from "./My";
+export { default as MyActivity } from "./MyActivity";
 export { default as MyTx } from "./MyTx";
 export { default as Login } from "./Login";
 export { default as Callback } from "./Callback";
@@ -17,7 +18,8 @@ export { default as FreeBoard } from "./community/FreeBoard";
 export { default as QuestionBoard } from "./community/QuestionBoard";
 export { default as FreePostDetail } from "./community/FreePostDetail";
 export { default as QuestionDetail } from "./community/QuestionDetail";
-export { default as CreatePost } from "./community/CreatePost";
+export { default as SelectImage } from "./community/SelectImage";
+export { default as WritePost } from "./community/WritePost";
 export { default as Register } from "./Register";
 export { default as TrainerDashboard } from "./trainer/TrainerDashboard";
 export { default as CreateTicket } from "./trainer/CreateTicket";
@@ -33,6 +35,7 @@ export { default as MarketPurchase } from "./market/MarketPurchase";
 export { default as MarketPurchaseFail } from "./market/MarketPurchaseFail";
 export { default as MarketReservation } from "./market/MarketReservation";
 export { default as ReviewWrite } from "./market/ReviewWrite";
+export { default as MyTknHistory } from "./MyTknHistory";
 
 // admin page
 export { default as AdminDashboard } from "./admin/Dashboard";
@@ -40,4 +43,3 @@ export { default as AdminLogin } from "./admin/Login";
 export { default as TokenLog } from "./admin/TokenLog";
 export { default as UserManagement } from "./admin/UserManagement";
 export { default as PostManagement } from "./admin/PostManagement";
-export { default as InquiryManagement } from "./admin/InquiryManagement";

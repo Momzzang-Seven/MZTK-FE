@@ -9,12 +9,14 @@ import {
   Home,
   Login,
   My,
+  MyActivity,
   MyTx,
   Verify,
   Community,
   FreeBoard,
   QuestionBoard,
-  CreatePost,
+  SelectImage,
+  WritePost,
   FreePostDetail,
   QuestionDetail,
   Leaderboard,
@@ -25,7 +27,6 @@ import {
   TokenLog,
   UserManagement,
   PostManagement,
-  InquiryManagement,
   TrainerDashboard,
   CreateTicket,
   EditTicket,
@@ -40,6 +41,7 @@ import {
   MarketReservation,
   ReviewWrite,
   RegisterTicket,
+  MyTknHistory,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -52,10 +54,11 @@ function App() {
   const { checkAnalysisCompletion } = useUserStore();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      checkAnalysisCompletion();
+    const interval = window.setInterval(() => {
+      void checkAnalysisCompletion();
     }, 1000);
-    return () => clearInterval(interval);
+
+    return () => window.clearInterval(interval);
   }, [checkAnalysisCompletion]);
 
   return (
@@ -72,7 +75,6 @@ function App() {
                 <Route path="users" element={<UserManagement />} />
                 <Route path="posts" element={<PostManagement />} />
                 <Route path="token-logs" element={<TokenLog />} />
-                <Route path="inquiries" element={<InquiryManagement />} />
 
                 <Route path="/404" element={<Err404 />} />
                 <Route
@@ -111,27 +113,37 @@ function App() {
                       <Route path="question" element={<QuestionBoard />} />
                     </Route>
                     <Route
+                      path="/community/:type/new/select-image"
+                      element={<SelectImage />}
+                    />
+                    <Route
+                      path="/community/:type/new"
+                      element={<WritePost />}
+                    />
+                    <Route
+                      path="/community/:type/new/:postId"
+                      element={<WritePost />}
+                    />
+                    <Route
+                      path="/community/:type/edit/:postId/select-image"
+                      element={<SelectImage />}
+                    />
+                    <Route
+                      path="/community/:type/edit/:postId"
+                      element={<WritePost />}
+                    />
+                    <Route
                       path="/community/free/:postId"
                       element={<FreePostDetail />}
                     />
                     <Route
                       path="/community/question/:postId"
                       element={<QuestionDetail />}
-                    />
-                    <Route
-                      path="/community/new/:type"
-                      element={<CreatePost />}
-                    />
-                    <Route
-                      path="/community/new/answer/:postId"
-                      element={<CreatePost />}
-                    />
-                    <Route
-                      path="/community/edit/:type/:postId"
-                      element={<CreatePost />}
-                    />
+                    />  
                     <Route path="/my" element={<My />} />
+                    <Route path="/my/activity/:tab" element={<MyActivity />} />
                     <Route path="/myTknTx" element={<MyTx />} />
+                    <Route path="/my-tkn-history" element={<MyTknHistory />} />
                     <Route path="/exercise-auth" element={<ExerciseAuth />} />
                     <Route path="/record-auth" element={<RecordAuth />} />
                     <Route

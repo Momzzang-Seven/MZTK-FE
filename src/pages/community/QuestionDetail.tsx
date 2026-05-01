@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 import type { QuestionPost, AnswerPost } from "@types";
-import { QuestionHeader, Question, Answer } from "@components/community";
+import {
+  QuestionHeader,
+  Question,
+  Answer,
+  CreatePostButton,
+} from "@components/community";
 
 const QuestionDetail = () => {
-  const navigate = useNavigate();
-  let params = useParams();
+  const params = useParams();
   const [question, setQuestion] = useState<QuestionPost | null>(null);
   const [answers, setAnswers] = useState<AnswerPost[]>([]);
 
@@ -33,7 +36,7 @@ const QuestionDetail = () => {
   return (
     <div className="h-full bg-gray-100">
       <QuestionHeader
-        type="question"
+        type="QUESTION"
         postId={Number(params.postId)}
         writer={question.writer}
         createdAt={question.createdAt}
@@ -54,18 +57,7 @@ const QuestionDetail = () => {
           ))}
       </div>
 
-      <div className="fixed flex bottom-10 w-full max-w-[420px] justify-center bg-none">
-        <div
-          className="z-[999] px-13 py-3 bg-main rounded-full text-white font-semibold cursor-pointer"
-          onClick={() =>
-            navigate(
-              `/community/new/answer/${encodeURIComponent(Number(params.postId))}`
-            )
-          }
-        >
-          답변 쓰기
-        </div>
-      </div>
+      <CreatePostButton postId={Number(params.postId)} />
     </div>
   );
 };

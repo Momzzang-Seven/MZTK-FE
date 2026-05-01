@@ -1,7 +1,7 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Verify from '../Verify';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { VERIFY_TEXT } from '@constant/location';
 
 // 모킹
@@ -12,7 +12,7 @@ const mockSetCoor = vi.fn();
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
     return {
-        ...actual as any,
+        ...(actual as object),
         useNavigate: () => mockNavigate,
     };
 });
@@ -26,14 +26,21 @@ vi.mock('@store', () => ({
 
 vi.mock('@store/userStore', () => ({
     useUserStore: () => ({
-        gymLocation: { lat: 37.5665, lng: 126.9780 }, // 같은 위치로 설정 (Near 상태)
+        gymLocation: { locationId: 1, lat: 37.5665, lng: 126.9780 }, // locationId 추가
         completeExercise: mockCompleteExercise,
     }),
+}));
+
+vi.mock('@services/location', () => ({
+    locationService: {
+        verifyLocation: vi.fn().mockResolvedValue({ isVerified: true, grantedXp: 100 }),
+    },
 }));
 
 // Geolocation 모킹
 const mockWatchPosition = vi.fn();
 const mockClearWatch = vi.fn();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global.navigator as any).geolocation = {
     watchPosition: mockWatchPosition,
     clearWatch: mockClearWatch,
@@ -42,11 +49,6 @@ const mockClearWatch = vi.fn();
 describe('Verify Page', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-        vi.useRealTimers();
     });
 
     it('인증 버튼 클릭 시 성공 오버레이가 표시되고 2초 후 홈으로 이동한다', async () => {
@@ -56,18 +58,16 @@ describe('Verify Page', () => {
             </BrowserRouter>
         );
 
-        const verifyButton = screen.getByRole('button', { name: VERIFY_TEXT.BTN_VERIFY });
+        // 버튼이 '인증 위치로 이동해주세요'에서 '위치 인증하기'로 바뀔 때까지 대기
+        const verifyButton = await screen.findByRole('button', { name: VERIFY_TEXT.BTN_VERIFY });
         fireEvent.click(verifyButton);
 
-        expect(mockCompleteExercise).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(mockCompleteExercise).toHaveBeenCalled();
+        }, { timeout: 2000 });
 
-        // 성공 오버레이 확인 (VerifySuccessOverlay 내부의 텍스트가 있을 것임)
-        // 여기서는 컴포넌트가 렌더링되었는지만 확인하는 식으로 작성
-
-        act(() => {
-            vi.advanceTimersByTime(2000);
-        });
-
-        expect(mockNavigate).toHaveBeenCalledWith('/');
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith('/');
+        }, { timeout: 3000 });
     });
 });
