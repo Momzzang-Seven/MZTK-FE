@@ -1,7 +1,12 @@
 export interface LeaderboardUser {
-  id: number;
-  nickname: string;
   rank: number;
+  userId: number;
+  nickname: string;
+  profileImageUrl: string | null;
   level: number;
-  xp: number;
+  lifetimeXp: number;
+}
+
+export interface GetLeaderboardResponse {
+  users: LeaderboardUser[];
 }

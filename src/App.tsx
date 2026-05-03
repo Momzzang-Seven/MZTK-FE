@@ -1,4 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { useUserStore } from "@store/userStore";
 import { AdminLayout, Layout } from "@components/layout"; // AdminLayout 추가
 import GlobalSnackbar from "@components/common/GlobalSnackbar";
 import {
@@ -7,6 +9,7 @@ import {
   Home,
   Login,
   My,
+  MyActivity,
   MyTx,
   Verify,
   Community,
@@ -50,6 +53,16 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
+  const { checkAnalysisCompletion } = useUserStore();
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void checkAnalysisCompletion();
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [checkAnalysisCompletion]);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -132,6 +145,7 @@ function App() {
                     <Route path="/community/local-posts" element={<LocalPosts />} />
                     <Route path="/verify-wallet/:type/:id" element={<VerifyWallet />} />
                     <Route path="/my" element={<My />} />
+                    <Route path="/my/activity/:tab" element={<MyActivity />} />
                     <Route path="/myTknTx" element={<MyTx />} />
                     <Route path="/my-tkn-history" element={<MyTknHistory />} />
                     <Route path="/exercise-auth" element={<ExerciseAuth />} />

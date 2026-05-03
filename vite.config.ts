@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => {
         "/questions": { target: env.VITE_API_BASE_URL, changeOrigin: true },
         "/comments": { target: env.VITE_API_BASE_URL, changeOrigin: true },
         "/web3": { target: env.VITE_API_BASE_URL, changeOrigin: true },
+        "/v2": { target: env.VITE_API_BASE_URL, changeOrigin: true },
       },
     },
     test: {

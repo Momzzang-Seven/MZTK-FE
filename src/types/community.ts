@@ -98,6 +98,33 @@ export interface QnAPostResponse {
   web3?: ExecutionWeb3Intent;
 }
 
+/** GET /v2/users/me/posts 단일 게시글 항목 */
+export interface MyPost {
+  postId: number;
+  type: PostType;
+  title: string;
+  content: string;
+  likeCount: number;
+  isLiked: boolean;
+  commentCount: number;
+  tags: string[];
+  images: Image[];
+  createdAt: string;
+  updatedAt: string;
+  writer: Writer;
+  question?: {
+    reward: number;
+    isSolved: boolean;
+  };
+}
+
+/** GET /v2/users/me/posts cursor 기반 응답 */
+export interface GetMyPostsResponse {
+  posts: MyPost[];
+  hasNext: boolean;
+  nextCursor: string | null;
+}
+
 export interface GetCommentsResponse {
   content: Comment[];
   last: boolean;

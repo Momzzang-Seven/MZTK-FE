@@ -7,3 +7,4 @@ export * from "./market";
 export * from "./verification";
 export * from "./wallet";
 export * from "./web3";
+export * from "./leaderboard";

@@ -14,4 +14,5 @@ export * from "./usePostBoard";
 export * from "./useModal";
 export * from "./useCommentService";
 export * from "./useReplyService";
-export * from "./useWalletService"
+export * from "./useMyPosts";
+export * from "./useWalletService";
