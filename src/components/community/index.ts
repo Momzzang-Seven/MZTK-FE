@@ -29,5 +29,5 @@ export { default as SharePost } from "./postActions/SharePost";
 export { default as EditComment } from "./postActions/EditComment";
 export { default as TiptapEditor } from "./tiptapEditor/TiptapEditor";
 export { default as Toolbar } from "./tiptapEditor/Toolbar";
-
+export { default as QnaContent } from "./tiptapEditor/QnaContent";
 

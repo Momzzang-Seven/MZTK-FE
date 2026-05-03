@@ -43,11 +43,11 @@ const CreatePostButton = ({ postId }: CreatePostButtonProps) => {
     <div className="fixed bottom-[100px] flex w-full max-w-[420px] flex-row items-end justify-end px-4">
       <CommonButton
         onClick={handleCreatePost}
-        width="w-[60px]"
+        width="w-[70px]"
         padding="p-0"
         shadow={true}
-        className="h-[60px] !rounded-full shadow-xl"
-        label="十"
+        className="h-[70px] !rounded-full shadow-xl"
+        img="/icon/newPost.svg"
       />
     </div>
   );

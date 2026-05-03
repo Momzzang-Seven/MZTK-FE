@@ -16,6 +16,7 @@ import {
   WritePost,
   FreePostDetail,
   QuestionDetail,
+  LocalPosts,
   Leaderboard,
   CreateWallet,
   RegisterWallet,
@@ -39,6 +40,7 @@ import {
   ReviewWrite,
   RegisterTicket,
   MyTknHistory,
+  VerifyWallet
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -126,7 +128,9 @@ function App() {
                     <Route
                       path="/community/question/:postId"
                       element={<QuestionDetail />}
-                    />  
+                    />
+                    <Route path="/community/local-posts" element={<LocalPosts />} />
+                    <Route path="/verify-wallet/:type/:id" element={<VerifyWallet />} />
                     <Route path="/my" element={<My />} />
                     <Route path="/myTknTx" element={<MyTx />} />
                     <Route path="/my-tkn-history" element={<MyTknHistory />} />

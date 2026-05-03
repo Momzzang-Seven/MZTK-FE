@@ -50,7 +50,6 @@ describe("FreePostCard", () => {
 
   describe("기본 렌더링", () => {
     it("작성자 닉네임, 게시글 내용, 댓글 수, 작성 시간이 정상적으로 렌더링된다", () => {
-      // any 타입을 사용하여 타입 에러 방지 (실제 FreePost 타입의 필수 속성이 다를 수 있으므로)
       render(<FreePostCard post={defaultPost} />);
 
       expect(screen.getByText("테스트유저")).toBeInTheDocument();

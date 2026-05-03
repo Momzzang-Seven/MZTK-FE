@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import type { UploadedImage } from "@types";
 
-export type CreatePostType = "FREE" | "QUESTION" | "ANSWER";
+export type PostType = "FREE" | "QUESTION" | "ANSWER";
 
 export interface CreatePostState {
-  postType: CreatePostType;
+  postType: PostType;
   images: UploadedImage[];
   uploadingCount: number;
   title: string;
@@ -12,8 +12,16 @@ export interface CreatePostState {
   reward: number;
   tags: string[];
   parentPostId: number | null;
+  initialData: { 
+    postType: PostType;
+    title?: string; 
+    content?: string; 
+    imageIds?: number[]; 
+    reward?: number; 
+    tags?: string[]; 
+  } | null;
 
-  setPostType: (type: CreatePostType) => void;
+  setPostType: (type: PostType) => void;
   addImage: (image: UploadedImage) => void;
   removeImage: (id: number) => void;
   reorderImages: (images: UploadedImage[]) => void;
@@ -26,10 +34,11 @@ export interface CreatePostState {
   setTags: (tags: string[]) => void;
   setParentPostId: (id: number | null) => void;
   reset: () => void;
+  setInitialData: (data: CreatePostState["initialData"]) => void;
 }
 
 const initialState = {
-  postType: "FREE" as CreatePostType,
+  postType: "FREE" as PostType,
   images: [] as UploadedImage[],
   uploadingCount: 0,
   title: "",
@@ -37,6 +46,7 @@ const initialState = {
   reward: 0,
   tags: [],
   parentPostId: null,
+  initialData: null,
 };
 
 export const usePostStore = create<CreatePostState>()((set) => ({
@@ -73,6 +83,8 @@ export const usePostStore = create<CreatePostState>()((set) => ({
   setTags: (tags) => set({ tags }),
 
   setParentPostId: (parentPostId) => set({ parentPostId }),
+
+  setInitialData: (initialData) => set({ initialData }),
 
   reset: () => set(initialState),
 }));

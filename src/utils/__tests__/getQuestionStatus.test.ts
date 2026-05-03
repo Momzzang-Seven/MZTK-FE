@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getStatus, statusStyleMap } from '../getQuestionStatus';
+import { getStatus, statusStyleMap } from '../parsePostFields';
 
 describe('getQuestionStatus utils', () => {
   describe('getStatus', () => {

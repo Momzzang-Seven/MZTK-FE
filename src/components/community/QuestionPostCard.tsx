@@ -8,8 +8,15 @@ interface Props {
 
 const QuestionPostCard = ({ post }: Props) => {
   const navigate = useNavigate();
-  const status = getStatus(post.question.isSolved, post.commentCount);
+  const status = getStatus(undefined, post.question.isSolved, post.commentCount);
   const statusStyle = statusStyleMap[status];
+
+  const stripHtml = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
+  };
+
+  const pureText = stripHtml(post.content);
 
   return (
     <div className="rounded-2xl bg-white border-1 border-gray-100 shadow-xs px-5 py-4 hover:cursor-pointer">
@@ -34,7 +41,7 @@ const QuestionPostCard = ({ post }: Props) => {
           {post.title}
         </div>
         <p className="text-sm text-gray-500 font-normal line-clamp-2">
-          {post.content}
+          {pureText}
         </p>
       </div>
 

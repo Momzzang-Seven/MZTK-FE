@@ -41,7 +41,9 @@ export default defineConfig(({ mode }) => {
         "/images": { target: env.VITE_API_BASE_URL, changeOrigin: true },
         "/verification": { target: env.VITE_API_BASE_URL, changeOrigin: true },
         "/posts": { target: env.VITE_API_BASE_URL, changeOrigin: true },
+        "/questions": { target: env.VITE_API_BASE_URL, changeOrigin: true },
         "/comments": { target: env.VITE_API_BASE_URL, changeOrigin: true },
+        "/web3": { target: env.VITE_API_BASE_URL, changeOrigin: true },
       },
     },
     test: {

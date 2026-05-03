@@ -49,7 +49,7 @@ const FreePostDetail = () => {
   }
 
   return (
-    <div className="pb-15">
+    <div className="pt-20 pb-15">
       <SimpleHeader />
 
       <section>
@@ -94,16 +94,14 @@ const FreePostDetail = () => {
         {!isLast && !isLoading && <div ref={observerRef} className="h-1 w-full" />}
       </section>
 
-      <div>
-        <CommentInput
-          setParentId={setParentId}
-          writingComment={writingComment}
-          setWritingComment={setWritingComment}
-          parentNickname={parentNickname}
-          setParentNickname={setParentNickname}
-          handleCommentSubmit={handleSubmitComment}
-        />
-      </div>
+      <CommentInput
+        setParentId={setParentId}
+        writingComment={writingComment}
+        setWritingComment={setWritingComment}
+        parentNickname={parentNickname}
+        setParentNickname={setParentNickname}
+        handleCommentSubmit={handleSubmitComment}
+      />
     </div>
   );
 };

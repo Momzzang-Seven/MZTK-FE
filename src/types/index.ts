@@ -5,3 +5,4 @@ export * from "./level";
 export * from "./location";
 export * from "./location";
 export * from "./image";
+export * from "./web3";

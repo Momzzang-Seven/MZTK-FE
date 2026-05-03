@@ -1,9 +1,11 @@
+import type { ExecutionWeb3Intent } from "@types";
+
 export type PostType = "FREE" | "QUESTION";
 
 export interface PostPayload {
   title?: string;
-  content: string;
-  imageIds: number[];
+  content?: string;
+  imageIds?: number[];
   reward?: number;
   tags?: string[];
 }
@@ -56,6 +58,7 @@ export interface QuestionPost extends Post {
   question: {
     isSolved: boolean;
     reward: number;
+    web3Execution: ExecutionWeb3Intent;
   };
 }
 
@@ -81,6 +84,18 @@ export interface Reply extends Comment {
 export interface GetPostsResponse {
   posts: FreePost[] | QuestionPost[];
   hasNext: boolean;
+}
+
+export interface CreateFreePostResponse {
+  postId: number;
+  isXpGranted: boolean;
+  grantedXp: number;
+  message: string;
+}
+
+export interface QnAPostResponse {
+  postId: number;
+  web3?: ExecutionWeb3Intent;
 }
 
 export interface GetCommentsResponse {

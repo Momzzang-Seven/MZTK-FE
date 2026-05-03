@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { PostType, PostPayload, GetPostsResponse, FreePost, QuestionPost } from "@types";
+import type { PostType, PostPayload, GetPostsResponse, FreePost, QuestionPost, AnswerPost, QnAPostResponse } from "@types";
 
 export const postService = {
   /**
@@ -13,9 +13,17 @@ export const postService = {
   /**
    * 질문게시글 등록
    */
-  async createQuestionPost(payload: PostPayload): Promise<void> {
+  async createQuestion(payload: PostPayload): Promise<QnAPostResponse> {
     const response = await api.post("/posts/question", payload);
-    return response.data;
+    return response.data.data;
+  },
+
+  /**
+   * 답변 등록
+   */
+  async createAnswer(postId: number, payload: PostPayload): Promise<QnAPostResponse> {
+    const response = await api.post(`/questions/${postId}/answers`, payload)
+    return response.data.data;
   },
 
   /**
@@ -41,6 +49,14 @@ export const postService = {
   },
 
   /**
+   * 답변 조회
+   */
+  async getAnswers(postId: number): Promise<AnswerPost[]> {
+    const response = await api.get(`/questions/${postId}/answers`);
+    return response.data.data;
+  },
+
+  /**
    * 게시글 상세 조회
    */
   async getPost(postId: number): Promise<FreePost | QuestionPost> {
@@ -49,26 +65,43 @@ export const postService = {
   },
 
   /**
-   * 게시물 수정
+   * 자유게시글 수정
    */
-  async updatePost(postId: number, payload: PostPayload): Promise<void> {
+  async updateFreePost(postId: number, payload: PostPayload): Promise<void> {
     const response = await api.patch(`/posts/${postId}`, payload)
+    return response.data.data;
+  },
+
+  /**
+   * 질문게시글 수정
+   */
+  async updateQuestion(postId: number, payload: PostPayload): Promise<QnAPostResponse> {
+    const response = await api.patch(`/posts/${postId}`, payload)
+    return response.data.data;
+  },
+
+  /**
+   * 답변 수정
+   */
+  async updateAnswer(postId: number, answerId: number, payload: PostPayload): Promise<QnAPostResponse> {
+    const response = await api.put(`/questions/${postId}/answers/${answerId}`, payload)
     return response.data.data;
   },
 
   /**
    * 게시물 삭제
    */
-  async deletePost(postId: number): Promise<void> {
+  async deletePost(postId: number): Promise<QnAPostResponse> {
     const response = await api.delete(`/posts/${postId}`)
-    return response.data;
+    return response.data.data;
   },
 
   /**
-   * 답변 등록
+   * 답변 삭제
    */
-  async createAnswer(postId: number, payload: PostPayload): Promise<void> {
-    console.log(postId, payload)
+  async deleteAnswer(postId: number, answerId: number): Promise<QnAPostResponse> {
+    const response = await api.delete(`/questions/${postId}/answers/${answerId}`)
+    return response.data.data;
   },
 
   /**
@@ -87,8 +120,19 @@ export const postService = {
     return response.data;
   },
 
-  async createComment(postId: number, payload: PostPayload): Promise<void> {
-    const response = await api.post(`/posts/${postId}/comments`, payload)
-    return response.data;
+  /**
+   * 게시글 생성 복구
+   */
+  async recoveryCreatePost(postId: number): Promise<QnAPostResponse> {
+    const response = await api.post(`/posts/${postId}/web3/recover-create`)
+    return response.data.data;
+  },
+
+  /**
+   * 답변 생성 복구
+   */
+  async recoveryCreateAnswer(postId: number, answerId: number): Promise<QnAPostResponse> {
+    const response = await api.post(`/questions/${postId}/answers/${answerId}/web3/recover-create`);
+    return response.data.data;
   }
 }

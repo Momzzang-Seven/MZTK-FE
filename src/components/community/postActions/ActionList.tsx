@@ -9,7 +9,7 @@ import {
   ConfirmReport,
   EditComment,
 } from "@components/community";
-import type { ActionModalType } from "@types";
+import type { ActionModalType, ExecutionWeb3Intent } from "@types";
 import { usePostService, useCommentService } from "@hooks";
 
 const sizeMap = {
@@ -29,6 +29,9 @@ interface PostActionListProps {
   commentId?: number;
   commentContent?: string;
   onUpdateReplySuccess?: () => void;
+  isEditable?: boolean;
+  isWeb3Executable?: boolean;
+  Web3Execution?: ExecutionWeb3Intent;
 }
 
 const ActionList = ({
@@ -39,7 +42,10 @@ const ActionList = ({
   isSelectable = true,
   authorId,
   commentContent = "",
-  onUpdateReplySuccess
+  onUpdateReplySuccess,
+  isEditable,
+  isWeb3Executable,
+  Web3Execution
 }: PostActionListProps) => {
   const navigate = useNavigate();
   const [modalType, setModalType] = useState<ActionModalType>(null);
@@ -58,8 +64,20 @@ const ActionList = ({
 
   const handleEditClick = () => {
     if (type === "FREE") navigate(`/community/free/edit/${id}/select-image`);
-    if (type === "QUESTION") navigate(`/community/question/edit/${id}`);
-    if (type === "ANSWER") navigate(`/community/answer/edit/${id}`);
+    if (type === "QUESTION") {
+      if (isEditable) {
+        navigate(`/community/question/edit/${id}`);
+      } else {
+        alert("해결됐거나 답변이 있는 질문은 수정할 수 없습니다.");
+      }
+    }
+    if (type === "ANSWER") {
+      if (isEditable) {
+        navigate(`/community/answer/edit/${id}`);
+      } else {
+        alert("채택된 답변은 수정할 수 없습니다.");
+      }
+    }
     if (type === "COMMENT") setModalType("EDIT_COMMENT");
   };
 
@@ -74,7 +92,11 @@ const ActionList = ({
   const handleConfirmDeleteClick = async () => {
     if (type === "COMMENT" && id) {
       await deleteComment(id);
-    } else if (type === "FREE" &&id) {
+    } else if (type === "QUESTION" && isEditable && id) {
+      await deletePost(id);
+    } else if (type === "ANSWER" && isEditable && id) {
+      await deletePost(id);
+    } else if (type === "FREE" && id) {
       await deletePost(id);
     }
     closeModal();
@@ -89,6 +111,10 @@ const ActionList = ({
   const handleConfirmReportClick = () => {
     closeModal();
   };
+
+  const handleSignClick = () => {
+    navigate(`/verify-wallet/${Web3Execution?.resource.type}/${Web3Execution?.resource.id}`, {state : { intent: Web3Execution }})
+  }
 
   const handleDeleteClick = () => {
     setModalType("DELETE_CONFIRM");
@@ -111,6 +137,9 @@ const ActionList = ({
             handleEditClick={handleEditClick}
             handleDeleteClick={handleDeleteClick}
             handleCancelClick={closeModal}
+            handleSignClick={handleSignClick}
+            isWeb3Executable={isWeb3Executable ?? false}
+            isEditable={isEditable?? true}
           />
         );
 

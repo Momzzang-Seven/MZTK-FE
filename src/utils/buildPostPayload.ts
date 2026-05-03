@@ -3,9 +3,8 @@ import type { PostPayload, UploadedImage } from "@types";
 
 /**
  * HTML 문자열에서 <img imageId="..."> 속성을 등장 순서대로 수집.
- * 서버는 이 imageId 배열로 이미지 소유권 검증 및 src 매핑에 사용한다.
  */
-const extractImageIdsFromHtml = (html: string): number[] => {
+export const extractImageIdsFromHtml = (html: string): number[] => {
   const doc = new DOMParser().parseFromString(html, "text/html");
   return Array.from(doc.querySelectorAll("img[imageId]"))
     .map((img) => img.getAttribute("imageId"))
@@ -13,39 +12,47 @@ const extractImageIdsFromHtml = (html: string): number[] => {
     .map((id) => Number(id));
 };
 
+const isArrayEqual = (a: number[] | string[], b: number[] | string[]) => 
+  a.length === b.length && a.every((val, index) => val === b[index]);
+
 /**
  * 스토어 상태를 백엔드 JSON 규격으로 변환.
- * content 필드는 HTML 문자열이며, 이미지는 <img imageId="..."> 형태로 포함된다.
+ * initialData가 제공되면 수정 모드로 간주하여 변경된 필드만 추출.
  */
 export const buildPostPayload = (
   state: Pick<
     CreatePostState,
     "postType" | "title" | "content" | "images" | "reward" | "tags"
   >,
-): PostPayload => {
-  const { postType, title, images, reward, tags } = state;
+  initialData?: PostPayload
+): Partial<PostPayload> => {
+  const { postType, title, content, images, reward, tags } = state;
 
-  switch (postType) {
-    case "FREE":
-      return {
-        content: state.content,
-        imageIds: images.map((img: UploadedImage) => img.imageId),
-        tags,
-      };
+  // 현재 데이터 계산
+  const currentImageIds = postType === "FREE" 
+    ? images.map((img: UploadedImage) => img.imageId) 
+    : extractImageIdsFromHtml(content);
 
-    case "QUESTION":
-      return {
-        title,
-        content: state.content,
-        imageIds: extractImageIdsFromHtml(state.content),
-        reward,
-        tags,
-      };
-
-    case "ANSWER":
-      return {
-        content: state.content,
-        imageIds: extractImageIdsFromHtml(state.content),
-      };
+  // 1. 신규 등록 케이스: 전체 payload 반환
+  if (!initialData) {
+    switch (postType) {
+      case "FREE":
+        return { content, imageIds: currentImageIds, tags };
+      case "QUESTION":
+        return { title, content, imageIds: currentImageIds, reward, tags };
+      case "ANSWER":
+        return { content, imageIds: currentImageIds };
+    }
   }
+
+  // 2. 수정 케이스: 변경된 필드만 추출
+  const patch: Partial<PostPayload> = {};
+
+  if (title !== initialData.title) patch.title = title;
+  if (content !== initialData.content) patch.content = content;
+  if (reward !== initialData.reward) patch.reward = reward;
+  if (!isArrayEqual(currentImageIds, initialData.imageIds || [])) patch.imageIds = currentImageIds;
+  if (!isArrayEqual(tags, initialData.tags || [])) patch.tags = tags;
+
+  return patch;
 };

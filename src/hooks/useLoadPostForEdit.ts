@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { usePostStore } from "@store";
-import type { CreatePostType } from "@store";
 import { postService } from "@services";
+import type { PostType } from "@types";
 
 /**
  * 수정 모드 진입 시 게시물 데이터를 fetch해 스토어에 채우는 훅.
@@ -15,6 +15,7 @@ export const useLoadPostForEdit = () => {
   const setImages = usePostStore((s) => s.setImages);
   const setTags = usePostStore((s) => s.setTags);
   const setReward = usePostStore((s) => s.setReward);
+  const setInitialData = usePostStore((s) => s.setInitialData);
 
   const [isFetching, setIsFetching] = useState(false);
 
@@ -22,22 +23,34 @@ export const useLoadPostForEdit = () => {
       setIsFetching(true);
       try {
         const post = await postService.getPost(postId);
-        setContent(post.content);
-        setTags(post.tags);
-        setPostType(post.type as CreatePostType);
-        setImages(post.images.map((image) => ({ imageId: image.imageId, imageUrl: image.imageUrl })));
 
-        if ("title" in post) {
-          setTitle(post.title);
-        }
-        if ("question" in post) {
-          setReward(post.question.reward);
-        }
+        const nextPostType = post.type as PostType;
+        const nextContent = post.content;
+        const nextTags = post.tags;
+        const nextImageIds = post.images.map(img => img.imageId);
+        const nextTitle = ('title' in post) ? post.title : "";
+        const nextReward = ('question' in post && post.question) ? post.question.reward : 0;
+
+        setPostType(nextPostType);
+        setContent(nextContent);
+        setTags(nextTags);
+        setImages(post.images.map(img => ({ imageId: img.imageId, imageUrl: img.imageUrl })));
+        setTitle(nextTitle);
+        setReward(nextReward);
+      
+        setInitialData({
+          postType: nextPostType,
+          title: nextTitle,
+          content: nextContent,
+          reward: nextReward,
+          tags: nextTags,
+          imageIds: nextImageIds,
+        });
       } finally {
         setIsFetching(false);
       }
     },
-    [setPostType, setTitle, setContent, setImages, setTags, setReward],
+    [setPostType, setTitle, setContent, setImages, setTags, setReward, setInitialData],
   );
 
   return { isFetching, loadPost };

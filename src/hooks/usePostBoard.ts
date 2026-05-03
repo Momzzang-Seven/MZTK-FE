@@ -30,7 +30,6 @@ export const usePostBoard = <T extends FreePost | QuestionPost>(type: PostType, 
     }
   }, [type, tag, search]);
 
-  // tag 변경 시 목록 초기화
   useEffect(() => {
     setPosts([]);
     setPage(0);

@@ -3,7 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useCallback, useRef } from "react";
 import type { ImageReferenceType } from "@types";
 import { usePostStore } from "@store";
-import { useImageUpload } from "@hooks/useImageUpload";
+import { useImageUpload } from "@hooks";
 import ImageUploadNode from "@components/community/tiptapEditor/ImageUploadNode";
 
 export const useTiptapEditor = (

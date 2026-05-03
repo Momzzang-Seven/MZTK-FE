@@ -19,6 +19,7 @@ export { default as FreePostDetail } from "./community/FreePostDetail";
 export { default as QuestionDetail } from "./community/QuestionDetail";
 export { default as SelectImage } from "./community/SelectImage";
 export { default as WritePost } from "./community/WritePost";
+export { default as LocalPosts } from "./community/LocalPosts";
 export { default as Register } from "./Register";
 export { default as TrainerDashboard } from "./trainer/TrainerDashboard";
 export { default as CreateTicket } from "./trainer/CreateTicket";
@@ -35,6 +36,7 @@ export { default as MarketPurchaseFail } from "./market/MarketPurchaseFail";
 export { default as MarketReservation } from "./market/MarketReservation";
 export { default as ReviewWrite } from "./market/ReviewWrite";
 export { default as MyTknHistory } from "./MyTknHistory";
+export { default as VerifyWallet } from "./VerifyWallet";
 
 // admin page
 export { default as AdminDashboard } from "./admin/Dashboard";
