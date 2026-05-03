@@ -131,7 +131,7 @@ function App() {
                       element={<SelectImage />}
                     />
                     <Route
-                      path="/community/:type/edit/:postId"
+                      path="/community/:type/edit/:postId/:parentId?"
                       element={<WritePost />}
                     />
                     <Route
@@ -143,7 +143,7 @@ function App() {
                       element={<QuestionDetail />}
                     />
                     <Route path="/community/local-posts" element={<LocalPosts />} />
-                    <Route path="/verify-wallet/:type/:id" element={<VerifyWallet />} />
+                    <Route path="/verify-wallet/:type/:id/:parentId?" element={<VerifyWallet />} />
                     <Route path="/my" element={<My />} />
                     <Route path="/my/activity/:tab" element={<MyActivity />} />
                     <Route path="/myTknTx" element={<MyTx />} />

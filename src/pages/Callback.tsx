@@ -43,15 +43,15 @@ const Callback = () => {
           redirectUri,
         });
 
+        if (response?.userInfo.walletAddress) {
+          localStorage.setItem("wallet_address", response.userInfo.walletAddress);
+        }
+
         if (response) {
-          const { userInfo, accessToken, isNewUser } = response;
+          const { userInfo, accessToken } = response;
           setUser(userInfo);
           setAccessToken(accessToken);
-          if (isNewUser) {
-            navigate("/register");
-          } else {
-            navigate(userInfo.role === "TRAINER" ? "/trainer" : "/");
-          }
+          navigate("/register");
         }
       } catch (err: unknown) {
         if (isSanctionedAccountError(err, { allowBareForbidden: true })) {

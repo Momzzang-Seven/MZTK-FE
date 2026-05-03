@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { QuestionPost } from "@types";
-import { getStatus, statusStyleMap, formatTimeAgo } from "@utils";
+import { getQuestionStatus, statusStyleMap, formatTimeAgo } from "@utils";
 
 interface Props {
   post: QuestionPost;
@@ -8,7 +8,7 @@ interface Props {
 
 const QuestionPostCard = ({ post }: Props) => {
   const navigate = useNavigate();
-  const status = getStatus(undefined, post.question.isSolved, post.commentCount);
+  const status = getQuestionStatus(post.publicationStatus, post.moderationStatus, post.question.isSolved, post.commentCount);
   const statusStyle = statusStyleMap[status];
 
   const stripHtml = (html: string) => {

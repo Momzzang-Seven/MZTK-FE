@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { usePostStore } from "@store";
 import { buildPostPayload } from "@utils/buildPostPayload";
 import { postService, web3Service } from "@services";
-import type { FreePost, QuestionPost, PostPayload, ExecutionWeb3Intent, StoredWeb3Action, AnswerPost } from "@types";
+import type { FreePost, QuestionPost, PostPayload, Web3Execution, StoredWeb3Action, AnswerPost } from "@types";
+import type { PostType } from "@store";
 
 export const usePostService = () => {
   const navigate = useNavigate();
@@ -155,6 +156,7 @@ export const usePostService = () => {
         else navigate(-2);
       }
     } catch (error) {
+      console.log(error);
       const errorResponse = error as { response?: { data?: { message?: string } } };
       const message = errorResponse.response?.data?.message || "게시물 수정에 실패했습니다.";
       setError(message);
@@ -167,7 +169,7 @@ export const usePostService = () => {
    * 게시물 삭제
    * @param postId 게시물 ID
    */
-  const deletePost = async (postId: number) => {
+  const deletePost = async (type: PostType, postId: number, parentPostId?: number) => {
     if (isPostLoading) return;
 
     setIsPostLoading(true);
@@ -175,10 +177,10 @@ export const usePostService = () => {
     try {
       let hasWeb3Action = false;
 
-      if (postType === "FREE") {
+      if (type === "FREE") {
         await postService.deletePost(postId);
 
-      } else if (postType === "QUESTION") {
+      } else if (type === "QUESTION") {
         const response = await postService.deletePost(postId);
         if (response?.web3) {
           addPendingAction(response.web3, title);
@@ -186,7 +188,7 @@ export const usePostService = () => {
           hasWeb3Action = true;
         }
 
-      } else if (postType === "ANSWER") {
+      } else if (type === "ANSWER") {
         if (!parentPostId) throw Error("답변은 부모 게시글 정보가 있어야 합니다.");
         const response = await postService.deleteAnswer(parentPostId, postId)
         if (response?.web3) {
@@ -228,7 +230,7 @@ export const usePostService = () => {
     }
   }, []);
 
-  const addPendingAction = (data: ExecutionWeb3Intent, summary?: string) => {
+  const addPendingAction = (data: Web3Execution, summary?: string) => {
     if (!data) return;
 
     const existingActions: StoredWeb3Action[] = JSON.parse(
@@ -309,12 +311,19 @@ export const usePostService = () => {
   /**
    * intent 재생성
    */
-  const recoverCreate = async (postId: number) => {
+  const recoverCreate = async (postType: PostType, postId: number, parentPostId?: number) => {
     if(isPostLoading) return null;
 
     setIsPostLoading(true);
     try {
-      const response = await postService.recoveryCreatePost(postId);
+      let response;
+      if (postType === "FREE" || postType==="QUESTION") {
+        response = await postService.recoverCreatePost(postId);
+      } else if (postType === "ANSWER" && parentPostId) {
+        response = await postService.recoverCreateAnswer(parentPostId, postId);
+      } else {
+        throw Error("게시글 타입이 올바르지 않습니다.");
+      }
       
       // 1. 응답에 web3 정보가 포함되어 있는지 확인
       if (response?.web3) {
@@ -340,8 +349,31 @@ export const usePostService = () => {
       }
       return response;
     } catch (error) {
+      console.log(error);
       const errorResponse = error as { response?: { data?: { message?: string } } };
       const message = errorResponse.response?.data?.message || "게시물 재생성에 실패했습니다.";
+      setError(message);
+      throw error;
+    } finally {
+      setIsPostLoading(false);
+    }
+  }
+
+  /**
+   * 답변 채택
+   */
+  const acceptAnswer = async (postId: number, answerId: number) => {
+    if(isPostLoading) return;
+
+    setIsPostLoading(true);
+    try {
+      const response = await postService.acceptAnswer(postId, answerId);
+      if(response.web3) {
+        navigate(`/verify-wallet/${response.web3.resource.type}/${response.postId}`, {state : { intent: response.web3 }  });
+      }
+    } catch (error) {
+      const errorResponse = error as { response?: { data?: { message?: string } } };
+      const message = errorResponse.response?.data?.message || "답변 채택에 실패했습니다.";
       setError(message);
       throw error;
     } finally {
@@ -389,5 +421,5 @@ export const usePostService = () => {
     }
   }
 
-  return { isSubmitActive, isPostLoading, isAnswerLoading, error, setError, createPost, getPost, updatePost, deletePost, getAnswers, getIncompletedPostTransaction, refreshPendingPosts, recoverCreate, likePost, unlikePost };
+  return { isSubmitActive, isPostLoading, isAnswerLoading, error, setError, createPost, getPost, updatePost, deletePost, getAnswers, getIncompletedPostTransaction, refreshPendingPosts, recoverCreate, acceptAnswer, likePost, unlikePost };
 };

@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { PostType, PostPayload, GetPostsResponse, GetMyPostsResponse, FreePost, QuestionPost, AnswerPost, QnAPostResponse } from "@types";
+import type { PostType, PostPayload, GetPostsResponse, GetMyPostsResponse, FreePost, QuestionPost, AnswerPost, CreateQnAPostResponse, AcceptAnswerResponse } from "@types";
 
 export const postService = {
   /**
@@ -13,7 +13,7 @@ export const postService = {
   /**
    * 질문게시글 등록
    */
-  async createQuestion(payload: PostPayload): Promise<QnAPostResponse> {
+  async createQuestion(payload: PostPayload): Promise<CreateQnAPostResponse> {
     const response = await api.post("/posts/question", payload);
     return response.data.data;
   },
@@ -21,7 +21,7 @@ export const postService = {
   /**
    * 답변 등록
    */
-  async createAnswer(postId: number, payload: PostPayload): Promise<QnAPostResponse> {
+  async createAnswer(postId: number, payload: PostPayload): Promise<CreateQnAPostResponse> {
     const response = await api.post(`/questions/${postId}/answers`, payload)
     return response.data.data;
   },
@@ -75,7 +75,7 @@ export const postService = {
   /**
    * 질문게시글 수정
    */
-  async updateQuestion(postId: number, payload: PostPayload): Promise<QnAPostResponse> {
+  async updateQuestion(postId: number, payload: PostPayload): Promise<CreateQnAPostResponse> {
     const response = await api.patch(`/posts/${postId}`, payload)
     return response.data.data;
   },
@@ -83,7 +83,7 @@ export const postService = {
   /**
    * 답변 수정
    */
-  async updateAnswer(postId: number, answerId: number, payload: PostPayload): Promise<QnAPostResponse> {
+  async updateAnswer(postId: number, answerId: number, payload: PostPayload): Promise<CreateQnAPostResponse> {
     const response = await api.put(`/questions/${postId}/answers/${answerId}`, payload)
     return response.data.data;
   },
@@ -91,7 +91,7 @@ export const postService = {
   /**
    * 게시물 삭제
    */
-  async deletePost(postId: number): Promise<QnAPostResponse> {
+  async deletePost(postId: number): Promise<CreateQnAPostResponse> {
     const response = await api.delete(`/posts/${postId}`)
     return response.data.data;
   },
@@ -99,7 +99,7 @@ export const postService = {
   /**
    * 답변 삭제
    */
-  async deleteAnswer(postId: number, answerId: number): Promise<QnAPostResponse> {
+  async deleteAnswer(postId: number, answerId: number): Promise<CreateQnAPostResponse> {
     const response = await api.delete(`/questions/${postId}/answers/${answerId}`)
     return response.data.data;
   },
@@ -121,16 +121,27 @@ export const postService = {
   },
 
   /**
-   * 게시글 생성 복구
+   * 자유, 질문 생성 복구
    */
-  async recoveryCreatePost(postId: number): Promise<QnAPostResponse> {
+  async recoverCreatePost(postId: number): Promise<CreateQnAPostResponse> {
     const response = await api.post(`/posts/${postId}/web3/recover-create`)
     return response.data.data;
   },
-  
-  async createComment(postId: number, payload: PostPayload): Promise<void> {
-    const response = await api.post(`/posts/${postId}/comments`, payload)
-    return response.data;
+
+  /**
+   * 답변 생성 복구
+   */
+  async recoverCreateAnswer(postId: number, answerId: number): Promise<CreateQnAPostResponse> {
+    const response = await api.post(`/questions/${postId}/answers/${answerId}/web3/recover-create`)
+    return response.data.data;
+  },
+
+  /**
+   * 답변 채택
+   */
+  async acceptAnswer(postId: number, answerId: number): Promise<AcceptAnswerResponse> {
+    const response = await api.post(`/posts/${postId}/answers/${answerId}/accept`)
+    return response.data.data;
   },
 
   /**

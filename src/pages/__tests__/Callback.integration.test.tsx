@@ -39,6 +39,7 @@ vi.mock("react-router-dom", async () => {
 describe("[통합] Callback - 로그인 처리 흐름", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(PostLogin).mockReset();
   });
 
   it('기존 유저가 로그인하면 메인(/) 페이지로 이동한다', async () => {
@@ -74,7 +75,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     });
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith('/register');
     });
   });
 
@@ -107,7 +108,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     });
   });
 
-  it("기존 일반 유저가 성공적으로 로그인하면 홈으로 이동한다", async () => {
+  it("기존 일반 유저가 성공적으로 로그인하면 /register로 이동한다", async () => {
     vi.mocked(PostLogin).mockResolvedValueOnce({
       userInfo: {
         userId: 1,
@@ -132,7 +133,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      expect(mockNavigate).toHaveBeenCalledWith("/register");
     });
   });
 
@@ -161,7 +162,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/trainer");
+      expect(mockNavigate).toHaveBeenCalledWith("/register");
     });
   });
 
@@ -174,9 +175,6 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
       isAxiosError: true,
     };
     vi.mocked(PostLogin).mockRejectedValueOnce(errorResponse);
-
-    const axios = await import("axios");
-    vi.spyOn(axios.default, "isAxiosError").mockReturnValue(true);
 
     render(
       <MemoryRouter initialEntries={["/callback?code=test-code&state=kakao"]}>

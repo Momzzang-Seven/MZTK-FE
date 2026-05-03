@@ -45,7 +45,7 @@ export interface SignRequest {
 }
 
 // 백엔드 -> 프론트
-export interface ExecutionWeb3Intent {
+export interface Web3Execution {
     resource: {
         type: "QUESTION" | "ANSWER";
         id: string; // 질문/답변 id
@@ -71,6 +71,6 @@ export interface ExecuteWeb3TransactionRequest {
     signedRawTransaction?: string;
 }
 
-export interface StoredWeb3Action extends ExecutionWeb3Intent {
+export interface StoredWeb3Action extends Web3Execution {
   summary: string;
 }

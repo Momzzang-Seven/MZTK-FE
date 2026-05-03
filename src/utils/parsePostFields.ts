@@ -1,31 +1,33 @@
-import type { Web3IntentStatus } from "@types";
+import type { Web3IntentStatus, PublicationStatus, ModerationStatus } from "@types";
 
-export const getStatus = (web3IntentStatus: Web3IntentStatus | undefined, isSolved: boolean, answers: number) => {
-  if (web3IntentStatus === "CONFIRMED" || web3IntentStatus === undefined) {
-    // 질문 목록조회에서는 아직 온체인 작업이 완료되지 않은 게시물은 오지 않는다.
-    // 단, 리팩토링 전까지는 온체인 작업이 완료되지 않은 게시물도 오기 때문에 web3IntentStatus가 undefined인 게시물을 처리해뒀다.
+/**
+ * 게시글 공개/차단 상태 및 Web3 상태를 기준으로 질문의 상태를 파싱합니다.
+ */
+export const getQuestionStatus = (
+  publicationStatus: PublicationStatus,
+  moderationStatus: ModerationStatus,
+  isSolved: boolean,
+  commentCount: number
+) => {
+  if (moderationStatus === "BLOCKED") return "blocked";
+  if (publicationStatus === "PENDING") return "pending";
+  if (publicationStatus === "FAILED") return "failed";
+  if (publicationStatus === "VISIBLE") {
     if (isSolved) return "completed";
-    if (answers === 0) return "waiting";
+    if (commentCount === 0) return "waiting";
     return "answering";
   }
-  if (web3IntentStatus === "SIGNED" || web3IntentStatus === "PENDING_ONCHAIN") {
-    return "blockchain_processing";
-  }
-  return "awaiting_signature";
+  return "unknown";
 };
 
 export const statusStyleMap: Record<string, { label: string; bg: string }> = {
-  awaiting_signature: { label: "서명 필요", bg: "bg-[#27DDA1]" },
+  pending: { label: "처리 중", bg: "bg-[#9CA3AF]" },
+  failed: { label: "실패", bg: "bg-[#EF4444]" },
+  blocked: { label: "차단됨", bg: "bg-[#1F2937]" },
   waiting: { label: "답변대기", bg: "bg-[#F59E0B]" },
   answering: { label: "답변중", bg: "bg-[#9CA3AF]" },
   completed: { label: "채택완료", bg: "bg-[#27DDA1]" },
-  blockchain_processing: { label: "블록체인 처리중", bg: "bg-[#27DDA1]" },
-};
-
-export const parseResourceId = (rawId: string): number => {
-  const parts = rawId.split(':');
-  const idString = parts[parts.length - 1];
-  return parseInt(idString, 10);
+  unknown: { label: "상태 확인중", bg: "bg-[#E5E7EB]" },
 };
 
 // 상태값에 따른 한글 메시지 변환
@@ -39,15 +41,6 @@ export const getIntentStatusMessage = (status: Web3IntentStatus) => {
       case "CONFIRMED": return '완료';
       default: return '상태 확인중';
     }
-};
-
-// 액션 타입에 따른 라벨 변환
-export const getIntentActionLabel = (type: string) => {
-    if (type.includes('CREATE')) return '생성';
-    if (type.includes('UPDATE')) return '수정';
-    if (type.includes('DELETE')) return '삭제';
-    if (type.includes('ACCEPT')) return '채택';
-    return '작업';
 };
 
 export const replaceImageSrc = (content: string, images: { imageUrl: string }[]) => {

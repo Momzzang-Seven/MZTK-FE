@@ -20,10 +20,11 @@ const QuestionDetail = () => {
   const stored = localStorage.getItem("user-storage");
   const userId = stored ? JSON.parse(stored)?.state?.user?.userId : null;
 
-  const isMyQuestion = userId !== null && question?.writer.userId === userId;
-  const isWeb3Executable = question?.question.web3Execution.resource.status !== "COMPLETED";
-  const isEditable = isMyQuestion && question?.commentCount === 0 && question?.question.web3Execution.resource.status === "COMPLETED";
-  const canAcceptAnswer = isMyQuestion && !question?.question.isSolved;
+  const isMine = userId !== null && question?.writer.userId === userId;
+  const isWeb3Done = question?.publicationStatus === "VISIBLE" || question?.publicationStatus === "FAILED";
+
+  const isWeb3Executable = isMine && !isWeb3Done;
+  const isEditable = isMine && isWeb3Done && question?.commentCount === 0;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,6 +64,7 @@ const QuestionDetail = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <QuestionHeader
+        isMine={isMine}
         type="QUESTION"
         postId={Number(params.postId)}
         writer={question.writer}
@@ -91,14 +93,21 @@ const QuestionDetail = () => {
           ) : (
             answers.map((answer) => (
               <div key={answer.answerId}>
-                <Answer answer={answer} isSelectable={canAcceptAnswer} />
+                <Answer
+                  answer={answer}
+                  parentId={postId}
+                  // userId={userId}
+                  isSelectable={isMine && isWeb3Done && !question.question.isSolved}
+                  isEditable={answer.userId===userId ? !answer.isAccepted && answer.web3Execution.resource.status === "COMPLETED" : false}
+                  isWeb3Executable={answer.userId===userId ? answer.web3Execution.resource.status !== "COMPLETED" : false} 
+                  />
               </div>
             ))
           )
         )}
       </div>
 
-      {!isMyQuestion && <CreatePostButton postId={Number(params.postId)} />}
+      {!isMine && <CreatePostButton postId={Number(params.postId)} />}
     </div>
   );
 };

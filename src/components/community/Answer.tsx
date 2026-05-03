@@ -1,60 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AnswerPost, Comment } from "@types";
-import { CommentItem, CommentInput, ActionList } from "@components/community";
-import { formatTimeAgo } from "@utils";
+import { CommentItem, CommentInput, ActionList, QnaContent } from "@components/community";
+import { LoadingSpinner } from "@components/common";
+import { formatTimeAgo, replaceImageSrc } from "@utils";
+import { useCommentService } from "@hooks";
 
 interface AnswerProps {
   answer: AnswerPost;
-  isSelectable: boolean;
+  parentId: number;
+  // userId: number | null;
+  isSelectable: boolean; // 질문 작성자의 답변 선택 가능 여부
+  isEditable: boolean; // 답변 작성자의 수정 가능 여부
+  isWeb3Executable: boolean; // 답변 작성자의 web3 실행 가능 여부
 }
 
-const Answer = ({ answer, isSelectable }: AnswerProps) => {
+const Answer = ({ answer, parentId: parenPostId, isSelectable, isEditable, isWeb3Executable }: AnswerProps) => {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [repliesMap, setRepliesMap] = useState<Record<number, Comment[]>>({});
-  const [openMap, setOpenMap] = useState<Record<number, boolean>>({});
-
   const [writingComment, setWritingComment] = useState("");
 
-  const handleToggleComments = async () => {
-    if (isCommentsOpen) {
-      setIsCommentsOpen(false);
-      return;
-    }
+  const [parentCommentId, setParentCommentId] = useState<number | undefined>(undefined);
+  const [parentCommentNickname, setParentCommentNickname] = useState<string | null>(null);
+  const { comments, isLoading, refetch, fetchComments, createComment, error } = useCommentService<Comment>(answer.answerId);
 
-    try {
-      const res = await fetch("/data/comments.json");
-      const data: Comment[] = await res.json();
+  // const isMine = userId !== null && answer.userId === userId;
+  // const isWeb3Done = answer.publicationStatus === "VISIBLE" || answer.publicationStatus === "FAILED";
 
-      setComments(data);
-      setIsCommentsOpen(true);
-    } catch (e) {
-      console.error(e);
+  // const isEditable = isMine && isWeb3Done && !answer.isAccepted;
+  // const isWeb3Executable = isMine && !isWeb3Done;
+  // const isSelectable = isQuestionMine && isWeb3Done && !isQuestionSolved
+
+  const processedContent = answer.content 
+    ? replaceImageSrc(answer.content, answer.images) 
+    : "";
+
+  useEffect(() => {
+    if (isCommentsOpen && comments.length === 0) {
+      fetchComments(true);
     }
+  }, [isCommentsOpen, comments.length, fetchComments]);
+
+  const toggleComment = () => {
+    const nextState = !isCommentsOpen;
+    setIsCommentsOpen(nextState);
+    if (nextState && comments.length === 0) {
+      fetchComments(true);
+    }
+  }
+
+  const handleStartReply = (commentId: number, nickname: string) => {
+    setParentCommentId(commentId);
+    setParentCommentNickname(nickname);
   };
 
-  const handleReplyClick = (commentId: number) => {
-    if (openMap[commentId]) {
-      setOpenMap((prev) => ({
-        ...prev,
-        [commentId]: false,
-      }));
-      return;
-    }
-
-    fetch("/data/replies.json")
-      .then((res) => res.json())
-      .then((data) => setRepliesMap((prev) => ({ ...prev, [commentId]: data })))
-      .then(() => setOpenMap((prev) => ({ ...prev, [commentId]: true })))
-      .catch(console.error);
-  };
-
-  const handleCommentSubmit = () => {
+  const handleCommentSubmit = async () => {
     if (!writingComment.trim()) return;
 
-    // 전송 api 추가
-    console.log(answer.answerId, writingComment);
+    // 대댓글인 경우 commentParentId를 사용
+    await createComment({ 
+      content: writingComment, 
+      parentId: parentCommentId 
+    });
+    
     setWritingComment("");
+    setParentCommentId(undefined);
+    setParentCommentNickname(null);
+    
+    // 댓글 목록 갱신 (대댓글인 경우 각 ReplySection에서 갱신이 일어날 수 있도록 설계됨)
+    if (!parentCommentId) refetch();
   };
 
   return (
@@ -76,34 +88,38 @@ const Answer = ({ answer, isSelectable }: AnswerProps) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img
-            src={answer.writer.profileImage || "/icon/defaultUser.svg"}
-            alt={answer.writer.nickname}
+            src={answer.profileImageUrl || "/icon/defaultUser.svg"}
+            alt={answer.nickname}
             className={`h-10 w-10 rounded-full ${
-              answer.writer.profileImage ? "object-cover" : "bg-main pt-2"
+              answer.profileImageUrl ? "object-cover" : "bg-main pt-2"
             }`}
           />
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium">
-              {answer.writer.nickname}
+              {answer.nickname}
             </span>
             <span className="text-xs text-gray-400">
               {formatTimeAgo(answer.createdAt)}
             </span>
           </div>
         </div>
+
         <ActionList
           size="sm"
           type="ANSWER"
+          parentPostId={parenPostId}
           id={answer.answerId}
-          authorId={answer.writer.userId}
+          authorId={answer.userId}
+          answerContent={answer.content}
           isSelectable={isSelectable}
+          isEditable={isEditable}
+          isWeb3Executable={isWeb3Executable}
+          Web3Execution={answer.web3Execution}
         />
       </div>
 
       {/* 본문 */}
-      <p className="text-base text-gray-700 whitespace-pre-line">
-        {answer.content}
-      </p>
+      {processedContent && <QnaContent content={processedContent} />}
 
       {/* 이미지 */}
       {answer.images && answer.images.length > 0 && (
@@ -116,7 +132,7 @@ const Answer = ({ answer, isSelectable }: AnswerProps) => {
 
       {/* 댓글 버튼 */}
       <div
-        onClick={handleToggleComments}
+        onClick={toggleComment}
         className="flex items-center gap-2 pl-2 text-sm font-semibold text-gray-500 cursor-pointer"
       >
         <img src="/icon/comment.svg" alt="comment" className="w-5 h-5" />
@@ -127,47 +143,39 @@ const Answer = ({ answer, isSelectable }: AnswerProps) => {
       {isCommentsOpen && (
         <div className="flex flex-col">
           <CommentInput
-            setParentId={() => {}}
-            parentNickname={null}
-            setParentNickname={() => {}}
             isAnswerPost={true}
+            setParentId={setParentCommentId}
             writingComment={writingComment}
             setWritingComment={setWritingComment}
+            parentNickname={parentCommentNickname}
+            setParentNickname={setParentCommentNickname}
             handleCommentSubmit={handleCommentSubmit}
           />
 
-          {comments.length === 0 && (
-            <p className="text-xs text-gray-400">댓글이 없습니다.</p>
+          {isLoading && comments.length === 0 ? (
+            <div className="py-10">
+              <LoadingSpinner size="md" color="text-gray-400" />
+            </div>
+          ) : (
+            <div className="mt-4">
+              {comments.length === 0 && (
+                <p className="text-xs text-gray-400 px-2">댓글이 없습니다.</p>
+              )}
+
+              {comments.map((comment) => (
+                <CommentItem 
+                  key={comment.commentId} 
+                  comment={comment} 
+                  onUpdateReplySuccess={refetch}
+                  onReplyClick={handleStartReply}
+                />
+              ))}
+            </div>
           )}
 
-          {comments.map((comment) => (
-            <div key={comment.commentId} className="mb-1">
-              <CommentItem comment={comment} showProfileImage={false} />
-
-              <div className="flex gap-4 ml-2 font-semibold text-xs text-gray-500">
-                {comment.replyCount > 0 && (
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => handleReplyClick(comment.commentId)}
-                  >
-                    답글 펼쳐보기 ({comment.replyCount}개)
-                  </div>
-                )}
-
-                <div className="cursor-pointer">답글 달기</div>
-              </div>
-
-              {openMap[comment.commentId] && (
-                <div>
-                  {repliesMap[comment.commentId]?.map((reply) => (
-                    <div key={reply.commentId} className="ml-4">
-                      <CommentItem comment={reply} showProfileImage={false} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+          {error && (
+            <p className="text-xs px-2">댓글을 불러오던 중 오류가 발생했습니다.</p>
+          )}
         </div>
       )}
     </div>

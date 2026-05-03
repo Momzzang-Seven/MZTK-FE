@@ -1,4 +1,4 @@
-import type { ExecutionWeb3Intent } from "@types";
+import type { Web3Execution } from "@types";
 
 export type PostType = "FREE" | "QUESTION";
 
@@ -46,6 +46,10 @@ export interface Post {
   tags: string[];
 }
 
+export type PublicationStatus = "PENDING" | "VISIBLE" | "FAILED";
+
+export type ModerationStatus = "NORMAL" | "BLOCKED";
+
 export interface FreePost extends Post {
   postId: number;
   isLiked: boolean;
@@ -58,13 +62,24 @@ export interface QuestionPost extends Post {
   question: {
     isSolved: boolean;
     reward: number;
-    web3Execution: ExecutionWeb3Intent;
+    web3Execution: Web3Execution;
   };
+  publicationStatus: PublicationStatus;
+  moderationStatus: ModerationStatus;
 }
 
-export interface AnswerPost extends Post {
+export interface AnswerPost {
   answerId: number;
+  userId: number;
+  nickname: string;
+  profileImageUrl: string;
+  content: string;
   isAccepted: boolean;
+  images: Image[];
+  createdAt: string;
+  updatedAt: string;
+  web3Execution: Web3Execution;
+  commentCount: number;
 }
 
 export interface Comment {
@@ -93,9 +108,15 @@ export interface CreateFreePostResponse {
   message: string;
 }
 
-export interface QnAPostResponse {
+export interface CreateQnAPostResponse {
   postId: number;
-  web3?: ExecutionWeb3Intent;
+  web3?: Web3Execution;
+}
+
+export interface AcceptAnswerResponse {
+  postId: number;
+  acceptedAnswerId: number;
+  web3?: Web3Execution;
 }
 
 /** GET /v2/users/me/posts 단일 게시글 항목 */

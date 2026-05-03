@@ -7,14 +7,17 @@ import type { PostType } from "@store";
 import { usePostService, useLoadPostForEdit } from "@hooks";
 import { FreePostForm, QuestionPostForm, AnswerPostForm } from "@components/community";
 import { replaceImageSrc } from "@utils";
+import type { Image } from "@types";
 
 const WritePost = () => {
-  const { type, postId } = useParams();
+  const { type, postId, parentId } = useParams();
+  const location = useLocation();
   const { pathname } = useLocation();
   const isEditMode = pathname.includes("/edit/");
   const shouldFetchHere = isEditMode && type !== "free"; // FREE 게시글은 SelectImage에서 이미 fetch했으므로 여기서는 skip
 
   const postType = usePostStore((s) => s.postType);
+  const parentPostId = usePostStore((s) => s.parentPostId);
   const storeContent = usePostStore((s) => s.content);
   const storeImages = usePostStore((s) => s.images);
   const storeTitle = usePostStore((s) => s.title);
@@ -22,7 +25,7 @@ const WritePost = () => {
   const setPostType = usePostStore((s) => s.setPostType);
   const setParentPostId = usePostStore((s) => s.setParentPostId);
 
-  const { isFetching, loadPost } = useLoadPostForEdit();
+  const { isFetching, loadPost, setPostForEdit } = useLoadPostForEdit();
   const {
     isSubmitActive,
     isPostLoading: isLoading,
@@ -33,21 +36,36 @@ const WritePost = () => {
   } = usePostService();
 
   useEffect(() => {
+    const urlType = (type?.toUpperCase() ?? "QUESTION") as PostType;
+
     if (isEditMode && shouldFetchHere && postId) {
       // 수정 모드
       reset();
-      loadPost(Number(postId));
+      if (urlType === "QUESTION") loadPost(Number(postId));
+      else if (urlType ==="ANSWER") {
+        const answerContent = location.state?.content ?? "";
+        const answerImages = location.state?.images ?? [];
+
+        setPostForEdit({
+          parentId: Number(parentId),
+          type: urlType,
+          content: answerContent,
+          images: answerImages.map((img: Image) => ({ 
+            imageId: img.imageId, 
+            imageUrl: img.imageUrl 
+          }))
+        });
+      }
     } else {
       // 새 게시물 모드
-      const urlType = (type?.toUpperCase() ?? "QUESTION") as PostType;
-      if (urlType !== "FREE") reset();
+      if (urlType !== "FREE") reset(); // 질문, 답변만 이 페이지에서 reset
       setPostType(urlType);
 
-      if (urlType === "ANSWER" && postId) {
+      if (urlType === "ANSWER" && postId) { // 이때 postId: 부모 질문의 postId
         setParentPostId(Number(postId));
       }
     }
-  }, [type, postId, isEditMode, reset, loadPost, setPostType, setParentPostId, shouldFetchHere]);
+  }, [location.state?.content, location.state?.images, parentId, type, postId, isEditMode, shouldFetchHere, reset, loadPost, setPostType, setParentPostId, setPostForEdit]);
 
   // 수정 모드 초기값: 스토어에서 읽음
   // FREE: SelectImage fetch 후 WritePost → 스토어에 이미 데이터 있음
@@ -58,9 +76,12 @@ const WritePost = () => {
     ? replaceImageSrc(initialContent, storeImages)
     : "";
 
-  const handleSubmit = isEditMode
-    ? () => updatePost(Number(postId))
-    : createPost;
+  const handleSubmit =
+    isEditMode
+      ? postType === "QUESTION"
+        ? () => updatePost(Number(postId))
+        : () => updatePost(Number(postId), Number(parentPostId))
+      : createPost;
 
   const isActive = isSubmitActive && !isLoading;
 

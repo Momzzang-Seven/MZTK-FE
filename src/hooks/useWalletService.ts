@@ -2,7 +2,7 @@ import { useState } from "react";
 import { walletService, web3Service } from "@services";
 import { ethers, getBytes } from "ethers";
 import { MZTK_ABI } from "@abi";
-import type { ExecutionWeb3Intent } from "@types";
+import type { Web3Execution } from "@types";
 
 const TOKEN_ADDRESS = import.meta.env.VITE_TOKEN_ADDRESS;
 const QNA_ESCROW_ADDRESS = import.meta.env.VITE_QNA_ESCROW_CONTRACT;
@@ -83,7 +83,7 @@ export const useWalletService = () => {
         }
     };
 
-    const handleWeb3Signature = async (executionIntentId: string, wallet: ethers.HDNodeWallet, intent: ExecutionWeb3Intent) => {
+    const handleWeb3Signature = async (executionIntentId: string, wallet: ethers.HDNodeWallet, intent: Web3Execution) => {
         setLoading(true);
 
         try {

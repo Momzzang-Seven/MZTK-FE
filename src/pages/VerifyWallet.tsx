@@ -3,11 +3,10 @@ import { CommonModal, LoadingSpinner } from "@components/common";
 import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { ethers } from "ethers";
-import type { ExecutionWeb3Intent } from "@types";
+import type { Web3Execution } from "@types";
 import { usePostService, useWalletService } from "@hooks";
-import { parseResourceId } from "@utils";
 
 interface ApiErrorResponse {
     response?: {
@@ -20,6 +19,7 @@ interface ApiErrorResponse {
 
 const VerifyWallet = () => {
     const navigate = useNavigate();
+    const params = useParams();
     const location = useLocation();
     const { loading: isWalletLoading, error: walletError, setError: setWalletError, handleWeb3Signature } = useWalletService();
     const { isPostLoading, error: postError, setError: setPostError, recoverCreate, getIncompletedPostTransaction } = usePostService();
@@ -41,10 +41,10 @@ const VerifyWallet = () => {
 
         try {
             if (intent.transaction) {
-                return intent as ExecutionWeb3Intent;
+                return intent as Web3Execution;
             } else {
                 const postData = await getIncompletedPostTransaction(intent.executionIntent.id);
-                return postData as ExecutionWeb3Intent;
+                return postData as Web3Execution;
             }
         } catch {
             setAuthPin("");
@@ -53,10 +53,16 @@ const VerifyWallet = () => {
         }
     }, [intent, getIncompletedPostTransaction]);
 
-    const handleRecoverAndRetry = useCallback(async (currentIntent: ExecutionWeb3Intent, wallet: ethers.Wallet) => {
+    const handleRecoverAndRetry = useCallback(async (currentIntent: Web3Execution, wallet: ethers.Wallet) => {
         try {
-            const postId = parseResourceId(currentIntent.resource.id);
-            const recoveryRes = await recoverCreate(postId);
+            const type = currentIntent.resource.type;
+            let recoveryRes;
+
+            if (type === "ANSWER" && params.parentId) {
+                recoveryRes = await recoverCreate(type, Number(params.id), Number(params.parentId));
+            } else {
+                recoveryRes = await recoverCreate(type, Number(params.id));
+            }
 
             if (recoveryRes?.web3) {
                 await handleWeb3Signature(
@@ -72,9 +78,9 @@ const VerifyWallet = () => {
             setAuthPin("");
             setStep("AUTH_PIN");
         }
-    }, [recoverCreate, handleWeb3Signature]);
+    }, [params.id, params.parentId, recoverCreate, handleWeb3Signature]);
 
-    const handleSignProcess = useCallback(async (currentIntent: ExecutionWeb3Intent, wallet: ethers.Wallet) => {
+    const handleSignProcess = useCallback(async (currentIntent: Web3Execution, wallet: ethers.Wallet) => {
         try {
             if (currentIntent.executionIntent.status === "EXPIRED") {
                 await handleRecoverAndRetry(currentIntent, wallet);
@@ -132,7 +138,7 @@ const VerifyWallet = () => {
     const handleSuccessConfirm = () => {
         switch (intent.resource.type) {
             case "QUESTION": navigate("/community/question"); break;
-            case "ANSWER": navigate(`/community/question/${intent.resource.postId}`); break;
+            case "ANSWER": navigate(-2); break;
             default: navigate("/community/question"); break;
         }
     };

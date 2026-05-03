@@ -175,19 +175,31 @@ describe("ActionList 컴포넌트", () => {
     });
 
     it('type이 "question"일 때 수정 클릭 시 navigate("/community/question/edit/{id}")가 호출된다', () => {
-      setup({ type: "QUESTION", id: 20 });
+      setup({ type: "QUESTION", id: 20, isEditable: true });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
       expect(mockNavigate).toHaveBeenCalledWith("/community/question/edit/20");
     });
 
-    it('type이 "answer"일 때 수정 클릭 시 navigate("/community/answer/edit/{id}")가 호출된다', () => {
-      setup({ type: "ANSWER", id: 30 });
+    it('type이 "answer"일 때 수정 클릭 시 navigate("/community/answer/edit/{id}/{parentPostId}")가 호출된다', () => {
+      const answerContent = "답변 본문";
+      const answerImages: never[] = [];
+      setup({
+        type: "ANSWER",
+        id: 30,
+        parentPostId: 7,
+        isEditable: true,
+        answerContent,
+        answerImages,
+      });
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/community/answer/edit/30");
+      expect(mockNavigate).toHaveBeenCalledWith(
+        "/community/answer/edit/30/7",
+        { state: { content: answerContent, images: answerImages } }
+      );
     });
   });
 

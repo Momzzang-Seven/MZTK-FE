@@ -17,6 +17,13 @@ vi.mock("@components/community", () => ({
   SharePost: () => <div data-testid="mock-share-post" />,
 }));
 
+vi.mock("@hooks", () => ({
+  usePostService: () => ({
+    likePost: vi.fn().mockResolvedValue(undefined),
+    unlikePost: vi.fn().mockResolvedValue(undefined),
+  }),
+}));
+
 const mockNavigate = vi.fn();
 
 const defaultPost = {
