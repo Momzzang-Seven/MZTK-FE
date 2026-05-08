@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import DaumPostcode from "react-daum-postcode";

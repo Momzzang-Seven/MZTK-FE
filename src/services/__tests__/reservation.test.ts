@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "@services/client";
 import {
   approveTrainerReservation,
   cancelMyReservation,
@@ -10,22 +11,15 @@ import {
   getTrainerReservationDetail,
   getTrainerReservations,
   rejectTrainerReservation,
-} from "../reservation";
-
-const mockApi = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
-  patch: vi.fn(),
-}));
-
-vi.mock("../client", () => ({
-  api: mockApi,
-}));
+} from "@services/reservation";
 
 const apiResponse = <T>(data: T) => ({ data: { data } });
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.spyOn(api, "get").mockImplementation(vi.fn());
+  vi.spyOn(api, "post").mockImplementation(vi.fn());
+  vi.spyOn(api, "patch").mockImplementation(vi.fn());
 });
 
 describe("reservation service", () => {
@@ -38,11 +32,11 @@ describe("reservation service", () => {
       durationMinutes: 50,
       availableDates: [],
     };
-    mockApi.get.mockResolvedValueOnce(apiResponse(response));
+    vi.mocked(api.get).mockResolvedValueOnce(apiResponse(response));
 
     await expect(getClassReservationInfo(101)).resolves.toEqual(response);
 
-    expect(mockApi.get).toHaveBeenCalledWith(
+    expect(api.get).toHaveBeenCalledWith(
       "/marketplace/classes/101/reservation-info"
     );
   });
@@ -58,25 +52,29 @@ describe("reservation service", () => {
       executionSignature: `0x${"2".repeat(130)}`,
     };
     const response = { reservationId: 10, status: "PENDING" as const };
-    mockApi.post.mockResolvedValueOnce(apiResponse(response));
+    vi.mocked(api.post).mockResolvedValueOnce(apiResponse(response));
 
     await expect(createClassReservation(101, request)).resolves.toEqual(
       response
     );
 
-    expect(mockApi.post).toHaveBeenCalledWith(
+    expect(api.post).toHaveBeenCalledWith(
       "/marketplace/classes/101/reservations",
       request
     );
   });
 
   it("회원 예약 목록/상세/상태 변경 API를 호출한다", async () => {
-    mockApi.get.mockResolvedValueOnce(apiResponse([]));
-    mockApi.get.mockResolvedValueOnce(apiResponse({ reservationId: 10 }));
-    mockApi.patch.mockResolvedValueOnce(
+    vi.mocked(api.get).mockResolvedValueOnce(
+      apiResponse({ reservations: [], nextCursor: null, hasNext: false })
+    );
+    vi.mocked(api.get).mockResolvedValueOnce(
+      apiResponse({ reservationId: 10 })
+    );
+    vi.mocked(api.patch).mockResolvedValueOnce(
       apiResponse({ reservationId: 10, status: "USER_CANCELLED" })
     );
-    mockApi.patch.mockResolvedValueOnce(
+    vi.mocked(api.patch).mockResolvedValueOnce(
       apiResponse({ reservationId: 10, status: "SETTLED" })
     );
 
@@ -85,32 +83,31 @@ describe("reservation service", () => {
     await cancelMyReservation(10);
     await completeMyReservation(10);
 
-    expect(mockApi.get).toHaveBeenNthCalledWith(
-      1,
-      "/marketplace/me/reservations",
-      { params: { status: "PENDING" } }
-    );
-    expect(mockApi.get).toHaveBeenNthCalledWith(
-      2,
-      "/marketplace/reservations/10"
-    );
-    expect(mockApi.patch).toHaveBeenNthCalledWith(
+    expect(api.get).toHaveBeenNthCalledWith(1, "/marketplace/me/reservations", {
+      params: { status: "PENDING", cursor: undefined, size: 10 },
+    });
+    expect(api.get).toHaveBeenNthCalledWith(2, "/marketplace/reservations/10");
+    expect(api.patch).toHaveBeenNthCalledWith(
       1,
       "/marketplace/me/reservations/10/cancel"
     );
-    expect(mockApi.patch).toHaveBeenNthCalledWith(
+    expect(api.patch).toHaveBeenNthCalledWith(
       2,
       "/marketplace/me/reservations/10/complete"
     );
   });
 
   it("트레이너 예약 목록/상세/승인/반려 API를 호출한다", async () => {
-    mockApi.get.mockResolvedValueOnce(apiResponse([]));
-    mockApi.get.mockResolvedValueOnce(apiResponse({ reservationId: 10 }));
-    mockApi.patch.mockResolvedValueOnce(
+    vi.mocked(api.get).mockResolvedValueOnce(
+      apiResponse({ reservations: [], nextCursor: null, hasNext: false })
+    );
+    vi.mocked(api.get).mockResolvedValueOnce(
+      apiResponse({ reservationId: 10 })
+    );
+    vi.mocked(api.patch).mockResolvedValueOnce(
       apiResponse({ reservationId: 10, status: "APPROVED" })
     );
-    mockApi.patch.mockResolvedValueOnce(
+    vi.mocked(api.patch).mockResolvedValueOnce(
       apiResponse({ reservationId: 10, status: "REJECTED" })
     );
 
@@ -119,20 +116,20 @@ describe("reservation service", () => {
     await approveTrainerReservation(10);
     await rejectTrainerReservation(10, { rejectionReason: "일정 불가" });
 
-    expect(mockApi.get).toHaveBeenNthCalledWith(
+    expect(api.get).toHaveBeenNthCalledWith(
       1,
       "/marketplace/trainer/reservations",
-      { params: { status: "PENDING" } }
+      { params: { status: "PENDING", cursor: undefined, size: 10 } }
     );
-    expect(mockApi.get).toHaveBeenNthCalledWith(
+    expect(api.get).toHaveBeenNthCalledWith(
       2,
       "/marketplace/trainer/reservations/10"
     );
-    expect(mockApi.patch).toHaveBeenNthCalledWith(
+    expect(api.patch).toHaveBeenNthCalledWith(
       1,
       "/marketplace/trainer/reservations/10/approve"
     );
-    expect(mockApi.patch).toHaveBeenNthCalledWith(
+    expect(api.patch).toHaveBeenNthCalledWith(
       2,
       "/marketplace/trainer/reservations/10/reject",
       { rejectionReason: "일정 불가" }

@@ -305,6 +305,18 @@ const TicketForm = ({
               />
             </div>
           </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-[12px] font-black text-gray-400 ml-1">
+              {CREATE_TICKET_TEXT.LABELS.SUPPLIES}
+            </label>
+            <input
+              name="supplies"
+              value={formData.supplies}
+              onChange={handleChange}
+              placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.SUPPLIES}
+              className="w-full h-14 rounded-[20px] bg-white border border-gray-100 px-5 text-[15px] font-bold text-gray-900 outline-none focus:border-main/30 shadow-sm transition-all"
+            />
+          </div>
         </section>
 
         {/* 3. Features & Tags Section */}

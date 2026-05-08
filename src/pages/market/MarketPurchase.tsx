@@ -77,7 +77,7 @@ const MarketPurchase = () => {
           setReservationInfo(reservationInfoResponse);
           setLoadError("");
         }
-      } catch (error) {
+      } catch {
         if (isMounted) setLoadError("클래스 정보를 불러오지 못했습니다.");
       } finally {
         if (isMounted) setIsLoading(false);

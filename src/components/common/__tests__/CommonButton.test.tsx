@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { act, render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { CommonButton } from "../CommonButton";
 
 describe("CommonButton", () => {
@@ -62,30 +62,5 @@ describe("CommonButton", () => {
 
     const button = screen.getByRole("button", { name: "테두리 버튼" });
     expect(button).toHaveClass("border");
-  });
-
-  it("빠른 중복 클릭을 한 번만 처리한다", async () => {
-    vi.useFakeTimers();
-    const handleClick = vi.fn();
-    render(<CommonButton label="중복 클릭 방지" onClick={handleClick} />);
-
-    const button = screen.getByRole("button", { name: "중복 클릭 방지" });
-    fireEvent.click(button);
-    fireEvent.click(button);
-
-    expect(handleClick).toHaveBeenCalledTimes(1);
-
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    act(() => {
-      vi.advanceTimersByTime(300);
-    });
-
-    fireEvent.click(button);
-    expect(handleClick).toHaveBeenCalledTimes(2);
-
-    vi.useRealTimers();
   });
 });

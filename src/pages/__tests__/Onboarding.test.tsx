@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import Onboarding from "../Onboarding";
+import Onboarding from "@pages/Onboarding";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // useNavigate 모킹
@@ -26,10 +26,15 @@ describe("Onboarding Page", () => {
     );
 
     expect(
-      screen.getByText(/지갑을.*생성\/연결 해볼까요\?/)
+      screen.getByText((_, element) => {
+        return (
+          element?.tagName.toLowerCase() === "h1" &&
+          /지갑.*을 연결할까요\?/.test(element.textContent || "")
+        );
+      })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/이미 사용 중인 지갑이 없다면/)
+      screen.getByText(/처음이시라면 3초 만에 새 지갑을/)
     ).toBeInTheDocument();
   });
 
@@ -40,7 +45,9 @@ describe("Onboarding Page", () => {
       </BrowserRouter>
     );
 
-    const createButton = screen.getByRole("button", { name: "지갑 생성하기" });
+    const createButton = screen.getByRole("button", {
+      name: /새 지갑 생성하기/,
+    });
     fireEvent.click(createButton);
 
     expect(mockNavigate).toHaveBeenCalledWith("/create-wallet");
@@ -54,7 +61,7 @@ describe("Onboarding Page", () => {
     );
 
     const registerButton = screen.getByRole("button", {
-      name: "지갑 등록하기",
+      name: /기존 지갑 등록하기/,
     });
     fireEvent.click(registerButton);
 

@@ -72,6 +72,8 @@ const My = () => {
   const user = useUserStore((state) => state.user);
   const updateRole = useUserStore((state) => state.updateRole);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
+  const selectedNetwork = useUserStore((state) => state.selectedNetwork);
+  const setSelectedNetwork = useUserStore((state) => state.setSelectedNetwork);
   const [isChangingRole, setIsChangingRole] = useState(false);
 
   const isTrainer = user?.role === "TRAINER";
@@ -306,21 +308,16 @@ const My = () => {
               </div>
             </div>
             <div className="px-2.5 py-1 rounded-lg bg-gray-50 text-[10px] font-black text-gray-400 uppercase">
-              {useUserStore((state) =>
-                state.selectedNetwork === "OPT" ? "Optimism" : "Base"
-              )}
+              {selectedNetwork === "OPT" ? "Optimism" : "Base"}
             </div>
           </div>
           <div className="p-4 flex gap-2">
             {(["OPT", "BASE"] as const).map((net) => {
-              const isActive =
-                useUserStore((state) => state.selectedNetwork) === net;
+              const isActive = selectedNetwork === net;
               return (
                 <button
                   key={net}
-                  onClick={() =>
-                    useUserStore.getState().setSelectedNetwork(net)
-                  }
+                  onClick={() => setSelectedNetwork(net)}
                   className={`btn-press flex-1 py-3.5 rounded-[18px] font-black text-[14px] transition-all border-none ${
                     isActive
                       ? "bg-main text-white shadow-lg shadow-main/25"

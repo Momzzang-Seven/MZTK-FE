@@ -17,7 +17,6 @@ import {
 } from "@services";
 import type { ReservationDetail, ReservationSummary } from "@services";
 
-
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat("ko-KR", {
     month: "long",
@@ -92,7 +91,7 @@ const MarketReservation = () => {
       setNextCursor(response.nextCursor);
       setHasNext(response.hasNext);
       setLoadError("");
-    } catch (error) {
+    } catch {
       setLoadError("예약 내역을 불러오지 못했습니다.");
     } finally {
       setIsLoading(false);

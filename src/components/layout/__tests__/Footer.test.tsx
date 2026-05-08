@@ -5,35 +5,6 @@ import { Footer } from "../Footer";
 
 const mockNavigate = vi.fn();
 
-vi.mock("@constant", () => ({
-  footerItem: [
-    {
-      path: "/",
-      label: "홈",
-      src: "/icon/home.svg",
-      activeSrc: "/icon/home-active.svg",
-    },
-    {
-      path: "/exercise",
-      label: "운동",
-      src: "/icon/exercise.svg",
-      activeSrc: "/icon/exercise-active.svg",
-    },
-    {
-      path: "/community",
-      label: "커뮤니티",
-      src: "/icon/community.svg",
-      activeSrc: "/icon/community-active.svg",
-    },
-    {
-      path: "/my",
-      label: "마이",
-      src: "/icon/my.svg",
-      activeSrc: "/icon/my-active.svg",
-    },
-  ],
-}));
-
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
@@ -41,6 +12,12 @@ vi.mock("react-router-dom", async () => {
     useNavigate: () => mockNavigate,
   };
 });
+
+vi.mock("@store", () => ({
+  useUserStore: () => ({
+    user: { role: "USER" },
+  }),
+}));
 
 const renderWithRouter = (initialPath: string) => {
   return render(
@@ -59,70 +36,37 @@ describe("Footer", () => {
     renderWithRouter("/");
 
     expect(screen.getByText("홈")).toBeInTheDocument();
-    expect(screen.getByText("운동")).toBeInTheDocument();
     expect(screen.getByText("커뮤니티")).toBeInTheDocument();
-    expect(screen.getByText("마이")).toBeInTheDocument();
+    expect(screen.getByText("마켓")).toBeInTheDocument();
+    expect(screen.getByText("내 클래스")).toBeInTheDocument();
+    expect(screen.getByText("마이페이지")).toBeInTheDocument();
   });
 
   it("아이템 버튼 클릭 시 navigate가 호출된다", () => {
     renderWithRouter("/");
 
-    const exerciseButton = screen.getByRole("button", { name: /운동/ });
-    fireEvent.click(exerciseButton);
+    const marketButton = screen.getByRole("button", { name: /마켓/ });
+    fireEvent.click(marketButton);
 
-    expect(mockNavigate).toHaveBeenCalledWith("/exercise");
+    expect(mockNavigate).toHaveBeenCalledWith("/market");
   });
 
-  it("현재 경로에 맞는 아이템이 활성화된다", () => {
-    renderWithRouter("/exercise");
-
-    const exerciseImg = screen.getByAltText("운동");
-    expect(exerciseImg).toHaveAttribute("src", "/icon/exercise-active.svg");
-  });
-
-  it("활성 아이템은 activeSrc 이미지를 사용한다", () => {
-    renderWithRouter("/community");
-
-    const communityImg = screen.getByAltText("커뮤니티");
-    expect(communityImg).toHaveAttribute("src", "/icon/community-active.svg");
-  });
-
-  it("비활성 아이템은 src 이미지를 사용한다", () => {
+  it("현재 경로에 맞는 아이템이 활성화된다 (스타일 확인)", () => {
     renderWithRouter("/");
 
-    const exerciseImg = screen.getByAltText("운동");
-    expect(exerciseImg).toHaveAttribute("src", "/icon/exercise.svg");
+    const homeButton = screen.getByRole("button", { name: /홈/ });
+    const homeText = homeButton.querySelector("span");
+    expect(homeText).toHaveClass("text-main");
+
+    const communityButton = screen.getByRole("button", { name: /커뮤니티/ });
+    const communityText = communityButton.querySelector("span");
+    expect(communityText).toHaveClass("text-gray-400");
   });
 
-  it("홈 경로는 정확한 매칭을 사용한다", () => {
+  it("유저 권한에 따라 '내 클래스' 경로가 달라진다 (USER)", () => {
     renderWithRouter("/");
-
-    const homeImg = screen.getByAltText("홈");
-    expect(homeImg).toHaveAttribute("src", "/icon/home-active.svg");
-  });
-
-  it("다른 경로는 prefix 매칭을 사용한다", () => {
-    renderWithRouter("/community/free");
-
-    const communityImg = screen.getByAltText("커뮤니티");
-    expect(communityImg).toHaveAttribute("src", "/icon/community-active.svg");
-  });
-
-  it("활성/비활성 텍스트 스타일이 적용된다", () => {
-    const { container } = renderWithRouter("/my");
-
-    const buttons = container.querySelectorAll("button");
-    const myButton = Array.from(buttons).find((btn) =>
-      btn.textContent?.includes("마이")
-    );
-    const homeButton = Array.from(buttons).find((btn) =>
-      btn.textContent?.includes("홈")
-    );
-
-    const myText = myButton?.querySelector(".text-main.body-bold");
-    const homeText = homeButton?.querySelector(".text-grey-main.body");
-
-    expect(myText).toBeInTheDocument();
-    expect(homeText).toBeInTheDocument();
+    const myClassButton = screen.getByRole("button", { name: /내 클래스/ });
+    fireEvent.click(myClassButton);
+    expect(mockNavigate).toHaveBeenCalledWith("/market/reservations");
   });
 });

@@ -68,7 +68,12 @@ describe("SummaryCard", () => {
 
   it("variant prop이 적용된다", () => {
     const { container } = render(
-      <SummaryCard title="총 사용자" value={1234} icon={Users} variant="amber" />
+      <SummaryCard
+        title="총 사용자"
+        value={1234}
+        icon={Users}
+        variant="amber"
+      />
     );
 
     // amber variant는 bg-main/10 클래스를 가진 아이콘 래퍼를 가짐

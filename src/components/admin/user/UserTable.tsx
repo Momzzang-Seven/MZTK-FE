@@ -179,6 +179,7 @@ const UserTable = () => {
                         onClick={() => void handleBanUser(user.id)}
                         className="p-2.5 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all shadow-sm group/btn"
                         title={ADMIN_TEXT.USER.BTN_BAN}
+                        aria-label={`${user.email} 사용자 제한`}
                       >
                         <Ban
                           size={18}
@@ -191,6 +192,7 @@ const UserTable = () => {
                         onClick={() => void handleUnbanUser(user.id)}
                         className="p-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 group/btn"
                         title={ADMIN_TEXT.USER.BTN_UNBAN}
+                        aria-label={`${user.email} 사용자 제한 해제`}
                       >
                         <CheckCircle2
                           size={18}

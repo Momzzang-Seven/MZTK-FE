@@ -88,7 +88,7 @@ const MarketDetail = () => {
           setData(response);
           setLoadError("");
         }
-      } catch (error) {
+      } catch {
         if (isMounted) setLoadError("클래스 상세를 불러오지 못했습니다.");
       } finally {
         if (isMounted) setIsLoading(false);

@@ -66,11 +66,16 @@ const Web3Management = () => {
       } else {
         setWalletTxs([]);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to fetch wallet activity:", error);
       setWalletTxs([]);
 
-      if (error.response?.status >= 500) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        (error as { response: { status: number } }).response?.status >= 500
+      ) {
         setIsPollingSuspended(true);
       }
     } finally {

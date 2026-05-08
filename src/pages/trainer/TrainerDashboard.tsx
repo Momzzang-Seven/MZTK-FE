@@ -135,7 +135,7 @@ const TrainerDashboard = () => {
         title: "이의 신청 접수",
         desc: "이의 신청이 성공적으로 접수되었습니다.<br/>관리자 확인 후 조치해 드릴 예정입니다.",
       });
-    } catch (error) {
+    } catch {
       setAppealModal({
         isOpen: true,
         title: "이의 신청 실패",

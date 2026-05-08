@@ -44,7 +44,7 @@ const TrainerList = () => {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<TrainerClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [_loadError, setLoadError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [isSuspended, setIsSuspended] = useState(false);
   const [togglingIds, setTogglingIds] = useState<number[]>([]);
   const [modalState, setModalState] = useState<{
@@ -67,7 +67,7 @@ const TrainerList = () => {
         setTickets(response.items);
         setIsSuspended(response.isSuspended);
         setLoadError("");
-      } catch (error) {
+      } catch {
         if (!isMounted) return;
         setLoadError("클래스 목록을 불러오지 못했습니다.");
       } finally {
@@ -143,6 +143,12 @@ const TrainerList = () => {
             </div>
           </div>
         </div>
+
+        {loadError && (
+          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-[13px] font-black">
+            {loadError}
+          </div>
+        )}
 
         {isSuspended && (
           <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-[13px] font-black flex items-center gap-3">

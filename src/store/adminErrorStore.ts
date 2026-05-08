@@ -5,14 +5,14 @@ interface AdminErrorState {
   status: number | null;
   code: string | null;
   message: string | null;
-  detail: any | null;
+  detail: unknown | null;
   url: string | null;
   method: string | null;
   openErrorModal: (errorData: {
     status: number;
     code?: string;
     message?: string;
-    detail?: any;
+    detail?: unknown;
     url?: string;
     method?: string;
   }) => void;

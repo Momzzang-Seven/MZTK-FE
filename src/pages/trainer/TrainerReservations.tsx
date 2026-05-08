@@ -80,7 +80,7 @@ const TrainerReservations = () => {
       setNextCursor(response.nextCursor);
       setHasNext(response.hasNext);
       setLoadError("");
-    } catch (error) {
+    } catch {
       setLoadError("예약 목록을 불러오지 못했습니다.");
     } finally {
       setIsLoading(false);

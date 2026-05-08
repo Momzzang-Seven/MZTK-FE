@@ -142,8 +142,11 @@ describe("Verify Page API Integration (MSW)", () => {
     fireEvent.click(verifyButton);
 
     // 에러 모달 뜨는지 확인 (VERIFY_TEXT.MODAL_FAIL_TITLE)
-    const failModalTitle = await screen.findByText(
-      VERIFY_TEXT.MODAL_FAIL_TITLE
+    // dynamic import 오버헤드를 감안해 timeout을 넉넉하게 설정
+    const failModalTitle = await screen.findByRole(
+      "heading",
+      { name: VERIFY_TEXT.MODAL_FAIL_TITLE },
+      { timeout: 3000 }
     );
     expect(failModalTitle).toBeInTheDocument();
   });
@@ -168,9 +171,9 @@ describe("Verify Page API Integration (MSW)", () => {
     fireEvent.click(verifyButton);
 
     // 에러 모달 뜨는지 확인 (catch 블록에 의해 setFailModalOpen이 true가 됨)
-    const failModalTitle = await screen.findByText(
-      VERIFY_TEXT.MODAL_FAIL_TITLE
-    );
+    const failModalTitle = await screen.findByRole("heading", {
+      name: VERIFY_TEXT.MODAL_FAIL_TITLE,
+    });
     expect(failModalTitle).toBeInTheDocument();
   });
 });

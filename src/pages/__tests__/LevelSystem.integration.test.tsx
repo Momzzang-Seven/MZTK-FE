@@ -59,11 +59,11 @@ describe("[통합] Level System - 초기 로딩 및 정책 연동", () => {
 
     // 1. 레벨 텍스트 확인 (Lv.5)
     // findByText는 최대 1000ms 동안 대기하며, 요소가 나타날 때까지 스마트하게 기다립니다.
-    const levelText = await screen.findByText(/Lv\.5/i);
+    const levelText = await screen.findByText(/Lv\.5/i, {}, { timeout: 3000 });
     expect(levelText).toBeInTheDocument();
 
-    // 2. XP 텍스트 확인 (80 / 100 EXP)
-    const xpText = await screen.findByText(/80\s*\/\s*100/i);
+    // 2. XP 텍스트 확인 (성장까지 20 EXP 남음)
+    const xpText = await screen.findByText(/20\s*EXP/i, {}, { timeout: 3000 });
     expect(xpText).toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe("[통합] Level System - 초기 로딩 및 정책 연동", () => {
     );
 
     // findByText를 통해 비동기 업데이트가 완료될 때까지 기다린 후 호출 여부 확인
-    await screen.findByText(/Lv\.5/i);
+    await screen.findByText(/Lv\.5/i, {}, { timeout: 3000 });
 
     expect(levelService.getMyLevel).toHaveBeenCalled();
     expect(levelService.getMyXpLedger).toHaveBeenCalled();

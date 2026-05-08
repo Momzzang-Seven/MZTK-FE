@@ -103,13 +103,9 @@ export const LevelProgress = () => {
               className="transition-all duration-1000 ease-out"
             />
           </svg>
-          {/* Center Info */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[10px] text-gray-400 font-black tracking-[0.2em] uppercase mb-0.5">
-              LV
-            </span>
             <span className="text-main text-[40px] font-black font-gmarket leading-none tracking-tighter">
-              {level}
+              LV.{level}
             </span>
           </div>
         </div>
