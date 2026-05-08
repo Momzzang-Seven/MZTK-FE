@@ -5,7 +5,7 @@ interface CommonButtonProps {
   bgColor?: string;
   border?: string;
   shadow?: boolean;
-  label: string | React.ReactNode;
+  label?: string | React.ReactNode;
   img?: string;
   className?: string;
   icon?: React.ReactNode;
@@ -80,9 +80,11 @@ export const CommonButton = ({
         ${isDisabled ? "cursor-not-allowed" : ""}
         `}
     >
-      {img && <img src={img} alt="buttonImage" width="20px" className="mr-3" />}
       {icon && <span className="flex items-center">{icon}</span>}
-      {label}
+      <div className="flex gap-3 items-center">
+        {img && <img src={img} alt="buttonImage" width="20px"/>}
+        {label && <div>{label}</div>}
+      </div>
     </button>
   );
 };

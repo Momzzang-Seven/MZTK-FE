@@ -17,7 +17,7 @@ const OtherPostActions = ({
 }: OtherPostActionsProps) => {
   return (
     <div className="w-full flex flex-col gap-y-3">
-      {type === "answer" && isSelectable && (
+      {type === "ANSWER" && isSelectable && (
         <CommonButton
           label="채택하기"
           bgColor="bg-main"

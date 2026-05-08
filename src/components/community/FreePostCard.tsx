@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { FreePost } from "@types";
 import { formatTimeAgo } from "@utils";
 import { SharePost, ActionList } from "@components/community";
+import { usePostService } from "@hooks";
 
 interface Props {
   post: FreePost;
@@ -13,12 +14,18 @@ const FreePostCard = ({ post, onDeletePostSuccess }: Props) => {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(post.isLiked);
   const [likeCount, setLikeCount] = useState(post.likeCount);
+  const { likePost, unlikePost } = usePostService();
 
   const handleLikeClick = () => {
-    setLiked((prevLiked) => {
-      setLikeCount((prevCount) => (prevLiked ? prevCount - 1 : prevCount + 1));
-      return !prevLiked;
-    });
+    const nextLiked = !liked;
+    if (liked) {
+      unlikePost(post.postId);
+    } else {
+      likePost(post.postId);
+    }
+
+    setLiked(nextLiked);
+    setLikeCount((prev) => (nextLiked ? prev + 1 : prev - 1));
   };
 
   const handleCommentClick = () => {

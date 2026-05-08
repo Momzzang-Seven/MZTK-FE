@@ -161,18 +161,6 @@ const Login = () => {
     window.location.href = url;
   };
 
-  const navigateByRole = useCallback(
-    (role?: string, isNewUser?: boolean) => {
-      if (isNewUser) {
-        navigate("/register");
-        return;
-      }
-
-      navigate(role === "TRAINER" ? "/trainer" : "/");
-    },
-    [navigate]
-  );
-
   const handleLocalLogin = async () => {
     const email = localEmail.trim();
 
@@ -190,8 +178,10 @@ const Login = () => {
         email,
         password: localPassword,
       });
-
-      navigateByRole(response.userInfo.role, response.isNewUser);
+      if (response?.userInfo.walletAddress) {
+        localStorage.setItem("wallet_address", response.userInfo.walletAddress);
+      }
+      navigate("/register");
     } catch (error) {
       if (axios.isAxiosError(error)) {
         setLocalError(

@@ -31,7 +31,7 @@ describe("CreatePostButton", () => {
   it("버튼이 렌더링된다", () => {
     renderWithRouter();
 
-    const button = screen.getByRole("button", { name: "十" });
+    const button = screen.getByAltText("buttonImage");
     expect(button).toBeInTheDocument();
   });
 
@@ -72,7 +72,7 @@ describe("CreatePostButton", () => {
     renderWithRouter();
 
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("w-[60px]");
-    expect(button).toHaveClass("h-[60px]");
+    expect(button).toHaveClass("w-[70px]");
+    expect(button).toHaveClass("h-[70px]");
   });
 });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-// import { useTokenBalance } from "@hooks";
+import { useTokenBalance } from "@hooks";
 
 interface QuestionPostRewardSelectorProps {
   reward: number;
@@ -7,13 +7,13 @@ interface QuestionPostRewardSelectorProps {
 }
 
 const QuestionPostRewardSelector = ({ reward, setReward }: QuestionPostRewardSelectorProps) => {
-  // const { balance } = useTokenBalance();
-  const dummyBalance = 80;
+  const { balance } = useTokenBalance();
+  const balanceNum = Number(balance);
   const [customValue, setCustomValue] = useState("");
 
   const setAmount = (value: number) => {
     if (value < 0) return;
-    if (value > dummyBalance) value = dummyBalance;
+    if (value > balanceNum) value = balanceNum;
     setReward(value);
   };
 
@@ -43,7 +43,7 @@ const QuestionPostRewardSelector = ({ reward, setReward }: QuestionPostRewardSel
             <button
               key={amount}
               onClick={() => setAmount(amount)}
-              disabled={amount > dummyBalance}
+              disabled={amount > balanceNum}
               className={`
                 w-full aspect-square flex items-center justify-center
                 transition-colors
@@ -74,13 +74,13 @@ const QuestionPostRewardSelector = ({ reward, setReward }: QuestionPostRewardSel
           value={customValue}
           onChange={handleCustomInput}
           min={0}
-          max={dummyBalance}
+          max={balanceNum}
           placeholder={"직접 입력"}
           className="border rounded px-3 py-2"
         />
       </div>
       <div className="flex justify-end text-main font-semibold mr-1">
-        보유 토큰: {dummyBalance}
+        보유 토큰: {balanceNum}
       </div>
     </div>
   );

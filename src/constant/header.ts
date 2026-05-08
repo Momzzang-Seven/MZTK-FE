@@ -18,10 +18,6 @@ export const headerByPath: HeaderByPathType[] = [
     path: "/community/free/new",
   },
   {
-    label: "댓글",
-    path: "/community/free",
-  },
-  {
     label: "새 질문",
     path: "/community/question/new",
   },
@@ -42,6 +38,14 @@ export const headerByPath: HeaderByPathType[] = [
     path: "/community/answer/edit",
   },
   {
+    label: "댓글",
+    path: "/community/free",
+  },
+  {
+    label: "대기 중인 게시물",
+    path: "/community/local-posts"
+  },
+  {
     label: "예약/수강 내역",
     path: "/market/reservations",
   },
@@ -52,7 +56,7 @@ export const headerByPath: HeaderByPathType[] = [
   {
     label: "후기 작성",
     path: "/market/review",
-  }
+  },
 ];
 
 export const adminHeaderByPath: HeaderByPathType[] = [

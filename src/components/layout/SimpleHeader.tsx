@@ -16,7 +16,7 @@ export const SimpleHeader = ({ onBackClick, button, title }: SimpleHeaderProps) 
   const displayTitle = title ?? currentHeader?.label ?? "";
 
   return (
-    <header className="z-[998] w-full sticky max-w-[450px] mx-auto flex items-center justify-between px-6 py-6 border-b border-gray-300 bg-white">
+    <header className="z-[998] fixed top-0 w-full max-w-[450px] mx-auto flex items-center justify-between px-6 py-6 border-b border-gray-300 bg-white">
       <img
         src="/icon/backArrow.svg"
         alt="back"

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import type { QuestionPost } from "@types";
-import { getStatus, statusStyleMap } from "@utils";
+import { getQuestionStatus, statusStyleMap, replaceImageSrc } from "@utils";
+import { QnaContent } from "@components/community";
 
 interface QuestionProps {
   post: QuestionPost;
@@ -8,8 +9,9 @@ interface QuestionProps {
 
 const Question = ({ post }: QuestionProps) => {
   const navigate = useNavigate();
-  const status = getStatus(post.question.isSolved, post.commentCount);
+  const status = getQuestionStatus(post.publicationStatus, post.moderationStatus, post.question.isSolved, post.commentCount);
   const statusStyle = statusStyleMap[status];
+  const processedContent = post.content ? replaceImageSrc(post.content, post.images) : "";
 
   return (
     <section className="px-4 py-3 flex flex-col gap-3 border-b-1 border-gray-200 bg-white shadow-sm">
@@ -30,20 +32,7 @@ const Question = ({ post }: QuestionProps) => {
       </div>
 
       {/* 본문 */}
-      {post.content && (
-        <p className="text-base text-gray-700 whitespace-pre-line">
-          {post.content}
-        </p>
-      )}
-
-      {/* 이미지 */}
-      {post.images && post.images.length > 0 && (
-        <img
-          src={post.images[0].imageUrl}
-          alt="question"
-          className="w-full rounded-lg object-cover"
-        />
-      )}
+      {processedContent && <QnaContent content={processedContent} />}
 
       {/* 태그 */}
       <div className="flex gap-2 flex-wrap">

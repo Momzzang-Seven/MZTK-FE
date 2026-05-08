@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
 import { usePostStore } from "@store";
-import type { CreatePostType } from "@store";
+import type { PostType } from "@store";
 import { FreePostImageUploader } from "@components/community";
 import { useLoadPostForEdit } from "@hooks";
 
@@ -22,11 +22,12 @@ const SelectImage = () => {
   useEffect(() => {
     if (isEditMode && postId) {
       // 수정 모드: 기존 게시물 데이터를 fetch해 스토어에 채움
+      reset();
       loadPost(Number(postId));
     } else {
       // 신규 작성 모드: 스토어 초기화 후 타입 설정
       reset();
-      setPostType(type?.toUpperCase() as CreatePostType);
+      setPostType(type?.toUpperCase() as PostType);
     }
   }, [isEditMode, postId, type, loadPost, reset, setPostType]);
 
@@ -55,7 +56,7 @@ const SelectImage = () => {
   }
 
   return (
-    <div>
+    <div className="pt-20">
       <SimpleHeader
         onBackClick={handleBackClick}
         button={

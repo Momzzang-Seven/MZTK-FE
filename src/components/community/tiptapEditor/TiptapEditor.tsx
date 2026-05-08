@@ -12,11 +12,11 @@ interface TiptapEditorProps {
 const TiptapEditor = ({ onChange, referenceType, initialContent }: TiptapEditorProps) => {
   const { editor, handleImageSelect } = useTiptapEditor(onChange, referenceType, initialContent);
 
+  if (!editor) return null;
+
   return (
     <div className="w-full">
-      {editor && (
-        <Toolbar editor={editor} onImageSelect={handleImageSelect} />
-      )}
+      <Toolbar editor={editor} onImageSelect={handleImageSelect} />
       <div className="px-4 py-2 border-b border-gray-200">
         <EditorContent editor={editor} />
       </div>

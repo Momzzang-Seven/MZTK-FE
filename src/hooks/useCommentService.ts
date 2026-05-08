@@ -28,7 +28,7 @@ export const useCommentService = <T extends Comment>(postId: number) => {
             profileImage: user?.profileImage,
           }
         };
-        setComments((prev) => [commentWithWriter as T, ...prev]);
+        setComments((prev) => [...prev, commentWithWriter as T]);
       }
       return newComment;
     } catch (error) {
@@ -58,12 +58,12 @@ export const useCommentService = <T extends Comment>(postId: number) => {
     } finally {
       setIsLoading(false);
     }
-  }, [page]);
+  }, [postId, page]);
 
   const loadMore = useCallback(() => {
     if (isLoading || isLast) return;
     fetchComments(false);
-  }, [isLoading, isLast, page, fetchComments]);
+  }, [isLoading, isLast, fetchComments]);
     
   const refetch = useCallback(async () => {
     await fetchComments(true);

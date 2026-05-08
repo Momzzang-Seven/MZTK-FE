@@ -2,6 +2,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import TokenSelector from "../newPost/QuestionPostRewardSelector";
 
+vi.mock("@hooks", () => ({
+  useTokenBalance: vi.fn(() => ({ balance: 80 })),
+}));
+
 describe("TokenSelect", () => {
   const setRewardMock = vi.fn();
 

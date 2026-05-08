@@ -9,7 +9,7 @@ import {
   ConfirmReport,
   EditComment,
 } from "@components/community";
-import type { ActionModalType } from "@types";
+import type { ActionModalType, Web3Execution, Image } from "@types";
 import { usePostService, useCommentService } from "@hooks";
 
 const sizeMap = {
@@ -22,29 +22,41 @@ const sizeMap = {
 interface PostActionListProps {
   size?: "xs" | "sm" | "md" | "lg";
   type: string;
+  parentPostId?: number;
   id?: number;
   authorId: number;
   onDeletePostSuccess?: () => void;
   isSelectable?: boolean;
   commentId?: number;
+  answerContent?: string;
+  answerImages?: Image[];
   commentContent?: string;
   onUpdateReplySuccess?: () => void;
+  isEditable?: boolean;
+  isWeb3Executable?: boolean;
+  Web3Execution?: Web3Execution;
 }
 
 const ActionList = ({
   size = "md",
   type,
+  parentPostId,
   id,
   onDeletePostSuccess,
   isSelectable = true,
   authorId,
+  answerContent,
+  answerImages,
   commentContent = "",
-  onUpdateReplySuccess
+  onUpdateReplySuccess,
+  isEditable,
+  isWeb3Executable,
+  Web3Execution
 }: PostActionListProps) => {
   const navigate = useNavigate();
   const [modalType, setModalType] = useState<ActionModalType>(null);
   const [content, setContent] = useState(commentContent);
-  const { deletePost } = usePostService();
+  const { deletePost, acceptAnswer } = usePostService();
   const { updateComment, deleteComment } = useCommentService(0); // 댓글 수정, 삭제는 postId가 필요 없으므로 0으로 고정
 
   const stored = localStorage.getItem("user-storage");
@@ -58,8 +70,16 @@ const ActionList = ({
 
   const handleEditClick = () => {
     if (type === "FREE") navigate(`/community/free/edit/${id}/select-image`);
-    if (type === "QUESTION") navigate(`/community/question/edit/${id}`);
-    if (type === "ANSWER") navigate(`/community/answer/edit/${id}`);
+    if (type === "QUESTION") {
+      if (isEditable && !isWeb3Executable) {
+        navigate(`/community/question/edit/${id}`);
+      }
+    }
+    if (type === "ANSWER" && answerContent) {
+      if (isEditable && !isWeb3Executable) {
+        navigate(`/community/answer/edit/${id}/${parentPostId}`, { state: { content: answerContent, images: answerImages } });
+      }
+    }
     if (type === "COMMENT") setModalType("EDIT_COMMENT");
   };
 
@@ -74,21 +94,36 @@ const ActionList = ({
   const handleConfirmDeleteClick = async () => {
     if (type === "COMMENT" && id) {
       await deleteComment(id);
-    } else if (type === "FREE" &&id) {
-      await deletePost(id);
+    } else if (type === "QUESTION" && isEditable && id) {
+      await deletePost(type, id);
+    } else if (type === "ANSWER" && isEditable && parentPostId && id) {
+      await deletePost(type, id, parentPostId);
+    } else if (type === "FREE" && id) {
+      await deletePost(type, id);
     }
     closeModal();
     onUpdateReplySuccess?.();
     onDeletePostSuccess?.();
   };
   
-  const handleConfirmSelectClick = () => {
+  const handleConfirmAcceptClick = async () => {
+    if (type === "ANSWER" && id && parentPostId) {
+      await acceptAnswer(parentPostId, id);
+    }
     closeModal();
   };
   
   const handleConfirmReportClick = () => {
     closeModal();
   };
+
+  const handleSignClick = () => {
+    if (type === "ANSWER") {
+      navigate(`/verify-wallet/${Web3Execution?.resource.type?.toLowerCase()}/${Web3Execution?.resource.id}/${parentPostId}`, {state : { intent: Web3Execution }})
+    } else {
+      navigate(`/verify-wallet/${Web3Execution?.resource.type?.toLowerCase()}/${Web3Execution?.resource.id}`, {state : { intent: Web3Execution }})
+    }
+  }
 
   const handleDeleteClick = () => {
     setModalType("DELETE_CONFIRM");
@@ -111,6 +146,9 @@ const ActionList = ({
             handleEditClick={handleEditClick}
             handleDeleteClick={handleDeleteClick}
             handleCancelClick={closeModal}
+            handleSignClick={handleSignClick}
+            isWeb3Executable={isWeb3Executable ?? false}
+            isEditable={isEditable ?? true}
           />
         );
 
@@ -128,7 +166,7 @@ const ActionList = ({
       case "SELECT_CONFIRM":
         return (
           <ConfirmSelect
-            handleSelectClick={handleConfirmSelectClick}
+            handleSelectClick={handleConfirmAcceptClick}
             handleCancelClick={closeModal}
           />
         );

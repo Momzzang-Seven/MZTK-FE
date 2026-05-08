@@ -3,14 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { MnemonicForm } from "@components/auth/MnemonicForm";
 import { PinPad } from "@components/auth/PinPad";
-import { CommonModal } from "@components/common";
+import { CommonModal, LoadingSpinner } from "@components/common";
 import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useUserStore } from "@store";
+import { useWalletService } from "@hooks";
 
 const RegisterWallet = () => {
   const navigate = useNavigate();
   const setWalletAddress = useUserStore((state) => state.setWalletAddress);
+  const { loading, error, setError, handleWalletRegistration, handleUnlinkWallet } = useWalletService();
   const [step, setStep] = useState<
     "AUTH_PIN" | "MNEMONIC" | "PIN_SET" | "PIN_CONFIRM" | "SUCCESS"
   >(() => {
@@ -41,13 +43,29 @@ const RegisterWallet = () => {
   };
 
   const handleFinalize = useCallback(async () => {
-    if (!wallet) return;
-    const encryptedJson = await wallet.encrypt(pin);
-    localStorage.setItem("encrypted_wallet", encryptedJson);
-    localStorage.setItem("wallet_address", wallet.address);
-    setWalletAddress(wallet.address);
-    setStep("SUCCESS");
-  }, [wallet, pin, setWalletAddress]);
+    if (!wallet || loading) return;
+
+    try {
+      const existingWalletAddress = localStorage.getItem("wallet_address");
+      if (existingWalletAddress) {
+        await handleUnlinkWallet(existingWalletAddress);
+        localStorage.removeItem("encrypted_wallet");
+        localStorage.removeItem("wallet_address");
+      }
+
+      await handleWalletRegistration(wallet);
+      
+      const encryptedJson = await wallet.encrypt(pin);
+      localStorage.setItem("encrypted_wallet", encryptedJson);
+      localStorage.setItem("wallet_address", wallet.address);
+      setWalletAddress(wallet.address);
+      setStep("SUCCESS");
+    } catch {
+      setPin("");
+      setConfirmPin("");
+      setStep("PIN_SET");
+    }
+  }, [loading, wallet, pin, setWalletAddress, handleUnlinkWallet, handleWalletRegistration]);
 
   useEffect(() => {
     const verifyPin = async () => {
@@ -84,6 +102,12 @@ const RegisterWallet = () => {
 
   return (
     <FullScreenPage className="overflow-hidden">
+      {loading && (
+              <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+                <LoadingSpinner size="lg" color="text-white" />
+              </div>
+      )}
+
       {step === "AUTH_PIN" && (
         <PinPad
           title="기존 PIN 번호 인증"
@@ -139,6 +163,15 @@ const RegisterWallet = () => {
             if (step === "PIN_CONFIRM") setConfirmPin("");
             if (step === "AUTH_PIN") setAuthPin("");
           }}
+        />
+      )}
+
+      {error && (
+        <CommonModal
+          title="등록 실패"
+          desc={error}
+          confirmLabel="다시 시도하기"
+          onConfirmClick={() => setError(null)}
         />
       )}
     </FullScreenPage>

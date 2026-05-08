@@ -1,20 +1,28 @@
 import { useNavigate } from "react-router-dom";
-import type { PostType, Writer } from "@types";
+import type { PostType, Writer, Web3Execution } from "@types";
 import { formatTimeAgo } from "@utils";
 import { ActionList, SharePost } from "@components/community";
 
 interface QuestionHeaderProps {
+  isMine: boolean;
   type: PostType;
   postId: number;
   writer: Writer;
   createdAt: string;
+  isEditable: boolean;
+  isWeb3Executable: boolean;
+  Web3Execution: Web3Execution
 }
 
 const QuestionHeader = ({
+  isMine,
   type,
   postId,
   writer,
   createdAt,
+  isEditable,
+  isWeb3Executable,
+  Web3Execution
 }: QuestionHeaderProps) => {
   const navigate = useNavigate();
 
@@ -43,13 +51,29 @@ const QuestionHeader = ({
           </span>
         </div>
       </div>
+
       <div className="flex items-center space-x-2">
-        <ActionList
+        {isMine ? isEditable || isWeb3Executable && (
+          <ActionList
           size="md"
           type={type}
           id={postId}
           authorId={writer.userId}
+          isEditable={isEditable}
+          isWeb3Executable={isWeb3Executable}
+          Web3Execution={Web3Execution}
         />
+        ): (
+          <ActionList
+            size="md"
+            type={type}
+            id={postId}
+            authorId={writer.userId}
+            isEditable={false}
+            isWeb3Executable={false}
+          />
+        )}
+        
         <SharePost type={type} postId={postId} />
       </div>
     </div>
