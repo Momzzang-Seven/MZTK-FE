@@ -77,7 +77,6 @@ export const AdminErrorModal = () => {
             </p>
           </div>
 
-          {/* Request Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-1">
               <div className="flex items-center gap-2 text-gray-400 mb-1">
@@ -109,7 +108,7 @@ export const AdminErrorModal = () => {
           </div>
 
           {/* Detail Trace (Response Value) */}
-          {detail && (
+          {detail !== null && detail !== undefined && (
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-gray-400">
                 <ChevronRight size={14} />
