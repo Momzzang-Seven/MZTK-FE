@@ -2,8 +2,9 @@ import { authApi } from "./client";
 
 // DTO Interfaces based on Backend
 export interface LoginRequest {
-  provider: "KAKAO" | "GOOGLE" | "LOCAL";
+  provider: "KAKAO" | "GOOGLE" | "LOCAL" | "LOCAL_ADMIN";
   email?: string;
+  loginId?: string;
   password?: string;
   authorizationCode?: string;
   redirectUri?: string;

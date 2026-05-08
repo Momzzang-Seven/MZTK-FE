@@ -28,6 +28,9 @@ import {
   TokenLog,
   UserManagement,
   PostManagement,
+  AdminAccountManagement,
+  Web3Management,
+  SystemSettings,
   TrainerDashboard,
   CreateTicket,
   EditTicket,
@@ -53,15 +56,18 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
-  const { checkAnalysisCompletion } = useUserStore();
+  const { user, checkAnalysisCompletion } = useUserStore();
 
   useEffect(() => {
+    // Skip analysis completion check for ADMIN users or unauthenticated users
+    if (!user || user.role === "ADMIN") return;
+
     const interval = window.setInterval(() => {
       void checkAnalysisCompletion();
     }, 1000);
 
     return () => window.clearInterval(interval);
-  }, [checkAnalysisCompletion]);
+  }, [checkAnalysisCompletion, user]);
 
   return (
     <BrowserRouter>
@@ -77,6 +83,9 @@ function App() {
                 <Route path="users" element={<UserManagement />} />
                 <Route path="posts" element={<PostManagement />} />
                 <Route path="token-logs" element={<TokenLog />} />
+                <Route path="accounts" element={<AdminAccountManagement />} />
+                <Route path="web3" element={<Web3Management />} />
+                <Route path="settings" element={<SystemSettings />} />
 
                 <Route path="/404" element={<Err404 />} />
                 <Route
@@ -141,14 +150,6 @@ function App() {
                     <Route
                       path="/community/question/:postId"
                       element={<QuestionDetail />}
-                    />
-                    <Route
-                      path="/community/local-posts"
-                      element={<LocalPosts />}
-                    />
-                    <Route
-                      path="/verify-wallet/:type/:id/:parentId?"
-                      element={<VerifyWallet />}
                     />
                     <Route path="/my" element={<My />} />
                     <Route path="/my/activity/:tab" element={<MyActivity />} />

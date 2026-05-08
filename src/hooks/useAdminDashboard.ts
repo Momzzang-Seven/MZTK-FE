@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
+import { fetchUserStats, fetchPostStats } from "@services";
+import type { UserStatsResponse, PostStatsResponse } from "@types";
 
 interface EtherscanTxItem {
   from: string;
@@ -21,6 +23,8 @@ interface AdminDashboardData {
   tokenLogs: TokenLogItem[];
   ethBalance: string;
   mztkBalance: string;
+  userStats: UserStatsResponse | null;
+  postStats: PostStatsResponse | null;
   loading: boolean;
   error: string | null;
 }
@@ -57,6 +61,8 @@ export const useAdminDashboardData = () => {
     tokenLogs: [],
     ethBalance: "0",
     mztkBalance: "0",
+    userStats: null,
+    postStats: null,
     loading: true,
     error: null,
   });
@@ -65,7 +71,7 @@ export const useAdminDashboardData = () => {
     try {
       setData((prev) => ({ ...prev, loading: true, error: null }));
 
-      const [txRes, ethRes, mztkRes] = await Promise.all([
+      const [txRes, ethRes, mztkRes, userStats, postStats] = await Promise.all([
         fetch(
           `${ETHERSCAN_API_URL}?chainid=${CHAIN_ID}&module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&page=1&offset=6&sort=desc&apikey=${ETHERSCAN_API_KEY}`
         ),
@@ -75,6 +81,14 @@ export const useAdminDashboardData = () => {
         fetch(
           `${ETHERSCAN_API_URL}?chainid=${CHAIN_ID}&module=account&action=tokenbalance&contractaddress=${TOKEN_ADDRESS}&address=${ADMIN_WALLET_ADDRESS}&tag=latest&apikey=${ETHERSCAN_API_KEY}`
         ),
+        fetchUserStats().catch((err) => {
+          console.error("User stats fetch failed:", err);
+          return null;
+        }),
+        fetchPostStats().catch((err) => {
+          console.error("Post stats fetch failed:", err);
+          return null;
+        }),
       ]);
 
       const [txData, ethData, mztkData] = await Promise.all([
@@ -83,27 +97,31 @@ export const useAdminDashboardData = () => {
         mztkRes.json(),
       ]);
 
-      let tokenLogs: TokenLogItem[] = [];
-      if (txData.status === "1" && Array.isArray(txData.result)) {
-        tokenLogs = txData.result.map(formatTokenLog);
-      }
+      setData((prev) => {
+        let newTokenLogs = prev.tokenLogs;
+        if (txData.status === "1" && Array.isArray(txData.result)) {
+          newTokenLogs = txData.result.map(formatTokenLog);
+        }
 
-      let ethBalance = "0";
-      if (ethData.status === "1") {
-        ethBalance = formatEthBalance(ethData.result);
-      }
+        let newEthBalance = prev.ethBalance;
+        if (ethData.status === "1") {
+          newEthBalance = formatEthBalance(ethData.result);
+        }
 
-      let mztkBalance = "0";
-      if (mztkData.status === "1") {
-        mztkBalance = formatMztkBalance(mztkData.result);
-      }
+        let newMztkBalance = prev.mztkBalance;
+        if (mztkData.status === "1") {
+          newMztkBalance = formatMztkBalance(mztkData.result);
+        }
 
-      setData({
-        tokenLogs,
-        ethBalance,
-        mztkBalance,
-        loading: false,
-        error: null,
+        return {
+          tokenLogs: newTokenLogs,
+          ethBalance: newEthBalance,
+          mztkBalance: newMztkBalance,
+          userStats: userStats || prev.userStats,
+          postStats: postStats || prev.postStats,
+          loading: false,
+          error: null,
+        };
       });
     } catch (err) {
       console.error("데이터 호출 중 오류 발생:", err);
@@ -123,6 +141,8 @@ export const useAdminDashboardData = () => {
     tokenLogs: data.tokenLogs,
     ethBalance: data.ethBalance,
     mztkBalance: data.mztkBalance,
+    userStats: data.userStats,
+    postStats: data.postStats,
     loading: data.loading,
     error: data.error,
   };

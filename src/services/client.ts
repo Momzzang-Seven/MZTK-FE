@@ -38,14 +38,23 @@ const isAuthRequest = (url?: string) =>
     url?.includes("/auth/reissue")
   );
 
+const isAdminRequest = (url?: string) => url?.startsWith("/admin");
+
 const isMockAccessToken = (token?: string | null) =>
   typeof token === "string" && /^mock[-_]/.test(token);
 
 const showUnauthorizedModal = () => {
+  const isAdmin = window.location.pathname.startsWith("/admin");
+  useUserStore.getState().clearUser();
+
+  if (isAdmin) {
+    window.location.href = "/admin";
+    return;
+  }
+
   const authModalState = useAuthModalStore.getState();
   authModalState.setSanctioned(false);
   authModalState.setUnauthorized(true);
-  useUserStore.getState().clearUser();
 };
 
 const showSanctionedModal = () => {
@@ -86,6 +95,12 @@ const attachInterceptors = (instance: AxiosInstance) => {
           return Promise.reject(error);
         }
 
+        // For admin requests, redirect immediately on 401 instead of attempting reissue
+        if (isAdminRequest(originalRequest.url)) {
+          showUnauthorizedModal();
+          return Promise.reject(error);
+        }
+
         // Attempt to reissue token
         return axios
           .post(`${BASE}/auth/reissue`, {}, { withCredentials: true })
@@ -106,7 +121,11 @@ const attachInterceptors = (instance: AxiosInstance) => {
       }
 
       // 404
-      if (status === 404 && !originalRequest?._skipNotFoundRedirect) {
+      if (
+        status === 404 &&
+        !originalRequest?._skipNotFoundRedirect &&
+        !isAdminRequest(originalRequest?.url)
+      ) {
         window.location.href = "/404";
       }
 

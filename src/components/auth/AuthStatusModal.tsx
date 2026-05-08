@@ -16,7 +16,8 @@ export const AuthStatusModal = () => {
         confirmLabel="로그인 페이지로 이동"
         onConfirmClick={() => {
           setSanctioned(false);
-          navigate("/login");
+          const isAdmin = window.location.pathname.startsWith("/admin");
+          navigate(isAdmin ? "/admin" : "/login");
         }}
       >
         <a
@@ -39,7 +40,8 @@ export const AuthStatusModal = () => {
         confirmLabel="로그인 페이지로 이동"
         onConfirmClick={() => {
           setUnauthorized(false);
-          navigate("/login");
+          const isAdmin = window.location.pathname.startsWith("/admin");
+          navigate(isAdmin ? "/admin" : "/login");
         }}
       />
     );
