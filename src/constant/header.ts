@@ -43,7 +43,7 @@ export const headerByPath: HeaderByPathType[] = [
   },
   {
     label: "대기 중인 게시물",
-    path: "/community/local-posts"
+    path: "/community/local-posts",
   },
   {
     label: "예약/수강 내역",

@@ -3,7 +3,10 @@ interface QuestionPostRewardTokenProps {
   onClick?: () => void;
 }
 
-const QuestionPostRewardToken = ({ rewardToken, onClick }: QuestionPostRewardTokenProps) => {
+const QuestionPostRewardToken = ({
+  rewardToken,
+  onClick,
+}: QuestionPostRewardTokenProps) => {
   return (
     <div
       className="flex flex-row rounded-xl p-4 bg-gradient-to-r from-main to-sub w-full h-20 items-center justify-between text-white cursor-pointer"

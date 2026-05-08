@@ -11,9 +11,7 @@ const CreatePostButton = ({ postId }: CreatePostButtonProps) => {
 
   const handleCreatePost = () => {
     if (postId !== undefined) {
-      navigate(
-        `/community/answer/new/${encodeURIComponent(postId)}`,
-      );
+      navigate(`/community/answer/new/${encodeURIComponent(postId)}`);
       return;
     }
 

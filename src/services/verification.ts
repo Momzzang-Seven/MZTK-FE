@@ -74,14 +74,14 @@ export interface TodayWorkoutCompletionResponse {
 
 export const verificationService = {
   async submitWorkoutPhoto(
-    request: SubmitWorkoutVerificationRequest,
+    request: SubmitWorkoutVerificationRequest
   ): Promise<SubmitWorkoutVerificationResponse> {
     const response = await api.post("/verification/photo", request);
     return response.data.data;
   },
 
   async submitWorkoutRecord(
-    request: SubmitWorkoutVerificationRequest,
+    request: SubmitWorkoutVerificationRequest
   ): Promise<SubmitWorkoutVerificationResponse> {
     const response = await api.post("/verification/record", request);
     return response.data.data;

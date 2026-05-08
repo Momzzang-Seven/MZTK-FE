@@ -41,7 +41,9 @@ describe("CreatePostButton", () => {
     const button = screen.getByRole("button");
     fireEvent.click(button);
 
-    expect(mockNavigate).toHaveBeenCalledWith("/community/free/new/select-image");
+    expect(mockNavigate).toHaveBeenCalledWith(
+      "/community/free/new/select-image"
+    );
   });
 
   it("질문게시판 경로에서 클릭 시 새 질문 작성 페이지로 이동한다", () => {

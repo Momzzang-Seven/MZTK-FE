@@ -51,7 +51,7 @@ const ActionList = ({
   onUpdateReplySuccess,
   isEditable,
   isWeb3Executable,
-  Web3Execution
+  Web3Execution,
 }: PostActionListProps) => {
   const navigate = useNavigate();
   const [modalType, setModalType] = useState<ActionModalType>(null);
@@ -77,7 +77,9 @@ const ActionList = ({
     }
     if (type === "ANSWER" && answerContent) {
       if (isEditable && !isWeb3Executable) {
-        navigate(`/community/answer/edit/${id}/${parentPostId}`, { state: { content: answerContent, images: answerImages } });
+        navigate(`/community/answer/edit/${id}/${parentPostId}`, {
+          state: { content: answerContent, images: answerImages },
+        });
       }
     }
     if (type === "COMMENT") setModalType("EDIT_COMMENT");
@@ -90,7 +92,7 @@ const ActionList = ({
     closeModal();
     onUpdateReplySuccess?.();
   };
-  
+
   const handleConfirmDeleteClick = async () => {
     if (type === "COMMENT" && id) {
       await deleteComment(id);
@@ -105,25 +107,31 @@ const ActionList = ({
     onUpdateReplySuccess?.();
     onDeletePostSuccess?.();
   };
-  
+
   const handleConfirmAcceptClick = async () => {
     if (type === "ANSWER" && id && parentPostId) {
       await acceptAnswer(parentPostId, id);
     }
     closeModal();
   };
-  
+
   const handleConfirmReportClick = () => {
     closeModal();
   };
 
   const handleSignClick = () => {
     if (type === "ANSWER") {
-      navigate(`/verify-wallet/${Web3Execution?.resource.type?.toLowerCase()}/${Web3Execution?.resource.id}/${parentPostId}`, {state : { intent: Web3Execution }})
+      navigate(
+        `/verify-wallet/${Web3Execution?.resource.type?.toLowerCase()}/${Web3Execution?.resource.id}/${parentPostId}`,
+        { state: { intent: Web3Execution } }
+      );
     } else {
-      navigate(`/verify-wallet/${Web3Execution?.resource.type?.toLowerCase()}/${Web3Execution?.resource.id}`, {state : { intent: Web3Execution }})
+      navigate(
+        `/verify-wallet/${Web3Execution?.resource.type?.toLowerCase()}/${Web3Execution?.resource.id}`,
+        { state: { intent: Web3Execution } }
+      );
     }
-  }
+  };
 
   const handleDeleteClick = () => {
     setModalType("DELETE_CONFIRM");
@@ -132,7 +140,6 @@ const ActionList = ({
   const handleReportClick = () => {
     setModalType("REPORT_CONFIRM");
   };
-
 
   const handleSelectClick = () => {
     setModalType("SELECT_CONFIRM");

@@ -1,9 +1,9 @@
 import { api } from "./client";
-import type { 
-  CreateChallengeRequest, 
-  ChallengeResponse, 
-  RegisterWalletRequest, 
-  RegisterWalletResponse 
+import type {
+  CreateChallengeRequest,
+  ChallengeResponse,
+  RegisterWalletRequest,
+  RegisterWalletResponse,
 } from "../types/wallet";
 
 /**
@@ -13,7 +13,9 @@ export const walletService = {
   /**
    * 지갑 등록을 위한 챌린지(메시지) 생성
    */
-  async createChallenge(request: CreateChallengeRequest): Promise<ChallengeResponse> {
+  async createChallenge(
+    request: CreateChallengeRequest
+  ): Promise<ChallengeResponse> {
     const response = await api.post("/web3/challenges", request);
     return response.data.data;
   },
@@ -21,7 +23,9 @@ export const walletService = {
   /**
    * 서명된 메시지로 지갑 등록
    */
-  async registerWallet(request: RegisterWalletRequest): Promise<RegisterWalletResponse> {
+  async registerWallet(
+    request: RegisterWalletRequest
+  ): Promise<RegisterWalletResponse> {
     const response = await api.post("/web3/wallets", request);
     return response.data.data;
   },
@@ -31,5 +35,5 @@ export const walletService = {
    */
   async unlinkWallet(walletAddress: string): Promise<void> {
     await api.delete(`/web3/wallets/${walletAddress}`);
-  }
+  },
 };

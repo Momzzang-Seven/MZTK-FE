@@ -161,7 +161,7 @@ export const useUserStore = create<UserState>()(
       clearUser: () => {
         localStorage.removeItem("wallet_address");
         localStorage.removeItem("encrypted_wallet");
-        
+
         set({
           user: null,
           isAuthenticated: false,
@@ -176,7 +176,7 @@ export const useUserStore = create<UserState>()(
           analysisTargetTime: null,
           analysisType: null,
           analysisStartedAt: null,
-        })
+        });
       },
 
       reset: () => set(initialState),

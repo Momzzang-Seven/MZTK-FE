@@ -1,4 +1,8 @@
-import type { Web3IntentStatus, PublicationStatus, ModerationStatus } from "@types";
+import type {
+  Web3IntentStatus,
+  PublicationStatus,
+  ModerationStatus,
+} from "@types";
 
 /**
  * 게시글 공개/차단 상태 및 Web3 상태를 기준으로 질문의 상태를 파싱합니다.
@@ -32,18 +36,28 @@ export const statusStyleMap: Record<string, { label: string; bg: string }> = {
 
 // 상태값에 따른 한글 메시지 변환
 export const getIntentStatusMessage = (status: Web3IntentStatus) => {
-    switch (status) {
-      case 'AWAITING_SIGNATURE': return '서명 필요';
-      case 'SIGNED': return '서명 완료'
-      case 'PENDING_ONCHAIN': return '체인 전송중';
-      case 'FAILED_ONCHAIN': return '실패';
-      case 'EXPIRED': return '시간 만료';
-      case "CONFIRMED": return '완료';
-      default: return '상태 확인중';
-    }
+  switch (status) {
+    case "AWAITING_SIGNATURE":
+      return "서명 필요";
+    case "SIGNED":
+      return "서명 완료";
+    case "PENDING_ONCHAIN":
+      return "체인 전송중";
+    case "FAILED_ONCHAIN":
+      return "실패";
+    case "EXPIRED":
+      return "시간 만료";
+    case "CONFIRMED":
+      return "완료";
+    default:
+      return "상태 확인중";
+  }
 };
 
-export const replaceImageSrc = (content: string, images: { imageUrl: string }[]) => {
+export const replaceImageSrc = (
+  content: string,
+  images: { imageUrl: string }[]
+) => {
   let index = 0;
   return content.replace(/<img[^>]+src="([^">]+)"/g, (match) => {
     if (index < images.length) {

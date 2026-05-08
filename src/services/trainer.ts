@@ -197,7 +197,7 @@ export const getTrainerStore = async (): Promise<TrainerStoreResponse> => {
     _skipNotFoundRedirect: true,
     headers: {
       "Cache-Control": "no-cache",
-      "Pragma": "no-cache",
+      Pragma: "no-cache",
     },
   });
   return response.data.data;
@@ -221,7 +221,10 @@ export const updateTrainerClass = async (
   classId: number,
   payload: UpdateTrainerClassPayload
 ): Promise<UpdateTrainerClassResponse> => {
-  const response = await api.put(`/marketplace/trainer/classes/${classId}`, payload);
+  const response = await api.put(
+    `/marketplace/trainer/classes/${classId}`,
+    payload
+  );
   return response.data.data;
 };
 
@@ -237,22 +240,22 @@ export const getTrainerClasses = async (
 export const toggleTrainerClassStatus = async (
   classId: number
 ): Promise<ToggleTrainerClassStatusResponse> => {
-  const response = await api.patch(`/marketplace/trainer/classes/${classId}/status`);
+  const response = await api.patch(
+    `/marketplace/trainer/classes/${classId}/status`
+  );
   return response.data.data;
 };
 
-export const getMarketplaceClasses = async (
-  params?: {
-    lat?: number;
-    lng?: number;
-    category?: MarketplaceClassCategory;
-    sort?: string;
-    trainerId?: number;
-    startTime?: string;
-    endTime?: string;
-    page?: number;
-  }
-): Promise<GetMarketplaceClassesResponse> => {
+export const getMarketplaceClasses = async (params?: {
+  lat?: number;
+  lng?: number;
+  category?: MarketplaceClassCategory;
+  sort?: string;
+  trainerId?: number;
+  startTime?: string;
+  endTime?: string;
+  page?: number;
+}): Promise<GetMarketplaceClassesResponse> => {
   const response = await api.get("/marketplace/classes", { params });
   return response.data.data;
 };

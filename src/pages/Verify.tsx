@@ -42,7 +42,7 @@ const Verify = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 0
+        maximumAge: 0,
       }
     );
 
@@ -56,8 +56,10 @@ const Verify = () => {
 
     if (coor && gymLocation) {
       const d = getDistanceFromLatLonInMeters(
-        coor.lat, coor.lng,
-        gymLocation.lat, gymLocation.lng
+        coor.lat,
+        coor.lng,
+        gymLocation.lat,
+        gymLocation.lng
       );
       setDistance(Math.floor(d)); // Integer meters
     }
@@ -70,16 +72,19 @@ const Verify = () => {
     }
     if (!coor) return;
 
-    if (distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS) {
+    if (
+      distance !== null &&
+      distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS
+    ) {
       setIsVerifying(true);
       try {
         const { locationService } = await import("@services/location");
         const result = await locationService.verifyLocation({
           locationId: gymLocation.locationId,
           currentLatitude: coor.lat,
-          currentLongitude: coor.lng
+          currentLongitude: coor.lng,
         });
-        
+
         if (result.isVerified) {
           completeExercise(result.grantedXp || 100);
           setSuccessModalOpen(true);
@@ -102,7 +107,8 @@ const Verify = () => {
     }
   };
 
-  const isNear = distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS;
+  const isNear =
+    distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS;
 
   return (
     <div className="flex flex-col h-full bg-white relative">
@@ -111,16 +117,30 @@ const Verify = () => {
       {/* Map Area */}
       <div className="flex-1 w-full relative">
         <MapView center={coor} mapKey={MAP_KEY} mapId={MAP_ID} />
-        <VerifyStatusOverlay gymLocation={gymLocation} distance={distance} isNear={isNear} />
+        <VerifyStatusOverlay
+          gymLocation={gymLocation}
+          distance={distance}
+          isNear={isNear}
+        />
       </div>
 
       {/* Verify Button */}
       <div className="absolute bottom-[110px] left-0 right-0 px-5 z-20">
         <CommonButton
-          label={isVerifying ? "인증 중..." : (isNear ? VERIFY_TEXT.BTN_VERIFY : VERIFY_TEXT.BTN_MOVE_TO_RANGE)}
+          label={
+            isVerifying
+              ? "인증 중..."
+              : isNear
+                ? VERIFY_TEXT.BTN_VERIFY
+                : VERIFY_TEXT.BTN_MOVE_TO_RANGE
+          }
           onClick={handleVerify}
           disabled={isVerifying}
-          bgColor={isNear && !isVerifying ? "bg-main hover:bg-[#E09E2B]" : "bg-gray-300"}
+          bgColor={
+            isNear && !isVerifying
+              ? "bg-main hover:bg-[#E09E2B]"
+              : "bg-gray-300"
+          }
           textColor={isNear && !isVerifying ? "text-white" : "text-gray-500"}
           className="font-bold text-xl py-4 rounded-2xl shadow-lg transition-all active:scale-95 w-full"
         />

@@ -69,25 +69,37 @@ vi.mock("@components/community", () => ({
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
-  ConfirmSelect: ({ handleSelectClick, handleCancelClick }: Record<string, () => void>) => (
+  ConfirmSelect: ({
+    handleSelectClick,
+    handleCancelClick,
+  }: Record<string, () => void>) => (
     <div data-testid="confirm-select">
       <button onClick={handleSelectClick}>채택 확인</button>
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
-  ConfirmDelete: ({ handleConfirmClick, handleCancelClick }: Record<string, () => void>) => (
+  ConfirmDelete: ({
+    handleConfirmClick,
+    handleCancelClick,
+  }: Record<string, () => void>) => (
     <div data-testid="confirm-delete">
       <button onClick={handleConfirmClick}>삭제 확인</button>
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
-  ConfirmReport: ({ handleReportClick, handleCancelClick }: Record<string, () => void>) => (
+  ConfirmReport: ({
+    handleReportClick,
+    handleCancelClick,
+  }: Record<string, () => void>) => (
     <div data-testid="confirm-report">
       <button onClick={handleReportClick}>신고 확인</button>
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
-  EditComment: ({ handleEditClick, handleCancelClick }: Record<string, () => void>) => (
+  EditComment: ({
+    handleEditClick,
+    handleCancelClick,
+  }: Record<string, () => void>) => (
     <div data-testid="edit-comment">
       <button onClick={handleEditClick}>수정 완료</button>
       <button onClick={handleCancelClick}>취소</button>
@@ -171,7 +183,9 @@ describe("ActionList 컴포넌트", () => {
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
-      expect(mockNavigate).toHaveBeenCalledWith("/community/free/edit/10/select-image");
+      expect(mockNavigate).toHaveBeenCalledWith(
+        "/community/free/edit/10/select-image"
+      );
     });
 
     it('type이 "question"일 때 수정 클릭 시 navigate("/community/question/edit/{id}")가 호출된다', () => {
@@ -196,10 +210,9 @@ describe("ActionList 컴포넌트", () => {
       fireEvent.click(screen.getByAltText("더보기"));
       fireEvent.click(screen.getByText("수정"));
 
-      expect(mockNavigate).toHaveBeenCalledWith(
-        "/community/answer/edit/30/7",
-        { state: { content: answerContent, images: answerImages } }
-      );
+      expect(mockNavigate).toHaveBeenCalledWith("/community/answer/edit/30/7", {
+        state: { content: answerContent, images: answerImages },
+      });
     });
   });
 

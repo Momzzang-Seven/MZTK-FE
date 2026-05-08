@@ -1,5 +1,15 @@
 import { api } from "./client";
-import type { PostType, PostPayload, GetPostsResponse, GetMyPostsResponse, FreePost, QuestionPost, AnswerPost, CreateQnAPostResponse, AcceptAnswerResponse } from "@types";
+import type {
+  PostType,
+  PostPayload,
+  GetPostsResponse,
+  GetMyPostsResponse,
+  FreePost,
+  QuestionPost,
+  AnswerPost,
+  CreateQnAPostResponse,
+  AcceptAnswerResponse,
+} from "@types";
 
 export const postService = {
   /**
@@ -21,8 +31,11 @@ export const postService = {
   /**
    * 답변 등록
    */
-  async createAnswer(postId: number, payload: PostPayload): Promise<CreateQnAPostResponse> {
-    const response = await api.post(`/questions/${postId}/answers`, payload)
+  async createAnswer(
+    postId: number,
+    payload: PostPayload
+  ): Promise<CreateQnAPostResponse> {
+    const response = await api.post(`/questions/${postId}/answers`, payload);
     return response.data.data;
   },
 
@@ -60,7 +73,7 @@ export const postService = {
    * 게시글 상세 조회
    */
   async getPost(postId: number): Promise<FreePost | QuestionPost> {
-    const response = await api.get(`/posts/${postId}`)
+    const response = await api.get(`/posts/${postId}`);
     return response.data.data;
   },
 
@@ -68,23 +81,33 @@ export const postService = {
    * 자유게시글 수정
    */
   async updateFreePost(postId: number, payload: PostPayload): Promise<void> {
-    const response = await api.patch(`/posts/${postId}`, payload)
+    const response = await api.patch(`/posts/${postId}`, payload);
     return response.data.data;
   },
 
   /**
    * 질문게시글 수정
    */
-  async updateQuestion(postId: number, payload: PostPayload): Promise<CreateQnAPostResponse> {
-    const response = await api.patch(`/posts/${postId}`, payload)
+  async updateQuestion(
+    postId: number,
+    payload: PostPayload
+  ): Promise<CreateQnAPostResponse> {
+    const response = await api.patch(`/posts/${postId}`, payload);
     return response.data.data;
   },
 
   /**
    * 답변 수정
    */
-  async updateAnswer(postId: number, answerId: number, payload: PostPayload): Promise<CreateQnAPostResponse> {
-    const response = await api.put(`/questions/${postId}/answers/${answerId}`, payload)
+  async updateAnswer(
+    postId: number,
+    answerId: number,
+    payload: PostPayload
+  ): Promise<CreateQnAPostResponse> {
+    const response = await api.put(
+      `/questions/${postId}/answers/${answerId}`,
+      payload
+    );
     return response.data.data;
   },
 
@@ -92,15 +115,20 @@ export const postService = {
    * 게시물 삭제
    */
   async deletePost(postId: number): Promise<CreateQnAPostResponse> {
-    const response = await api.delete(`/posts/${postId}`)
+    const response = await api.delete(`/posts/${postId}`);
     return response.data.data;
   },
 
   /**
    * 답변 삭제
    */
-  async deleteAnswer(postId: number, answerId: number): Promise<CreateQnAPostResponse> {
-    const response = await api.delete(`/questions/${postId}/answers/${answerId}`)
+  async deleteAnswer(
+    postId: number,
+    answerId: number
+  ): Promise<CreateQnAPostResponse> {
+    const response = await api.delete(
+      `/questions/${postId}/answers/${answerId}`
+    );
     return response.data.data;
   },
 
@@ -108,7 +136,7 @@ export const postService = {
    * 게시물 좋아요
    */
   async likePost(postId: number): Promise<void> {
-    const response = await api.post(`/posts/${postId}/likes`)
+    const response = await api.post(`/posts/${postId}/likes`);
     return response.data;
   },
 
@@ -116,7 +144,7 @@ export const postService = {
    * 게시물 좋아요 취소
    */
   async unlikePost(postId: number): Promise<void> {
-    const response = await api.delete(`/posts/${postId}/likes`)
+    const response = await api.delete(`/posts/${postId}/likes`);
     return response.data;
   },
 
@@ -124,23 +152,33 @@ export const postService = {
    * 자유, 질문 생성 복구
    */
   async recoverCreatePost(postId: number): Promise<CreateQnAPostResponse> {
-    const response = await api.post(`/posts/${postId}/web3/recover-create`)
+    const response = await api.post(`/posts/${postId}/web3/recover-create`);
     return response.data.data;
   },
 
   /**
    * 답변 생성 복구
    */
-  async recoverCreateAnswer(postId: number, answerId: number): Promise<CreateQnAPostResponse> {
-    const response = await api.post(`/questions/${postId}/answers/${answerId}/web3/recover-create`)
+  async recoverCreateAnswer(
+    postId: number,
+    answerId: number
+  ): Promise<CreateQnAPostResponse> {
+    const response = await api.post(
+      `/questions/${postId}/answers/${answerId}/web3/recover-create`
+    );
     return response.data.data;
   },
 
   /**
    * 답변 채택
    */
-  async acceptAnswer(postId: number, answerId: number): Promise<AcceptAnswerResponse> {
-    const response = await api.post(`/posts/${postId}/answers/${answerId}/accept`)
+  async acceptAnswer(
+    postId: number,
+    answerId: number
+  ): Promise<AcceptAnswerResponse> {
+    const response = await api.post(
+      `/posts/${postId}/answers/${answerId}/accept`
+    );
     return response.data.data;
   },
 
@@ -185,4 +223,4 @@ export const postService = {
     });
     return response.data.data;
   },
-}
+};

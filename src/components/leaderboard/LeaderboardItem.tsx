@@ -10,9 +10,7 @@ const RANK_MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 const LeaderboardItem = ({ user, isMe = false }: LeaderboardItemProps) => {
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 ${
-        isMe ? "bg-main" : ""
-      }`}
+      className={`flex items-center gap-3 px-4 py-3 ${isMe ? "bg-main" : ""}`}
     >
       {/* 랭킹 */}
       <span
@@ -32,7 +30,9 @@ const LeaderboardItem = ({ user, isMe = false }: LeaderboardItemProps) => {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className={`w-full h-full ${isMe ? "bg-white/30" : "bg-main/30"}`} />
+          <div
+            className={`w-full h-full ${isMe ? "bg-white/30" : "bg-main/30"}`}
+          />
         )}
       </div>
 
@@ -45,13 +45,13 @@ const LeaderboardItem = ({ user, isMe = false }: LeaderboardItemProps) => {
         >
           {user.nickname}
           {isMe && (
-            <span className="ml-1.5 text-[11px] font-medium opacity-80">(나)</span>
+            <span className="ml-1.5 text-[11px] font-medium opacity-80">
+              (나)
+            </span>
           )}
         </span>
         <span
-          className={`text-[12px] ${
-            isMe ? "text-white/80" : "text-gray-500"
-          }`}
+          className={`text-[12px] ${isMe ? "text-white/80" : "text-gray-500"}`}
         >
           Lv.{user.level} · {user.lifetimeXp.toLocaleString()} XP
         </span>

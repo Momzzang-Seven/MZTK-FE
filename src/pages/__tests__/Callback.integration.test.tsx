@@ -8,7 +8,8 @@ vi.mock("axios", async () => {
   const actual = await vi.importActual("axios");
   return {
     ...(actual as object),
-    isAxiosError: (err: unknown) => (err as { isAxiosError?: boolean }).isAxiosError === true,
+    isAxiosError: (err: unknown) =>
+      (err as { isAxiosError?: boolean }).isAxiosError === true,
     default: {
       ...(actual as { default: Record<string, unknown> }).default,
       isAxiosError: (err: unknown) =>
@@ -42,7 +43,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     vi.mocked(PostLogin).mockReset();
   });
 
-  it('기존 유저가 로그인하면 메인(/) 페이지로 이동한다', async () => {
+  it("기존 유저가 로그인하면 메인(/) 페이지로 이동한다", async () => {
     vi.mocked(PostLogin).mockResolvedValueOnce({
       userInfo: {
         userId: 1,
@@ -75,28 +76,28 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     });
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/register');
+      expect(mockNavigate).toHaveBeenCalledWith("/register");
     });
   });
 
-  it('신규 유저가 로그인하면 회원가입(/register) 페이지로 이동한다', async () => {
+  it("신규 유저가 로그인하면 회원가입(/register) 페이지로 이동한다", async () => {
     vi.mocked(PostLogin).mockResolvedValueOnce({
-      userInfo: { 
-        userId: 1, 
-        nickname: '테스트',
-        email: 'test@example.com',
-        profileImage: '',
-        role: 'USER',
-        walletAddress: '0x123'
+      userInfo: {
+        userId: 1,
+        nickname: "테스트",
+        email: "test@example.com",
+        profileImage: "",
+        role: "USER",
+        walletAddress: "0x123",
       },
-      accessToken: 'mock-token',
-      grantType: 'Bearer',
+      accessToken: "mock-token",
+      grantType: "Bearer",
       expiresIn: 3600,
       isNewUser: true,
     });
 
     render(
-      <MemoryRouter initialEntries={['/callback?code=test-code&state=kakao']}>
+      <MemoryRouter initialEntries={["/callback?code=test-code&state=kakao"]}>
         <Routes>
           <Route path="/callback" element={<Callback />} />
         </Routes>
@@ -185,7 +186,9 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     );
 
     expect(await screen.findByText("로그인 실패")).toBeInTheDocument();
-    expect(await screen.findByText("이미 가입된 계정입니다.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("이미 가입된 계정입니다.")
+    ).toBeInTheDocument();
   });
 
   it("일반 에러 발생 시 /login 페이지로 리다이렉트한다", async () => {

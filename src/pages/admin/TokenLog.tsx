@@ -35,7 +35,9 @@ const TokenLog = () => {
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       const amount = Number(ethers.formatUnits(log.value, 18));
-      const matchesSearch = log.to.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = log.to
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
 
       let matchesFilter = true;
       if (filterType === "REWARD") matchesFilter = amount <= 100;
@@ -92,16 +94,21 @@ const TokenLog = () => {
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 rounded-full ${isSettlement ? "bg-blue-500" : "bg-main"}`}></span>
+                      <span
+                        className={`w-2.5 h-2.5 rounded-full ${isSettlement ? "bg-blue-500" : "bg-main"}`}
+                      ></span>
                       <p className="font-bold text-gray-800 break-all text-[15px]">
                         {tx.to}
                       </p>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className={`text-[11px] font-black px-2 py-0.5 rounded-md border ${isSettlement
-                        ? "text-blue-600 bg-blue-50 border-blue-100"
-                        : "text-main bg-orange-50 border-orange-100"
-                        }`}>
+                      <span
+                        className={`text-[11px] font-black px-2 py-0.5 rounded-md border ${
+                          isSettlement
+                            ? "text-blue-600 bg-blue-50 border-blue-100"
+                            : "text-main bg-orange-50 border-orange-100"
+                        }`}
+                      >
                         {isSettlement ? "트레이너 정산" : "사용자 보상"}
                       </span>
                       <span className="text-[12px] text-gray-300">
@@ -110,10 +117,14 @@ const TokenLog = () => {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className={`font-black text-xl tracking-tight ${isSettlement ? "text-blue-600" : "text-main"}`}>
+                    <span
+                      className={`font-black text-xl tracking-tight ${isSettlement ? "text-blue-600" : "text-main"}`}
+                    >
                       +{amount.toLocaleString()}
                     </span>
-                    <span className="ml-1 text-sm font-bold text-gray-400">MZTK</span>
+                    <span className="ml-1 text-sm font-bold text-gray-400">
+                      MZTK
+                    </span>
                   </div>
                 </div>
               );
@@ -123,7 +134,10 @@ const TokenLog = () => {
               <div className="text-4xl opacity-20">🔍</div>
               <p className="text-gray-400 font-medium">검색 결과가 없습니다.</p>
               <button
-                onClick={() => { setSearchQuery(""); setFilterType("ALL"); }}
+                onClick={() => {
+                  setSearchQuery("");
+                  setFilterType("ALL");
+                }}
                 className="text-xs text-main font-bold underline mt-2"
               >
                 필터 초기화하기

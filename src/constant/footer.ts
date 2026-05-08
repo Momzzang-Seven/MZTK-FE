@@ -39,4 +39,3 @@ export const footerItem: FooterItemType[] = [
     path: "/my",
   },
 ];
-

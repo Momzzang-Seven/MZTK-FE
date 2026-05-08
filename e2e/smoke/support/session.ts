@@ -86,7 +86,7 @@ const buildPersistedUserStorage = (loginData: LoginResponseData) => ({
 export const hasTrainerSmokeCredentials = () =>
   Boolean(
     process.env.E2E_SMOKE_TRAINER_EMAIL &&
-      process.env.E2E_SMOKE_TRAINER_PASSWORD
+    process.env.E2E_SMOKE_TRAINER_PASSWORD
   );
 
 export const createAuthenticatedSession = async (
@@ -139,7 +139,8 @@ export const waitForApiResponse = (
     status >= 200 && status < 300
 ) =>
   page.waitForResponse(
-    (response) => response.url().includes(path) && statusPredicate(response.status()),
+    (response) =>
+      response.url().includes(path) && statusPredicate(response.status()),
     { timeout: 30000 }
   );
 

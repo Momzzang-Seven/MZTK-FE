@@ -5,24 +5,24 @@ import { useTicketForm } from "@hooks/trainer/useTicketForm";
  * 트레이너 클래스 등록 페이지
  */
 const CreateTicket = () => {
-    const ticketFormProps = useTicketForm("create");
+  const ticketFormProps = useTicketForm("create");
 
-    if (ticketFormProps.isLoading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-sm font-medium text-gray-500">
-                클래스를 준비하는 중입니다...
-            </div>
-        );
-    }
-
+  if (ticketFormProps.isLoading) {
     return (
-        <TicketForm 
-            mode="create" 
-            {...ticketFormProps} 
-            onSubmit={ticketFormProps.handleSubmit}
-            isSubmitting={ticketFormProps.isSubmitting}
-        />
+      <div className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-sm font-medium text-gray-500">
+        클래스를 준비하는 중입니다...
+      </div>
     );
+  }
+
+  return (
+    <TicketForm
+      mode="create"
+      {...ticketFormProps}
+      onSubmit={ticketFormProps.handleSubmit}
+      isSubmitting={ticketFormProps.isSubmitting}
+    />
+  );
 };
 
 export default CreateTicket;

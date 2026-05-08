@@ -8,7 +8,11 @@ interface SimpleHeaderProps {
   title?: string;
 }
 
-export const SimpleHeader = ({ onBackClick, button, title }: SimpleHeaderProps) => {
+export const SimpleHeader = ({
+  onBackClick,
+  button,
+  title,
+}: SimpleHeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;

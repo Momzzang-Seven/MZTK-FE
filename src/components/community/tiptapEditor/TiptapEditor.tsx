@@ -9,8 +9,16 @@ interface TiptapEditorProps {
   initialContent?: string;
 }
 
-const TiptapEditor = ({ onChange, referenceType, initialContent }: TiptapEditorProps) => {
-  const { editor, handleImageSelect } = useTiptapEditor(onChange, referenceType, initialContent);
+const TiptapEditor = ({
+  onChange,
+  referenceType,
+  initialContent,
+}: TiptapEditorProps) => {
+  const { editor, handleImageSelect } = useTiptapEditor(
+    onChange,
+    referenceType,
+    initialContent
+  );
 
   if (!editor) return null;
 

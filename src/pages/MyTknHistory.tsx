@@ -55,11 +55,22 @@ const MyTknHistory = () => {
           onClick={() => navigate(-1)}
           className="w-10 h-10 flex items-center justify-center text-gray-400"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6"/>
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
-        <span className="text-lg font-bold text-gray-900 ml-1">토큰 거래 내역</span>
+        <span className="text-lg font-bold text-gray-900 ml-1">
+          토큰 거래 내역
+        </span>
       </div>
 
       {/* Content */}
@@ -73,7 +84,8 @@ const MyTknHistory = () => {
           <div className="flex flex-col items-center justify-center text-gray-400 gap-4 px-10 text-center">
             <div className="text-5xl opacity-20">👛</div>
             <p className="text-sm font-medium leading-relaxed">
-              연결된 지갑 주소가 없습니다.<br/>
+              연결된 지갑 주소가 없습니다.
+              <br />
               마이페이지에서 지갑을 먼저 등록해 주세요.
             </p>
             <button
@@ -86,14 +98,22 @@ const MyTknHistory = () => {
         ) : logs.length > 0 ? (
           logs.map((tx, i) => {
             const amount = Number(ethers.formatUnits(tx.value, 18));
-            const isReceive = tx.to.toLowerCase() === user?.walletAddress?.toLowerCase();
-            
+            const isReceive =
+              tx.to.toLowerCase() === user?.walletAddress?.toLowerCase();
+
             return (
-              <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+              <div
+                key={i}
+                className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center"
+              >
                 <div className="flex flex-col gap-1">
-                  <span className={`text-[11px] font-black w-fit px-2 py-0.5 rounded-md ${
-                    isReceive ? "text-main bg-orange-50" : "text-gray-500 bg-gray-50"
-                  }`}>
+                  <span
+                    className={`text-[11px] font-black w-fit px-2 py-0.5 rounded-md ${
+                      isReceive
+                        ? "text-main bg-orange-50"
+                        : "text-gray-500 bg-gray-50"
+                    }`}
+                  >
                     {isReceive ? "보상 수령" : "토큰 송금"}
                   </span>
                   <span className="text-sm font-bold text-gray-800 tracking-tight">
@@ -104,12 +124,17 @@ const MyTknHistory = () => {
                   </span>
                 </div>
                 <div className="text-right">
-                  <div className={`text-lg font-black tracking-tighter ${
-                    isReceive ? "text-main" : "text-gray-900"
-                  }`}>
-                    {isReceive ? "+" : "-"}{amount.toLocaleString()}
+                  <div
+                    className={`text-lg font-black tracking-tighter ${
+                      isReceive ? "text-main" : "text-gray-900"
+                    }`}
+                  >
+                    {isReceive ? "+" : "-"}
+                    {amount.toLocaleString()}
                   </div>
-                  <div className="text-[10px] font-bold text-gray-300">MZTK</div>
+                  <div className="text-[10px] font-bold text-gray-300">
+                    MZTK
+                  </div>
                 </div>
               </div>
             );

@@ -9,7 +9,13 @@ import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useUserStore } from "@store";
 
-type Step = "AUTH_PIN" | "SHOW" | "VERIFY" | "PIN_SET" | "PIN_CONFIRM" | "SUCCESS";
+type Step =
+  | "AUTH_PIN"
+  | "SHOW"
+  | "VERIFY"
+  | "PIN_SET"
+  | "PIN_CONFIRM"
+  | "SUCCESS";
 
 const CreateWallet = () => {
   const navigate = useNavigate();
@@ -70,8 +76,8 @@ const CreateWallet = () => {
         try {
           const encryptedJson = localStorage.getItem("encrypted_wallet");
           if (!encryptedJson) {
-             setStep("SHOW");
-             return;
+            setStep("SHOW");
+            return;
           }
           await ethers.Wallet.fromEncryptedJson(encryptedJson, authPin);
           setStep("SHOW");

@@ -34,7 +34,7 @@ const FreePostImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
       // 같은 파일 재선택 허용
       if (inputRef.current) inputRef.current.value = "";
     },
-    [images.length, maxImages, uploadImages],
+    [images.length, maxImages, uploadImages]
   );
 
   return (

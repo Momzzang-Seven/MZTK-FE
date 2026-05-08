@@ -31,19 +31,25 @@ describe("Comment", () => {
   };
 
   it("댓글 내용이 렌더링된다", () => {
-    render(<CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />);
+    render(
+      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+    );
 
     expect(screen.getByText("이것은 테스트 댓글입니다.")).toBeInTheDocument();
   });
 
   it("작성자 닉네임이 표시된다", () => {
-    render(<CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />);
+    render(
+      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+    );
 
     expect(screen.getByText("테스트유저")).toBeInTheDocument();
   });
 
   it("프로필 이미지가 표시된다", () => {
-    render(<CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />);
+    render(
+      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+    );
 
     const profileImage = screen.getByAltText("테스트유저");
     expect(profileImage).toBeInTheDocument();
@@ -62,7 +68,12 @@ describe("Comment", () => {
       },
     };
 
-    const { container } = render(<CommentItem comment={commentWithoutImage} onReplyClick={mockOnReplyClick} />);
+    const { container } = render(
+      <CommentItem
+        comment={commentWithoutImage}
+        onReplyClick={mockOnReplyClick}
+      />
+    );
 
     const defaultAvatar = container.querySelector(
       ".h-10.w-10.rounded-full.bg-main"
@@ -72,7 +83,11 @@ describe("Comment", () => {
 
   it("showProfileImage=false일 때 프로필이 숨겨진다", () => {
     const { container } = render(
-      <CommentItem comment={mockComment} isRootComment={false} onReplyClick={mockOnReplyClick} />
+      <CommentItem
+        comment={mockComment}
+        isRootComment={false}
+        onReplyClick={mockOnReplyClick}
+      />
     );
 
     const profileImage = screen.queryByAltText("테스트유저");
@@ -85,19 +100,25 @@ describe("Comment", () => {
   });
 
   it("formatTimeAgo 함수가 호출되어 시간이 표시된다", () => {
-    render(<CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />);
+    render(
+      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+    );
 
     expect(screen.getByText("5분 전")).toBeInTheDocument();
   });
 
   it("ActionList 컴포넌트가 렌더링된다", () => {
-    render(<CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />);
+    render(
+      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+    );
 
     expect(screen.getByTestId("action-list-COMMENT-1")).toBeInTheDocument();
   });
 
   it("댓글 레이아웃이 올바르게 구성된다", () => {
-    const { container } = render(<CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />);
+    const { container } = render(
+      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+    );
 
     const commentContainer = container.querySelector(".flex.gap-3.p-2");
     expect(commentContainer).toBeInTheDocument();

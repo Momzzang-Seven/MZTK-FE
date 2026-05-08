@@ -10,7 +10,11 @@ const AnswerPostForm = ({ initialContent }: AnswerPostFormProps) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <TiptapEditor onChange={setContent} referenceType="COMMUNITY_ANSWER" initialContent={initialContent} />
+      <TiptapEditor
+        onChange={setContent}
+        referenceType="COMMUNITY_ANSWER"
+        initialContent={initialContent}
+      />
     </div>
   );
 };

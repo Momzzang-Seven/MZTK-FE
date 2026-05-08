@@ -50,10 +50,11 @@ export const WithdrawAmt = ({ amt, value, onChange }: WithdrawAmtProps) => {
                 key={percentage}
                 type="button"
                 onClick={() => handlePercentageClick(percentage)}
-                className={`${active
+                className={`${
+                  active
                     ? "bg-main text-white shadow-sm"
                     : "bg-grey-pale text-grey-deep"
-                  } w-full text-center rounded-xl py-2 px-3 label hover:brightness-95 active:scale-95 transition-all`}
+                } w-full text-center rounded-xl py-2 px-3 label hover:brightness-95 active:scale-95 transition-all`}
               >
                 {percentage === 100 ? "전체" : `${percentage}%`}
               </button>

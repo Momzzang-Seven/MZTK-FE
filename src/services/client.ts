@@ -33,9 +33,9 @@ type RetriableRequestConfig = {
 const isAuthRequest = (url?: string) =>
   Boolean(
     url === "/login" ||
-      url === "/reissue" ||
-      url?.includes("/auth/login") ||
-      url?.includes("/auth/reissue")
+    url === "/reissue" ||
+    url?.includes("/auth/login") ||
+    url?.includes("/auth/reissue")
   );
 
 const isMockAccessToken = (token?: string | null) =>
@@ -60,7 +60,9 @@ const attachInterceptors = (instance: AxiosInstance) => {
     (response) => response,
     (error) => {
       const status = error.response?.status;
-      const originalRequest = error.config as RetriableRequestConfig | undefined;
+      const originalRequest = error.config as
+        | RetriableRequestConfig
+        | undefined;
       const allowBareForbidden = isAuthRequest(originalRequest?.url);
       const activeToken = useUserStore.getState().accessToken;
 

@@ -38,9 +38,7 @@ const Home = () => {
       </div>
 
       {/* 3. Action Buttons (Bottom) */}
-      <AuthActionButtons
-        onExerciseClick={handleExerciseAuth}
-      />
+      <AuthActionButtons onExerciseClick={handleExerciseAuth} />
 
       {/* Auth Method Selection Modal */}
       <AuthChoiceModal

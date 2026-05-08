@@ -11,10 +11,19 @@ const FreePostDetail = () => {
   const postIdNum = Number(postId);
 
   const [writingComment, setWritingComment] = useState("");
-  const [parentCommentId, setParentCommentId] = useState<number | undefined>(undefined);
-  const [parentCommentNickname, setParentCommentNickname] = useState<string | null>(null);
-  const { comments, isLoading, isLast, loadMore, refetch, createComment } = useCommentService<Comment>(postIdNum);
-  const observerRef = useInfiniteScroll({ onLoadMore: loadMore, hasMore: !isLast, isLoading });
+  const [parentCommentId, setParentCommentId] = useState<number | undefined>(
+    undefined
+  );
+  const [parentCommentNickname, setParentCommentNickname] = useState<
+    string | null
+  >(null);
+  const { comments, isLoading, isLast, loadMore, refetch, createComment } =
+    useCommentService<Comment>(postIdNum);
+  const observerRef = useInfiniteScroll({
+    onLoadMore: loadMore,
+    hasMore: !isLast,
+    isLoading,
+  });
 
   const handleStartReply = (commentId: number, nickname: string) => {
     setParentCommentId(commentId);
@@ -44,11 +53,19 @@ const FreePostDetail = () => {
       <section>
         {comments.map((comment) => (
           <div key={comment.commentId} className="mb-1">
-            <CommentItem comment={comment} onUpdateReplySuccess={refetch} onReplyClick={handleStartReply}/>
+            <CommentItem
+              comment={comment}
+              onUpdateReplySuccess={refetch}
+              onReplyClick={handleStartReply}
+            />
           </div>
         ))}
-        {isLoading && <div className="text-center py-4 text-gray-500">불러오는 중...</div>}
-        {!isLast && !isLoading && <div ref={observerRef} className="h-1 w-full" />}
+        {isLoading && (
+          <div className="text-center py-4 text-gray-500">불러오는 중...</div>
+        )}
+        {!isLast && !isLoading && (
+          <div ref={observerRef} className="h-1 w-full" />
+        )}
       </section>
 
       <CommentInput

@@ -51,13 +51,17 @@ export interface ReissueTokenResponse {
 }
 
 // POST: Login
-export const PostLogin = async (request: LoginRequest): Promise<LoginResponse> => {
+export const PostLogin = async (
+  request: LoginRequest
+): Promise<LoginResponse> => {
   const { data } = await authApi.post("/login", request);
   return data.data; // ApiResponse.success(response) 구조 대응
 };
 
 // POST: Signup
-export const PostSignup = async (request: SignupRequest): Promise<SignupResponse> => {
+export const PostSignup = async (
+  request: SignupRequest
+): Promise<SignupResponse> => {
   const { data } = await authApi.post("/signup", request);
   return data.data;
 };
@@ -74,13 +78,17 @@ export const PostLogout = async () => {
 };
 
 // POST: Reactivate
-export const PostReactivate = async (request: ReactivateRequest): Promise<LoginResponse> => {
+export const PostReactivate = async (
+  request: ReactivateRequest
+): Promise<LoginResponse> => {
   const { data } = await authApi.post("/reactivate", request);
   return data.data;
 };
 
 // POST: StepUp
-export const PostStepUp = async (request: StepUpRequest): Promise<{ accessToken: string }> => {
+export const PostStepUp = async (
+  request: StepUpRequest
+): Promise<{ accessToken: string }> => {
   const { data } = await authApi.post("/stepup", request);
   return data.data;
 };
@@ -92,13 +100,23 @@ export const GetLoginStatus = async (): Promise<ReissueTokenResponse> => {
 };
 
 // POST: Issue Challenge for Wallet Login
-export const PostIssueChallenge = async (walletAddress: string): Promise<string> => {
-  const { data: responseData } = await authApi.post("/challenge", { walletAddress });
+export const PostIssueChallenge = async (
+  walletAddress: string
+): Promise<string> => {
+  const { data: responseData } = await authApi.post("/challenge", {
+    walletAddress,
+  });
   return responseData.data;
 };
 
 // POST: Verify Challenge for Wallet Login
-export const PostVerifyChallenge = async (walletAddress: string, signature: string): Promise<LoginResponse> => {
-  const { data: responseData } = await authApi.post("/verify", { walletAddress, signature });
+export const PostVerifyChallenge = async (
+  walletAddress: string,
+  signature: string
+): Promise<LoginResponse> => {
+  const { data: responseData } = await authApi.post("/verify", {
+    walletAddress,
+    signature,
+  });
   return responseData.data;
 };

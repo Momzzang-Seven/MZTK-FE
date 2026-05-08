@@ -11,12 +11,12 @@ export type RewardStatus = "PENDING" | "SUCCESS" | "FAILED";
 /**
  * 보상 트랜잭션 수치 상태
  */
-export type RewardTxStatus = 
-  | "CREATED" 
-  | "SIGNED" 
-  | "PENDING" 
-  | "SUCCEEDED" 
-  | "FAILED_ONCHAIN" 
+export type RewardTxStatus =
+  | "CREATED"
+  | "SIGNED"
+  | "PENDING"
+  | "SUCCEEDED"
+  | "FAILED_ONCHAIN"
   | "UNCONFIRMED";
 
 /**

@@ -31,7 +31,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     "/trainer/store-register",
     "/market/purchase",
     "/market/review",
-    "/verify-wallet"
+    "/verify-wallet",
   ];
   const showHeaderPages: string[] = ["/leaderboard"];
   const shouldShowHeader = showHeaderPages.includes(location.pathname);

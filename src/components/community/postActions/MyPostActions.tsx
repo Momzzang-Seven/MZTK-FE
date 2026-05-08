@@ -15,19 +15,19 @@ const MyPostActions = ({
   handleCancelClick,
   handleSignClick,
   isEditable,
-  isWeb3Executable
+  isWeb3Executable,
 }: MyPostActionsProps) => {
   return (
     <div className="w-full flex flex-col gap-y-3">
       {isWeb3Executable && (
-        <CommonButton 
+        <CommonButton
           label="서명하기"
           bgColor="bg-main"
           className="border !rounded-full"
           onClick={handleSignClick}
         />
       )}
-      {(isEditable && !isWeb3Executable) && (
+      {isEditable && !isWeb3Executable && (
         <div className="flex flex-col gap-y-3">
           <CommonButton
             label="수정하기"

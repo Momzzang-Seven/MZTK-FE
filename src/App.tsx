@@ -43,7 +43,7 @@ import {
   ReviewWrite,
   RegisterTicket,
   MyTknHistory,
-  VerifyWallet
+  VerifyWallet,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -142,8 +142,14 @@ function App() {
                       path="/community/question/:postId"
                       element={<QuestionDetail />}
                     />
-                    <Route path="/community/local-posts" element={<LocalPosts />} />
-                    <Route path="/verify-wallet/:type/:id/:parentId?" element={<VerifyWallet />} />
+                    <Route
+                      path="/community/local-posts"
+                      element={<LocalPosts />}
+                    />
+                    <Route
+                      path="/verify-wallet/:type/:id/:parentId?"
+                      element={<VerifyWallet />}
+                    />
                     <Route path="/my" element={<My />} />
                     <Route path="/my/activity/:tab" element={<MyActivity />} />
                     <Route path="/myTknTx" element={<MyTx />} />
@@ -156,18 +162,42 @@ function App() {
                     />
                     <Route path="/trainer" element={<TrainerDashboard />} />
                     <Route path="/trainer/create" element={<CreateTicket />} />
-                    <Route path="/trainer/register-ticket" element={<RegisterTicket />} />
+                    <Route
+                      path="/trainer/register-ticket"
+                      element={<RegisterTicket />}
+                    />
                     <Route path="/trainer/edit/:id" element={<EditTicket />} />
                     <Route path="/trainer/list" element={<TrainerList />} />
-                    <Route path="/trainer/reservations" element={<TrainerReservations />} />
-                    <Route path="/trainer/reviews" element={<TrainerReviews />} />
-                    <Route path="/trainer/store-register" element={<TrainerStoreRegister />} />
+                    <Route
+                      path="/trainer/reservations"
+                      element={<TrainerReservations />}
+                    />
+                    <Route
+                      path="/trainer/reviews"
+                      element={<TrainerReviews />}
+                    />
+                    <Route
+                      path="/trainer/store-register"
+                      element={<TrainerStoreRegister />}
+                    />
                     <Route path="/market" element={<Market />} />
-                    <Route path="/market/reservations" element={<MarketReservation />} />
-                    <Route path="/market/review/:id" element={<ReviewWrite />} />
+                    <Route
+                      path="/market/reservations"
+                      element={<MarketReservation />}
+                    />
+                    <Route
+                      path="/market/review/:id"
+                      element={<ReviewWrite />}
+                    />
                     <Route path="/market/:id" element={<MarketDetail />} />
-                    <Route path="/market/purchase/:id" element={<MarketPurchase />} />
-                    <Route path="/market/purchase-fail" element={<MarketPurchaseFail />} />
+                    <Route
+                      path="/market/purchase/:id"
+                      element={<MarketPurchase />}
+                    />
+                    <Route
+                      path="/market/purchase-fail"
+                      element={<MarketPurchaseFail />}
+                    />
                   </Route>
 
                   <Route path="/404" element={<Err404 />} />

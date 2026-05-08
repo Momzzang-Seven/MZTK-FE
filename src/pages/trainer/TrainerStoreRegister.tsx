@@ -110,7 +110,13 @@ const StoreGeocoder = ({
     return () => {
       isMounted = false;
     };
-  }, [address, isApiLoaded, setCoordinates, setIsResolvingCoordinates, setMapCenter]);
+  }, [
+    address,
+    isApiLoaded,
+    setCoordinates,
+    setIsResolvingCoordinates,
+    setMapCenter,
+  ]);
 
   return null;
 };
@@ -192,7 +198,9 @@ const TrainerStoreRegister = () => {
     if (data.addressType === "R") {
       if (data.bname) extraAddress += data.bname;
       if (data.buildingName) {
-        extraAddress += extraAddress ? `, ${data.buildingName}` : data.buildingName;
+        extraAddress += extraAddress
+          ? `, ${data.buildingName}`
+          : data.buildingName;
       }
       fullAddress += extraAddress ? ` (${extraAddress})` : "";
     }
@@ -224,7 +232,9 @@ const TrainerStoreRegister = () => {
       (error) => {
         console.error("Failed to get current position", error);
         setIsResolvingCoordinates(false);
-        window.alert("현재 위치를 가져오지 못했습니다. 위치 권한을 확인해 주세요.");
+        window.alert(
+          "현재 위치를 가져오지 못했습니다. 위치 권한을 확인해 주세요."
+        );
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -276,12 +286,16 @@ const TrainerStoreRegister = () => {
       });
 
       window.alert(
-        hasExistingStore ? "매장 정보가 수정되었습니다." : "매장 정보가 등록되었습니다."
+        hasExistingStore
+          ? "매장 정보가 수정되었습니다."
+          : "매장 정보가 등록되었습니다."
       );
       navigate("/trainer");
     } catch (error) {
       console.error("Failed to upsert trainer store", error);
-      window.alert("매장 정보 저장에 실패했습니다. 입력값을 다시 확인해 주세요.");
+      window.alert(
+        "매장 정보 저장에 실패했습니다. 입력값을 다시 확인해 주세요."
+      );
     } finally {
       setIsSaving(false);
     }
@@ -350,7 +364,9 @@ const TrainerStoreRegister = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-gray-700">지도 위치</label>
+                <label className="text-sm font-bold text-gray-700">
+                  지도 위치
+                </label>
                 <div className="relative h-[220px] w-full overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
                   {mapKey ? (
                     <APIProvider apiKey={mapKey}>
@@ -374,7 +390,9 @@ const TrainerStoreRegister = () => {
                           })
                         }
                       >
-                        <StoreMapController coordinates={coordinates ?? mapCenter} />
+                        <StoreMapController
+                          coordinates={coordinates ?? mapCenter}
+                        />
                         <AdvancedMarker position={toMapPosition(mapCenter)}>
                           <Pin
                             background={coordinates ? "#fab12f" : "#6b7280"}
@@ -388,7 +406,8 @@ const TrainerStoreRegister = () => {
                     <div className="absolute inset-0 flex flex-col items-center justify-center border border-gray-100 bg-white/90 px-5 text-center text-[14px] font-bold leading-relaxed text-gray-500 backdrop-blur-sm">
                       Google Map API Key 필요
                       <span className="mt-1 text-[12px] font-medium text-gray-400">
-                        `.env`의 `VITE_GOOGLE_MAP_API`를 채우면 지도가 표시됩니다.
+                        `.env`의 `VITE_GOOGLE_MAP_API`를 채우면 지도가
+                        표시됩니다.
                       </span>
                     </div>
                   )}
@@ -412,8 +431,8 @@ const TrainerStoreRegister = () => {
                   </div>
                   {address && !isResolvingCoordinates && !coordinates && (
                     <p className="text-[12px] text-gray-500">
-                      주소 좌표를 바로 찾지 못했습니다. 지도를 움직인 뒤 위치 설정 버튼을
-                      눌러 주세요.
+                      주소 좌표를 바로 찾지 못했습니다. 지도를 움직인 뒤 위치
+                      설정 버튼을 눌러 주세요.
                     </p>
                   )}
                   {coordinates && (
@@ -442,7 +461,9 @@ const TrainerStoreRegister = () => {
             <div className="flex flex-col gap-3">
               <label className="mb-1 text-sm font-bold text-gray-700">
                 SNS 계정 연동
-                <span className="ml-1 text-xs font-medium text-gray-400">(선택)</span>
+                <span className="ml-1 text-xs font-medium text-gray-400">
+                  (선택)
+                </span>
               </label>
 
               <div className="flex items-center gap-3">

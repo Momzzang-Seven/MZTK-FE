@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { attendanceService } from "@services/attendance";
-import type { 
-  AttendanceStatus, 
-  WeeklyAttendance, 
-  CheckInResponse 
+import type {
+  AttendanceStatus,
+  WeeklyAttendance,
+  CheckInResponse,
 } from "../types/attendance";
 
 /**
@@ -24,7 +24,7 @@ export const useAttendance = () => {
       setError(null);
       const [statusRes, weeklyRes] = await Promise.all([
         attendanceService.getStatus(),
-        attendanceService.getWeekly()
+        attendanceService.getWeekly(),
       ]);
       setStatus(statusRes);
       setWeekly(weeklyRes);
@@ -47,8 +47,11 @@ export const useAttendance = () => {
       return result;
     } catch (err) {
       console.error("출석 체크 실패:", err);
-      const errorResponse = err as { response?: { data?: { message?: string } } };
-      const message = errorResponse.response?.data?.message || "출석 체크에 실패했습니다.";
+      const errorResponse = err as {
+        response?: { data?: { message?: string } };
+      };
+      const message =
+        errorResponse.response?.data?.message || "출석 체크에 실패했습니다.";
       setError(message);
       return null;
     }
@@ -64,6 +67,6 @@ export const useAttendance = () => {
     loading,
     error,
     checkIn,
-    refresh: fetchData
+    refresh: fetchData,
   };
 };

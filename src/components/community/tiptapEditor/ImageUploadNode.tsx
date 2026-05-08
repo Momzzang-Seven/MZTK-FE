@@ -14,7 +14,7 @@ const ImageUploadNode = Image.extend({
         default: null,
         parseHTML: (element) => element.getAttribute("imageId"),
         renderHTML: (attrs) =>
-          attrs.imageId ? { "imageId": attrs.imageId } : {},
+          attrs.imageId ? { imageId: attrs.imageId } : {},
       },
       uploading: {
         default: false,

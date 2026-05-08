@@ -74,14 +74,14 @@ src/
 
 ### 네이밍
 
-| 대상 | 규칙 | 예시 |
-|---|---|---|
-| 폴더 | lowercase | `home`, `trainer` |
-| React 컴포넌트 파일 | PascalCase | `Header.tsx`, `TrainerStats.tsx` |
-| 유틸/헬퍼 파일 | camelCase | `formatTimeAgo.ts`, `connectMetamask.ts` |
-| 타입 파일 | PascalCase | `Home.ts`, `My.ts` |
-| Zustand 스토어 | camelCase | `userStore.ts`, `authModal.ts` |
-| 커스텀 훅 | camelCase `use` 접두사 | `useVoucher.ts`, `useModal.ts` |
+| 대상                | 규칙                   | 예시                                     |
+| ------------------- | ---------------------- | ---------------------------------------- |
+| 폴더                | lowercase              | `home`, `trainer`                        |
+| React 컴포넌트 파일 | PascalCase             | `Header.tsx`, `TrainerStats.tsx`         |
+| 유틸/헬퍼 파일      | camelCase              | `formatTimeAgo.ts`, `connectMetamask.ts` |
+| 타입 파일           | PascalCase             | `Home.ts`, `My.ts`                       |
+| Zustand 스토어      | camelCase              | `userStore.ts`, `authModal.ts`           |
+| 커스텀 훅           | camelCase `use` 접두사 | `useVoucher.ts`, `useModal.ts`           |
 
 ### Anti-Patterns (금지 사항)
 
@@ -99,37 +99,37 @@ src/
 
 ### 코드 수정 시 반드시 확인할 파일
 
-| 작업 | 확인 위치 | 비고 |
-|---|---|---|
-| 라우팅 추가/수정 | `src/App.tsx` | 모든 Routes 중앙 정의, admin/user 분리 |
-| 페이지 추가 | `src/pages/` + `src/pages/index.ts` | 반드시 barrel export 등록 |
-| 공통 UI 변경 | `src/components/common/` | CommonButton, CommonModal, GlobalSnackbar |
-| 레이아웃 변경 | `src/components/layout/` | Layout(유저) / AdminLayout(관리자) 분리 |
-| API 호출 추가 | `src/services/client.ts` | `api`, `authApi`, `walletApi` 3개 인스턴스 |
-| 상태 추가/변경 | `src/store/` | Zustand persist, `@store` alias |
-| 블록체인 연동 | `src/hooks/useVoucher.ts`, `useTokenBalance.ts` | ethers.js 직접 호출 |
-| 스마트 컨트랙트 ABI | `src/abi/` | MZTK.ts, Voucher.ts |
-| 글로벌 스타일/테마 | `src/index.css` | TailwindCSS 4 `@theme` 토큰 |
-| Path alias 설정 | `vite.config.ts` + `tsconfig.app.json` | 13개 alias 동기화 필수 |
-| 환경 변수 추가 | `.env.example` | `VITE_` 접두사 필수 |
-| 테스트 작성 | `src/*/__tests__/*.test.tsx` | 각 모듈 내 `__tests__/` 디렉토리 |
+| 작업                | 확인 위치                                       | 비고                                       |
+| ------------------- | ----------------------------------------------- | ------------------------------------------ |
+| 라우팅 추가/수정    | `src/App.tsx`                                   | 모든 Routes 중앙 정의, admin/user 분리     |
+| 페이지 추가         | `src/pages/` + `src/pages/index.ts`             | 반드시 barrel export 등록                  |
+| 공통 UI 변경        | `src/components/common/`                        | CommonButton, CommonModal, GlobalSnackbar  |
+| 레이아웃 변경       | `src/components/layout/`                        | Layout(유저) / AdminLayout(관리자) 분리    |
+| API 호출 추가       | `src/services/client.ts`                        | `api`, `authApi`, `walletApi` 3개 인스턴스 |
+| 상태 추가/변경      | `src/store/`                                    | Zustand persist, `@store` alias            |
+| 블록체인 연동       | `src/hooks/useVoucher.ts`, `useTokenBalance.ts` | ethers.js 직접 호출                        |
+| 스마트 컨트랙트 ABI | `src/abi/`                                      | MZTK.ts, Voucher.ts                        |
+| 글로벌 스타일/테마  | `src/index.css`                                 | TailwindCSS 4 `@theme` 토큰                |
+| Path alias 설정     | `vite.config.ts` + `tsconfig.app.json`          | 13개 alias 동기화 필수                     |
+| 환경 변수 추가      | `.env.example`                                  | `VITE_` 접두사 필수                        |
+| 테스트 작성         | `src/*/__tests__/*.test.tsx`                    | 각 모듈 내 `__tests__/` 디렉토리           |
 
 ### 스토어 구성
 
-| 스토어 | 파일 | 설명 |
-|---|---|---|
-| `useUserStore` | `store/userStore.ts` | 인증, 유저 정보, XP/레벨, 출석 시스템, 분석 상태 |
-| `useAuthModalStore` | `store/authModal.ts` | 401 인증 모달 제어 |
-| `locationStore` | `store/locationStore.ts` | 위치 상태 |
-| `adminStore` | `store/adminStore.ts` | 관리자 대시보드 (현재 mock 데이터 기반) |
+| 스토어              | 파일                     | 설명                                             |
+| ------------------- | ------------------------ | ------------------------------------------------ |
+| `useUserStore`      | `store/userStore.ts`     | 인증, 유저 정보, XP/레벨, 출석 시스템, 분석 상태 |
+| `useAuthModalStore` | `store/authModal.ts`     | 401 인증 모달 제어                               |
+| `locationStore`     | `store/locationStore.ts` | 위치 상태                                        |
+| `adminStore`        | `store/adminStore.ts`    | 관리자 대시보드 (현재 mock 데이터 기반)          |
 
 ### API 인스턴스
 
-| 인스턴스 | Base URL | 용도 |
-|---|---|---|
-| `api` | `VITE_API_BASE_URL` | 범용 API |
-| `authApi` | `{BASE}/auth` | 인증/로그인 |
-| `walletApi` | `{BASE}/api/auth/wallet` | 지갑 연동 |
+| 인스턴스    | Base URL                 | 용도        |
+| ----------- | ------------------------ | ----------- |
+| `api`       | `VITE_API_BASE_URL`      | 범용 API    |
+| `authApi`   | `{BASE}/auth`            | 인증/로그인 |
+| `walletApi` | `{BASE}/api/auth/wallet` | 지갑 연동   |
 
 - **Request Interceptor**: `userStore`에서 `accessToken` 자동 주입 (`Bearer`)
 - **Response Interceptor**: 401 → `authModal` 표시, 404 → `/404` 리디렉트
