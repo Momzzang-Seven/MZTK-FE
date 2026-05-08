@@ -5,7 +5,7 @@ import { MapView } from "@components/verify";
 import { VerifyStatusOverlay } from "@components/verify/VerifyStatusOverlay";
 import { VerifySuccessOverlay } from "@components/verify/VerifySuccessOverlay";
 import { CommonModal } from "@components/common";
-import AuthPageShell from "@components/common/AuthPageShell";
+
 import { useNavigate } from "react-router-dom";
 import { getDistanceFromLatLonInMeters } from "@utils/geo";
 import { LOCATION_CONSTANTS, VERIFY_TEXT } from "@constant/location";

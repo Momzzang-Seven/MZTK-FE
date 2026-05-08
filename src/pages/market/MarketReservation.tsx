@@ -17,9 +17,6 @@ import {
 } from "@services";
 import type { ReservationDetail, ReservationSummary } from "@services";
 
-const IMAGE_BASE_URL =
-  (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
-  "https://mztk-bucket.s3.ap-northeast-2.amazonaws.com/";
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat("ko-KR", {

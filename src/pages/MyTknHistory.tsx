@@ -39,9 +39,6 @@ const MyTknHistory = () => {
       ? "https://api-sepolia.basescan.org/api"
       : "https://api-sepolia-optimistic.etherscan.io/api";
 
-    const CHAIN_ID = isBase
-      ? import.meta.env.VITE_BASE_SEPOLIA_CHAIN_ID
-      : import.meta.env.VITE_OPT_SEPOLIA_CHAIN_ID;
 
     fetch(
       `${ETHERSCAN_API_URL}?module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&address=${user.walletAddress}&page=1&offset=50&sort=desc&apikey=${ETHERSCAN_API_KEY}`

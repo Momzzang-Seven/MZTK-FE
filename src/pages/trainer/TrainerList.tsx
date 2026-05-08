@@ -1,5 +1,6 @@
 import type { ChangeEvent } from "react";
 import TrainerHeader from "@components/trainer/TrainerHeader";
+import { CommonModal } from "@components/common";
 import {
   getTrainerClasses,
   toggleTrainerClassStatus,
@@ -43,14 +44,14 @@ const TrainerList = () => {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<TrainerClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  const [_loadError, setLoadError] = useState("");
   const [isSuspended, setIsSuspended] = useState(false);
   const [togglingIds, setTogglingIds] = useState<number[]>([]);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
     desc: string;
-    variant?: "default" | "error";
+    variant?: "error" | "warning" | "info" | "success";
   }>({
     isOpen: false,
     title: "",

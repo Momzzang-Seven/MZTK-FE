@@ -104,10 +104,10 @@ const InfoStep = ({
                 onChange={handleChange}
                 className="w-full h-[56px] bg-gray-50/50 rounded-2xl px-5 text-[14px] font-black text-gray-800 outline-none border border-transparent focus:border-main/30 focus:bg-white transition-all appearance-none"
               >
-                {EXERCISE_CATEGORIES.filter((cat) => cat !== "전체").map(
+                {EXERCISE_CATEGORIES.filter((cat) => cat.key !== "ALL").map(
                   (cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat.key} value={cat.key}>
+                      {cat.label}
                     </option>
                   )
                 )}

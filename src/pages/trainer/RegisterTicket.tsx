@@ -1,4 +1,4 @@
-import { CommonButton } from "@components/common";
+import { CommonButton, CommonModal } from "@components/common";
 import InfoStep from "@components/trainer/register/InfoStep";
 import PhotoStep from "@components/trainer/register/PhotoStep";
 import RegisterHeader from "@components/trainer/register/RegisterHeader";

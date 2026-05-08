@@ -37,7 +37,7 @@ describe("CommonButton", () => {
         label="스타일 버튼"
         textColor="text-blue-500"
         bgColor="bg-red-500"
-        width="w-[200px]"
+        className="w-[200px]"
       />
     );
 
@@ -55,28 +55,13 @@ describe("CommonButton", () => {
     ).toBeInTheDocument();
   });
 
-  it("이미지와 함께 렌더링된다", () => {
-    render(<CommonButton label="이미지 버튼" img="/test-image.png" />);
-
-    const image = screen.getByAltText("buttonImage");
-    expect(image).toBeInTheDocument();
-    expect(image).toHaveAttribute("src", "/test-image.png");
-  });
-
-  it("shadow prop이 적용된다", () => {
-    render(<CommonButton label="그림자 버튼" shadow />);
-
-    const button = screen.getByRole("button", { name: "그림자 버튼" });
-    expect(button).toHaveClass("shadow-[0_2px_2px_rgba(0,0,0,0.12)]");
-  });
-
-  it("ReactNode를 label로 사용할 수 있다", () => {
-    const CustomLabel = () => (
-      <span data-testid="custom-label">커스텀 라벨</span>
+  it("border prop이 적용된다", () => {
+    render(
+      <CommonButton label="테두리 버튼" border="border border-gray-300" />
     );
-    render(<CommonButton label={<CustomLabel />} />);
 
-    expect(screen.getByTestId("custom-label")).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "테두리 버튼" });
+    expect(button).toHaveClass("border");
   });
 
   it("빠른 중복 클릭을 한 번만 처리한다", async () => {

@@ -63,7 +63,7 @@ export const useRegisterTicket = () => {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    category: EXERCISE_CATEGORIES[1],
+    category: EXERCISE_CATEGORIES[1].key,
     price: "",
     capacity: "",
     description: "",

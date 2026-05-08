@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
 import { TOKEN_MESSAGES } from "@constant/token";
-import { useUserStore } from "@store";
 import { getNetworkConfig } from "@utils";
 
 export const useTokenTransfer = () => {
@@ -15,7 +14,6 @@ export const useTokenTransfer = () => {
   const [txHash, setTxHash] = useState("");
   const [errorModal, setErrorModal] = useState<string | null>(null);
 
-  const { selectedNetwork } = useUserStore();
   const { RPC_URL, TOKEN_ADDRESS: MZT_ADDR } = getNetworkConfig();
 
   const isAmountValid = useMemo(() => {

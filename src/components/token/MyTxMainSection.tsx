@@ -31,9 +31,9 @@ export const MyTxMainSection = ({
       <div className="mt-auto pb-10">
         <CommonButton
           label="송금 요청"
-          padding="p-4"
           onClick={onNext}
           disabled={!isAmountValid || !isAddressValid}
+          className="h-14"
         />
       </div>
     </div>

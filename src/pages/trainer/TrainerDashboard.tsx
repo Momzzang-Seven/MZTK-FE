@@ -121,7 +121,7 @@ const TrainerDashboard = () => {
     isOpen: boolean;
     title: string;
     desc: string;
-    variant?: "default" | "error";
+    variant?: "warning" | "error" | "info" | "success";
   } | null>(null);
   const [isCheckingStore, setIsCheckingStore] = useState(true);
   const { isRestricted, handleAppeal: postAppeal } = useTrainerStatus();
