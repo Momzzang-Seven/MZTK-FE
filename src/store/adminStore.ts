@@ -1,11 +1,46 @@
 import { create } from "zustand";
+import { ADMIN_TEXT } from "@constant/admin";
+import {
+  fetchUsersList,
+  updateUserStatus,
+  fetchPostsList,
+  fetchCommentsList,
+  banAdminPost,
+  banAdminComment,
+  fetchAdminAccounts,
+  createAdminAccount,
+  resetAdminPassword,
+  markTransactionSucceeded,
+  fetchQnARefundReview,
+  fetchQnASettlementReview,
+  processQnARefund,
+  processQnASettle,
+  provisionTreasuryKey,
+  disableTreasuryKey,
+  archiveTreasuryKey,
+  fetchAllTreasuryKeys,
+  reseedSystem,
+  changeAdminPassword,
+} from "@services";
+import type {
+  AdminAccountDto,
+  CreateAdminAccountRequest,
+  QnARefundReviewResponse,
+  QnASettlementReviewResponse,
+  Web3ActionResponse,
+  TreasuryKeyDto,
+  ProvisionKeyRequest,
+  BanRequest,
+  AdminPostQuery,
+  ChangeAdminPasswordRequest,
+} from "@types";
 
 export interface AdminUser {
   id: number;
   nickname: string;
   email: string;
   joinDate: string; // YYYY.MM.DD
-  status: "ACTIVE" | "BANNED" | "DELETED";
+  status: "ACTIVE" | "BLOCKED" | "DELETED";
   postCount: number;
   commentCount: number;
   profileColor: string; // Hex color for avatar background
@@ -52,13 +87,13 @@ interface AdminState {
   users: AdminUser[];
   filteredUsers: AdminUser[];
   searchQuery: string;
-  statusFilter: "ALL" | "ACTIVE" | "BANNED";
+  statusFilter: "ALL" | "ACTIVE" | "BLOCKED";
   roleFilter: "ALL" | "MEMBER" | "TRAINER";
   isLoading: boolean;
 
   // User Management Stats
   totalUsers: number;
-  bannedUsers: number;
+  blockedUsers: number;
 
   // Post Management State
   posts: AdminPost[];
@@ -79,20 +114,28 @@ interface AdminState {
 
   // User Management Actions
   fetchUsers: () => Promise<void>;
-  setStatusFilter: (status: "ALL" | "ACTIVE" | "BANNED") => void;
+  setStatusFilter: (status: "ALL" | "ACTIVE" | "BLOCKED") => void;
   setRoleFilter: (role: "ALL" | "MEMBER" | "TRAINER") => void;
   searchUsers: (query: string) => void;
   banUser: (userId: number) => Promise<void>;
   unbanUser: (userId: number) => Promise<void>;
 
   // Post Management Actions
-  // Post Management Actions
   fetchPosts: (reset?: boolean) => Promise<void>;
   setPostStatusFilter: (status: "ALL" | "ACTIVE" | "BANNED") => void;
   searchPosts: (query: string) => void;
-  banPost: (postId: number) => Promise<void>;
+  banPost: (
+    postId: number,
+    reason?: string,
+    reasonCode?: BanRequest["reasonCode"]
+  ) => Promise<void>;
   unbanPost: (postId: number) => Promise<void>;
-  deleteComment: (postId: number, commentId: number) => Promise<void>;
+  deleteComment: (
+    postId: number,
+    commentId: number,
+    reason?: string,
+    reasonCode?: BanRequest["reasonCode"]
+  ) => Promise<void>;
   restoreComment: (postId: number, commentId: number) => Promise<void>;
 
   // Inquiry Management Actions
@@ -100,232 +143,35 @@ interface AdminState {
   searchInquiries: (query: string) => void;
   setInquiryFilter: (filter: "ALL" | "MEMBER" | "TRAINER") => void;
   toggleUserBanByInquiry: (inquiryId: number) => Promise<void>;
+
+  // Admin Account State & Actions
+  adminAccounts: AdminAccountDto[];
+  fetchAccounts: () => Promise<void>;
+  addAdminAccount: (data: CreateAdminAccountRequest) => Promise<void>;
+  resetPassword: (userId: number) => Promise<void>;
+
+  // Web3/Escrow Actions
+  confirmTransaction: (txId: number) => Promise<void>;
+  getRefundReview: (postId: number) => Promise<QnARefundReviewResponse>;
+  getSettlementReview: (
+    postId: number,
+    answerId: number
+  ) => Promise<QnASettlementReviewResponse>;
+  executeRefund: (postId: number) => Promise<Web3ActionResponse>;
+  executeSettle: (
+    postId: number,
+    answerId: number
+  ) => Promise<Web3ActionResponse>;
+
+  // Treasury & Recovery
+  treasuryKeys: TreasuryKeyDto[];
+  fetchTreasuryKeys: () => Promise<void>;
+  provisionKey: (data: ProvisionKeyRequest) => Promise<void>;
+  disableKey: (alias: string) => Promise<void>;
+  archiveKey: (alias: string) => Promise<void>;
+  reseedSystem: () => Promise<void>;
+  updateAdminPassword: (data: ChangeAdminPasswordRequest) => Promise<void>;
 }
-
-// Mock Data Generator
-const generateMockUsers = (): AdminUser[] => {
-  return [
-    {
-      id: 1,
-      nickname: "김규원의마지막",
-      email: "gyugyugyu@email.com",
-      joinDate: "2024.01.15",
-      status: "ACTIVE",
-      postCount: 24,
-      commentCount: 156,
-      profileColor: "#FFD700",
-      role: "MEMBER",
-    },
-    {
-      id: 2,
-      nickname: "운동하는직장인",
-      email: "fitness_lover@test.com",
-      joinDate: "2024.02.03",
-      status: "ACTIVE",
-      postCount: 18,
-      commentCount: 89,
-      profileColor: "#FFA500",
-      role: "TRAINER",
-    },
-    {
-      id: 3,
-      nickname: "헬스장빌런",
-      email: "villain@bad.com",
-      joinDate: "2023.12.20",
-      status: "BANNED",
-      postCount: 5,
-      commentCount: 12,
-      profileColor: "#FF4500",
-      role: "MEMBER",
-    },
-    {
-      id: 4,
-      nickname: "건강이최고",
-      email: "health_first@good.com",
-      joinDate: "2024.03.10",
-      status: "ACTIVE",
-      postCount: 42,
-      commentCount: 231,
-      profileColor: "#32CD32",
-      role: "TRAINER",
-    },
-    {
-      id: 5,
-      nickname: "작심삼일",
-      email: "three_days@fail.com",
-      joinDate: "2024.01.28",
-      status: "ACTIVE",
-      postCount: 15,
-      commentCount: 67,
-      profileColor: "#1E90FF",
-      role: "MEMBER",
-    },
-    {
-      id: 6,
-      nickname: "홍길동",
-      email: "hong@test.com",
-      joinDate: "2024.04.01",
-      status: "ACTIVE",
-      postCount: 0,
-      commentCount: 2,
-      profileColor: "#BA55D3",
-      role: "MEMBER",
-    },
-    {
-      id: 7,
-      nickname: "스팸계정",
-      email: "spam@spam.com",
-      joinDate: "2024.04.05",
-      status: "BANNED",
-      postCount: 100,
-      commentCount: 500,
-      profileColor: "#808080",
-      role: "TRAINER",
-    },
-  ];
-};
-
-const generateMockPosts = (page: number): AdminPost[] => {
-  const startId = (page - 1) * 10 + 1;
-  const comments: AdminComment[] = [
-    {
-      id: 1,
-      author: "박지영",
-      content: "ㄴㅇㄹㅇㄴㄹㅇㄴㄹㅇㄴㄹㅇㄴㄹ",
-      date: "2024-01-18 15:20",
-      profileColor: "#FFD700",
-      isBanned: false,
-    },
-    {
-      id: 2,
-      author: "이민호",
-      content: "ㄴㅇㄹㅇㄴㄹㅇㄴㄹㅇㄴㄹㅇㄴㄹ",
-      date: "2024-01-18 16:45",
-      profileColor: "#FFA500",
-      isBanned: false,
-    },
-    {
-      id: 3,
-      author: "최수진",
-      content: "ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ",
-      date: "2024-01-18 17:10",
-      profileColor: "#FF4500",
-      isBanned: false,
-    },
-    {
-      id: 4,
-      author: "강태양",
-      content: "1점",
-      date: "2024-01-18 13:00",
-      profileColor: "#32CD32",
-      isBanned: false,
-    },
-    {
-      id: 5,
-      author: "윤성호",
-      content: "010000010101000점",
-      date: "2024-01-18 13:45",
-      profileColor: "#1E90FF",
-      isBanned: false,
-    },
-  ];
-
-  const posts: AdminPost[] = [];
-
-  // Generate 5 posts per page
-  for (let i = 0; i < 5; i++) {
-    const id = startId + i;
-    posts.push({
-      id: id,
-      author: id % 2 === 0 ? "로지텍스" : "김기기기기길호",
-      date: "2024-01-18 14:30",
-      category: id % 2 === 0 ? "자유게시판" : "질문게시판",
-      title:
-        id % 2 === 0
-          ? `내 몸은 짱멋지고 잘생겼어 ${id}`
-          : `내 근육은 100점 ${id}`,
-      content:
-        id % 2 === 0
-          ? "하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하하"
-          : "10점 만점에?",
-      comments: [
-        comments[0],
-        comments[1],
-        comments[2],
-        comments[3],
-        comments[4],
-      ],
-      profileColor: id % 2 === 0 ? "#DAA520" : "#CD853F",
-      isBanned: false,
-      likeCount: 80 + i,
-      commentCount: 20 + i,
-    });
-  }
-
-  return posts;
-};
-
-const generateMockInquiries = (): AdminInquiry[] => {
-  return [
-    {
-      id: 1,
-      author: "김규원의마지막",
-      authorId: 1,
-      authorRole: "MEMBER",
-      title: "토큰 지급이 안 됐어요",
-      content:
-        "안녕하세요, 어제 레벨업 했는데 토큰이 안 들어왔습니다. 확인 부탁드려요.",
-      date: "2024-03-09 10:20",
-      status: "OPEN",
-      isAuthorBanned: false,
-    },
-    {
-      id: 2,
-      author: "운동하는직장인",
-      authorId: 2,
-      authorRole: "TRAINER",
-      title: "정산 관련 문의",
-      content:
-        "이번 주 정산 예정 금액이 실제 수업 횟수와 다릅니다. 확인 부탁드립니다.",
-      date: "2024-03-09 11:45",
-      status: "OPEN",
-      isAuthorBanned: false,
-    },
-    {
-      id: 3,
-      author: "헬스장빌런",
-      authorId: 3,
-      authorRole: "MEMBER",
-      title: "계정 정지 이의신청",
-      content: "왜 정지됐는지 모르겠어요. 풀어주세요.",
-      date: "2024-03-08 17:10",
-      status: "CLOSED",
-      isAuthorBanned: true,
-    },
-    {
-      id: 4,
-      author: "건강이최고",
-      authorId: 4,
-      authorRole: "TRAINER",
-      title: "클래스 승인 반려 사유",
-      content: "등록한 클래스가 반려됐는데 정확한 사유를 알고 싶습니다.",
-      date: "2024-03-08 13:00",
-      status: "OPEN",
-      isAuthorBanned: false,
-    },
-    {
-      id: 5,
-      author: "작심삼일",
-      authorId: 5,
-      authorRole: "MEMBER",
-      title: "앱 오류 제보",
-      content: "운동 인증 버튼을 눌러도 반응이 없을 때가 많습니다.",
-      date: "2024-03-07 14:30",
-      status: "CLOSED",
-      isAuthorBanned: false,
-    },
-  ];
-};
 
 // Helper to filter users
 const getFilteredUsers = (
@@ -376,32 +222,6 @@ const getFilteredInquiries = (
   return filtered;
 };
 
-// Helper to filter posts
-const getFilteredPosts = (
-  posts: AdminPost[],
-  status: string,
-  query: string
-) => {
-  let filtered = posts;
-  if (status !== "ALL") {
-    filtered = filtered.filter((post) =>
-      status === "ACTIVE" ? !post.isBanned : post.isBanned
-    );
-  }
-  const trimmedQuery = query.trim().toLowerCase();
-  if (trimmedQuery) {
-    filtered = filtered.filter(
-      (post) =>
-        post.content.toLowerCase().includes(trimmedQuery) ||
-        post.title.toLowerCase().includes(trimmedQuery) ||
-        post.comments.some((comment) =>
-          comment.content.toLowerCase().includes(trimmedQuery)
-        )
-    );
-  }
-  return filtered;
-};
-
 export const useAdminStore = create<AdminState>((set, get) => ({
   // User State
   users: [],
@@ -411,7 +231,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   roleFilter: "ALL",
   isLoading: false,
   totalUsers: 0,
-  bannedUsers: 0,
+  blockedUsers: 0,
+
+  // Admin Account State
+  adminAccounts: [],
 
   // Post State
   posts: [],
@@ -431,20 +254,51 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   // User Actions
   fetchUsers: async () => {
     set({ isLoading: true });
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const response = await fetchUsersList({ size: 100 });
+      const users: AdminUser[] = response.content.map((u) => ({
+        id: u.userId,
+        nickname: u.nickname,
+        email: u.email,
+        joinDate: new Date(u.joinedAt)
+          .toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          })
+          .replace(/\. /g, ".")
+          .replace(/\.$/, ""),
+        status: u.status,
+        postCount: u.postCount,
+        commentCount: u.commentCount,
+        profileColor:
+          ADMIN_TEXT.COLORS.AVATARS[
+            u.userId % ADMIN_TEXT.COLORS.AVATARS.length
+          ],
+        role: u.role === "USER" ? "MEMBER" : "TRAINER",
+      }));
 
-    const mockData = generateMockUsers();
-    set({
-      users: mockData,
-      filteredUsers: mockData,
-      totalUsers: mockData.length,
-      bannedUsers: mockData.filter((u) => u.status === "BANNED").length,
-      isLoading: false,
-    });
+      const { searchQuery, statusFilter, roleFilter } = get();
+
+      set({
+        users,
+        filteredUsers: getFilteredUsers(
+          users,
+          statusFilter,
+          roleFilter,
+          searchQuery
+        ),
+        totalUsers: response.totalElements,
+        blockedUsers: users.filter((u) => u.status === "BLOCKED").length,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      set({ isLoading: false });
+    }
   },
 
-  setStatusFilter: (status: "ALL" | "ACTIVE" | "BANNED") => {
+  setStatusFilter: (status: "ALL" | "ACTIVE" | "BLOCKED") => {
     set({ statusFilter: status });
     const { users, searchQuery, roleFilter } = get();
     set({
@@ -469,39 +323,57 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   banUser: async (userId: number) => {
-    const { users, searchQuery, statusFilter, roleFilter } = get();
-    const updatedUsers = users.map((user) =>
-      user.id === userId ? { ...user, status: "BANNED" as const } : user
-    );
+    try {
+      await updateUserStatus(userId, {
+        status: "BLOCKED",
+        reason: ADMIN_TEXT.POST.MSG_BAN_REASON,
+      });
+      const { users, searchQuery, statusFilter, roleFilter } = get();
+      const updatedUsers = users.map((user) =>
+        user.id === userId ? { ...user, status: "BLOCKED" as const } : user
+      );
 
-    set({
-      users: updatedUsers,
-      filteredUsers: getFilteredUsers(
-        updatedUsers,
-        statusFilter,
-        roleFilter,
-        searchQuery
-      ),
-      bannedUsers: updatedUsers.filter((u) => u.status === "BANNED").length,
-    });
+      set({
+        users: updatedUsers,
+        filteredUsers: getFilteredUsers(
+          updatedUsers,
+          statusFilter,
+          roleFilter,
+          searchQuery
+        ),
+        blockedUsers: updatedUsers.filter((u) => u.status === "BLOCKED").length,
+      });
+    } catch (error) {
+      console.error("Failed to ban user:", error);
+      throw error;
+    }
   },
 
   unbanUser: async (userId: number) => {
-    const { users, searchQuery, statusFilter, roleFilter } = get();
-    const updatedUsers = users.map((user) =>
-      user.id === userId ? { ...user, status: "ACTIVE" as const } : user
-    );
+    try {
+      await updateUserStatus(userId, {
+        status: "ACTIVE",
+        reason: ADMIN_TEXT.POST.MSG_UNBAN_REASON,
+      });
+      const { users, searchQuery, statusFilter, roleFilter } = get();
+      const updatedUsers = users.map((user) =>
+        user.id === userId ? { ...user, status: "ACTIVE" as const } : user
+      );
 
-    set({
-      users: updatedUsers,
-      filteredUsers: getFilteredUsers(
-        updatedUsers,
-        statusFilter,
-        roleFilter,
-        searchQuery
-      ),
-      bannedUsers: updatedUsers.filter((u) => u.status === "BANNED").length,
-    });
+      set({
+        users: updatedUsers,
+        filteredUsers: getFilteredUsers(
+          updatedUsers,
+          statusFilter,
+          roleFilter,
+          searchQuery
+        ),
+        blockedUsers: updatedUsers.filter((u) => u.status === "BLOCKED").length,
+      });
+    } catch (error) {
+      console.error("Failed to unban user:", error);
+      throw error;
+    }
   },
 
   // Post Actions
@@ -518,94 +390,156 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
     set({ isFetchingPosts: true });
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const nextPage = reset ? 0 : page - 1;
+      const params: AdminPostQuery = { size: 10, page: nextPage };
+      if (postStatusFilter !== "ALL") {
+        params.status = postStatusFilter === "ACTIVE" ? "OPEN" : "BANNED";
+      }
+      if (searchPostQuery) params.search = searchPostQuery;
 
-    const nextPage = reset ? 1 : page;
-    const newPosts = generateMockPosts(nextPage);
-    const isLastPage = nextPage >= 5;
-    const allPosts = reset ? newPosts : [...get().posts, ...newPosts];
+      const response = await fetchPostsList(params);
 
-    set(() => ({
-      posts: allPosts,
-      filteredPosts: getFilteredPosts(
-        allPosts,
-        postStatusFilter,
-        searchPostQuery
-      ),
-      page: nextPage + 1,
-      hasMore: !isLastPage,
-      isFetchingPosts: false,
-    }));
+      const postsWithComments: AdminPost[] = await Promise.all(
+        response.content.map(async (p) => {
+          let comments: AdminComment[] = [];
+          if (p.commentCount > 0) {
+            const commentRes = await fetchCommentsList(p.postId, { size: 50 });
+            comments = commentRes.content.map((c) => ({
+              id: c.commentId,
+              author: c.writerNickname,
+              content: c.content,
+              date: new Date(c.createdAt).toLocaleString("ko-KR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              profileColor:
+                ADMIN_TEXT.COLORS.AVATARS[
+                  c.writerId % ADMIN_TEXT.COLORS.AVATARS.length
+                ],
+              isBanned: c.isDeleted,
+            }));
+          }
+          return {
+            id: p.postId,
+            author: p.writerNickname,
+            date: new Date(p.createdAt).toLocaleString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            category:
+              p.type === "FREE"
+                ? ADMIN_TEXT.POST.BOARD_TYPE.FREE
+                : ADMIN_TEXT.POST.BOARD_TYPE.QUESTION,
+            title: p.title,
+            content: p.contentPreview,
+            comments: comments,
+            profileColor:
+              ADMIN_TEXT.COLORS.AVATARS[
+                p.writerId % ADMIN_TEXT.COLORS.AVATARS.length
+              ],
+            isBanned: p.status === "BANNED",
+            likeCount: 0,
+            commentCount: p.commentCount,
+          };
+        })
+      );
+
+      const isLastPage = response.last;
+      const allPosts = reset
+        ? postsWithComments
+        : [...get().posts, ...postsWithComments];
+
+      set(() => ({
+        posts: allPosts,
+        filteredPosts: allPosts,
+        page: (reset ? 1 : page) + 1,
+        hasMore: !isLastPage,
+        isFetchingPosts: false,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch posts:", error);
+      set({ isFetchingPosts: false });
+    }
   },
 
   setPostStatusFilter: (status: "ALL" | "ACTIVE" | "BANNED") => {
-    set({ postStatusFilter: status });
-    const { posts, searchPostQuery } = get();
-    set({ filteredPosts: getFilteredPosts(posts, status, searchPostQuery) });
+    set({ postStatusFilter: status, posts: [], page: 1, hasMore: true });
+    get().fetchPosts(true);
   },
 
   searchPosts: (query: string) => {
-    set({ searchPostQuery: query });
-    const { posts, postStatusFilter } = get();
-    set({ filteredPosts: getFilteredPosts(posts, postStatusFilter, query) });
+    set({ searchPostQuery: query, posts: [], page: 1, hasMore: true });
+    get().fetchPosts(true);
   },
 
-  banPost: async (postId: number) => {
-    const { posts, searchPostQuery, postStatusFilter } = get();
-    const updatedPosts = posts.map((post) =>
-      post.id === postId ? { ...post, isBanned: true } : post
-    );
-    set({
-      posts: updatedPosts,
-      filteredPosts: getFilteredPosts(
-        updatedPosts,
-        postStatusFilter,
-        searchPostQuery
-      ),
-    });
+  banPost: async (
+    postId: number,
+    reason?: string,
+    reasonCode: BanRequest["reasonCode"] = "INAPPROPRIATE"
+  ) => {
+    try {
+      await banAdminPost(postId, {
+        reasonCode,
+        reasonDetail: reason || ADMIN_TEXT.POST.MSG_DELETE_REASON,
+      });
+      const { posts } = get();
+      const updatedPosts = posts.map((post) =>
+        post.id === postId ? { ...post, isBanned: true } : post
+      );
+      set({ posts: updatedPosts, filteredPosts: updatedPosts });
+    } catch (error) {
+      console.error("Failed to ban post:", error);
+      throw error;
+    }
   },
 
   unbanPost: async (postId: number) => {
-    const { posts, searchPostQuery, postStatusFilter } = get();
+    const { posts } = get();
     const updatedPosts = posts.map((post) =>
       post.id === postId ? { ...post, isBanned: false } : post
     );
-    set({
-      posts: updatedPosts,
-      filteredPosts: getFilteredPosts(
-        updatedPosts,
-        postStatusFilter,
-        searchPostQuery
-      ),
-    });
+    set({ posts: updatedPosts, filteredPosts: updatedPosts });
   },
 
-  deleteComment: async (postId: number, commentId: number) => {
-    const { posts, searchPostQuery, postStatusFilter } = get();
-    const updatedPosts = posts.map((post) => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          comments: post.comments.map((c) =>
-            c.id === commentId ? { ...c, isBanned: true } : c
-          ),
-        };
-      }
-      return post;
-    });
-    set({
-      posts: updatedPosts,
-      filteredPosts: getFilteredPosts(
-        updatedPosts,
-        postStatusFilter,
-        searchPostQuery
-      ),
-    });
+  deleteComment: async (
+    postId: number,
+    commentId: number,
+    reason?: string,
+    reasonCode: BanRequest["reasonCode"] = "INAPPROPRIATE"
+  ) => {
+    try {
+      await banAdminComment(commentId, {
+        reasonCode,
+        reasonDetail: reason || ADMIN_TEXT.POST.MSG_DELETE_REASON,
+      });
+      const { posts } = get();
+      const updatedPosts = posts.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: post.comments.map((c) =>
+              c.id === commentId ? { ...c, isBanned: true } : c
+            ),
+          };
+        }
+        return post;
+      });
+      set({ posts: updatedPosts, filteredPosts: updatedPosts });
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
+      throw error;
+    }
   },
 
   restoreComment: async (postId: number, commentId: number) => {
-    const { posts, searchPostQuery, postStatusFilter } = get();
+    const { posts } = get();
     const updatedPosts = posts.map((post) => {
       if (post.id === postId) {
         return {
@@ -617,29 +551,16 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       }
       return post;
     });
-    set({
-      posts: updatedPosts,
-      filteredPosts: getFilteredPosts(
-        updatedPosts,
-        postStatusFilter,
-        searchPostQuery
-      ),
-    });
+    set({ posts: updatedPosts, filteredPosts: updatedPosts });
   },
 
   // Inquiry Actions
   fetchInquiries: async () => {
     set({ isLoading: true });
     await new Promise((r) => setTimeout(r, 500));
-    const mockData = generateMockInquiries();
-    const { inquiryFilter, searchInquiryQuery } = get();
     set({
-      inquiries: mockData,
-      filteredInquiries: getFilteredInquiries(
-        mockData,
-        inquiryFilter,
-        searchInquiryQuery
-      ),
+      inquiries: [],
+      filteredInquiries: [],
       isLoading: false,
     });
   },
@@ -683,7 +604,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       u.id === inquiry.authorId
         ? {
             ...u,
-            status: newBanStatus ? ("BANNED" as const) : ("ACTIVE" as const),
+            status: newBanStatus ? ("BLOCKED" as const) : ("ACTIVE" as const),
           }
         : u
     );
@@ -697,5 +618,99 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       ),
       users: updatedUsers,
     });
+  },
+
+  // Admin Account Actions
+  fetchAccounts: async () => {
+    set({ isLoading: true });
+    try {
+      const accounts = await fetchAdminAccounts();
+      set({ adminAccounts: accounts, isLoading: false });
+    } catch (error) {
+      console.error("Failed to fetch admin accounts:", error);
+      set({ isLoading: false });
+    }
+  },
+
+  addAdminAccount: async (data: CreateAdminAccountRequest) => {
+    try {
+      await createAdminAccount(data);
+      await get().fetchAccounts();
+    } catch (error) {
+      console.error("Failed to create admin account:", error);
+      throw error;
+    }
+  },
+
+  resetPassword: async (userId: number) => {
+    try {
+      await resetAdminPassword(userId);
+    } catch (error) {
+      console.error("Failed to reset password:", error);
+      throw error;
+    }
+  },
+
+  // Web3/Escrow Actions
+  confirmTransaction: async (txId: number) => {
+    try {
+      await markTransactionSucceeded(txId);
+    } catch (error) {
+      console.error("Failed to confirm transaction:", error);
+      throw error;
+    }
+  },
+
+  getRefundReview: async (postId: number) => {
+    return await fetchQnARefundReview(postId);
+  },
+
+  getSettlementReview: async (postId: number, answerId: number) => {
+    return await fetchQnASettlementReview(postId, answerId);
+  },
+
+  executeRefund: async (postId: number) => {
+    return await processQnARefund(postId);
+  },
+
+  executeSettle: async (postId: number, answerId: number) => {
+    return await processQnASettle(postId, answerId);
+  },
+
+  // Treasury & Recovery
+  treasuryKeys: [],
+
+  fetchTreasuryKeys: async () => {
+    set({ isLoading: true });
+    try {
+      const keys = await fetchAllTreasuryKeys();
+      set({ treasuryKeys: keys || [], isLoading: false });
+    } catch (error) {
+      console.error("Failed to fetch treasury keys:", error);
+      set({ isLoading: false });
+    }
+  },
+
+  provisionKey: async (data: ProvisionKeyRequest) => {
+    await provisionTreasuryKey(data);
+    await get().fetchTreasuryKeys();
+  },
+
+  disableKey: async (alias: string) => {
+    await disableTreasuryKey(alias);
+    await get().fetchTreasuryKeys();
+  },
+
+  archiveKey: async (alias: string) => {
+    await archiveTreasuryKey(alias);
+    await get().fetchTreasuryKeys();
+  },
+
+  reseedSystem: async () => {
+    await reseedSystem();
+  },
+
+  updateAdminPassword: async (data: ChangeAdminPasswordRequest) => {
+    await changeAdminPassword(data);
   },
 }));
