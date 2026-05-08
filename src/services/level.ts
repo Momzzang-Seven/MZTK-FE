@@ -1,10 +1,10 @@
 import { api } from "./client";
-import type { 
-  MyLevelResponse, 
-  LevelPoliciesResponse, 
-  LevelUpResponse, 
-  LevelUpHistoriesResponse, 
-  XpLedgerResponse 
+import type {
+  MyLevelResponse,
+  LevelPoliciesResponse,
+  LevelUpResponse,
+  LevelUpHistoriesResponse,
+  XpLedgerResponse,
 } from "../types/level";
 
 /**
@@ -38,9 +38,12 @@ export const levelService = {
   /**
    * 레벨업 히스토리 조회
    */
-  async getMyLevelUpHistories(page = 0, size = 20): Promise<LevelUpHistoriesResponse> {
+  async getMyLevelUpHistories(
+    page = 0,
+    size = 20
+  ): Promise<LevelUpHistoriesResponse> {
     const response = await api.get("/users/me/level-up-histories", {
-      params: { page, size }
+      params: { page, size },
     });
     return response.data.data;
   },
@@ -50,8 +53,8 @@ export const levelService = {
    */
   async getMyXpLedger(page = 0, size = 20): Promise<XpLedgerResponse> {
     const response = await api.get("/users/me/xp-ledger", {
-      params: { page, size }
+      params: { page, size },
     });
     return response.data.data;
-  }
+  },
 };

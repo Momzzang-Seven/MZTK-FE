@@ -10,22 +10,12 @@ interface TiptapToolbarProps {
   onImageSelect: (file: File) => void;
 }
 
-const groupOrder = [
-  "heading",
-  "text",
-  "list",
-  "media",
-] as const;
+const groupOrder = ["heading", "text", "list", "media"] as const;
 
-const Toolbar = ({
-  editor,
-  onImageSelect,
-}: TiptapToolbarProps) => {
+const Toolbar = ({ editor, onImageSelect }: TiptapToolbarProps) => {
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) onImageSelect(file);
     if (fileRef.current) fileRef.current.value = "";

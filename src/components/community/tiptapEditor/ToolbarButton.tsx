@@ -18,9 +18,7 @@ const ToolbarButton = ({
     onClick={onClick}
     aria-label={label}
     className={`p-1.5 rounded transition-colors ${
-      active
-        ? "bg-main text-white"
-        : "text-gray-600 hover:bg-gray-100"
+      active ? "bg-main text-white" : "text-gray-600 hover:bg-gray-100"
     }`}
   >
     <Icon size={18} strokeWidth={2} />

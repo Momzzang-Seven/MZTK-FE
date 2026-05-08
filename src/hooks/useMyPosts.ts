@@ -25,9 +25,17 @@ export const useMyPosts = () => {
         if (tab === "written") {
           data = await postService.getMyPosts(type, nextCursor, FETCH_SIZE);
         } else if (tab === "liked") {
-          data = await postService.getMyLikedPosts(type, nextCursor, FETCH_SIZE);
+          data = await postService.getMyLikedPosts(
+            type,
+            nextCursor,
+            FETCH_SIZE
+          );
         } else {
-          data = await postService.getMyCommentedPosts(type, nextCursor, FETCH_SIZE);
+          data = await postService.getMyCommentedPosts(
+            type,
+            nextCursor,
+            FETCH_SIZE
+          );
         }
 
         const fetchedPosts = data?.posts ?? [];

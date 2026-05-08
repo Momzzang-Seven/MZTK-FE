@@ -14,31 +14,30 @@ interface VerificationApiError {
   message?: string;
 }
 
-type LatestWorkoutVerification =
-  NonNullable<TodayWorkoutCompletionResponse["latestVerification"]>;
+type LatestWorkoutVerification = NonNullable<
+  TodayWorkoutCompletionResponse["latestVerification"]
+>;
 
 const PHOTO_REJECTION_MESSAGES: Partial<Record<RejectionReasonCode, string>> = {
   SCREEN_OR_UI: "화면이나 UI가 아닌 실제 운동 사진을 올려 주세요.",
   NO_PERSON_VISIBLE: "운동하는 사람이 보이는 사진을 올려 주세요.",
-  EQUIPMENT_ONLY:
-    "기구만 찍힌 사진 말고 운동 장면이 보이는 사진이 필요합니다.",
+  EQUIPMENT_ONLY: "기구만 찍힌 사진 말고 운동 장면이 보이는 사진이 필요합니다.",
   INSUFFICIENT_WORKOUT_CONTEXT:
     "운동 직후이거나 운동 중이라는 맥락이 보이는 사진을 올려 주세요.",
   LOW_CONFIDENCE: "사진을 명확하게 분석하기 어려워요. 다시 촬영해 주세요.",
-  MISSING_EXIF_METADATA:
-    "촬영 정보가 포함된 원본 사진으로 다시 시도해 주세요.",
+  MISSING_EXIF_METADATA: "촬영 정보가 포함된 원본 사진으로 다시 시도해 주세요.",
   EXIF_DATE_MISMATCH: "오늘 촬영한 운동 사진으로 다시 인증해 주세요.",
 };
 
-const RECORD_REJECTION_MESSAGES: Partial<Record<RejectionReasonCode, string>> = {
-  NOT_WORKOUT_RECORD:
-    "운동 기록 화면이 아닌 것 같아요. 기록 화면을 올려 주세요.",
-  DATE_NOT_VISIBLE:
-    "운동 날짜가 선명하게 보이는 기록 화면을 올려 주세요.",
-  DATE_MISMATCH: "오늘 운동 기록 화면이 맞는지 다시 확인해 주세요.",
-  LOW_CONFIDENCE:
-    "기록 화면을 명확하게 분석하기 어려워요. 다시 캡처해 주세요.",
-};
+const RECORD_REJECTION_MESSAGES: Partial<Record<RejectionReasonCode, string>> =
+  {
+    NOT_WORKOUT_RECORD:
+      "운동 기록 화면이 아닌 것 같아요. 기록 화면을 올려 주세요.",
+    DATE_NOT_VISIBLE: "운동 날짜가 선명하게 보이는 기록 화면을 올려 주세요.",
+    DATE_MISMATCH: "오늘 운동 기록 화면이 맞는지 다시 확인해 주세요.",
+    LOW_CONFIDENCE:
+      "기록 화면을 명확하게 분석하기 어려워요. 다시 캡처해 주세요.",
+  };
 
 const FAILURE_MESSAGES: Record<FailureCode, string> = {
   EXTERNAL_AI_TIMEOUT:
@@ -61,8 +60,7 @@ const REQUEST_ERROR_MESSAGES: Record<string, string> = {
   VERIFICATION_002:
     "인증에 사용할 수 없는 이미지 형식입니다. 다른 파일로 다시 시도해 주세요.",
   VERIFICATION_003: "업로드한 파일을 찾을 수 없습니다. 다시 업로드해 주세요.",
-  VERIFICATION_004:
-    "업로드한 파일에 접근할 수 없습니다. 다시 업로드해 주세요.",
+  VERIFICATION_004: "업로드한 파일에 접근할 수 없습니다. 다시 업로드해 주세요.",
   VERIFICATION_005: "인증 요청 종류가 올바르지 않습니다. 다시 시도해 주세요.",
   VERIFICATION_006: "오늘 운동 인증은 이미 완료되었습니다.",
   VERIFICATION_007: "인증 정보를 찾을 수 없습니다. 다시 시도해 주세요.",
@@ -93,13 +91,12 @@ const REQUEST_MESSAGE_TRANSLATIONS: Record<string, string> = {
   "Verification not found": "인증 정보를 찾을 수 없습니다. 다시 시도해 주세요.",
 };
 
-const DEFAULT_REJECTION_MESSAGE =
-  "인증 기준에 맞는 이미지를 다시 올려 주세요.";
+const DEFAULT_REJECTION_MESSAGE = "인증 기준에 맞는 이미지를 다시 올려 주세요.";
 const DEFAULT_ERROR_MESSAGE =
   "운동 인증 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
 
 const getModeFromKind = (
-  verificationKind: VerificationKind,
+  verificationKind: VerificationKind
 ): WorkoutVerificationMode =>
   verificationKind === "WORKOUT_RECORD" ? "record" : "exercise";
 
@@ -126,7 +123,7 @@ const translateRequestMessage = (code?: string, message?: string) => {
 const getRejectedMessage = (
   mode: WorkoutVerificationMode,
   rejectionReasonCode: RejectionReasonCode | null,
-  rejectionReasonDetail: string | null,
+  rejectionReasonDetail: string | null
 ) => {
   const messageMap =
     mode === "record" ? RECORD_REJECTION_MESSAGES : PHOTO_REJECTION_MESSAGES;
@@ -142,13 +139,13 @@ const getRejectedMessage = (
 
 export const getWorkoutVerificationErrorMessage = (
   mode: WorkoutVerificationMode,
-  result: SubmitWorkoutVerificationResponse,
+  result: SubmitWorkoutVerificationResponse
 ) => {
   if (result.verificationStatus === "REJECTED") {
     return getRejectedMessage(
       mode,
       result.rejectionReasonCode,
-      result.rejectionReasonDetail,
+      result.rejectionReasonDetail
     );
   }
 
@@ -174,7 +171,7 @@ export const getWorkoutVerificationErrorMessage = (
 };
 
 export const getWorkoutVerificationLatestErrorMessage = (
-  latestVerification: LatestWorkoutVerification,
+  latestVerification: LatestWorkoutVerification
 ) => {
   const mode = getModeFromKind(latestVerification.verificationKind);
 
@@ -182,7 +179,7 @@ export const getWorkoutVerificationLatestErrorMessage = (
     return getRejectedMessage(
       mode,
       latestVerification.rejectionReasonCode,
-      null,
+      null
     );
   }
 
@@ -190,7 +187,9 @@ export const getWorkoutVerificationLatestErrorMessage = (
     latestVerification.verificationStatus === "FAILED" &&
     latestVerification.failureCode
   ) {
-    return FAILURE_MESSAGES[latestVerification.failureCode] ?? DEFAULT_ERROR_MESSAGE;
+    return (
+      FAILURE_MESSAGES[latestVerification.failureCode] ?? DEFAULT_ERROR_MESSAGE
+    );
   }
 
   return DEFAULT_ERROR_MESSAGE;
@@ -201,7 +200,7 @@ export const getWorkoutVerificationRequestErrorMessage = (error: unknown) => {
     const payload = error.response?.data as VerificationApiError | undefined;
     const translatedMessage = translateRequestMessage(
       payload?.code,
-      payload?.message,
+      payload?.message
     );
 
     return (

@@ -5,7 +5,11 @@ import { LoadingSpinner, CommonModal } from "@components/common";
 import { usePostStore } from "@store";
 import type { PostType } from "@store";
 import { usePostService, useLoadPostForEdit } from "@hooks";
-import { FreePostForm, QuestionPostForm, AnswerPostForm } from "@components/community";
+import {
+  FreePostForm,
+  QuestionPostForm,
+  AnswerPostForm,
+} from "@components/community";
 import { replaceImageSrc } from "@utils";
 import type { Image } from "@types";
 
@@ -42,7 +46,7 @@ const WritePost = () => {
       // 수정 모드
       reset();
       if (urlType === "QUESTION") loadPost(Number(postId));
-      else if (urlType ==="ANSWER") {
+      else if (urlType === "ANSWER") {
         const answerContent = location.state?.content ?? "";
         const answerImages = location.state?.images ?? [];
 
@@ -50,10 +54,10 @@ const WritePost = () => {
           parentId: Number(parentId),
           type: urlType,
           content: answerContent,
-          images: answerImages.map((img: Image) => ({ 
-            imageId: img.imageId, 
-            imageUrl: img.imageUrl 
-          }))
+          images: answerImages.map((img: Image) => ({
+            imageId: img.imageId,
+            imageUrl: img.imageUrl,
+          })),
         });
       }
     } else {
@@ -61,11 +65,25 @@ const WritePost = () => {
       if (urlType !== "FREE") reset(); // 질문, 답변만 이 페이지에서 reset
       setPostType(urlType);
 
-      if (urlType === "ANSWER" && postId) { // 이때 postId: 부모 질문의 postId
+      if (urlType === "ANSWER" && postId) {
+        // 이때 postId: 부모 질문의 postId
         setParentPostId(Number(postId));
       }
     }
-  }, [location.state?.content, location.state?.images, parentId, type, postId, isEditMode, shouldFetchHere, reset, loadPost, setPostType, setParentPostId, setPostForEdit]);
+  }, [
+    location.state?.content,
+    location.state?.images,
+    parentId,
+    type,
+    postId,
+    isEditMode,
+    shouldFetchHere,
+    reset,
+    loadPost,
+    setPostType,
+    setParentPostId,
+    setPostForEdit,
+  ]);
 
   // 수정 모드 초기값: 스토어에서 읽음
   // FREE: SelectImage fetch 후 WritePost → 스토어에 이미 데이터 있음
@@ -76,12 +94,11 @@ const WritePost = () => {
     ? replaceImageSrc(initialContent, storeImages)
     : "";
 
-  const handleSubmit =
-    isEditMode
-      ? postType === "QUESTION"
-        ? () => updatePost(Number(postId))
-        : () => updatePost(Number(postId), Number(parentPostId))
-      : createPost;
+  const handleSubmit = isEditMode
+    ? postType === "QUESTION"
+      ? () => updatePost(Number(postId))
+      : () => updatePost(Number(postId), Number(parentPostId))
+    : createPost;
 
   const isActive = isSubmitActive && !isLoading;
 
@@ -112,9 +129,7 @@ const WritePost = () => {
             }`}
             onClick={isActive ? handleSubmit : undefined}
           >
-            {isEditMode
-                ? "수정하기"
-                : "등록하기"}
+            {isEditMode ? "수정하기" : "등록하기"}
           </div>
         }
       />

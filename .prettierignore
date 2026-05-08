@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist-ssr/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+output/
+
+pnpm-lock.yaml
+public/mockServiceWorker.js
+
+src/assets/*.json
+src/abi/MarketplaceEscrow.json
+src/abi/QnAEscrow.json

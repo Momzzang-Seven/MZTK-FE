@@ -1,12 +1,12 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 export const attendanceHandlers = [
-  http.post('/users/me/attendance', () =>
+  http.post("/users/me/attendance", () =>
     HttpResponse.json({
       success: true,
       data: {
         success: true,
-        message: '출석 체크 완료! +10 XP',
+        message: "출석 체크 완료! +10 XP",
         grantedXp: 10,
         bonusXp: 0,
         streakDays: 3,
@@ -14,7 +14,7 @@ export const attendanceHandlers = [
     })
   ),
 
-  http.get('/users/me/attendance/status', () =>
+  http.get("/users/me/attendance/status", () =>
     HttpResponse.json({
       success: true,
       data: {
@@ -24,7 +24,7 @@ export const attendanceHandlers = [
     })
   ),
 
-  http.get('/users/me/attendance/weekly', () =>
+  http.get("/users/me/attendance/weekly", () =>
     HttpResponse.json({
       success: true,
       data: {
@@ -36,9 +36,9 @@ export const attendanceHandlers = [
 ];
 
 export const attendanceAlreadyCheckedHandlers = [
-  http.post('/users/me/attendance', () =>
+  http.post("/users/me/attendance", () =>
     HttpResponse.json(
-      { success: false, message: '오늘 이미 출석했습니다.' },
+      { success: false, message: "오늘 이미 출석했습니다." },
       { status: 409 }
     )
   ),

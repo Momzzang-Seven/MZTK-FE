@@ -98,7 +98,13 @@ const Login = () => {
             stroke="currentColor"
             strokeWidth="2"
           />
-          <circle cx="12" cy="11.5" r="4" stroke="currentColor" strokeWidth="2" />
+          <circle
+            cx="12"
+            cy="11.5"
+            r="4"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
           <rect x="3" y="27" width="25" height="1" fill="currentColor" />
         </svg>
       ),
@@ -282,7 +288,9 @@ const Login = () => {
               className="h-11 rounded-xl border border-white bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#FAB12F]/40 focus:ring-2 focus:ring-[#FAB12F]/20"
             />
             {localError && (
-              <p className="px-1 text-[12px] font-medium text-red-500">{localError}</p>
+              <p className="px-1 text-[12px] font-medium text-red-500">
+                {localError}
+              </p>
             )}
             <CommonButton
               label={isLocalSubmitting ? "로그인 중..." : "로컬 계정 로그인"}

@@ -11,7 +11,7 @@ interface QuestionHeaderProps {
   createdAt: string;
   isEditable: boolean;
   isWeb3Executable: boolean;
-  Web3Execution: Web3Execution
+  Web3Execution: Web3Execution;
 }
 
 const QuestionHeader = ({
@@ -22,7 +22,7 @@ const QuestionHeader = ({
   createdAt,
   isEditable,
   isWeb3Executable,
-  Web3Execution
+  Web3Execution,
 }: QuestionHeaderProps) => {
   const navigate = useNavigate();
 
@@ -53,17 +53,20 @@ const QuestionHeader = ({
       </div>
 
       <div className="flex items-center space-x-2">
-        {isMine ? isEditable || isWeb3Executable && (
-          <ActionList
-          size="md"
-          type={type}
-          id={postId}
-          authorId={writer.userId}
-          isEditable={isEditable}
-          isWeb3Executable={isWeb3Executable}
-          Web3Execution={Web3Execution}
-        />
-        ): (
+        {isMine ? (
+          isEditable ||
+          (isWeb3Executable && (
+            <ActionList
+              size="md"
+              type={type}
+              id={postId}
+              authorId={writer.userId}
+              isEditable={isEditable}
+              isWeb3Executable={isWeb3Executable}
+              Web3Execution={Web3Execution}
+            />
+          ))
+        ) : (
           <ActionList
             size="md"
             type={type}
@@ -73,7 +76,7 @@ const QuestionHeader = ({
             isWeb3Executable={false}
           />
         )}
-        
+
         <SharePost type={type} postId={postId} />
       </div>
     </div>

@@ -9,7 +9,7 @@ import ImageUploadNode from "@components/community/tiptapEditor/ImageUploadNode"
 export const useTiptapEditor = (
   onChange: (html: string) => void,
   referenceType: ImageReferenceType,
-  initialContent?: string,
+  initialContent?: string
 ) => {
   const addImage = usePostStore((s) => s.addImage);
   const removeImage = usePostStore((s) => s.removeImage);
@@ -31,8 +31,7 @@ export const useTiptapEditor = (
     content: initialContent ?? "",
     editorProps: {
       attributes: {
-        class:
-          "prose lg:prose-lg max-w-none focus:outline-none min-h-[200px]",
+        class: "prose lg:prose-lg max-w-none focus:outline-none min-h-[200px]",
       },
     },
     onUpdate: ({ editor: e }) => {
@@ -121,7 +120,7 @@ export const useTiptapEditor = (
         console.error("이미지 업로드 실패:", error);
       }
     },
-    [editor, prepareSingleUpload],
+    [editor, prepareSingleUpload]
   );
 
   return { editor, handleImageSelect };

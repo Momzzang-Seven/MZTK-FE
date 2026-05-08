@@ -82,7 +82,7 @@ export const CommonButton = ({
     >
       {icon && <span className="flex items-center">{icon}</span>}
       <div className="flex gap-3 items-center">
-        {img && <img src={img} alt="buttonImage" width="20px"/>}
+        {img && <img src={img} alt="buttonImage" width="20px" />}
         {label && <div>{label}</div>}
       </div>
     </button>

@@ -29,11 +29,7 @@ const TagInput = ({ tags, onChange, maxTags = 5 }: TagInputProps) => {
       e.preventDefault();
       addTag(inputValue);
     }
-    if (
-      e.key === "Backspace" &&
-      inputValue === "" &&
-      tags.length > 0
-    ) {
+    if (e.key === "Backspace" && inputValue === "" && tags.length > 0) {
       removeTag(tags.length - 1);
     }
   };
@@ -46,7 +42,7 @@ const TagInput = ({ tags, onChange, maxTags = 5 }: TagInputProps) => {
             key={tag}
             className="flex items-center gap-1 px-2.5 py-1 text-sm font-medium text-main bg-main/10 rounded-full"
           >
-            #{tag}  
+            #{tag}
             <button
               type="button"
               onClick={() => removeTag(index)}
@@ -65,7 +61,9 @@ const TagInput = ({ tags, onChange, maxTags = 5 }: TagInputProps) => {
             onKeyDown={handleKeyDown}
             onBlur={() => addTag(inputValue)}
             placeholder={
-              tags.length === 0 ? "게시물에 관련된 태그를 입력해주세요. 예) 운동루틴, 오운완" : ""
+              tags.length === 0
+                ? "게시물에 관련된 태그를 입력해주세요. 예) 운동루틴, 오운완"
+                : ""
             }
             className="flex-1 min-w-[80px] text-sm text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
           />

@@ -66,15 +66,17 @@ describe("RecordAuth Page", () => {
     render(
       <BrowserRouter>
         <RecordAuth />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     fireEvent.change(screen.getByTestId("photo-input"), {
-      target: { files: [new File(["test"], "record.png", { type: "image/png" })] },
+      target: {
+        files: [new File(["test"], "record.png", { type: "image/png" })],
+      },
     });
 
     expect(
-      screen.getByRole("button", { name: RECORD_TEXT.BTN_REGISTER }),
+      screen.getByRole("button", { name: RECORD_TEXT.BTN_REGISTER })
     ).not.toBeDisabled();
   });
 
@@ -106,7 +108,7 @@ describe("RecordAuth Page", () => {
     render(
       <BrowserRouter>
         <RecordAuth />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     const file = new File(["test"], "record.png", { type: "image/png" });
@@ -114,7 +116,7 @@ describe("RecordAuth Page", () => {
       target: { files: [file] },
     });
     fireEvent.click(
-      screen.getByRole("button", { name: RECORD_TEXT.BTN_REGISTER }),
+      screen.getByRole("button", { name: RECORD_TEXT.BTN_REGISTER })
     );
 
     await waitFor(() => {
@@ -159,20 +161,22 @@ describe("RecordAuth Page", () => {
     render(
       <BrowserRouter>
         <RecordAuth />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
 
     fireEvent.change(screen.getByTestId("photo-input"), {
-      target: { files: [new File(["test"], "record.png", { type: "image/png" })] },
+      target: {
+        files: [new File(["test"], "record.png", { type: "image/png" })],
+      },
     });
     fireEvent.click(
-      screen.getByRole("button", { name: RECORD_TEXT.BTN_REGISTER }),
+      screen.getByRole("button", { name: RECORD_TEXT.BTN_REGISTER })
     );
 
     await waitFor(() => {
       expect(mockFinishAnalysis).toHaveBeenCalled();
       expect(mockShowSnackbar).toHaveBeenCalledWith(
-        "오늘 운동 기록 화면이 맞는지 다시 확인해 주세요. 오늘 날짜가 보이는 기록 화면으로 다시 업로드해 주세요.",
+        "오늘 운동 기록 화면이 맞는지 다시 확인해 주세요. 오늘 날짜가 보이는 기록 화면으로 다시 업로드해 주세요."
       );
     });
   });

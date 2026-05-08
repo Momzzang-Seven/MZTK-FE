@@ -40,7 +40,7 @@ const defaultPost = {
     {
       imageId: 1,
       imageUrl: "https://example.com/post.png",
-    }
+    },
   ],
   tags: ["react", "frontend"],
   isLiked: false,
@@ -82,7 +82,15 @@ describe("FreePostCard", () => {
         ...defaultPost,
         writer: { ...defaultPost.writer, profileImage: null },
       };
-      render(<FreePostCard post={postWithoutProfile as unknown as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(
+        <FreePostCard
+          post={
+            postWithoutProfile as unknown as Parameters<
+              typeof FreePostCard
+            >[0]["post"]
+          }
+        />
+      );
       const profileImage = screen.getByAltText("테스트유저");
 
       expect(profileImage).toHaveAttribute("src", "/icon/defaultUser.svg");
@@ -100,9 +108,19 @@ describe("FreePostCard", () => {
 
     it("images가 없을 때 이미지를 렌더링하지 않는다", () => {
       const postWithoutImage = { ...defaultPost, images: [] };
-      render(<FreePostCard post={postWithoutImage as unknown as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(
+        <FreePostCard
+          post={
+            postWithoutImage as unknown as Parameters<
+              typeof FreePostCard
+            >[0]["post"]
+          }
+        />
+      );
 
-      expect(screen.queryByAltText(defaultPost.images[0].imageUrl)).not.toBeInTheDocument();
+      expect(
+        screen.queryByAltText(defaultPost.images[0].imageUrl)
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -117,7 +135,13 @@ describe("FreePostCard", () => {
 
     it("isLiked가 true인 경우 채워진 하트 아이콘이 렌더링된다", () => {
       const likedPost = { ...defaultPost, isLiked: true };
-      render(<FreePostCard post={likedPost as unknown as Parameters<typeof FreePostCard>[0]["post"]} />);
+      render(
+        <FreePostCard
+          post={
+            likedPost as unknown as Parameters<typeof FreePostCard>[0]["post"]
+          }
+        />
+      );
       const likeIcon = screen.getByAltText("like");
 
       expect(likeIcon).toHaveAttribute("src", "/icon/likeActive.svg");

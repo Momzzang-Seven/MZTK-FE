@@ -14,7 +14,11 @@ vi.mock("@components/common", () => ({
 }));
 
 vi.mock("@components/community", () => ({
-  CommentItem: ({ comment }: { comment: { content: string; replyCount: number } }) => (
+  CommentItem: ({
+    comment,
+  }: {
+    comment: { content: string; replyCount: number };
+  }) => (
     <div data-testid="mock-comment-item">
       <span>{comment.content}</span>
       {comment.replyCount > 0 && (
@@ -96,11 +100,18 @@ describe("Answer 컴포넌트", () => {
     commentServiceState.fetchComments = vi.fn();
     commentServiceState.createComment = vi.fn().mockResolvedValue(undefined);
     commentServiceState.refetch = vi.fn();
-    (useCommentService as unknown as import("vitest").Mock).mockReturnValue(commentServiceState);
+    (useCommentService as unknown as import("vitest").Mock).mockReturnValue(
+      commentServiceState
+    );
   });
 
   it("기본 정보(작성자, 본문, 댓글 수, 시간)가 올바르게 렌더링된다", () => {
-    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} {...defaultProps} />);
+    render(
+      <Answer
+        answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]}
+        {...defaultProps}
+      />
+    );
 
     expect(screen.getByText("작성자닉네임")).toBeInTheDocument();
     expect(screen.getByText("이것은 답변 내용입니다.")).toBeInTheDocument();
@@ -110,13 +121,25 @@ describe("Answer 컴포넌트", () => {
 
   it("isAccepted가 true일 때 '✓ 채택된 답변'이 표시된다", () => {
     const acceptedAnswer = { ...mockAnswer, isAccepted: true };
-    render(<Answer answer={acceptedAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} {...defaultProps} />);
+    render(
+      <Answer
+        answer={
+          acceptedAnswer as unknown as Parameters<typeof Answer>[0]["answer"]
+        }
+        {...defaultProps}
+      />
+    );
 
     expect(screen.getByText("✓ 채택된 답변")).toBeInTheDocument();
   });
 
   it("profileImageUrl이 없을 때 기본 이미지를 렌더링한다", () => {
-    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} {...defaultProps} />);
+    render(
+      <Answer
+        answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]}
+        {...defaultProps}
+      />
+    );
     expect(screen.getByAltText("작성자닉네임")).toHaveAttribute(
       "src",
       "/icon/defaultUser.svg"
@@ -128,7 +151,14 @@ describe("Answer 컴포넌트", () => {
       ...mockAnswer,
       profileImageUrl: "/images/profile.png",
     };
-    render(<Answer answer={answerWithProfile as unknown as Parameters<typeof Answer>[0]["answer"]} {...defaultProps} />);
+    render(
+      <Answer
+        answer={
+          answerWithProfile as unknown as Parameters<typeof Answer>[0]["answer"]
+        }
+        {...defaultProps}
+      />
+    );
 
     expect(screen.getByAltText("작성자닉네임")).toHaveAttribute(
       "src",
@@ -141,7 +171,12 @@ describe("Answer 컴포넌트", () => {
       { commentId: 1, content: "댓글 1", replyCount: 0 },
     ];
 
-    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} {...defaultProps} />);
+    render(
+      <Answer
+        answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]}
+        {...defaultProps}
+      />
+    );
 
     expect(screen.queryByTestId("mock-comment-input")).not.toBeInTheDocument();
 
@@ -160,7 +195,12 @@ describe("Answer 컴포넌트", () => {
   it("댓글이 없을 때 '댓글이 없습니다.' 문구를 표시한다", async () => {
     commentServiceState.comments = [];
 
-    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} {...defaultProps} />);
+    render(
+      <Answer
+        answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]}
+        {...defaultProps}
+      />
+    );
 
     fireEvent.click(screen.getByAltText("comment"));
 
@@ -175,7 +215,12 @@ describe("Answer 컴포넌트", () => {
       { commentId: 1, content: "댓글 1", replyCount: 2 },
     ];
 
-    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} {...defaultProps} />);
+    render(
+      <Answer
+        answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]}
+        {...defaultProps}
+      />
+    );
 
     fireEvent.click(screen.getByAltText("comment"));
 
@@ -187,7 +232,12 @@ describe("Answer 컴포넌트", () => {
   it("댓글 입력 후 제출하면 createComment가 호출되고 입력창이 초기화된다", async () => {
     commentServiceState.comments = [];
 
-    render(<Answer answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]} {...defaultProps} />);
+    render(
+      <Answer
+        answer={mockAnswer as unknown as Parameters<typeof Answer>[0]["answer"]}
+        {...defaultProps}
+      />
+    );
 
     fireEvent.click(screen.getByAltText("comment"));
 

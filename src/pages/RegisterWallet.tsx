@@ -12,7 +12,13 @@ import { useWalletService } from "@hooks";
 const RegisterWallet = () => {
   const navigate = useNavigate();
   const setWalletAddress = useUserStore((state) => state.setWalletAddress);
-  const { loading, error, setError, handleWalletRegistration, handleUnlinkWallet } = useWalletService();
+  const {
+    loading,
+    error,
+    setError,
+    handleWalletRegistration,
+    handleUnlinkWallet,
+  } = useWalletService();
   const [step, setStep] = useState<
     "AUTH_PIN" | "MNEMONIC" | "PIN_SET" | "PIN_CONFIRM" | "SUCCESS"
   >(() => {
@@ -54,7 +60,7 @@ const RegisterWallet = () => {
       }
 
       await handleWalletRegistration(wallet);
-      
+
       const encryptedJson = await wallet.encrypt(pin);
       localStorage.setItem("encrypted_wallet", encryptedJson);
       localStorage.setItem("wallet_address", wallet.address);
@@ -65,7 +71,14 @@ const RegisterWallet = () => {
       setConfirmPin("");
       setStep("PIN_SET");
     }
-  }, [loading, wallet, pin, setWalletAddress, handleUnlinkWallet, handleWalletRegistration]);
+  }, [
+    loading,
+    wallet,
+    pin,
+    setWalletAddress,
+    handleUnlinkWallet,
+    handleWalletRegistration,
+  ]);
 
   useEffect(() => {
     const verifyPin = async () => {
@@ -73,8 +86,8 @@ const RegisterWallet = () => {
         try {
           const encryptedJson = localStorage.getItem("encrypted_wallet");
           if (!encryptedJson) {
-             setStep("MNEMONIC");
-             return;
+            setStep("MNEMONIC");
+            return;
           }
           await ethers.Wallet.fromEncryptedJson(encryptedJson, authPin);
           setStep("MNEMONIC");
@@ -103,9 +116,9 @@ const RegisterWallet = () => {
   return (
     <FullScreenPage className="overflow-hidden">
       {loading && (
-              <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
-                <LoadingSpinner size="lg" color="text-white" />
-              </div>
+        <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+          <LoadingSpinner size="lg" color="text-white" />
+        </div>
       )}
 
       {step === "AUTH_PIN" && (

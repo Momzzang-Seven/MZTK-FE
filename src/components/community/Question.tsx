@@ -9,9 +9,16 @@ interface QuestionProps {
 
 const Question = ({ post }: QuestionProps) => {
   const navigate = useNavigate();
-  const status = getQuestionStatus(post.publicationStatus, post.moderationStatus, post.question.isSolved, post.commentCount);
+  const status = getQuestionStatus(
+    post.publicationStatus,
+    post.moderationStatus,
+    post.question.isSolved,
+    post.commentCount
+  );
   const statusStyle = statusStyleMap[status];
-  const processedContent = post.content ? replaceImageSrc(post.content, post.images) : "";
+  const processedContent = post.content
+    ? replaceImageSrc(post.content, post.images)
+    : "";
 
   return (
     <section className="px-4 py-3 flex flex-col gap-3 border-b-1 border-gray-200 bg-white shadow-sm">

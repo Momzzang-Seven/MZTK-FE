@@ -12,13 +12,13 @@ export interface CreatePostState {
   reward: number;
   tags: string[];
   parentPostId: number | null;
-  initialData: { 
+  initialData: {
     postType: PostType;
-    title?: string; 
-    content?: string; 
-    imageIds?: number[]; 
-    reward?: number; 
-    tags?: string[]; 
+    title?: string;
+    content?: string;
+    imageIds?: number[];
+    reward?: number;
+    tags?: string[];
   } | null;
 
   setPostType: (type: PostType) => void;
@@ -54,8 +54,7 @@ export const usePostStore = create<CreatePostState>()((set) => ({
 
   setPostType: (postType) => set({ postType }),
 
-  addImage: (image) =>
-    set((state) => ({ images: [...state.images, image] })),
+  addImage: (image) => set((state) => ({ images: [...state.images, image] })),
 
   removeImage: (id) =>
     set((state) => ({

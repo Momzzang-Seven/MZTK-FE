@@ -6,7 +6,10 @@ interface QuestionPostRewardSelectorProps {
   setReward: (value: number) => void;
 }
 
-const QuestionPostRewardSelector = ({ reward, setReward }: QuestionPostRewardSelectorProps) => {
+const QuestionPostRewardSelector = ({
+  reward,
+  setReward,
+}: QuestionPostRewardSelectorProps) => {
   const { balance } = useTokenBalance();
   const balanceNum = Number(balance);
   const [customValue, setCustomValue] = useState("");

@@ -9,8 +9,16 @@ const QuestionBoard = () => {
   const tag = searchParams.get("tag") ?? undefined;
   const keyword = searchParams.get("keyword") ?? undefined;
 
-  const { posts, isLoading, hasMore, loadMore } = usePostBoard<QuestionPost>("QUESTION", tag, keyword);
-  const observerRef = useInfiniteScroll({ onLoadMore: loadMore, hasMore, isLoading });
+  const { posts, isLoading, hasMore, loadMore } = usePostBoard<QuestionPost>(
+    "QUESTION",
+    tag,
+    keyword
+  );
+  const observerRef = useInfiniteScroll({
+    onLoadMore: loadMore,
+    hasMore,
+    isLoading,
+  });
 
   if (isLoading && posts.length === 0) {
     return (

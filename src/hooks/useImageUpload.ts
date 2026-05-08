@@ -13,7 +13,7 @@ interface UploadCallbacks {
 
 export const useImageUpload = (
   referenceType: ImageReferenceType,
-  callbacks: UploadCallbacks = {},
+  callbacks: UploadCallbacks = {}
 ) => {
   const { onUploaded, onUploadStart, onUploadEnd } = callbacks;
 
@@ -62,13 +62,13 @@ export const useImageUpload = (
             } finally {
               onUploadEnd?.();
             }
-          }),
+          })
         );
       } finally {
         setIsUploading(false);
       }
     },
-    [referenceType, onUploaded, onUploadStart, onUploadEnd],
+    [referenceType, onUploaded, onUploadStart, onUploadEnd]
   );
 
   /**
@@ -86,10 +86,11 @@ export const useImageUpload = (
       const commit = async (): Promise<{ imageId: number }> => {
         onUploadStart?.();
         try {
-          const [{ imageId, presignedUrl }] = await imageService.getPresignedUrl({
-            referenceType,
-            images: [file.name],
-          });
+          const [{ imageId, presignedUrl }] =
+            await imageService.getPresignedUrl({
+              referenceType,
+              images: [file.name],
+            });
           await imageService.uploadImageToS3(presignedUrl, file);
           // S3 업로드 완료 후 백엔드에 상태 전환 통보
           await imageService.confirmImageUpload(imageId);
@@ -110,7 +111,7 @@ export const useImageUpload = (
 
       return { previewUrl, commit };
     },
-    [referenceType, onUploaded, onUploadStart, onUploadEnd],
+    [referenceType, onUploaded, onUploadStart, onUploadEnd]
   );
 
   return { uploadImages, prepareSingleUpload, isUploading };

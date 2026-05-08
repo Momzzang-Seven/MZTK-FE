@@ -44,7 +44,10 @@ const Callback = () => {
         });
 
         if (response?.userInfo.walletAddress) {
-          localStorage.setItem("wallet_address", response.userInfo.walletAddress);
+          localStorage.setItem(
+            "wallet_address",
+            response.userInfo.walletAddress
+          );
         }
 
         if (response) {
@@ -80,12 +83,15 @@ const Callback = () => {
     login();
   }, [searchParams, navigate, setUser, setAccessToken, setSanctioned]);
 
-  const providerName = searchParams.get("state") === "google" ? "구글" : "카카오";
+  const providerName =
+    searchParams.get("state") === "google" ? "구글" : "카카오";
 
   return (
     <>
       <div className="flex justify-center items-center h-screen flex-col gap-4">
-        <div className="text-xl font-bold">{providerName} 로그인 중입니다...</div>
+        <div className="text-xl font-bold">
+          {providerName} 로그인 중입니다...
+        </div>
         <div className="text-gray-500">잠시만 기다려주세요.</div>
       </div>
 

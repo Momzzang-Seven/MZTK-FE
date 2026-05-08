@@ -20,65 +20,101 @@ export const useLoadPostForEdit = () => {
 
   const [isFetching, setIsFetching] = useState(false);
 
-  const loadPost = useCallback(async (postId: number) => {
-    setIsFetching(true);
-    try {
-      const post = await postService.getPost(postId);
+  const loadPost = useCallback(
+    async (postId: number) => {
+      setIsFetching(true);
+      try {
+        const post = await postService.getPost(postId);
 
-      const nextPostType = post.type as PostType;
-      const nextContent = post.content;
-      const nextTags = post.tags;
-      const nextImageIds = post.images.map(img => img.imageId);
-      const nextTitle = ('title' in post) ? post.title : "";
-      const nextReward = ('question' in post && post.question) ? post.question.reward : 0;
+        const nextPostType = post.type as PostType;
+        const nextContent = post.content;
+        const nextTags = post.tags;
+        const nextImageIds = post.images.map((img) => img.imageId);
+        const nextTitle = "title" in post ? post.title : "";
+        const nextReward =
+          "question" in post && post.question ? post.question.reward : 0;
 
-      setPostType(nextPostType);
-      setContent(nextContent);
-      setTags(nextTags);
-      setImages(post.images.map(img => ({ imageId: img.imageId, imageUrl: img.imageUrl })));
-      setTitle(nextTitle);
-      setReward(nextReward);
-      
+        setPostType(nextPostType);
+        setContent(nextContent);
+        setTags(nextTags);
+        setImages(
+          post.images.map((img) => ({
+            imageId: img.imageId,
+            imageUrl: img.imageUrl,
+          }))
+        );
+        setTitle(nextTitle);
+        setReward(nextReward);
+
+        setInitialData({
+          postType: nextPostType,
+          title: nextTitle,
+          content: nextContent,
+          reward: nextReward,
+          tags: nextTags,
+          imageIds: nextImageIds,
+        });
+      } finally {
+        setIsFetching(false);
+      }
+    },
+    [
+      setPostType,
+      setTitle,
+      setContent,
+      setImages,
+      setTags,
+      setReward,
+      setInitialData,
+    ]
+  );
+
+  const setPostForEdit = useCallback(
+    (data: {
+      type: PostType;
+      content: string;
+      images: { imageId: number; imageUrl: string }[];
+      title?: string;
+      reward?: number;
+      parentId?: number;
+    }) => {
+      const {
+        type,
+        content,
+        images,
+        title = "",
+        reward = 0,
+        parentId = null,
+      } = data;
+
+      setPostType(type);
+      setContent(content);
+      setImages(images);
+      setTitle(title);
+      setReward(reward);
+      setTags([]); // 답변은 태그가 없으므로 초기화
+      setParentPostId(parentId);
+
       setInitialData({
-        postType: nextPostType,
-        title: nextTitle,
-        content: nextContent,
-        reward: nextReward,
-        tags: nextTags,
-        imageIds: nextImageIds,
+        postType: type,
+        title: title,
+        content: content,
+        reward: reward,
+        tags: [],
+        imageIds: images.map((img) => img.imageId),
       });
-    } finally {
-      setIsFetching(false);
-    }
-  }, [setPostType, setTitle, setContent, setImages, setTags, setReward, setInitialData]);
-
-  const setPostForEdit = useCallback((data: {
-    type: PostType;
-    content: string;
-    images: { imageId: number; imageUrl: string }[];
-    title?: string;
-    reward?: number;
-    parentId?: number;
-  }) => {
-    const { type, content, images, title = "", reward = 0, parentId = null } = data;
-    
-    setPostType(type);
-    setContent(content);
-    setImages(images);
-    setTitle(title);
-    setReward(reward);
-    setTags([]); // 답변은 태그가 없으므로 초기화
-    setParentPostId(parentId);
-
-    setInitialData({
-      postType: type,
-      title: title,
-      content: content,
-      reward: reward,
-      tags: [],
-      imageIds: images.map(img => img.imageId),
-    });
-  }, [setParentPostId, setPostType, setContent, setImages, setTitle, setReward, setInitialData, setTags]);
+    },
+    [
+      setParentPostId,
+      setPostType,
+      setContent,
+      setImages,
+      setTitle,
+      setReward,
+      setInitialData,
+      setTags,
+    ]
+  );
 
   return { isFetching, loadPost, setPostForEdit };
 };

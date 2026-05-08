@@ -10,7 +10,12 @@ interface Props {
   onReplyClick: (commentId: number, nickname: string) => void;
 }
 
-const CommentItem = ({ comment, isRootComment = true, onUpdateReplySuccess, onReplyClick }: Props) => {
+const CommentItem = ({
+  comment,
+  isRootComment = true,
+  onUpdateReplySuccess,
+  onReplyClick,
+}: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleOpen = () => setIsOpen((prev) => !prev);
@@ -53,11 +58,13 @@ const CommentItem = ({ comment, isRootComment = true, onUpdateReplySuccess, onRe
           <p className="mt-1 pr-3 text-sm leading-relaxed">{comment.content}</p>
 
           {/* 답글 펼치기/숨기기 및 답글 달기 */}
-          {isRootComment && 
+          {isRootComment && (
             <div className="flex gap-4 mt-2 text-xs font-bold text-gray-500">
               {comment.replyCount > 0 && (
                 <div className="cursor-pointer" onClick={toggleOpen}>
-                  {isOpen ? "답글 숨기기" : `답글 펼쳐보기(${comment.replyCount}개)`}
+                  {isOpen
+                    ? "답글 숨기기"
+                    : `답글 펼쳐보기(${comment.replyCount}개)`}
                 </div>
               )}
               {comment.writer && (
@@ -72,7 +79,7 @@ const CommentItem = ({ comment, isRootComment = true, onUpdateReplySuccess, onRe
                 </div>
               )}
             </div>
-          }
+          )}
         </div>
       </div>
 

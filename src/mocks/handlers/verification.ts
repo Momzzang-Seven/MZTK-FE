@@ -12,6 +12,6 @@ export const verificationHandlers = [
         earnedDate: null,
         latestVerification: null,
       },
-    }),
+    })
   ),
 ];

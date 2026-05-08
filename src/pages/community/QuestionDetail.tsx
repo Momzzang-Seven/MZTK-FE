@@ -13,7 +13,8 @@ import { usePostService } from "@hooks";
 const QuestionDetail = () => {
   const params = useParams();
   const postId = Number(params.postId);
-  const { getPost, getAnswers, isPostLoading, isAnswerLoading, error } = usePostService();
+  const { getPost, getAnswers, isPostLoading, isAnswerLoading, error } =
+    usePostService();
   const [question, setQuestion] = useState<QuestionPost | null>(null);
   const [answers, setAnswers] = useState<AnswerPost[]>([]);
 
@@ -21,17 +22,22 @@ const QuestionDetail = () => {
   const userId = stored ? JSON.parse(stored)?.state?.user?.userId : null;
 
   const isMine = userId !== null && question?.writer.userId === userId;
-  const isWeb3Done = question?.publicationStatus === "VISIBLE" || question?.publicationStatus === "FAILED";
+  const isWeb3Done =
+    question?.publicationStatus === "VISIBLE" ||
+    question?.publicationStatus === "FAILED";
 
   const isWeb3Executable = isMine && !isWeb3Done;
   const isEditable = isMine && isWeb3Done && question?.commentCount === 0;
 
   useEffect(() => {
     const fetchData = async () => {
-      const [qData, aData] = await Promise.all([getPost(postId), getAnswers(postId)]);
+      const [qData, aData] = await Promise.all([
+        getPost(postId),
+        getAnswers(postId),
+      ]);
       if (qData) setQuestion(qData as QuestionPost);
       if (aData) setAnswers(aData as AnswerPost[]);
-    }
+    };
     fetchData();
   }, [getPost, getAnswers, postId]);
 
@@ -52,11 +58,13 @@ const QuestionDetail = () => {
     );
   }
 
-  if(!question){
+  if (!question) {
     return (
       <div className="w-full h-full flex flex-col min-h-screen justify-center items-center py-10">
         <p className="text-black-500">{"오류가 발생했습니다 : "}</p>
-        <p className="text-black-500 whitespace-pre-line">{"게시물을 찾을 수 없습니다."}</p>
+        <p className="text-black-500 whitespace-pre-line">
+          {"게시물을 찾을 수 없습니다."}
+        </p>
       </div>
     );
   }
@@ -83,27 +91,42 @@ const QuestionDetail = () => {
 
         {isAnswerLoading ? (
           <div className="py-10">
-            <LoadingSpinner size="md" color="text-gray-400" label="답변을 가져오는 중..." />
+            <LoadingSpinner
+              size="md"
+              color="text-gray-400"
+              label="답변을 가져오는 중..."
+            />
+          </div>
+        ) : answers.length === 0 ? (
+          <div className="py-10">
+            <p className="text-center text-gray-600">
+              아직 등록된 답변이 없습니다.
+            </p>
           </div>
         ) : (
-          answers.length === 0 ? (
-            <div className="py-10">
-              <p className="text-center text-gray-600">아직 등록된 답변이 없습니다.</p>
+          answers.map((answer) => (
+            <div key={answer.answerId}>
+              <Answer
+                answer={answer}
+                parentId={postId}
+                // userId={userId}
+                isSelectable={
+                  isMine && isWeb3Done && !question.question.isSolved
+                }
+                isEditable={
+                  answer.userId === userId
+                    ? !answer.isAccepted &&
+                      answer.web3Execution.resource.status === "COMPLETED"
+                    : false
+                }
+                isWeb3Executable={
+                  answer.userId === userId
+                    ? answer.web3Execution.resource.status !== "COMPLETED"
+                    : false
+                }
+              />
             </div>
-          ) : (
-            answers.map((answer) => (
-              <div key={answer.answerId}>
-                <Answer
-                  answer={answer}
-                  parentId={postId}
-                  // userId={userId}
-                  isSelectable={isMine && isWeb3Done && !question.question.isSolved}
-                  isEditable={answer.userId===userId ? !answer.isAccepted && answer.web3Execution.resource.status === "COMPLETED" : false}
-                  isWeb3Executable={answer.userId===userId ? answer.web3Execution.resource.status !== "COMPLETED" : false} 
-                  />
-              </div>
-            ))
-          )
+          ))
         )}
       </div>
 

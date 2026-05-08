@@ -11,8 +11,14 @@ interface ReplySectionProps {
   onReplyClick: (commentId: number, nickname: string) => void;
 }
 
-const ReplySection = ({ isOpen, parentId, replyCount, onReplyClick }: ReplySectionProps) => {
-  const { replies, isLoading, isLast, refetch, getReplies, loadMore } = useReplyService<Comment>(parentId);
+const ReplySection = ({
+  isOpen,
+  parentId,
+  replyCount,
+  onReplyClick,
+}: ReplySectionProps) => {
+  const { replies, isLoading, isLast, refetch, getReplies, loadMore } =
+    useReplyService<Comment>(parentId);
 
   useEffect(() => {
     if (isOpen && replies.length === 0) {
@@ -21,7 +27,7 @@ const ReplySection = ({ isOpen, parentId, replyCount, onReplyClick }: ReplySecti
   }, [isOpen, replies.length, getReplies]);
 
   if (replyCount === 0) return null;
-  
+
   if (!isOpen) return null;
 
   if (isLoading && replies.length === 0) {
@@ -44,14 +50,16 @@ const ReplySection = ({ isOpen, parentId, replyCount, onReplyClick }: ReplySecti
         />
       ))}
       {!isLast && !isLoading && (
-        <div 
+        <div
           onClick={loadMore}
           className="cursor-pointer text-sm text-gray-500"
         >
           답글 더보기
         </div>
       )}
-      {isLoading && <div className="text-xs text-gray-500 mt-2">로딩 중...</div>}
+      {isLoading && (
+        <div className="text-xs text-gray-500 mt-2">로딩 중...</div>
+      )}
     </div>
   );
 };

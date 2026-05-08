@@ -1,11 +1,11 @@
 import { api } from "./client";
-import type { 
-  GetMyLocationsResponse, 
-  RegisterLocationRequest, 
+import type {
+  GetMyLocationsResponse,
+  RegisterLocationRequest,
   RegisterLocationResponse,
   VerifyLocationRequest,
   VerifyLocationResponse,
-  DeleteLocationResponse
+  DeleteLocationResponse,
 } from "../types/location";
 
 /**
@@ -23,7 +23,9 @@ export const locationService = {
   /**
    * 위치 등록
    */
-  async registerLocation(request: RegisterLocationRequest): Promise<RegisterLocationResponse> {
+  async registerLocation(
+    request: RegisterLocationRequest
+  ): Promise<RegisterLocationResponse> {
     const response = await api.post("/users/me/locations/register", request);
     return response.data.data;
   },
@@ -31,7 +33,9 @@ export const locationService = {
   /**
    * 위치 인증 (GPS 검증 및 XP 지급)
    */
-  async verifyLocation(request: VerifyLocationRequest): Promise<VerifyLocationResponse> {
+  async verifyLocation(
+    request: VerifyLocationRequest
+  ): Promise<VerifyLocationResponse> {
     const response = await api.post("/locations/verify", request);
     return response.data.data;
   },
@@ -42,5 +46,5 @@ export const locationService = {
   async deleteLocation(locationId: number): Promise<DeleteLocationResponse> {
     const response = await api.delete(`/users/me/locations/${locationId}`);
     return response.data.data;
-  }
+  },
 };

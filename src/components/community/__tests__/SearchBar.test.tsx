@@ -47,7 +47,9 @@ describe("SearchBar", () => {
   it("검색어 입력 시 state가 업데이트된다", () => {
     renderWithRouter();
 
-    const input = screen.getByPlaceholderText("태그 검색...") as HTMLInputElement;
+    const input = screen.getByPlaceholderText(
+      "태그 검색..."
+    ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "운동" } });
 
     expect(input.value).toBe("운동");
@@ -68,7 +70,9 @@ describe("SearchBar", () => {
   it("Enter 키 입력 시 검색이 실행된다 (질문게시판)", () => {
     renderWithRouter("/community/question");
 
-    const input = screen.getByPlaceholderText("제목 검색: 검색어만 / 태그 검색: #운동");
+    const input = screen.getByPlaceholderText(
+      "제목 검색: 검색어만 / 태그 검색: #운동"
+    );
     fireEvent.change(input, { target: { value: "다이어트" } });
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
@@ -92,7 +96,9 @@ describe("SearchBar", () => {
   it("빈 검색어로 검색 시 기본 경로로 이동 (질문게시판)", () => {
     renderWithRouter("/community/question?tag=test");
 
-    const input = screen.getByPlaceholderText("제목 검색: 검색어만 / 태그 검색: #운동");
+    const input = screen.getByPlaceholderText(
+      "제목 검색: 검색어만 / 태그 검색: #운동"
+    );
     fireEvent.change(input, { target: { value: "" } });
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
@@ -122,7 +128,9 @@ describe("SearchBar", () => {
       </MemoryRouter>
     );
 
-    const input = screen.getByPlaceholderText("태그 검색...") as HTMLInputElement;
+    const input = screen.getByPlaceholderText(
+      "태그 검색..."
+    ) as HTMLInputElement;
     expect(input.value).toBe("#헬스");
   });
 });

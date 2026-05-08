@@ -82,7 +82,9 @@ const TrainerDashboard = () => {
                   key={itemIdx}
                   onClick={() => navigate(item.path)}
                   className={`w-full flex items-center justify-between p-4 active:bg-gray-50 transition-colors ${
-                    itemIdx !== group.items.length - 1 ? "border-b border-gray-50" : ""
+                    itemIdx !== group.items.length - 1
+                      ? "border-b border-gray-50"
+                      : ""
                   }`}
                 >
                   <div className="flex items-center gap-4">

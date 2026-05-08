@@ -21,7 +21,7 @@ const QuestionPostTitle = ({
     el.style.height = "auto";
 
     el.style.height = `${el.scrollHeight}px`;
-    
+
     el.style.overflowY = "hidden";
   }, [value]);
 

@@ -27,8 +27,7 @@ export const toolbarConfig: ToolbarItem[] = [
     label: "제목 1",
     action: (editor) =>
       editor.chain().focus().toggleHeading({ level: 1 }).run(),
-    isActive: (editor) =>
-      editor.isActive("heading", { level: 1 }),
+    isActive: (editor) => editor.isActive("heading", { level: 1 }),
     group: "heading",
   },
   {
@@ -36,8 +35,7 @@ export const toolbarConfig: ToolbarItem[] = [
     label: "제목 2",
     action: (editor) =>
       editor.chain().focus().toggleHeading({ level: 2 }).run(),
-    isActive: (editor) =>
-      editor.isActive("heading", { level: 2 }),
+    isActive: (editor) => editor.isActive("heading", { level: 2 }),
     group: "heading",
   },
   {
@@ -45,47 +43,41 @@ export const toolbarConfig: ToolbarItem[] = [
     label: "제목 3",
     action: (editor) =>
       editor.chain().focus().toggleHeading({ level: 3 }).run(),
-    isActive: (editor) =>
-      editor.isActive("heading", { level: 3 }),
+    isActive: (editor) => editor.isActive("heading", { level: 3 }),
     group: "heading",
   },
   {
     icon: Bold,
     label: "굵게",
-    action: (editor) =>
-      editor.chain().focus().toggleBold().run(),
+    action: (editor) => editor.chain().focus().toggleBold().run(),
     isActive: (editor) => editor.isActive("bold"),
     group: "text",
   },
   {
     icon: Italic,
     label: "기울임",
-    action: (editor) =>
-      editor.chain().focus().toggleItalic().run(),
+    action: (editor) => editor.chain().focus().toggleItalic().run(),
     isActive: (editor) => editor.isActive("italic"),
     group: "text",
   },
   {
     icon: Strikethrough,
     label: "취소선",
-    action: (editor) =>
-      editor.chain().focus().toggleStrike().run(),
+    action: (editor) => editor.chain().focus().toggleStrike().run(),
     isActive: (editor) => editor.isActive("strike"),
     group: "text",
   },
   {
     icon: List,
     label: "글머리 기호",
-    action: (editor) =>
-      editor.chain().focus().toggleBulletList().run(),
+    action: (editor) => editor.chain().focus().toggleBulletList().run(),
     isActive: (editor) => editor.isActive("bulletList"),
     group: "list",
   },
   {
     icon: ListOrdered,
     label: "번호 매기기",
-    action: (editor) =>
-      editor.chain().focus().toggleOrderedList().run(),
+    action: (editor) => editor.chain().focus().toggleOrderedList().run(),
     isActive: (editor) => editor.isActive("orderedList"),
     group: "list",
   },

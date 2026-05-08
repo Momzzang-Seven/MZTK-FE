@@ -57,7 +57,9 @@ const Leaderboard = () => {
         {users.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 gap-2">
             <span className="text-4xl opacity-20">🏆</span>
-            <p className="text-[13px] text-gray-400">아직 리더보드 데이터가 없습니다.</p>
+            <p className="text-[13px] text-gray-400">
+              아직 리더보드 데이터가 없습니다.
+            </p>
           </div>
         )}
       </ul>

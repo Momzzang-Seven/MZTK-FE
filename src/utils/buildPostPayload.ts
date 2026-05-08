@@ -12,7 +12,7 @@ export const extractImageIdsFromHtml = (html: string): number[] => {
     .map((id) => Number(id));
 };
 
-const isArrayEqual = (a: number[] | string[], b: number[] | string[]) => 
+const isArrayEqual = (a: number[] | string[], b: number[] | string[]) =>
   a.length === b.length && a.every((val, index) => val === b[index]);
 
 /**
@@ -29,9 +29,10 @@ export const buildPostPayload = (
   const { postType, title, content, images, reward, tags } = state;
 
   // 현재 데이터 계산
-  const currentImageIds = postType === "FREE" 
-    ? images.map((img: UploadedImage) => img.imageId) 
-    : extractImageIdsFromHtml(content);
+  const currentImageIds =
+    postType === "FREE"
+      ? images.map((img: UploadedImage) => img.imageId)
+      : extractImageIdsFromHtml(content);
 
   // 1. 신규 등록 케이스: 전체 payload 반환
   if (!initialData) {
@@ -51,7 +52,8 @@ export const buildPostPayload = (
   if (title !== initialData.title) patch.title = title;
   if (content !== initialData.content) patch.content = content;
   if (reward !== initialData.reward) patch.reward = reward;
-  if (!isArrayEqual(currentImageIds, initialData.imageIds || [])) patch.imageIds = currentImageIds;
+  if (!isArrayEqual(currentImageIds, initialData.imageIds || []))
+    patch.imageIds = currentImageIds;
   if (!isArrayEqual(tags, initialData.tags || [])) patch.tags = tags;
 
   return patch;

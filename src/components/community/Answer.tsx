@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import type { AnswerPost, Comment } from "@types";
-import { CommentItem, CommentInput, ActionList, QnaContent } from "@components/community";
+import {
+  CommentItem,
+  CommentInput,
+  ActionList,
+  QnaContent,
+} from "@components/community";
 import { LoadingSpinner } from "@components/common";
 import { formatTimeAgo, replaceImageSrc } from "@utils";
 import { useCommentService } from "@hooks";
@@ -14,13 +19,24 @@ interface AnswerProps {
   isWeb3Executable: boolean; // 답변 작성자의 web3 실행 가능 여부
 }
 
-const Answer = ({ answer, parentId: parenPostId, isSelectable, isEditable, isWeb3Executable }: AnswerProps) => {
+const Answer = ({
+  answer,
+  parentId: parenPostId,
+  isSelectable,
+  isEditable,
+  isWeb3Executable,
+}: AnswerProps) => {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [writingComment, setWritingComment] = useState("");
 
-  const [parentCommentId, setParentCommentId] = useState<number | undefined>(undefined);
-  const [parentCommentNickname, setParentCommentNickname] = useState<string | null>(null);
-  const { comments, isLoading, refetch, fetchComments, createComment, error } = useCommentService<Comment>(answer.answerId);
+  const [parentCommentId, setParentCommentId] = useState<number | undefined>(
+    undefined
+  );
+  const [parentCommentNickname, setParentCommentNickname] = useState<
+    string | null
+  >(null);
+  const { comments, isLoading, refetch, fetchComments, createComment, error } =
+    useCommentService<Comment>(answer.answerId);
 
   // const isMine = userId !== null && answer.userId === userId;
   // const isWeb3Done = answer.publicationStatus === "VISIBLE" || answer.publicationStatus === "FAILED";
@@ -29,8 +45,8 @@ const Answer = ({ answer, parentId: parenPostId, isSelectable, isEditable, isWeb
   // const isWeb3Executable = isMine && !isWeb3Done;
   // const isSelectable = isQuestionMine && isWeb3Done && !isQuestionSolved
 
-  const processedContent = answer.content 
-    ? replaceImageSrc(answer.content, answer.images) 
+  const processedContent = answer.content
+    ? replaceImageSrc(answer.content, answer.images)
     : "";
 
   useEffect(() => {
@@ -45,7 +61,7 @@ const Answer = ({ answer, parentId: parenPostId, isSelectable, isEditable, isWeb
     if (nextState && comments.length === 0) {
       fetchComments(true);
     }
-  }
+  };
 
   const handleStartReply = (commentId: number, nickname: string) => {
     setParentCommentId(commentId);
@@ -56,15 +72,15 @@ const Answer = ({ answer, parentId: parenPostId, isSelectable, isEditable, isWeb
     if (!writingComment.trim()) return;
 
     // 대댓글인 경우 commentParentId를 사용
-    await createComment({ 
-      content: writingComment, 
-      parentId: parentCommentId 
+    await createComment({
+      content: writingComment,
+      parentId: parentCommentId,
     });
-    
+
     setWritingComment("");
     setParentCommentId(undefined);
     setParentCommentNickname(null);
-    
+
     // 댓글 목록 갱신 (대댓글인 경우 각 ReplySection에서 갱신이 일어날 수 있도록 설계됨)
     if (!parentCommentId) refetch();
   };
@@ -95,9 +111,7 @@ const Answer = ({ answer, parentId: parenPostId, isSelectable, isEditable, isWeb
             }`}
           />
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium">
-              {answer.nickname}
-            </span>
+            <span className="text-sm font-medium">{answer.nickname}</span>
             <span className="text-xs text-gray-400">
               {formatTimeAgo(answer.createdAt)}
             </span>
@@ -163,9 +177,9 @@ const Answer = ({ answer, parentId: parenPostId, isSelectable, isEditable, isWeb
               )}
 
               {comments.map((comment) => (
-                <CommentItem 
-                  key={comment.commentId} 
-                  comment={comment} 
+                <CommentItem
+                  key={comment.commentId}
+                  comment={comment}
                   onUpdateReplySuccess={refetch}
                   onReplyClick={handleStartReply}
                 />
@@ -174,7 +188,9 @@ const Answer = ({ answer, parentId: parenPostId, isSelectable, isEditable, isWeb
           )}
 
           {error && (
-            <p className="text-xs px-2">댓글을 불러오던 중 오류가 발생했습니다.</p>
+            <p className="text-xs px-2">
+              댓글을 불러오던 중 오류가 발생했습니다.
+            </p>
           )}
         </div>
       )}

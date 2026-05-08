@@ -8,11 +8,16 @@ interface Props {
 
 const QuestionPostCard = ({ post }: Props) => {
   const navigate = useNavigate();
-  const status = getQuestionStatus(post.publicationStatus, post.moderationStatus, post.question.isSolved, post.commentCount);
+  const status = getQuestionStatus(
+    post.publicationStatus,
+    post.moderationStatus,
+    post.question.isSolved,
+    post.commentCount
+  );
   const statusStyle = statusStyleMap[status];
 
   const stripHtml = (html: string) => {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const doc = new DOMParser().parseFromString(html, "text/html");
     return doc.body.textContent || "";
   };
 

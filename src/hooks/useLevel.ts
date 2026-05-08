@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { levelService } from "@services/level";
 import { useUserStore } from "@store";
-import type { 
-  MyLevelResponse, 
-  LevelUpResponse, 
-  XpLedgerResponse 
+import type {
+  MyLevelResponse,
+  LevelUpResponse,
+  XpLedgerResponse,
 } from "../types/level";
 
 /**
@@ -14,7 +14,7 @@ export const useLevel = () => {
   const [levelInfo, setLevelInfo] = useState<MyLevelResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { setLevel, setXp, setMaxXp } = useUserStore();
 
   /**
@@ -26,7 +26,7 @@ export const useLevel = () => {
       setError(null);
       const data = await levelService.getMyLevel();
       setLevelInfo(data);
-      
+
       // 유저 스토어 동기화
       setLevel(data.level);
       setXp(data.availableXp);
@@ -51,8 +51,11 @@ export const useLevel = () => {
       return result;
     } catch (err) {
       console.error("레벨업 실패:", err);
-      const errorResponse = err as { response?: { data?: { message?: string } } };
-      const message = errorResponse.response?.data?.message || "레벨업에 실패했습니다.";
+      const errorResponse = err as {
+        response?: { data?: { message?: string } };
+      };
+      const message =
+        errorResponse.response?.data?.message || "레벨업에 실패했습니다.";
       setError(message);
       return null;
     } finally {
@@ -63,7 +66,10 @@ export const useLevel = () => {
   /**
    * XP 원장 조회
    */
-  const getXpLedger = async (page = 0, size = 20): Promise<XpLedgerResponse | null> => {
+  const getXpLedger = async (
+    page = 0,
+    size = 20
+  ): Promise<XpLedgerResponse | null> => {
     try {
       return await levelService.getMyXpLedger(page, size);
     } catch (err) {
@@ -82,6 +88,6 @@ export const useLevel = () => {
     error,
     levelUp: handleLevelUp,
     getXpLedger,
-    refreshLevel: fetchLevelInfo
+    refreshLevel: fetchLevelInfo,
   };
 };

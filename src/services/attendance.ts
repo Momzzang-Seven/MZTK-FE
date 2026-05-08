@@ -1,8 +1,8 @@
 import { api } from "./client";
-import type { 
-  CheckInResponse, 
-  AttendanceStatus, 
-  WeeklyAttendance 
+import type {
+  CheckInResponse,
+  AttendanceStatus,
+  WeeklyAttendance,
 } from "../types/attendance";
 
 /**
@@ -31,5 +31,5 @@ export const attendanceService = {
   async getWeekly(): Promise<WeeklyAttendance> {
     const response = await api.get("/users/me/attendance/weekly");
     return response.data.data;
-  }
+  },
 };
