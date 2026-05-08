@@ -53,6 +53,7 @@ export default defineConfig(({ mode }) => {
           },
         },
         "/v2": { target: env.VITE_API_BASE_URL, changeOrigin: true },
+        "/web3": { target: env.VITE_API_BASE_URL, changeOrigin: true },
       },
     },
     test: {

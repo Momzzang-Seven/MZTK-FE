@@ -41,11 +41,9 @@ const CreatePostButton = ({ postId }: CreatePostButtonProps) => {
     <div className="fixed bottom-[100px] flex w-full max-w-[420px] flex-row items-end justify-end px-4">
       <CommonButton
         onClick={handleCreatePost}
-        width="w-[70px]"
-        padding="p-0"
-        shadow={true}
-        className="h-[70px] !rounded-full shadow-xl"
-        img="/icon/newPost.svg"
+        label=""
+        className="h-[70px] !rounded-full !w-[70px] shadow-xl"
+        icon={<img src="/icon/newPost.svg" alt="새 글" className="w-7 h-7" />}
       />
     </div>
   );

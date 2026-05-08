@@ -7,6 +7,7 @@ import { LevelProgress } from "@components/home/LevelProgress";
 
 const mockLevelUp = vi.fn();
 const mockNavigate = vi.fn();
+const mockShowSnackbar = vi.fn();
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -17,12 +18,16 @@ vi.mock("react-router-dom", async () => {
 });
 
 vi.mock("@store", () => ({
-  useUserStore: () => ({
-    level: 5,
-    xp: 100,
-    maxXp: 100,
-    levelUp: mockLevelUp,
-  }),
+  useUserStore: <T,>(selector?: (state: unknown) => T) => {
+    const store = {
+      level: 5,
+      xp: 100,
+      maxXp: 100,
+      levelUp: mockLevelUp,
+      showSnackbar: mockShowSnackbar,
+    };
+    return selector ? selector(store) : store;
+  },
 }));
 
 const renderWithRouter = (ui: React.ReactElement) =>
@@ -31,7 +36,6 @@ const renderWithRouter = (ui: React.ReactElement) =>
 describe("[통합] LevelProgress - 레벨업 흐름", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(window, "alert").mockImplementation(() => {});
     localStorage.clear();
   });
 
@@ -44,12 +48,13 @@ describe("[통합] LevelProgress - 레벨업 흐름", () => {
 
     renderWithRouter(<LevelProgress />);
 
-    const btn = screen.getByRole("button", { name: "레벨업!" });
+    const btn = await screen.findByText(/지금 바로 레벨업!/);
     fireEvent.click(btn);
 
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith(
-        "축하합니다! Lv.6 달성! 보상으로 100 MZTK가 지급되었습니다."
+      expect(mockShowSnackbar).toHaveBeenCalledWith(
+        "축하합니다! Lv.6 달성! 보상으로 100 MZTK가 지급되었습니다.",
+        expect.objectContaining({ variant: "success" })
       );
     });
   });
@@ -59,7 +64,7 @@ describe("[통합] LevelProgress - 레벨업 흐름", () => {
 
     renderWithRouter(<LevelProgress />);
 
-    const btn = screen.getByRole("button", { name: "레벨업!" });
+    const btn = await screen.findByText(/지금 바로 레벨업!/);
     fireEvent.click(btn);
 
     await waitFor(() => {
@@ -77,11 +82,14 @@ describe("[통합] LevelProgress - 레벨업 흐름", () => {
 
     renderWithRouter(<LevelProgress />);
 
-    const btn = screen.getByRole("button", { name: "레벨업!" });
+    const btn = await screen.findByText(/지금 바로 레벨업!/);
     fireEvent.click(btn);
 
     await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith("연결된 지갑이 없습니다.");
+      expect(mockShowSnackbar).toHaveBeenCalledWith(
+        "연결된 지갑이 없습니다.",
+        expect.objectContaining({ variant: "error" })
+      );
     });
   });
 });

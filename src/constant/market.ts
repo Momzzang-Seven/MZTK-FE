@@ -3,8 +3,9 @@ export const MARKET_TEXT = {
   TABS: {
     ALL: "전체",
     PT: "PT/헬스",
-    PILATES: "요가/필라테스",
-    GOLF: "골프/테니스",
+    PILATES: "필라테스",
+    YOGA: "요가",
+    CROSSFIT: "크로스핏",
   },
   EMPTY_STATE: {
     TITLE: "등록된 클래스가 없습니다",

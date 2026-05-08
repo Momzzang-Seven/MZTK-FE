@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { fetchUserStats, fetchPostStats } from "@services";
 import type { UserStatsResponse, PostStatsResponse } from "@types";
+import { getNetworkConfig } from "@utils";
+import { useUserStore } from "@store";
 
 interface EtherscanTxItem {
   from: string;
@@ -30,10 +32,9 @@ interface AdminDashboardData {
 }
 
 const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
-const TOKEN_ADDRESS = import.meta.env.VITE_TOKEN_ADDRESS;
 const ADMIN_WALLET_ADDRESS = import.meta.env.VITE_ADMIN_ADDRESS;
-const ETHERSCAN_API_URL = import.meta.env.VITE_ETHERSCAN_API_URL;
-const CHAIN_ID = import.meta.env.VITE_CHAIN_ID;
+const MONITOR_ADDRESS =
+  import.meta.env.VITE_MONITOR_TARGET_ADDRESS || ADMIN_WALLET_ADDRESS;
 
 const formatTokenLog = (tx: EtherscanTxItem): TokenLogItem => ({
   id: `사용자 #${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`,
@@ -67,19 +68,25 @@ export const useAdminDashboardData = () => {
     error: null,
   });
 
+  // selectedNetwork를 직접 구독해야 네트워크 변경 시 리페치가 트리거됨
+  const selectedNetwork = useUserStore((state) => state.selectedNetwork);
+  const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL, EXPLORER_TX_URL } =
+    getNetworkConfig();
+
   const fetchDashboardData = useCallback(async () => {
     try {
       setData((prev) => ({ ...prev, loading: true, error: null }));
 
       const [txRes, ethRes, mztkRes, userStats, postStats] = await Promise.all([
+        // tokentx는 address 파라미터 없이는 결과를 반환하지 않음
         fetch(
-          `${ETHERSCAN_API_URL}?chainid=${CHAIN_ID}&module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&page=1&offset=6&sort=desc&apikey=${ETHERSCAN_API_KEY}`
+          `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&address=${MONITOR_ADDRESS}&page=1&offset=6&sort=desc&apikey=${ETHERSCAN_API_KEY}`
         ),
         fetch(
-          `${ETHERSCAN_API_URL}?chainid=${CHAIN_ID}&module=account&action=balance&address=${ADMIN_WALLET_ADDRESS}&apikey=${ETHERSCAN_API_KEY}`
+          `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=balance&address=${ADMIN_WALLET_ADDRESS}&apikey=${ETHERSCAN_API_KEY}`
         ),
         fetch(
-          `${ETHERSCAN_API_URL}?chainid=${CHAIN_ID}&module=account&action=tokenbalance&contractaddress=${TOKEN_ADDRESS}&address=${ADMIN_WALLET_ADDRESS}&tag=latest&apikey=${ETHERSCAN_API_KEY}`
+          `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=tokenbalance&contractaddress=${TOKEN_ADDRESS}&address=${ADMIN_WALLET_ADDRESS}&tag=latest&apikey=${ETHERSCAN_API_KEY}`
         ),
         fetchUserStats().catch((err) => {
           console.error("User stats fetch failed:", err);
@@ -131,7 +138,13 @@ export const useAdminDashboardData = () => {
         error: "데이터를 불러오는데 실패했습니다.",
       }));
     }
-  }, []);
+  }, [
+    TOKEN_ADDRESS,
+    CHAIN_ID,
+    ETHERSCAN_URL,
+    EXPLORER_TX_URL,
+    selectedNetwork,
+  ]);
 
   useEffect(() => {
     fetchDashboardData();

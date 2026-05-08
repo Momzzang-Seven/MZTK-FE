@@ -1,3 +1,9 @@
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+  Pin,
+} from "@vis.gl/react-google-maps";
 import { calculateEndTime } from "@utils";
 
 interface MarketData {
@@ -13,6 +19,8 @@ interface MarketData {
   sns?: { insta?: string };
   rating?: string;
   reviewCount?: number;
+  lat?: number;
+  lng?: number;
 }
 
 export const IntroTab = ({ data }: { data: MarketData }) => {
@@ -137,30 +145,35 @@ export const LocationTab = ({ data }: { data: MarketData }) => {
       <h3 className="text-[17px] font-bold text-gray-900">주소 및 연락처</h3>
       <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-5">
         <div className="flex flex-col gap-2 relative">
-          <div className="w-full h-[180px] bg-gray-100 rounded-lg overflow-hidden border border-gray-100 relative shadow-inner">
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
-              <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center text-white font-bold text-lg mb-2">
-                N
+          <div className="w-full h-[220px] bg-gray-100 rounded-[20px] overflow-hidden border border-gray-100 relative shadow-inner">
+            {data.lat && data.lng ? (
+              <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAP_API}>
+                <Map
+                  mapId={import.meta.env.VITE_GOOGLE_MAP_ID}
+                  defaultCenter={{ lat: data.lat, lng: data.lng }}
+                  defaultZoom={16}
+                  gestureHandling="greedy"
+                  disableDefaultUI
+                >
+                  <AdvancedMarker position={{ lat: data.lat, lng: data.lng }}>
+                    <Pin
+                      background="#fab12f"
+                      glyphColor="#fff"
+                      borderColor="#fab12f"
+                    />
+                  </AdvancedMarker>
+                </Map>
+              </APIProvider>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
+                <div className="w-8 h-8 bg-gray-300 rounded flex items-center justify-center text-white font-bold text-lg mb-2">
+                  ?
+                </div>
+                <span className="text-gray-500 text-xs font-bold font-sans tracking-tight">
+                  위치 정보 없음
+                </span>
               </div>
-              <span className="text-gray-500 text-xs font-bold font-sans tracking-tight">
-                지도 위치 노출 구역
-              </span>
-            </div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[100%]">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="filter drop-shadow-md"
-              >
-                <path
-                  d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-                  className="fill-main"
-                />
-              </svg>
-            </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-0.5 mt-1">

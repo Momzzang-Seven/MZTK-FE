@@ -51,10 +51,17 @@ const Callback = () => {
         }
 
         if (response) {
-          const { userInfo, accessToken } = response;
+          const { userInfo, accessToken, isNewUser } = response;
           setUser(userInfo);
           setAccessToken(accessToken);
-          navigate("/register");
+
+          if (isNewUser) {
+            navigate("/register");
+          } else if (userInfo.role === "TRAINER") {
+            navigate("/trainer");
+          } else {
+            navigate("/");
+          }
         }
       } catch (err: unknown) {
         if (isSanctionedAccountError(err, { allowBareForbidden: true })) {

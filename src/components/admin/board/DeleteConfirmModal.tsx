@@ -56,7 +56,6 @@ export const DeleteConfirmModal = ({
             className="flex-1 py-4 text-gray-700 font-bold rounded-xl"
             bgColor="bg-gray-100 hover:bg-gray-200"
             textColor="text-gray-700"
-            shadow={false}
           />
           <CommonButton
             label={ADMIN_TEXT.POST.MODAL.BTN_DELETE}
@@ -67,7 +66,6 @@ export const DeleteConfirmModal = ({
               deleteReason ? "bg-[#FF4500] hover:bg-[#FF6347]" : "bg-gray-300"
             }
             textColor="text-white"
-            shadow={false}
           />
         </div>
       </div>

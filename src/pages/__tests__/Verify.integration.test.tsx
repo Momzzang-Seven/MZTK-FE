@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Verify from "../Verify";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { VERIFY_TEXT } from "@constant/location";
 import { server } from "@mocks/server";
 import { http, HttpResponse } from "msw";
@@ -61,6 +61,11 @@ const mockClearWatch = vi.fn();
 describe("Verify Page API Integration (MSW)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  // MSW 핸들러가 테스트 간 누적되지 않도록 매 테스트 후 초기화
+  afterEach(() => {
+    server.resetHandlers();
   });
 
   it("인증 API 성공 시, 성공 오버레이가 표시되고 홈으로 이동한다", async () => {
@@ -137,8 +142,11 @@ describe("Verify Page API Integration (MSW)", () => {
     fireEvent.click(verifyButton);
 
     // 에러 모달 뜨는지 확인 (VERIFY_TEXT.MODAL_FAIL_TITLE)
-    const failModalTitle = await screen.findByText(
-      VERIFY_TEXT.MODAL_FAIL_TITLE
+    // dynamic import 오버헤드를 감안해 timeout을 넉넉하게 설정
+    const failModalTitle = await screen.findByRole(
+      "heading",
+      { name: VERIFY_TEXT.MODAL_FAIL_TITLE },
+      { timeout: 3000 }
     );
     expect(failModalTitle).toBeInTheDocument();
   });
@@ -163,9 +171,9 @@ describe("Verify Page API Integration (MSW)", () => {
     fireEvent.click(verifyButton);
 
     // 에러 모달 뜨는지 확인 (catch 블록에 의해 setFailModalOpen이 true가 됨)
-    const failModalTitle = await screen.findByText(
-      VERIFY_TEXT.MODAL_FAIL_TITLE
-    );
+    const failModalTitle = await screen.findByRole("heading", {
+      name: VERIFY_TEXT.MODAL_FAIL_TITLE,
+    });
     expect(failModalTitle).toBeInTheDocument();
   });
 });

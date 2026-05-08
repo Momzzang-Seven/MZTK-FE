@@ -13,6 +13,8 @@ export interface UserInfo {
   walletAddress: string;
 }
 
+export type NetworkType = "OPT" | "BASE";
+
 interface UserState {
   user: UserInfo | null;
   isAuthenticated: boolean;
@@ -36,6 +38,7 @@ interface UserState {
   snackbar: {
     isOpen: boolean;
     message: string;
+    variant?: "success" | "error" | "info";
     action?: {
       label: string;
       path: string;
@@ -45,9 +48,11 @@ interface UserState {
   analysisType: "exercise" | "record" | null;
   analysisTargetTime: number | null;
   analysisStartedAt: number | null;
+  selectedNetwork: NetworkType;
 
   setUser: (user: UserInfo) => void;
   setAccessToken: (token: string) => void;
+  updateRole: (role: string) => Promise<void>;
   setGymLocation: (
     location: {
       locationId?: number;
@@ -90,13 +95,17 @@ interface UserState {
   startAnalysis: (type: "exercise" | "record") => void;
   finishAnalysis: () => void;
   checkAnalysisCompletion: () => Promise<void>;
-  showSnackbar: (message: string) => void;
+  showSnackbar: (
+    message: string,
+    options?: { variant?: "success" | "error" | "info" }
+  ) => void;
   closeSnackbar: () => void;
   levelUp: () => Promise<{ success: boolean; message: string }>;
   initAttendance: () => Promise<void>;
   initLevel: () => Promise<void>;
   initLocation: () => Promise<void>;
   initWorkoutCompletion: () => Promise<void>;
+  setSelectedNetwork: (network: NetworkType) => void;
   reset: () => void;
 }
 
@@ -119,6 +128,7 @@ const initialState = {
   analysisType: null as "exercise" | "record" | null,
   analysisTargetTime: null as number | null,
   analysisStartedAt: null as number | null,
+  selectedNetwork: "OPT" as NetworkType,
 };
 
 let initWorkoutCompletionRequest: Promise<void> | null = null;
@@ -135,6 +145,15 @@ export const useUserStore = create<UserState>()(
 
       setUser: (user) => set({ user, isAuthenticated: true }),
       setAccessToken: (token) => set({ accessToken: token }),
+
+      updateRole: async (role) => {
+        const { updateMyRole } = await import("@services/user");
+        const result = await updateMyRole(role as "USER" | "TRAINER");
+        set((state) => ({
+          user: state.user ? { ...state.user, role: result.role } : null,
+        }));
+      },
+
       setGymLocation: (location) => set({ gymLocation: location }),
       setWalletAddress: (address) =>
         set((state) => ({
@@ -441,8 +460,8 @@ export const useUserStore = create<UserState>()(
         return checkAnalysisCompletionRequest;
       },
 
-      showSnackbar: (message) => {
-        set({ snackbar: { isOpen: true, message } });
+      showSnackbar: (message, options) => {
+        set({ snackbar: { isOpen: true, message, variant: options?.variant } });
       },
 
       closeSnackbar: () => {
@@ -576,6 +595,9 @@ export const useUserStore = create<UserState>()(
 
         return initWorkoutCompletionRequest;
       },
+
+      setSelectedNetwork: (network: NetworkType) =>
+        set({ selectedNetwork: network }),
     }),
     {
       name: "user-storage",
@@ -594,6 +616,7 @@ export const useUserStore = create<UserState>()(
         analysisType: state.analysisType,
         analysisTargetTime: state.analysisTargetTime,
         analysisStartedAt: state.analysisStartedAt,
+        selectedNetwork: state.selectedNetwork,
       }),
     }
   )

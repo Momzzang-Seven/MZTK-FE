@@ -11,8 +11,13 @@ export const EXERCISE_TEXT = {
 };
 
 export const EXERCISE_CATEGORIES = [
-  "전체",
-  "요가/필라테스",
-  "PT/헬스",
-  "크로스핏",
+  { key: "ALL", label: "전체" },
+  { key: "PT", label: "PT/헬스" },
+  { key: "PILATES", label: "필라테스" },
+  { key: "YOGA", label: "요가" },
+  { key: "CROSSFIT", label: "크로스핏" },
+  { key: "BOXING", label: "복싱" },
+  { key: "DANCE", label: "댄스" },
+  { key: "REHABILITATION", label: "재활" },
+  { key: "OTHER", label: "기타" },
 ];

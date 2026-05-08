@@ -1,7 +1,16 @@
 import { useState } from "react";
 import type { AdminPost, AdminComment } from "@store/adminStore";
 import { ADMIN_TEXT } from "@constant/admin";
-import { CommonButton } from "@components/common/CommonButton";
+import {
+  Trash2,
+  RotateCcw,
+  MessageSquare,
+  Heart,
+  ChevronDown,
+  ChevronUp,
+  Wallet2,
+  CheckCircle2,
+} from "lucide-react";
 
 interface PostItemProps {
   post: AdminPost;
@@ -30,35 +39,60 @@ export const PostItem = ({
     setIsCommentsExpanded(!isCommentsExpanded);
   };
 
+  const isQuestion = post.category === ADMIN_TEXT.POST.BOARD_TYPE.QUESTION;
+
   return (
     <div
-      className={`bg-gray-50 p-6 rounded-2xl border ${post.isBanned ? "border-red-200 bg-red-50" : "border-gray-100"}`}
+      className={`bg-white p-8 rounded-[28px] border transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.02)] group ${
+        post.isBanned
+          ? "border-red-100 bg-red-50/20"
+          : "border-gray-100 hover:border-gray-200"
+      }`}
     >
       {/* Post Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-4">
           <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg`}
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg relative"
             style={{ backgroundColor: post.profileColor }}
           >
             {post.author[0]}
+            <div
+              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${post.isBanned ? "bg-red-500" : "bg-emerald-500"}`}
+            />
           </div>
           <div>
-            <div className="font-bold text-gray-900">{post.author}</div>
-            <div className="text-xs text-gray-500">{post.date}</div>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-gray-900 text-[15px] tracking-tight">
+                {post.author}
+              </span>
+              {post.isBanned && (
+                <span className="bg-red-100 text-red-500 text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest">
+                  {ADMIN_TEXT.COMMON.FILTER.BANNED}
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] font-bold text-gray-400 mt-0.5 uppercase tracking-tighter italic opacity-70">
+              {post.date}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <span
-            className={`font-semibold text-sm ${post.category === ADMIN_TEXT.POST.BOARD_TYPE.FREE ? "text-orange-400" : "text-blue-500"}`}
+            className={`px-3 py-1.5 rounded-xl text-[10px] font-black tracking-[0.1em] uppercase border ${
+              isQuestion
+                ? "bg-blue-50 text-blue-600 border-blue-100"
+                : "bg-orange-50 text-main border-orange-100"
+            }`}
           >
             {post.category}
           </span>
-          {post.category === ADMIN_TEXT.POST.BOARD_TYPE.QUESTION && (
+          {isQuestion && (
             <button
               onClick={() => onOpenEscrowModal(post.id)}
-              className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold border border-blue-100 hover:bg-blue-100 transition-all"
+              className="px-4 py-1.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center gap-2"
             >
+              <Wallet2 size={12} />
               {ADMIN_TEXT.POST.BTN_ESCROW}
             </button>
           )}
@@ -66,58 +100,67 @@ export const PostItem = ({
       </div>
 
       {/* Post Content */}
-      <div className="mb-4">
-        <h3 className="font-bold text-lg mb-2">{post.title}</h3>
-        <p className="text-gray-600 whitespace-pre-wrap">{post.content}</p>
+      <div className="mb-6 px-1">
+        <h3 className="font-black text-xl text-gray-900 mb-3 tracking-tight group-hover:text-main transition-colors duration-300">
+          {post.title}
+        </h3>
+        <p className="text-gray-500 leading-relaxed text-[15px] line-clamp-3">
+          {post.content}
+        </p>
       </div>
 
       {/* Post Actions & Stats */}
-      <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
-        <div className="flex gap-4 text-gray-500 text-sm">
-          <span className="flex items-center gap-1">
-            <img src="/icon/comment.svg" alt="comments" className="w-4 h-4" />
-            {post.comments.length}
-          </span>
-          <span className="flex items-center gap-1">
-            <img src="/icon/like.svg" alt="likes" className="w-4 h-4" />
-            {post.likeCount}
-          </span>
+      <div className="flex justify-between items-center pt-6 border-t border-gray-50">
+        <div className="flex gap-6">
+          <div className="flex items-center gap-2 text-gray-400">
+            <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center">
+              <MessageSquare size={14} className="text-gray-400" />
+            </div>
+            <span className="text-[13px] font-black text-gray-600 tabular-nums">
+              {post.comments.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-400">
+            <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center">
+              <Heart size={14} className="text-gray-400" />
+            </div>
+            <span className="text-[13px] font-black text-gray-600 tabular-nums">
+              {post.likeCount}
+            </span>
+          </div>
         </div>
-        {!post.isBanned ? (
-          <CommonButton
-            label={ADMIN_TEXT.POST.BTN_DELETE_POST}
-            onClick={() => onOpenDeleteModal("POST", post.id)}
-            className="border border-red-200 text-sm font-semibold flex items-center gap-2 rounded-xl"
-            width="w-fit"
-            padding="px-4 py-2"
-            bgColor="bg-red-50 hover:bg-red-100"
-            textColor="text-red-500"
-            icon={
-              <img src="/icon/trash.svg" alt="delete" className="w-4 h-4" />
-            }
-          />
-        ) : (
-          <CommonButton
-            label={ADMIN_TEXT.POST.BTN_RESTORE_POST}
-            onClick={() => onRestorePost(post.id)}
-            className="border border-green-200 text-sm font-semibold flex items-center gap-2 rounded-xl"
-            width="w-fit"
-            padding="px-4 py-2"
-            bgColor="bg-green-50 hover:bg-green-100"
-            textColor="text-green-600"
-            icon={
-              <img src="/icon/refresh.svg" alt="restore" className="w-4 h-4" />
-            }
-          />
-        )}
+
+        <div className="flex items-center gap-3">
+          {!post.isBanned ? (
+            <button
+              onClick={() => onOpenDeleteModal("POST", post.id)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all text-xs font-black uppercase tracking-widest border border-red-100"
+            >
+              <Trash2 size={14} />
+              {ADMIN_TEXT.POST.BTN_DELETE_POST}
+            </button>
+          ) : (
+            <button
+              onClick={() => onRestorePost(post.id)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all text-xs font-black uppercase tracking-widest border border-emerald-100"
+            >
+              <RotateCcw size={14} />
+              {ADMIN_TEXT.POST.BTN_RESTORE_POST}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Comments Section */}
       {post.comments.length > 0 && (
-        <div className="bg-white rounded-xl p-4 space-y-4">
-          <div className="text-sm font-bold text-gray-700 flex items-center gap-2">
-            <img src="/icon/comment.svg" alt="comments" className="w-4 h-4" />
-            {ADMIN_TEXT.POST.LABEL_COMMENT} ({post.comments.length})
+        <div className="mt-6 bg-gray-50/50 rounded-[24px] p-6 space-y-4 border border-gray-100/50">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-main" />
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                {ADMIN_TEXT.POST.LABEL_COMMENT} ({post.comments.length})
+              </span>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -127,74 +170,72 @@ export const PostItem = ({
             ).map((comment: AdminComment) => (
               <div
                 key={comment.id}
-                className={`flex justify-between items-start p-3 rounded-lg ${comment.isBanned ? "bg-red-50 opacity-70" : "bg-gray-50"}`}
+                className={`flex justify-between items-center p-4 rounded-2xl transition-all ${
+                  comment.isBanned
+                    ? "bg-red-50/50 border border-red-100 opacity-60"
+                    : "bg-white border border-transparent hover:border-gray-100 shadow-sm"
+                }`}
               >
-                <div className="flex gap-3">
+                <div className="flex gap-4 flex-1">
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm"
                     style={{ backgroundColor: comment.profileColor }}
                   >
                     {comment.author[0]}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-sm text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-black text-[13px] text-gray-900 truncate max-w-[120px]">
                         {comment.author}
                       </span>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[9px] font-bold text-gray-400 uppercase italic opacity-60">
                         {comment.date}
                       </span>
                     </div>
                     <p
-                      className={`text-sm ${comment.isBanned ? "text-red-400 line-through" : "text-gray-600"}`}
+                      className={`text-[13px] leading-relaxed ${
+                        comment.isBanned
+                          ? "text-red-400 italic"
+                          : "text-gray-500 font-medium"
+                      }`}
                     >
-                      {comment.content}
+                      {comment.isBanned
+                        ? `[${ADMIN_TEXT.COMMON.FILTER.DELETED}] ${comment.content}`
+                        : comment.content}
                     </p>
-                    {comment.isBanned && (
-                      <span className="text-xs text-red-500 font-bold">
-                        {ADMIN_TEXT.POST.LABEL_DELETED_COMMENT}
-                      </span>
-                    )}
                   </div>
                 </div>
-                {!comment.isBanned ? (
-                  <div className="flex gap-2">
-                    {post.category === ADMIN_TEXT.POST.BOARD_TYPE.QUESTION && (
+
+                <div className="flex items-center gap-2 ml-4">
+                  {!comment.isBanned ? (
+                    <>
+                      {isQuestion && (
+                        <button
+                          onClick={() => onOpenSettleModal(post.id, comment.id)}
+                          className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest border border-blue-100 hover:bg-blue-100 transition-all flex items-center gap-1"
+                        >
+                          <CheckCircle2 size={10} />
+                          {ADMIN_TEXT.POST.BTN_SETTLE}
+                        </button>
+                      )}
                       <button
-                        onClick={() => onOpenSettleModal(post.id, comment.id)}
-                        className="w-12 h-8 rounded-lg border border-blue-200 text-blue-500 text-[10px] font-bold flex items-center justify-center hover:bg-blue-50 transition-all"
-                        title={ADMIN_TEXT.POST.BTN_SETTLE}
+                        onClick={() =>
+                          onOpenDeleteModal("COMMENT", post.id, comment.id)
+                        }
+                        className="p-2 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all"
                       >
-                        {ADMIN_TEXT.POST.BTN_SETTLE}
+                        <Trash2 size={14} />
                       </button>
-                    )}
+                    </>
+                  ) : (
                     <button
-                      onClick={() =>
-                        onOpenDeleteModal("COMMENT", post.id, comment.id)
-                      }
-                      className="w-8 h-8 rounded-full border border-red-200 text-red-400 flex items-center justify-center hover:bg-red-50"
-                      title={ADMIN_TEXT.POST.BTN_DELETE_COMMENT}
+                      onClick={() => onRestoreComment(post.id, comment.id)}
+                      className="p-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-100 transition-all"
                     >
-                      <img
-                        src="/icon/trash.svg"
-                        alt="delete"
-                        className="w-4 h-4"
-                      />
+                      <RotateCcw size={14} />
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => onRestoreComment(post.id, comment.id)}
-                    className="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center hover:bg-green-600 shadow-sm transition-all active:scale-90"
-                    title={ADMIN_TEXT.POST.BTN_RESTORE_COMMENT}
-                  >
-                    <img
-                      src="/icon/refresh.svg"
-                      alt="restore"
-                      className="w-4 h-4 brightness-0 invert"
-                    />
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -202,42 +243,23 @@ export const PostItem = ({
           {post.comments.length > 3 && (
             <button
               onClick={toggleComments}
-              className="text-main text-sm font-bold flex items-center gap-1 hover:underline"
+              className="w-full flex items-center justify-center gap-2 py-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] hover:text-main transition-colors group/more"
             >
               {isCommentsExpanded ? (
                 <>
                   {ADMIN_TEXT.POST.BTN_COMMENT_FOLD}{" "}
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 15l7-7 7 7"
-                    />
-                  </svg>
+                  <ChevronUp
+                    size={14}
+                    className="group-hover/more:-translate-y-0.5 transition-transform"
+                  />
                 </>
               ) : (
                 <>
-                  {ADMIN_TEXT.POST.BTN_COMMENT_MORE} ({post.comments.length - 3}
-                  개 남음){" "}
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
+                  {ADMIN_TEXT.POST.BTN_COMMENT_MORE}{" "}
+                  <ChevronDown
+                    size={14}
+                    className="group-hover/more:translate-y-0.5 transition-transform"
+                  />
                 </>
               )}
             </button>

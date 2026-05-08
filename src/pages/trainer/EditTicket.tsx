@@ -1,4 +1,5 @@
 import TicketForm from "@components/trainer/TicketForm";
+import { CommonModal } from "@components/common";
 import { useTicketForm } from "@hooks/trainer/useTicketForm";
 
 /**
@@ -16,12 +17,25 @@ const EditTicket = () => {
   }
 
   return (
-    <TicketForm
-      mode="edit"
-      {...ticketFormProps}
-      onSubmit={ticketFormProps.handleSubmit}
-      isSubmitting={ticketFormProps.isSubmitting}
-    />
+    <>
+      <TicketForm
+        mode="edit"
+        {...ticketFormProps}
+        onSubmit={ticketFormProps.handleSubmit}
+        isSubmitting={ticketFormProps.isSubmitting}
+      />
+      {ticketFormProps.isSuccessModalOpen && (
+        <CommonModal
+          title="수정 완료"
+          desc="클래스 정보가 성공적으로 수정되었습니다!<br/>목록에서 변경된 내용을 확인해 보세요."
+          confirmLabel="목록으로 이동"
+          onConfirmClick={() => {
+            ticketFormProps.setIsSuccessModalOpen(false);
+            ticketFormProps.navigate("/trainer/list", { replace: true });
+          }}
+        />
+      )}
+    </>
   );
 };
 

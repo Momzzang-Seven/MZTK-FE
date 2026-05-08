@@ -12,7 +12,9 @@ let mockStoreState = {
 };
 
 vi.mock("@store", () => ({
-  useUserStore: () => mockStoreState,
+  useUserStore: vi.fn(<T,>(selector: (state: typeof mockStoreState) => T) =>
+    selector(mockStoreState)
+  ),
 }));
 
 describe("AuthActionButtons", () => {

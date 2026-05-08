@@ -8,6 +8,7 @@ export const LeaderboardBanner = () => {
   const myUserId = useUserStore((s) => s.user?.userId);
   const [myRank, setMyRank] = useState<number | null>(null);
   const [totalUsers, setTotalUsers] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
@@ -18,63 +19,103 @@ export const LeaderboardBanner = () => {
         const me = users.find((u) => u.userId === myUserId);
         if (me) setMyRank(me.rank);
       } catch {
-        // 배너는 조용히 실패 처리
+        /* FAIL SILENTLY */
+      } finally {
+        setLoading(false);
       }
     };
     if (myUserId) void fetch();
+    else setLoading(false);
   }, [myUserId]);
 
   const topPercent =
     myRank !== null && totalUsers > 0
-      ? ((myRank / totalUsers) * 100).toFixed(1)
+      ? ((myRank / totalUsers) * 100).toFixed(0)
       : null;
+
+  if (loading) {
+    return (
+      <div className="flex-1 bg-white rounded-[28px] h-40 skeleton shadow-xl shadow-gray-100/50" />
+    );
+  }
 
   return (
     <div
-      onClick={() => navigate("/leaderboard")}
-      className="w-full bg-gray-900 rounded-[20px] p-5 text-white shadow-md relative overflow-hidden flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all"
+      className="flex-1 rounded-[28px] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden relative animate-fade-slide-up card-hover"
+      style={{ animationDelay: "0.2s" }}
     >
-      {/* 배경 장식 */}
-      <div className="absolute -right-4 -top-8 w-32 h-32 bg-white opacity-[0.03] rounded-full blur-2xl pointer-events-none" />
+      <button
+        onClick={() => navigate("/leaderboard")}
+        className="w-full h-40 bg-white p-5 text-left flex flex-col justify-between relative"
+        style={{ borderRadius: 0 }}
+      >
+        {/* Background Decor */}
+        <div className="absolute top-[-10px] right-[-10px] w-12 h-12 bg-main/5 rounded-full blur-xl" />
 
-      {/* 좌측 아이콘 */}
-      <div className="shrink-0 mr-4">
-        <img
-          src="/icon/leaderboard.svg"
-          alt="leaderboard"
-          width={40}
-          height={40}
-          className="brightness-0 invert transform scale-110 opacity-90 drop-shadow-md"
-        />
-      </div>
-
-      {/* 우측 컨텐츠 */}
-      <div className="flex flex-col flex-1 items-start gap-2">
-        <span className="font-bold text-[16px] tracking-tight text-white/95">
-          내 현재 등수
-        </span>
-
-        <div className="flex items-end gap-1.5 h-6">
-          {myRank !== null ? (
-            <>
-              <span className="text-[28px] font-extrabold leading-none tracking-tighter text-main translate-y-1">
-                {myRank.toLocaleString()}
-              </span>
-              <span className="text-[15px] font-bold text-white/90">위</span>
-            </>
-          ) : (
-            <span className="text-[18px] font-bold text-white/40 leading-none translate-y-1">
-              —
-            </span>
-          )}
+        <div className="flex items-center justify-between">
+          <div className="w-9 h-9 rounded-xl bg-yellow-50 flex items-center justify-center shadow-sm">
+            {/* Lucide: Trophy */}
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#FAB12F"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+              <path d="M4 22h16" />
+              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+            </svg>
+          </div>
+          <div className="text-[10px] text-gray-300 font-black uppercase tracking-tighter">
+            Global Rank
+          </div>
         </div>
 
-        <p className="text-[12px] font-bold opacity-90 text-white">
-          {topPercent !== null
-            ? `전체 상위 ${topPercent}% 달성 중! 🚀`
-            : "리더보드를 확인해보세요"}
-        </p>
-      </div>
+        <div>
+          <h4 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.1em] mb-1">
+            현재 내 순위
+          </h4>
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl font-black text-main font-gmarket leading-none">
+              {myRank || "—"}
+            </span>
+            <span className="text-xs text-gray-400 font-bold uppercase">
+              위
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] text-gray-400 font-bold leading-tight">
+            상위{" "}
+            <span className="text-gray-900 font-black">
+              {topPercent || "—"}%
+            </span>{" "}
+            달성 중
+          </p>
+          <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#9CA3AF"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </div>
+        </div>
+      </button>
     </div>
   );
 };

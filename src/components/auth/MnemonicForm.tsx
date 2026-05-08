@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 interface Props {
   mnemonics: string[];
+  description?: React.ReactNode;
   onChange: (idx: number, value: string) => void;
   onBulkChange: (words: string[]) => void;
   onSubmit: () => void;
@@ -9,6 +10,7 @@ interface Props {
 
 export const MnemonicForm = ({
   mnemonics,
+  description,
   onChange,
   onBulkChange,
   onSubmit,
@@ -34,12 +36,10 @@ export const MnemonicForm = ({
       if (words.length === 12) {
         onBulkChange(words);
       } else {
-        showToast("클립보드에 12개의 단어가 필요합니다");
+        showToast("12개의 단어가 필요합니다");
       }
     } catch {
-      showToast(
-        "클립보드 접근이 거부되었습니다. 브라우저 설정에서 허용해주세요"
-      );
+      showToast("클립보드 접근 실패");
     }
   };
 
@@ -48,95 +48,72 @@ export const MnemonicForm = ({
   };
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in duration-500">
-      <div className="mt-16 mb-10">
-        <h1 className="font-gmarket text-[28px] leading-tight mb-4">
-          비밀복구구문을 <br /> 입력해주세요
+    <div className="flex flex-col h-full animate-in fade-in duration-700 bg-white px-6">
+      <div className="mt-16 mb-8">
+        <h1 className="text-gray-900 text-[28px] font-black leading-tight mb-3 tracking-tight">
+          비밀 복구 구문을
+          <br /> 입력해 주세요
         </h1>
-        <p className="body text-color-grey-deep">
-          이미 사용 중인 지갑이 없다면, <br /> 뒤로 가기를 눌러 지갑을
-          생성해주세요!
+        <p className="text-gray-400 text-[14px] font-bold leading-relaxed tracking-tight">
+          {description || "사용 중인 지갑의 12개 단어를 입력하세요."}
         </p>
       </div>
 
-      <div className="flex flex-col gap-y-2 my-10">
+      <div className="flex flex-col gap-y-4 mb-8">
         <div className="flex items-center justify-between">
-          <span className="label-bold text-color-grey-deep">니모닉</span>
+          <span className="text-[11px] font-black text-gray-300 uppercase tracking-widest">
+            Phrase
+          </span>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleClearAll}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-color-grey-deep hover:text-red-500 transition-colors"
+              className="btn-press flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 text-[11px] font-black text-gray-400 border-none"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 6h18" />
-                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-              </svg>
-              모두삭제
+              모두 삭제
             </button>
             <button
               type="button"
               onClick={handlePaste}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-color-grey-deep hover:text-main transition-colors"
+              className="btn-press flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-[11px] font-black text-main border-none"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
               붙여넣기
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+
+        <div className="grid grid-cols-3 gap-2">
           {mnemonics.map((word, idx) => (
-            <input
-              key={idx}
-              id={`mnemonic-${idx}`}
-              type="text"
-              value={word}
-              onChange={(e) => onChange(idx, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, idx)}
-              placeholder={(idx + 1).toString()}
-              className="w-full h-[52px] border border-gray-200 rounded-xl text-center font-sans focus:border-main outline-none transition-all"
-              autoComplete="off"
-            />
+            <div key={idx} className="relative">
+              <span className="absolute left-2.5 top-1.5 text-[9px] font-black text-gray-200">
+                {idx + 1}
+              </span>
+              <input
+                id={`mnemonic-${idx}`}
+                type="text"
+                value={word}
+                onChange={(e) => onChange(idx, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, idx)}
+                className="w-full h-[52px] pt-2 text-center bg-gray-50/50 border border-transparent rounded-xl text-[14px] font-black text-gray-900 focus:bg-white focus:border-main outline-none transition-all"
+                autoComplete="off"
+              />
+            </div>
           ))}
         </div>
       </div>
 
-      <div className="mt-auto pb-6">
+      <div className="mt-auto pb-8">
         <button
           onClick={onSubmit}
           disabled={mnemonics.some((w) => w.trim() === "")}
-          className="w-full h-[60px] bg-main text-black rounded-xl font-gmarket text-lg disabled:bg-gray-200 disabled:text-gray-400"
+          className="btn-press w-full h-[60px] bg-main text-black rounded-[22px] font-black text-[16px] shadow-lg shadow-main/20 border-none disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none"
         >
-          지갑 등록하기
+          지갑 등록 완료
         </button>
       </div>
 
       {toastMessage && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-xl text-sm animate-in fade-in slide-in-from-bottom-4 duration-300 max-w-[90%] text-center">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-[12px] font-bold animate-in fade-in slide-in-from-bottom-2">
           {toastMessage}
         </div>
       )}

@@ -76,7 +76,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     });
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/register");
+      expect(mockNavigate).toHaveBeenCalledWith("/");
     });
   });
 
@@ -134,7 +134,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/register");
+      expect(mockNavigate).toHaveBeenCalledWith("/");
     });
   });
 
@@ -163,7 +163,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/register");
+      expect(mockNavigate).toHaveBeenCalledWith("/trainer");
     });
   });
 

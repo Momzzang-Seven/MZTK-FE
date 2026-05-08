@@ -1,3 +1,8 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+
+  // TailwindCSS v4 전용 at-rule(@theme, @plugin 등)을 CSS Language Server가
+  // 알 수 없는 규칙으로 경고하지 않도록 억제
+  "css.lint.unknownAtRules": "ignore"
 }

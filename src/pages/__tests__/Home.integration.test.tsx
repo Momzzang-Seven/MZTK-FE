@@ -12,31 +12,27 @@ vi.mock("react-router-dom", async () => {
   return { ...(actual as object), useNavigate: () => mockNavigate };
 });
 
-vi.mock("@store/userStore", () => ({
-  useUserStore: () => ({
-    gymLocation: null,
-    initAttendance: vi.fn().mockResolvedValue(undefined),
-    initLevel: vi.fn().mockResolvedValue(undefined),
-    initLocation: vi.fn().mockResolvedValue(undefined),
-    initWorkoutCompletion: vi.fn().mockResolvedValue(undefined),
-    level: 5,
-    xp: 80,
-    maxXp: 100,
-    levelUp: vi.fn(),
-    attendanceStreak: 3,
-    hasAttendedToday: false,
-    weeklyAttendance: { attendedCount: 3 },
-  }),
-}));
-
 vi.mock("@store", () => ({
-  useUserStore: () => ({
-    gymLocation: null,
-    initAttendance: vi.fn(),
-    initLevel: vi.fn(),
-    initLocation: vi.fn(),
-    initWorkoutCompletion: vi.fn(),
-  }),
+  useUserStore: <T,>(selector?: (state: unknown) => T) => {
+    const state = {
+      gymLocation: null,
+      initAttendance: vi.fn().mockResolvedValue(undefined),
+      initLevel: vi.fn().mockResolvedValue(undefined),
+      initLocation: vi.fn().mockResolvedValue(undefined),
+      initWorkoutCompletion: vi.fn().mockResolvedValue(undefined),
+      level: 5,
+      xp: 80,
+      maxXp: 100,
+      levelUp: vi.fn(),
+      attendanceStreak: 3,
+      hasAttendedToday: false,
+      weeklyAttendance: { attendedCount: 3 },
+      analysisStatus: "idle",
+      lastExerciseDate: null,
+      checkAttendance: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  },
   useLocationStore: () => ({ coor: null, setCoor: vi.fn() }),
   useAuthModalStore: () => ({ isUnauthorized: false }),
 }));

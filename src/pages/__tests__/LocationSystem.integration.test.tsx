@@ -14,8 +14,8 @@ import { locationHandlers } from "@mocks/handlers/location";
 import { UI_TEXT } from "@constant/index";
 
 // 애니메이션 시간을 0으로 모킹
-vi.mock("@constant/location", async () => {
-  const actual = await vi.importActual("@constant/location");
+vi.mock("@constant/index", async () => {
+  const actual = await vi.importActual("@constant/index");
   return {
     ...actual,
     LOCATION_CONSTANTS: {

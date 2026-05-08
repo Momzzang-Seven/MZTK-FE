@@ -1,34 +1,77 @@
-import { MySectionCard } from "./MySectionCard";
 import { useUserStore } from "@store/userStore";
 
 export const LevelProgress = () => {
   const { level, xp, maxXp } = useUserStore();
+  const pct = Math.min((xp / maxXp) * 100, 100);
 
   return (
-    <MySectionCard>
-      <div className="flex flex-row justify-between w-full">
-        <div className="title">EXP & 레벨</div>
-        <div className="rounded-full bg-main text-white py-1 px-3">
-          LV {level}
+    <div
+      className="w-full bg-white rounded-[28px] border border-gray-100 shadow-xl shadow-gray-100/50 p-6 animate-fade-slide-up"
+      style={{ animationDelay: "0.1s" }}
+    >
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-main/10 flex items-center justify-center">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#FAB12F"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </div>
+          <span className="text-gray-900 font-black text-[15px]">
+            EXP · 레벨
+          </span>
+        </div>
+        <div className="px-3 py-1 rounded-xl bg-main text-white text-[12px] font-black shadow-md shadow-main/30">
+          Lv.{level}
         </div>
       </div>
-      {/* current xp */}
-      <div className="flex flex-row justify-between w-full label text-grey-deep">
-        <div>현재 EXP</div>
-        <div>{xp.toLocaleString()} EXP</div>
+
+      {/* XP numbers */}
+      <div className="flex items-baseline justify-between mb-3">
+        <div>
+          <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+            현재 EXP
+          </p>
+          <p className="text-gray-900 font-black text-[22px] leading-none">
+            {xp.toLocaleString()}
+            <span className="text-gray-400 text-[14px] font-bold ml-1">XP</span>
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+            다음 레벨
+          </p>
+          <p className="text-gray-500 font-black text-[16px] leading-none">
+            {maxXp.toLocaleString()}
+            <span className="text-gray-400 text-[12px] font-bold ml-1">XP</span>
+          </p>
+        </div>
       </div>
-      {/* progress bar */}
-      <div className="w-full bg-grey-pale rounded-full h-4">
+
+      {/* Progress bar */}
+      <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className="bg-gradient-to-r from-main to-sub h-4 rounded-full"
-          style={{ width: `${Math.min((xp / maxXp) * 100, 100)}%` }}
+          className="h-full rounded-full bg-gradient-to-r from-main to-amber-300 transition-all duration-700"
+          style={{ width: `${pct}%` }}
         />
       </div>
-      {/* goal xp */}
-      <div className="flex flex-row justify-between w-full label text-grey-deep">
-        <div>목표 EXP</div>
-        <div className="font-bold text-black">{maxXp.toLocaleString()} EXP</div>
+      <div className="flex items-center justify-between mt-2">
+        <span className="text-[11px] text-gray-400 font-bold">
+          {Math.floor(pct)}% 달성
+        </span>
+        <span className="text-[11px] text-gray-400 font-bold">
+          {(maxXp - xp).toLocaleString()} XP 남음
+        </span>
       </div>
-    </MySectionCard>
+    </div>
   );
 };

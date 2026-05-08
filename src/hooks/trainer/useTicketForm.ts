@@ -47,15 +47,16 @@ const CATEGORY_MAP: Record<string, MarketplaceClassCategory> = {
   재활: "REHABILITATION",
 };
 
+// API enum → form key (e.g. "PT" → "PT") — keep as key for select value
 const API_TO_CATEGORY_MAP: Record<string, string> = {
-  PT: "PT/헬스",
-  PILATES: "필라테스",
-  YOGA: "요가",
-  CROSSFIT: "크로스핏",
-  BOXING: "복싱",
-  DANCE: "댄스",
-  REHABILITATION: "재활",
-  OTHER: "기타",
+  PT: "PT",
+  PILATES: "PILATES",
+  YOGA: "YOGA",
+  CROSSFIT: "CROSSFIT",
+  BOXING: "BOXING",
+  DANCE: "DANCE",
+  REHABILITATION: "REHABILITATION",
+  OTHER: "OTHER",
 };
 
 const createEmptyOperatingTimes = () =>
@@ -74,8 +75,12 @@ const toPositiveInt = (value: string | number) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const toApiCategory = (category: string): MarketplaceClassCategory =>
-  CATEGORY_MAP[category] ?? "OTHER";
+const toApiCategory = (category: string): MarketplaceClassCategory => {
+  // category is already an API key (e.g. "PT") — use CATEGORY_MAP for label fallback
+  if (category in CATEGORY_MAP) return CATEGORY_MAP[category];
+  const direct = category as MarketplaceClassCategory;
+  return direct ?? "OTHER";
+};
 
 const toSlotKey = (day: string, time: string) => `${day}-${time}`;
 
@@ -85,13 +90,14 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingSlotIds, setExistingSlotIds] = useState<
     Record<string, number>
   >({});
   const [formData, setFormData] = useState({
     title: "",
-    category: EXERCISE_CATEGORIES[1],
+    category: EXERCISE_CATEGORIES[1].key,
     price: "",
     capacity: "",
     description: "",
@@ -354,12 +360,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
         });
       }
 
-      window.alert(
-        mode === "edit"
-          ? "클래스가 성공적으로 수정되었습니다."
-          : "클래스가 성공적으로 등록되었습니다."
-      );
-      navigate("/trainer/list", { replace: true });
+      setIsSuccessModalOpen(true);
     } catch (error) {
       console.error("Failed to submit ticket form", error);
       const message = axios.isAxiosError(error)
@@ -379,7 +380,6 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
     !formData.capacity ||
     !formData.description ||
     !formData.duration ||
-    !formData.supplies ||
     formData.operatingDays.length === 0;
 
   return {
@@ -399,5 +399,8 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
     isSubmitDisabled,
     isSubmitting,
     isLoading,
+    isSuccessModalOpen,
+    setIsSuccessModalOpen,
+    navigate,
   };
 };

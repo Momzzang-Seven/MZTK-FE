@@ -1,5 +1,6 @@
-import { useAuthModalStore, useUserStore } from "@store";
+import { useAuthModalStore, useUserStore, useAdminErrorStore } from "@store";
 import { isSanctionedAccountError } from "@utils";
+import { getKoreanErrorMessage } from "@constant";
 import axios, { type AxiosInstance } from "axios";
 
 declare module "axios" {
@@ -43,12 +44,20 @@ const isAdminRequest = (url?: string) => url?.startsWith("/admin");
 const isMockAccessToken = (token?: string | null) =>
   typeof token === "string" && /^mock[-_]/.test(token);
 
+// 동시에 여러 401이 발생해도 reissue 요청은 단 한 번만 전송
+let pendingReissue: Promise<string> | null = null;
+
 const showUnauthorizedModal = () => {
   const isAdmin = window.location.pathname.startsWith("/admin");
+  // Do not redirect if we are already on the admin login page and it's a login attempt
+  // This is handled by the caller or skip conditions in the interceptor
   useUserStore.getState().clearUser();
 
   if (isAdmin) {
-    window.location.href = "/admin";
+    // Only redirect to /admin if we are NOT already on the admin login page
+    if (window.location.pathname !== "/admin") {
+      window.location.href = "/admin";
+    }
     return;
   }
 
@@ -101,13 +110,20 @@ const attachInterceptors = (instance: AxiosInstance) => {
           return Promise.reject(error);
         }
 
-        // Attempt to reissue token
-        return axios
-          .post(`${BASE}/auth/reissue`, {}, { withCredentials: true })
-          .then((res) => {
-            const data = res.data.data;
-            useUserStore.getState().setAccessToken(data.accessToken);
-            originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        // 동시 401 발생 시 reissue를 한 번만 호출하고 나머지는 대기
+        if (!pendingReissue) {
+          pendingReissue = axios
+            .post(`${BASE}/auth/reissue`, {}, { withCredentials: true })
+            .then((res) => res.data.data.accessToken as string)
+            .finally(() => {
+              pendingReissue = null;
+            });
+        }
+
+        return pendingReissue
+          .then((newToken) => {
+            useUserStore.getState().setAccessToken(newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return instance(originalRequest);
           })
           .catch((err) => {
@@ -120,13 +136,45 @@ const attachInterceptors = (instance: AxiosInstance) => {
           });
       }
 
-      // 404
-      if (
-        status === 404 &&
-        !originalRequest?._skipNotFoundRedirect &&
-        !isAdminRequest(originalRequest?.url)
-      ) {
-        window.location.href = "/404";
+      // 404 — 페이지 이동 없이 항상 스낵바로 표시
+      if (status === 404 && !isAdminRequest(originalRequest?.url)) {
+        const code: string | undefined = error.response?.data?.code;
+        const serverMessage: string | undefined = error.response?.data?.message;
+        useUserStore
+          .getState()
+          .showSnackbar(getKoreanErrorMessage(code, serverMessage), {
+            variant: "error",
+          });
+        return Promise.reject(error);
+      }
+
+      // 그 외 4xx / 5xx — 스낵바 혹은 관리자 전용 에러 모달
+      if (status && status !== 401) {
+        // 인증 요청은 호출부에서 직접 에러 처리를 수행하므로 전역 UI 처리를 건너뜀
+        if (isAuthRequest(originalRequest?.url)) {
+          return Promise.reject(error);
+        }
+
+        const code: string | undefined = error.response?.data?.code;
+        const serverMessage: string | undefined = error.response?.data?.message;
+        const detail = error.response?.data;
+
+        if (isAdminRequest(originalRequest?.url)) {
+          useAdminErrorStore.getState().openErrorModal({
+            status,
+            code,
+            message: getKoreanErrorMessage(code, serverMessage),
+            detail,
+            url: originalRequest?.url,
+            method: error.config?.method?.toUpperCase(),
+          });
+        } else {
+          useUserStore
+            .getState()
+            .showSnackbar(getKoreanErrorMessage(code, serverMessage), {
+              variant: "error",
+            });
+        }
       }
 
       return Promise.reject(error);
