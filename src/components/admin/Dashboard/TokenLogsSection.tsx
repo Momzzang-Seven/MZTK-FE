@@ -1,4 +1,3 @@
-import { CommonButton } from "@components/common";
 import { History, ArrowUpRight, Inbox } from "lucide-react";
 
 interface TokenLogItem {
