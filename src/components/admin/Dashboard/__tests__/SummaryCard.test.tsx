@@ -1,19 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { Users, Ban } from "lucide-react";
 import SummaryCard from "../SummaryCard";
 
 describe("SummaryCard", () => {
   it("기본 정보가 렌더링된다", () => {
-    render(
-      <SummaryCard title="총 사용자" value={1234} icon="/icon/users.svg" />
-    );
+    render(<SummaryCard title="총 사용자" value={1234} icon={Users} />);
 
     expect(screen.getByText("총 사용자")).toBeInTheDocument();
     expect(screen.getByText("1234")).toBeInTheDocument();
   });
 
   it("문자열 value도 렌더링된다", () => {
-    render(<SummaryCard title="상태" value="활성" icon="/icon/status.svg" />);
+    render(<SummaryCard title="상태" value="활성" icon={Users} />);
 
     expect(screen.getByText("활성")).toBeInTheDocument();
   });
@@ -24,7 +23,7 @@ describe("SummaryCard", () => {
         title="총 사용자"
         value={1234}
         subValue="전일 대비 +10"
-        icon="/icon/users.svg"
+        icon={Users}
       />
     );
 
@@ -32,9 +31,7 @@ describe("SummaryCard", () => {
   });
 
   it("subValue가 없을 때 렌더링되지 않는다", () => {
-    render(
-      <SummaryCard title="총 사용자" value={1234} icon="/icon/users.svg" />
-    );
+    render(<SummaryCard title="총 사용자" value={1234} icon={Users} />);
 
     const subValueElement = screen.queryByText(/전일 대비/);
     expect(subValueElement).not.toBeInTheDocument();
@@ -46,7 +43,7 @@ describe("SummaryCard", () => {
         title="정지된 사용자"
         value={5}
         subValue="BAN 사용자"
-        icon="/icon/ban.svg"
+        icon={Ban}
       />
     );
 
@@ -60,45 +57,41 @@ describe("SummaryCard", () => {
         title="총 사용자"
         value={1234}
         subValue="전일 대비 +10"
-        icon="/icon/users.svg"
+        icon={Users}
       />
     );
 
     const subValue = screen.getByText("전일 대비 +10");
-    expect(subValue).toHaveClass("text-gray-500");
+    expect(subValue).toHaveClass("text-gray-400");
     expect(subValue).not.toHaveClass("text-red-500");
   });
 
-  it("iconBg prop이 적용된다", () => {
+  it("variant prop이 적용된다", () => {
     const { container } = render(
-      <SummaryCard
-        title="총 사용자"
-        value={1234}
-        icon="/icon/users.svg"
-        iconBg="bg-blue-100"
-      />
+      <SummaryCard title="총 사용자" value={1234} icon={Users} variant="amber" />
     );
 
-    const iconWrapper = container.querySelector(".bg-blue-100");
+    // amber variant는 bg-main/10 클래스를 가진 아이콘 래퍼를 가짐
+    const iconWrapper = container.querySelector(".bg-main\\/10");
     expect(iconWrapper).toBeInTheDocument();
   });
 
-  it("아이콘 이미지가 렌더링된다", () => {
-    render(
-      <SummaryCard title="총 사용자" value={1234} icon="/icon/users.svg" />
+  it("아이콘 컴포넌트가 렌더링된다", () => {
+    const { container } = render(
+      <SummaryCard title="총 사용자" value={1234} icon={Users} />
     );
 
-    const icon = screen.getByAltText("iconImg");
-    expect(icon).toBeInTheDocument();
-    expect(icon).toHaveAttribute("src", "/icon/users.svg");
+    // Lucide 아이콘은 SVG로 렌더링됨
+    const svg = container.querySelector("svg");
+    expect(svg).toBeInTheDocument();
   });
 
-  it("카드 스타일이 올바르게 적용된다", () => {
+  it("카드 기본 스타일이 적용된다", () => {
     const { container } = render(
-      <SummaryCard title="총 사용자" value={1234} icon="/icon/users.svg" />
+      <SummaryCard title="총 사용자" value={1234} icon={Users} />
     );
 
-    const card = container.querySelector(".bg-white.p-6.rounded-2xl.shadow-sm");
+    const card = container.querySelector(".bg-white");
     expect(card).toBeInTheDocument();
   });
 });
