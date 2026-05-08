@@ -8,7 +8,7 @@ const UserManagement = () => {
   const {
     fetchUsers,
     totalUsers,
-    bannedUsers,
+    blockedUsers,
     searchUsers,
     statusFilter,
     setStatusFilter,
@@ -26,11 +26,13 @@ const UserManagement = () => {
       <div className="flex justify-end items-center gap-3">
         <div className="flex items-center gap-2 px-4 py-2 bg-main rounded-lg text-white font-bold text-sm shadow-sm">
           <span>{ADMIN_TEXT.USER.TITLE_TOTAL}</span>
-          <span className="text-lg">{totalUsers.toLocaleString()}</span>
+          <span className="text-lg">{(totalUsers ?? 0).toLocaleString()}</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-[#FF4500] rounded-lg text-white font-bold text-sm shadow-sm">
           <span>{ADMIN_TEXT.USER.TITLE_BANNED}</span>
-          <span className="text-lg">{bannedUsers.toLocaleString()}</span>
+          <span className="text-lg">
+            {(blockedUsers ?? 0).toLocaleString()}
+          </span>
         </div>
       </div>
 
@@ -57,7 +59,7 @@ const UserManagement = () => {
             >
               <option value="ALL">{ADMIN_TEXT.COMMON.FILTER.ALL}</option>
               <option value="ACTIVE">{ADMIN_TEXT.COMMON.FILTER.ACTIVE}</option>
-              <option value="BANNED">{ADMIN_TEXT.COMMON.FILTER.BANNED}</option>
+              <option value="BLOCKED">{ADMIN_TEXT.COMMON.FILTER.BANNED}</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
               <svg
