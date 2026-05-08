@@ -13,7 +13,7 @@ vi.mock("@store/adminStore", () => ({
   useAdminStore: () => ({
     fetchUsers: mockFetchUsers,
     totalUsers: 100,
-    bannedUsers: 5,
+    blockedUsers: 5,
     searchUsers: mockSearchUsers,
     statusFilter: "ALL",
     setStatusFilter: mockSetStatusFilter,

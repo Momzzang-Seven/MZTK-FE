@@ -42,8 +42,8 @@ export const DeleteConfirmModal = ({
               {ADMIN_TEXT.POST.MODAL.SELECT_REASON}
             </option>
             {ADMIN_TEXT.POST.REASONS.map((reason, idx) => (
-              <option key={idx} value={reason}>
-                {reason}
+              <option key={idx} value={reason.value}>
+                {reason.label}
               </option>
             ))}
           </select>

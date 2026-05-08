@@ -100,20 +100,23 @@ const UserTable = () => {
                                     ${
                                       user.status === "ACTIVE"
                                         ? "text-green-500 bg-green-50"
-                                        : user.status === "BANNED"
+                                        : user.status === "BLOCKED"
                                           ? "text-gray-500 bg-gray-100"
                                           : "text-red-500 bg-red-50"
                                     }`}
                 >
                   {user.status === "ACTIVE"
                     ? ADMIN_TEXT.COMMON.FILTER.ACTIVE
-                    : user.status === "BANNED"
+                    : user.status === "BLOCKED"
                       ? ADMIN_TEXT.COMMON.FILTER.BANNED
                       : user.status}
                 </span>
               </td>
               <td className="py-4 px-6 text-sm text-gray-500">
-                게시글 {user.postCount} · 댓글 {user.commentCount}
+                {ADMIN_TEXT.USER.TABLE.ACTIVITY_FORMAT.replace(
+                  "%POSTS%",
+                  user.postCount.toString()
+                ).replace("%COMMENTS%", user.commentCount.toString())}
               </td>
               <td className="py-4 px-6">
                 {user.status === "ACTIVE" && (
@@ -140,7 +143,7 @@ const UserTable = () => {
                   </button>
                 )}
 
-                {user.status === "BANNED" && (
+                {user.status === "BLOCKED" && (
                   <button
                     aria-label={`${user.email} 사용자 제한 해제`}
                     onClick={() => void handleUnbanUser(user.id)}

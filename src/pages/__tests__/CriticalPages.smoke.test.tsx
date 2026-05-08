@@ -194,6 +194,18 @@ vi.mock("@hooks", () => ({
     ],
     ethBalance: "1.25",
     mztkBalance: "5000",
+    userStats: {
+      totalUserCount: 100,
+      activeUserCount: 95,
+      blockedUserCount: 5,
+    },
+    postStats: {
+      postRemovalReasonStats: {
+        SPAM: 10,
+      },
+      boardTypeSplit: {},
+      targetTypeStats: {},
+    },
     loading: false,
     error: null,
   }),
@@ -216,7 +228,7 @@ vi.mock("@store/adminStore", () => ({
   useAdminStore: () => ({
     fetchUsers: mockFetchUsers,
     totalUsers: 100,
-    bannedUsers: 5,
+    blockedUsers: 5,
     searchUsers: mockSearchUsers,
     statusFilter: "ALL",
     setStatusFilter: mockSetStatusFilter,

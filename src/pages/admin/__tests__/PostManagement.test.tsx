@@ -81,7 +81,7 @@ describe("Admin PostManagement Page", () => {
     // 삭제 사유 선택 (모달 내의 두 번째 select)
     const selects = screen.getAllByRole("combobox");
     const reasonSelect = selects[selects.length - 1];
-    fireEvent.change(reasonSelect, { target: { value: "부적절한 내용" } });
+    fireEvent.change(reasonSelect, { target: { value: "INAPPROPRIATE" } });
 
     // 모달 내의 '삭제' 버튼 찾기 (그냥 '삭제' 텍스트를 가진 버튼 중 나중 것)
     const deleteButtons = screen.getAllByRole("button", { name: /^삭제$/ });
@@ -91,6 +91,10 @@ describe("Admin PostManagement Page", () => {
       fireEvent.click(targetBtn);
     });
 
-    expect(mockBanPost).toHaveBeenCalledWith(1);
+    expect(mockBanPost).toHaveBeenCalledWith(
+      1,
+      "부적절한 내용",
+      "INAPPROPRIATE"
+    );
   });
 });

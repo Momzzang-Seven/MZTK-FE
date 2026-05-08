@@ -11,9 +11,9 @@ ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { tokenLogs, ethBalance, mztkBalance, loading } =
+  const { tokenLogs, ethBalance, mztkBalance, userStats, postStats, loading } =
     useAdminDashboardData();
-  const chartData = getChartData();
+  const chartData = getChartData(postStats);
   const chartOptions = getChartOptions();
 
   return (
@@ -36,12 +36,22 @@ const AdminDashboard = () => {
           title="MZTK 잔액"
           value={loading ? "로딩 중..." : `${mztkBalance} MZTK`}
           iconBg="bg-main"
-          icon="/icon/token.svg"
+          icon="/icon/adminToken.svg"
         />
         <SummaryCard
           title="활성 사용자"
-          value="1,847"
-          subValue="BAN 사용자: 23명"
+          value={
+            loading
+              ? "로딩 중..."
+              : userStats
+                ? userStats.activeUserCount.toLocaleString()
+                : "0"
+          }
+          subValue={
+            userStats
+              ? `BAN 사용자: ${userStats.blockedUserCount}명`
+              : "BAN 사용자: 0명"
+          }
           iconBg="bg-blue-600"
           icon="/icon/activeUser.svg"
         />

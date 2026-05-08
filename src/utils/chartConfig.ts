@@ -1,4 +1,5 @@
 import { type TooltipItem } from "chart.js";
+import type { PostStatsResponse } from "@types";
 
 interface ChartData {
   labels: string[];
@@ -17,7 +18,7 @@ interface ChartOptions {
     datalabels: {
       color: string;
       font: { weight: "bold"; size: number };
-      formatter: (value: number) => string;
+      formatter: (value: number, context: unknown) => string;
       anchor: "center";
       align: "center";
     };
@@ -33,17 +34,69 @@ interface ChartOptions {
   };
 }
 
-export const getChartData = (): ChartData => ({
-  labels: ["부적절한 내용", "스팸", "규정 위반", "괴롭힘", "기타"],
-  datasets: [
-    {
-      data: [30, 25, 20, 15, 10],
-      backgroundColor: ["#FF6384", "#FF9F40", "#4BC0C0", "#9966FF", "#FFCD56"],
-      hoverOffset: 4,
-      borderWidth: 0,
-    },
-  ],
-});
+export const getChartData = (
+  postStats?: PostStatsResponse | null
+): ChartData => {
+  const defaultData: ChartData = {
+    labels: ["데이터 없음"],
+    datasets: [
+      {
+        data: [100],
+        backgroundColor: ["#E5E7EB"],
+        hoverOffset: 0,
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  if (!postStats || !postStats.postRemovalReasonStats) {
+    return defaultData;
+  }
+
+  const reasonMap: Record<string, string> = {
+    INAPPROPRIATE: "부적절한 콘텐츠",
+    SPAM: "스팸/홍보",
+    HARASSMENT: "욕설/비하",
+    POLICY_VIOLATION: "정책 위반",
+    OTHER: "기타",
+  };
+
+  const reasons = postStats.postRemovalReasonStats;
+
+  // Filter out zero values and map to Korean labels
+  const filteredEntries = Object.entries(reasons)
+    .filter(([key, value]) => value > 0 && key)
+    .map(([key, value]) => ({
+      label: reasonMap[key] || key,
+      value: value,
+    }));
+
+  if (filteredEntries.length === 0) {
+    return defaultData;
+  }
+
+  const labels = filteredEntries.map((e) => e.label);
+  const data = filteredEntries.map((e) => e.value);
+  const backgroundColors = [
+    "#FF8A00",
+    "#FFD600",
+    "#4BC0C0",
+    "#FF6384",
+    "#36A2EB",
+  ];
+
+  return {
+    labels,
+    datasets: [
+      {
+        data,
+        backgroundColor: backgroundColors.slice(0, data.length),
+        hoverOffset: 8,
+        borderWidth: 0,
+      },
+    ],
+  };
+};
 
 export const getChartOptions = (): ChartOptions => ({
   responsive: true,
@@ -52,7 +105,15 @@ export const getChartOptions = (): ChartOptions => ({
     datalabels: {
       color: "#fff",
       font: { weight: "bold" as const, size: 18 },
-      formatter: (value: number) => `${value}%`,
+      formatter: (value: number, context: unknown) => {
+        const ctx = context as {
+          chart: { data: { datasets: { data: number[] }[] } };
+        };
+        const dataArr = ctx.chart.data.datasets[0].data;
+        const total = dataArr.reduce((a: number, b: number) => a + b, 0);
+        if (total === 0) return "0%";
+        return `${Math.round((value / total) * 100)}%`;
+      },
       anchor: "center" as const,
       align: "center" as const,
     },

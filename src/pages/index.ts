@@ -45,3 +45,6 @@ export { default as AdminLogin } from "./admin/Login";
 export { default as TokenLog } from "./admin/TokenLog";
 export { default as UserManagement } from "./admin/UserManagement";
 export { default as PostManagement } from "./admin/PostManagement";
+export { default as AdminAccountManagement } from "./admin/AdminAccountManagement";
+export { default as Web3Management } from "./admin/Web3Management";
+export { default as SystemSettings } from "./admin/SystemSettings";

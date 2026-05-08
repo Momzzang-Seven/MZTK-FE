@@ -12,6 +12,8 @@ interface PostItemProps {
   ) => void;
   onRestorePost: (postId: number) => void;
   onRestoreComment: (postId: number, commentId: number) => void;
+  onOpenEscrowModal: (postId: number) => void;
+  onOpenSettleModal: (postId: number, answerId: number) => void;
 }
 
 export const PostItem = ({
@@ -19,6 +21,8 @@ export const PostItem = ({
   onOpenDeleteModal,
   onRestorePost,
   onRestoreComment,
+  onOpenEscrowModal,
+  onOpenSettleModal,
 }: PostItemProps) => {
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
 
@@ -44,11 +48,21 @@ export const PostItem = ({
             <div className="text-xs text-gray-500">{post.date}</div>
           </div>
         </div>
-        <span
-          className={`font-semibold text-sm ${post.category === "자유게시판" ? "text-orange-400" : "text-blue-500"}`}
-        >
-          {post.category}
-        </span>
+        <div className="flex items-center gap-3">
+          <span
+            className={`font-semibold text-sm ${post.category === ADMIN_TEXT.POST.BOARD_TYPE.FREE ? "text-orange-400" : "text-blue-500"}`}
+          >
+            {post.category}
+          </span>
+          {post.category === ADMIN_TEXT.POST.BOARD_TYPE.QUESTION && (
+            <button
+              onClick={() => onOpenEscrowModal(post.id)}
+              className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold border border-blue-100 hover:bg-blue-100 transition-all"
+            >
+              {ADMIN_TEXT.POST.BTN_ESCROW}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Post Content */}
@@ -144,19 +158,30 @@ export const PostItem = ({
                   </div>
                 </div>
                 {!comment.isBanned ? (
-                  <button
-                    onClick={() =>
-                      onOpenDeleteModal("COMMENT", post.id, comment.id)
-                    }
-                    className="w-8 h-8 rounded-full border border-red-200 text-red-400 flex items-center justify-center hover:bg-red-50"
-                    title={ADMIN_TEXT.POST.BTN_DELETE_COMMENT}
-                  >
-                    <img
-                      src="/icon/trash.svg"
-                      alt="delete"
-                      className="w-4 h-4"
-                    />
-                  </button>
+                  <div className="flex gap-2">
+                    {post.category === ADMIN_TEXT.POST.BOARD_TYPE.QUESTION && (
+                      <button
+                        onClick={() => onOpenSettleModal(post.id, comment.id)}
+                        className="w-12 h-8 rounded-lg border border-blue-200 text-blue-500 text-[10px] font-bold flex items-center justify-center hover:bg-blue-50 transition-all"
+                        title={ADMIN_TEXT.POST.BTN_SETTLE}
+                      >
+                        {ADMIN_TEXT.POST.BTN_SETTLE}
+                      </button>
+                    )}
+                    <button
+                      onClick={() =>
+                        onOpenDeleteModal("COMMENT", post.id, comment.id)
+                      }
+                      className="w-8 h-8 rounded-full border border-red-200 text-red-400 flex items-center justify-center hover:bg-red-50"
+                      title={ADMIN_TEXT.POST.BTN_DELETE_COMMENT}
+                    >
+                      <img
+                        src="/icon/trash.svg"
+                        alt="delete"
+                        className="w-4 h-4"
+                      />
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => onRestoreComment(post.id, comment.id)}

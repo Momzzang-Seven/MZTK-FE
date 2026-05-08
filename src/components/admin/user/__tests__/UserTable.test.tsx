@@ -24,7 +24,7 @@ const bannedUser: AdminUser = {
   ...activeUser,
   id: 2,
   email: "villain@bad.com",
-  status: "BANNED",
+  status: "BLOCKED",
 };
 
 let filteredUsers: AdminUser[] = [activeUser];

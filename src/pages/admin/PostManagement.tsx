@@ -3,9 +3,13 @@ import { useAdminStore } from "@store/adminStore";
 import { AdminSearchBar } from "@components/admin/common/AdminSearchBar";
 import { PostItem } from "@components/admin/board/PostItem";
 import { DeleteConfirmModal } from "@components/admin/board/DeleteConfirmModal";
+import { EscrowModal } from "@components/admin/board/EscrowModal";
 import { useInfiniteScroll } from "@hooks/useInfiniteScroll";
 import { useModal } from "@hooks/useModal";
 import { ADMIN_TEXT } from "@constant/admin";
+import type { BanRequest } from "@types";
+
+import { useUserStore } from "@store/userStore";
 
 const PostManagement = () => {
   const {
@@ -22,6 +26,8 @@ const PostManagement = () => {
     setPostStatusFilter,
   } = useAdminStore();
 
+  const { showSnackbar } = useUserStore();
+
   // Modal State
   const {
     isOpen: isModalOpen,
@@ -30,7 +36,21 @@ const PostManagement = () => {
     closeModal,
   } = useModal<"POST" | "COMMENT", unknown>();
 
-  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteReason, setDeleteReason] = useState<
+    BanRequest["reasonCode"] | ""
+  >("");
+  const [escrowPostId, setEscrowPostId] = useState<number | null>(null);
+  const [escrowAnswerId, setEscrowAnswerId] = useState<number | null>(null);
+
+  const handleOpenSettleModal = (postId: number, answerId: number) => {
+    setEscrowPostId(postId);
+    setEscrowAnswerId(answerId);
+  };
+
+  const handleCloseEscrowModal = () => {
+    setEscrowPostId(null);
+    setEscrowAnswerId(null);
+  };
 
   // Infinite Scroll Observer
   const observerRef = useInfiniteScroll({
@@ -62,13 +82,56 @@ const PostManagement = () => {
   const confirmDelete = async () => {
     if (!modalData.targetId) return;
 
-    if (modalData.type === "POST") {
-      await banPost(modalData.targetId);
-    } else if (modalData.type === "COMMENT" && modalData.subTargetId) {
-      await deleteComment(modalData.targetId, modalData.subTargetId);
-    }
+    const selectedReason = ADMIN_TEXT.POST.REASONS.find(
+      (r) => r.value === deleteReason
+    );
+    const reasonLabel = selectedReason
+      ? selectedReason.label
+      : ADMIN_TEXT.POST.MSG_DELETE_REASON;
 
-    handleCloseModal();
+    try {
+      if (modalData.type === "POST") {
+        await banPost(
+          modalData.targetId,
+          reasonLabel,
+          deleteReason as BanRequest["reasonCode"]
+        );
+        showSnackbar("게시글이 삭제되었습니다.");
+      } else if (modalData.type === "COMMENT" && modalData.subTargetId) {
+        await deleteComment(
+          modalData.targetId,
+          modalData.subTargetId,
+          reasonLabel,
+          deleteReason as BanRequest["reasonCode"]
+        );
+        showSnackbar("댓글이 삭제되었습니다.");
+      }
+    } catch (error) {
+      showSnackbar("삭제 처리에 실패했습니다.");
+      console.error("Failed to delete post/comment:", error);
+    } finally {
+      handleCloseModal();
+    }
+  };
+
+  const handleRestorePost = async (postId: number) => {
+    try {
+      await unbanPost(postId);
+      showSnackbar("게시글이 복구되었습니다.");
+    } catch (error) {
+      showSnackbar("복구 처리에 실패했습니다.");
+      console.error(error);
+    }
+  };
+
+  const handleRestoreComment = async (postId: number, commentId: number) => {
+    try {
+      await restoreComment(postId, commentId);
+      showSnackbar("댓글이 복구되었습니다.");
+    } catch (error) {
+      showSnackbar("복구 처리에 실패했습니다.");
+      console.error(error);
+    }
   };
 
   return (
@@ -99,8 +162,10 @@ const PostManagement = () => {
             key={post.id}
             post={post}
             onOpenDeleteModal={handleOpenDeleteModal}
-            onRestorePost={unbanPost}
-            onRestoreComment={restoreComment}
+            onRestorePost={handleRestorePost}
+            onRestoreComment={handleRestoreComment}
+            onOpenEscrowModal={setEscrowPostId}
+            onOpenSettleModal={handleOpenSettleModal}
           />
         ))}
 
@@ -128,9 +193,19 @@ const PostManagement = () => {
         isOpen={isModalOpen}
         type={modalData.type}
         deleteReason={deleteReason}
-        onReasonChange={setDeleteReason}
+        onReasonChange={(reason) =>
+          setDeleteReason(reason as BanRequest["reasonCode"])
+        }
         onClose={handleCloseModal}
         onConfirm={confirmDelete}
+      />
+
+      {/* Escrow Modal */}
+      <EscrowModal
+        isOpen={!!escrowPostId}
+        postId={escrowPostId || 0}
+        answerId={escrowAnswerId}
+        onClose={handleCloseEscrowModal}
       />
     </div>
   );

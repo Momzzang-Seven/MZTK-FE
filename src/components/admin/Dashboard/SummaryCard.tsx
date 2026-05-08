@@ -26,9 +26,9 @@ const SummaryCard = ({
       )}
     </div>
     <div
-      className={`${iconBg} p-2 rounded-lg w-[48px] h-[48px] flex justify-center items-center`}
+      className={`${iconBg} p-2 rounded-lg w-[48px] h-[48px] flex justify-center items-center shadow-lg shadow-black/5`}
     >
-      <img src={icon} alt="iconImg" />
+      <img src={icon} alt="iconImg" className="w-6 h-6 brightness-0 invert" />
     </div>
   </div>
 );

@@ -3,27 +3,39 @@ import { getChartData, getChartOptions } from "../chartConfig";
 
 describe("chartConfig utils", () => {
   describe("getChartData", () => {
-    it("차트 데이터를 반환한다", () => {
-      const data = getChartData();
+    const mockPostStats = {
+      postRemovalReasonStats: {
+        INAPPROPRIATE: 30,
+        SPAM: 25,
+        POLICY_VIOLATION: 20,
+        HARASSMENT: 15,
+        OTHER: 10,
+      },
+      boardTypeSplit: {},
+      targetTypeStats: {},
+    };
+
+    it("데이터가 없을 때 기본 데이터를 반환한다", () => {
+      const data = getChartData(null);
 
       expect(data).toBeDefined();
-      expect(data).toHaveProperty("labels");
-      expect(data).toHaveProperty("datasets");
+      expect(data.labels).toEqual(["데이터 없음"]);
+      expect(data.datasets[0].data).toEqual([100]);
     });
 
-    it("5개의 라벨을 가진다", () => {
-      const data = getChartData();
+    it("데이터가 있을 때 올바른 라벨을 가진다", () => {
+      const data = getChartData(mockPostStats);
 
       expect(data.labels).toHaveLength(5);
-      expect(data.labels).toContain("부적절한 내용");
-      expect(data.labels).toContain("스팸");
-      expect(data.labels).toContain("규정 위반");
-      expect(data.labels).toContain("괴롭힘");
+      expect(data.labels).toContain("부적절한 콘텐츠");
+      expect(data.labels).toContain("스팸/홍보");
+      expect(data.labels).toContain("정책 위반");
+      expect(data.labels).toContain("욕설/비하");
       expect(data.labels).toContain("기타");
     });
 
     it("데이터셋을 가진다", () => {
-      const data = getChartData();
+      const data = getChartData(mockPostStats);
 
       expect(data.datasets).toHaveLength(1);
       expect(data.datasets[0]).toHaveProperty("data");
@@ -31,22 +43,22 @@ describe("chartConfig utils", () => {
     });
 
     it("데이터 값이 올바르다", () => {
-      const data = getChartData();
+      const data = getChartData(mockPostStats);
 
       expect(data.datasets[0].data).toEqual([30, 25, 20, 15, 10]);
     });
 
     it("배경색이 정의되어 있다", () => {
-      const data = getChartData();
+      const data = getChartData(mockPostStats);
 
       expect(data.datasets[0].backgroundColor).toHaveLength(5);
-      expect(data.datasets[0].backgroundColor[0]).toBe("#FF6384");
+      expect(data.datasets[0].backgroundColor[0]).toBe("#FF8A00");
     });
 
     it("hoverOffset과 borderWidth가 설정되어 있다", () => {
-      const data = getChartData();
+      const data = getChartData(mockPostStats);
 
-      expect(data.datasets[0].hoverOffset).toBe(4);
+      expect(data.datasets[0].hoverOffset).toBe(8);
       expect(data.datasets[0].borderWidth).toBe(0);
     });
   });
@@ -84,8 +96,19 @@ describe("chartConfig utils", () => {
 
     it("datalabels formatter가 퍼센트를 추가한다", () => {
       const options = getChartOptions();
+      const mockContext = {
+        chart: {
+          data: {
+            datasets: [
+              {
+                data: [30, 70],
+              },
+            ],
+          },
+        },
+      };
 
-      const formatted = options.plugins.datalabels.formatter(30);
+      const formatted = options.plugins.datalabels.formatter(30, mockContext);
       expect(formatted).toBe("30%");
     });
 
@@ -110,12 +133,12 @@ describe("chartConfig utils", () => {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockContext: any = {
-        label: "부적절한 내용",
+        label: "부적절한 콘텐츠",
         parsed: 30,
       };
 
       const result = options.plugins.tooltip.callbacks.label(mockContext);
-      expect(result).toBe("부적절한 내용: 30%");
+      expect(result).toBe("부적절한 콘텐츠: 30%");
     });
   });
 });
