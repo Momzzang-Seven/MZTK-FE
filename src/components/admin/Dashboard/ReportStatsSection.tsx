@@ -18,7 +18,7 @@ interface ReportStatsSectionProps {
       datalabels: {
         color: string;
         font: { weight: "bold"; size: number };
-        formatter: (value: number) => string;
+        formatter: (value: number, context: unknown) => string;
         anchor: "center";
         align: "center";
       };

@@ -19,7 +19,6 @@ import {
   WritePost,
   FreePostDetail,
   QuestionDetail,
-  LocalPosts,
   Leaderboard,
   CreateWallet,
   RegisterWallet,
@@ -46,7 +45,6 @@ import {
   ReviewWrite,
   RegisterTicket,
   MyTknHistory,
-  VerifyWallet,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
