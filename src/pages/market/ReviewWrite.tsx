@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
-import { CommonButton } from "@components/common";
+import { CommonButton, CommonModal } from "@components/common";
 import { PhotoUploader } from "@components/common/PhotoUploader";
 
 const ReviewWrite = () => {
@@ -9,6 +9,12 @@ const ReviewWrite = () => {
   const [rating, setRating] = useState(5);
   const [content, setContent] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    title: "",
+    desc: "",
+    variant: "success" as "success" | "warning" | "error",
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -19,84 +25,152 @@ const ReviewWrite = () => {
 
   const handleSubmit = () => {
     if (!content.trim()) {
-      alert("후기 내용을 입력해주세요.");
+      setModalState({
+        isOpen: true,
+        title: "내용 미입력",
+        desc: "클래스에 대한 솔직한 후기를 한 줄 이상 남겨주세요.",
+        variant: "warning",
+      });
       return;
     }
-    alert("후기가 성공적으로 등록되었습니다!");
-    navigate("/market/reservations");
+
+    // In real app, API call would go here
+    setModalState({
+      isOpen: true,
+      title: "등록 완료",
+      desc: "소중한 후기가 성공적으로 등록되었습니다!<br/>작성해주신 후기는 다른 회원들에게 큰 도움이 됩니다.",
+      variant: "success",
+    });
+  };
+
+  const getRatingText = (val: number) => {
+    switch (val) {
+      case 5:
+        return "최고의 경험이었어요! 😍";
+      case 4:
+        return "정말 만족스러워요 😊";
+      case 3:
+        return "보통이었어요 😐";
+      case 2:
+        return "조금 아쉬워요 😕";
+      case 1:
+        return "추천하지 않아요 😥";
+      default:
+        return "";
+    }
   };
 
   return (
-    <div className="flex flex-col h-full bg-white max-w-[450px] mx-auto min-h-screen shadow-lg">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen">
       <SimpleHeader title="수강평 작성" onBackClick={() => navigate(-1)} />
 
-      <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-8 pb-32">
-        {/* 별점 선택 */}
-        <div className="flex flex-col items-center gap-4 py-6 bg-gray-50 rounded-2xl border border-gray-100">
-          <span className="text-gray-500 font-bold text-[15px]">
-            클래스는 어떠셨나요?
-          </span>
-          <div className="flex gap-2">
+      <div className="flex-1 overflow-y-auto px-6 py-10 flex flex-col gap-10 pb-40 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Rating Section */}
+        <section className="flex flex-col items-center gap-6 py-10 bg-white rounded-[32px] shadow-2xl shadow-gray-200/40 border border-gray-50">
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[11px] font-black text-gray-300 uppercase tracking-widest">
+              How was your class?
+            </span>
+            <h3 className="text-[18px] font-black text-gray-900 tracking-tight">
+              수업은 만족스러우셨나요?
+            </h3>
+          </div>
+
+          <div className="flex gap-2.5">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 onClick={() => setRating(star)}
-                className="text-[36px] transition-transform active:scale-90"
+                className="transition-all active:scale-90"
               >
-                {star <= rating ? "⭐" : "☆"}
+                <svg
+                  width="42"
+                  height="42"
+                  viewBox="0 0 24 24"
+                  fill={star <= rating ? "#FAB12F" : "none"}
+                  stroke={star <= rating ? "#FAB12F" : "#E5E7EB"}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={
+                    star <= rating
+                      ? "drop-shadow-[0_0_8px_rgba(250,177,47,0.3)]"
+                      : ""
+                  }
+                >
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
               </button>
             ))}
           </div>
-          <span className="text-main font-extrabold text-[18px]">
-            {rating === 5
-              ? "최고예요! 😍"
-              : rating === 4
-                ? "좋아요! 😊"
-                : rating === 3
-                  ? "보통이에요 😐"
-                  : rating === 2
-                    ? "그저 그래요 😕"
-                    : "별로예요 😥"}
-          </span>
-        </div>
 
-        {/* 사진 업로드 */}
-        <div className="flex flex-col gap-3">
-          <h3 className="font-bold text-gray-900 text-[17px]">
-            사진 첨부 (선택)
-          </h3>
-          <div className="w-full">
+          <div className="px-6 py-2 bg-amber-50 rounded-full">
+            <span className="text-main font-black text-[15px] tracking-tight transition-all">
+              {getRatingText(rating)}
+            </span>
+          </div>
+        </section>
+
+        {/* Photo Upload Section */}
+        <section className="flex flex-col gap-5">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-1 h-4 bg-main rounded-full" />
+            <h3 className="text-[15px] font-black text-gray-900 tracking-tight">
+              운동 인증샷 첨부
+            </h3>
+          </div>
+          <div className="w-full bg-white rounded-[28px] p-2 border border-gray-100 shadow-xl shadow-gray-100/40">
             <PhotoUploader
               previewUrl={previewUrl}
               onFileChange={handleFileChange}
-              guideTitle="운동 인증샷을 공유해주세요"
-              guideDesc="직접 찍은 사진을 올리면 다른 회원들에게 큰 도움이 됩니다."
-              uploadNoImageText="사진을 선택해주세요"
-              uploadSizeHintText="이미지 파일만 업로드 가능합니다"
+              guideTitle="오늘의 운동을 사진으로 남겨보세요"
+              guideDesc="직접 찍은 인증샷은 트레이너에게 큰 힘이 됩니다."
+              uploadNoImageText="이곳을 눌러 사진 선택"
+              uploadSizeHintText="클래스 관련 이미지만 업로드해 주세요"
             />
           </div>
-        </div>
+        </section>
 
-        {/* 후기 내용 */}
-        <div className="flex flex-col gap-3">
-          <h3 className="font-bold text-gray-900 text-[17px]">후기 내용</h3>
+        {/* Content Section */}
+        <section className="flex flex-col gap-5">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-1 h-4 bg-main rounded-full" />
+            <h3 className="text-[15px] font-black text-gray-900 tracking-tight">
+              솔직한 후기를 남겨주세요
+            </h3>
+          </div>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="트레이너님의 수업 방식이나 장소의 쾌적함 등 솔직한 후기를 남겨주세요!"
-            className="w-full h-[180px] bg-gray-50 border border-gray-100 rounded-2xl p-5 text-[15px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-main/20 focus:border-main transition-all resize-none shadow-inner"
+            placeholder="수업 방식이나 장소의 쾌적함 등 다른 회원들에게 도움이 될 만한 이야기를 들려주세요!"
+            className="w-full h-48 bg-white border border-gray-100 rounded-[28px] p-6 text-[15px] font-bold text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-main/30 transition-all shadow-lg shadow-gray-100/40 resize-none leading-relaxed"
           />
-        </div>
+        </section>
       </div>
 
-      {/* 제출 버튼 */}
-      <div className="fixed bottom-0 w-full max-w-[450px] bg-white px-5 py-5 border-t border-gray-100 shadow-[0_-4px_15px_rgba(0,0,0,0.05)] z-50 rounded-t-3xl left-1/2 -translate-x-1/2">
+      {/* Luxury Sticky Footer */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-8 border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
         <CommonButton
-          label="후기 등록하기"
+          label="후기 등록 완료"
           onClick={handleSubmit}
-          className="h-[56px] rounded-2xl font-bold text-[17px]"
+          className="h-[60px] rounded-[22px] font-black text-[16px] shadow-xl shadow-main/20 active:scale-95 transition-all"
         />
       </div>
+
+      {modalState.isOpen && (
+        <CommonModal
+          variant={modalState.variant}
+          title={modalState.title}
+          desc={modalState.desc}
+          confirmLabel="확인"
+          onConfirmClick={() => {
+            if (modalState.variant === "success") {
+              navigate("/market/reservations");
+            }
+            setModalState({ ...modalState, isOpen: false });
+          }}
+        />
+      )}
     </div>
   );
 };

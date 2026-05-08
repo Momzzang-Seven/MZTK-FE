@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
 import { TOKEN_MESSAGES } from "@constant/token";
+import { useUserStore } from "@store";
+import { getNetworkConfig } from "@utils";
 
 export const useTokenTransfer = () => {
   const [step, setStep] = useState<
@@ -13,8 +15,8 @@ export const useTokenTransfer = () => {
   const [txHash, setTxHash] = useState("");
   const [errorModal, setErrorModal] = useState<string | null>(null);
 
-  const RPC_URL = import.meta.env.VITE_RPC_URL;
-  const MZT_ADDR = import.meta.env.VITE_TOKEN_ADDRESS;
+  const { selectedNetwork } = useUserStore();
+  const { RPC_URL, TOKEN_ADDRESS: MZT_ADDR } = getNetworkConfig();
 
   const isAmountValid = useMemo(() => {
     const numericAmount = Number(amount);

@@ -29,10 +29,9 @@ export const useTrainerStatus = () => {
     setIsAppealing(true);
     try {
       await postTrainerAppeal("이의 신청합니다.");
-      alert("이의 신청이 접수되었습니다.");
     } catch (error) {
       console.error("Failed to appeal:", error);
-      alert("이의 신청에 실패했습니다. 나중에 다시 시도해주세요.");
+      throw error;
     } finally {
       setIsAppealing(false);
     }

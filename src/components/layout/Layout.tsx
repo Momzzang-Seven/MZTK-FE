@@ -29,11 +29,14 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     "/trainer/reservations",
     "/trainer/reviews",
     "/trainer/store-register",
+    "/trainer/register-ticket",
+    "/trainer/create",
+    "/trainer/edit",
     "/market/purchase",
     "/market/review",
     "/verify-wallet",
   ];
-  const showHeaderPages: string[] = ["/leaderboard"];
+  const showHeaderPages: string[] = [];
   const shouldShowHeader = showHeaderPages.includes(location.pathname);
   const shouldHideFooter = hideFooterPages.some((path) =>
     location.pathname.toLowerCase().startsWith(path.toLowerCase())
@@ -41,8 +44,9 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div
+      id="app-root"
       onClickCapture={handleButtonClickCapture}
-      className={`bg-white w-full min-h-screen mx-auto flex flex-col max-w-[420px] items-center`}
+      className={`bg-white w-full min-h-screen mx-auto flex flex-col max-w-[450px] items-center relative`}
     >
       {shouldShowHeader && <Header />}
       <div

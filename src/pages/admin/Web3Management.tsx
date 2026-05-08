@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useAdminStore } from "@store/adminStore";
-import { useUserStore } from "@store/userStore";
+import { useAdminStore, useUserStore, useConfirmModalStore } from "@store";
 import { CommonButton } from "@components/common";
 import { ADMIN_TEXT } from "@constant/admin";
 import type { ProvisionKeyRequest } from "@types";
+import { getNetworkConfig } from "@utils";
+import { api } from "@services/client";
 
 interface EtherscanTx {
   hash: string;
@@ -21,12 +22,20 @@ const Web3Management = () => {
     fetchTreasuryKeys,
     disableKey,
     archiveKey,
+    selectedChainId,
+    provisionKey,
   } = useAdminStore();
   const { showSnackbar } = useUserStore();
+  const { openConfirm } = useConfirmModalStore();
+
+  // Manual Confirmation State
   const [txId, setTxId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Monitoring State
   const [walletTxs, setWalletTxs] = useState<EtherscanTx[]>([]);
   const [fetching, setFetching] = useState(false);
+  const [isPollingSuspended, setIsPollingSuspended] = useState(false);
 
   // Provision Key State
   const [showProvisionModal, setShowProvisionModal] = useState(false);
@@ -37,91 +46,128 @@ const Web3Management = () => {
   });
   const [isProvisioning, setIsProvisioning] = useState(false);
 
-  // Chain switching state
-  const [selectedChainId, setSelectedChainId] = useState(
-    import.meta.env.VITE_CHAIN_ID || "11155420"
-  );
-
   const MONITOR_ADDRESS =
     import.meta.env.VITE_MONITOR_TARGET_ADDRESS ||
     import.meta.env.VITE_ADMIN_ADDRESS;
   const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
-  const ETHERSCAN_API_URL = import.meta.env.VITE_ETHERSCAN_API_URL;
+  const { ETHERSCAN_URL, EXPLORER_TX_URL } = getNetworkConfig();
 
   const fetchWalletActivity = async () => {
-    if (!MONITOR_ADDRESS) return;
+    if (!MONITOR_ADDRESS || isPollingSuspended) return;
     setFetching(true);
     try {
-      const url = `${ETHERSCAN_API_URL}?chainid=${selectedChainId}&module=account&action=txlist&address=${MONITOR_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const url = `${ETHERSCAN_URL}?chainid=${selectedChainId}&module=account&action=txlist&address=${MONITOR_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+
+      const res = await api.get(url);
+      const data = res.data;
+
       if (data.status === "1") {
         setWalletTxs(data.result);
       } else {
         setWalletTxs([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch wallet activity:", error);
       setWalletTxs([]);
+
+      if (error.response?.status >= 500) {
+        setIsPollingSuspended(true);
+      }
     } finally {
       setFetching(false);
     }
   };
 
   useEffect(() => {
+    if (isPollingSuspended) return;
+
     fetchWalletActivity();
     fetchTreasuryKeys();
-    const interval = setInterval(fetchWalletActivity, 10000); // 10s polling
-    return () => clearInterval(interval);
-  }, [selectedChainId]);
+    const interval = setInterval(() => {
+      if (!isPollingSuspended) {
+        fetchWalletActivity();
+      }
+    }, 10000);
 
-  const handleConfirm = async (id?: number) => {
+    return () => clearInterval(interval);
+  }, [selectedChainId, isPollingSuspended]);
+
+  const handleConfirm = (id?: number) => {
     const targetId = id || Number(txId);
     if (!targetId) return;
-    if (
-      !confirm(ADMIN_TEXT.WEB3.CONFIRM_TX.replace("%ID%", targetId.toString()))
-    )
-      return;
 
-    setIsLoading(true);
+    openConfirm({
+      title: "Transaction Confirmation",
+      message: ADMIN_TEXT.WEB3.CONFIRM_TX.replace("%ID%", targetId.toString()),
+      variant: "warning",
+      onConfirm: async () => {
+        setIsLoading(true);
+        try {
+          await confirmTransaction(targetId);
+          showSnackbar(ADMIN_TEXT.WEB3.MSG_CONFIRM_SUCCESS);
+          setTxId("");
+        } catch {
+          showSnackbar(ADMIN_TEXT.WEB3.MSG_CONFIRM_FAILED);
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    });
+  };
+
+  const handleDisableKey = (alias: string) => {
+    openConfirm({
+      title: "Disable Treasury Key",
+      message: ADMIN_TEXT.WEB3.TREASURY.CONFIRM_DISABLE.replace(
+        "%ALIAS%",
+        alias
+      ),
+      variant: "warning",
+      onConfirm: async () => {
+        try {
+          await disableKey(alias);
+          showSnackbar(ADMIN_TEXT.WEB3.TREASURY.MSG_DISABLE_SUCCESS);
+        } catch {
+          showSnackbar(ADMIN_TEXT.WEB3.TREASURY.MSG_FAILED);
+        }
+      },
+    });
+  };
+
+  const handleArchiveKey = (alias: string) => {
+    openConfirm({
+      title: "Archive Treasury Key",
+      message: ADMIN_TEXT.WEB3.TREASURY.CONFIRM_ARCHIVE.replace(
+        "%ALIAS%",
+        alias
+      ),
+      variant: "error",
+      onConfirm: async () => {
+        try {
+          await archiveKey(alias);
+          showSnackbar(ADMIN_TEXT.WEB3.TREASURY.MSG_ARCHIVE_SUCCESS);
+        } catch {
+          showSnackbar(ADMIN_TEXT.WEB3.TREASURY.MSG_FAILED);
+        }
+      },
+    });
+  };
+
+  const handleProvisionKey = async () => {
+    setIsProvisioning(true);
     try {
-      await confirmTransaction(targetId);
-      showSnackbar(ADMIN_TEXT.WEB3.MSG_CONFIRM_SUCCESS);
-      setTxId("");
+      await provisionKey(provisionData);
+      showSnackbar(ADMIN_TEXT.WEB3.MODAL.MSG_SUCCESS);
+      setShowProvisionModal(false);
+      setProvisionData({
+        rawPrivateKey: "",
+        role: "REWARD",
+        expectedAddress: "",
+      });
     } catch {
-      showSnackbar(ADMIN_TEXT.WEB3.MSG_CONFIRM_FAILED);
+      showSnackbar(ADMIN_TEXT.WEB3.MODAL.MSG_FAILED);
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDisableKey = async (alias: string) => {
-    if (
-      !confirm(
-        ADMIN_TEXT.WEB3.TREASURY.CONFIRM_DISABLE.replace("%ALIAS%", alias)
-      )
-    )
-      return;
-    try {
-      await disableKey(alias);
-      showSnackbar(ADMIN_TEXT.WEB3.TREASURY.MSG_DISABLE_SUCCESS);
-    } catch {
-      showSnackbar(ADMIN_TEXT.WEB3.TREASURY.MSG_FAILED);
-    }
-  };
-
-  const handleArchiveKey = async (alias: string) => {
-    if (
-      !confirm(
-        ADMIN_TEXT.WEB3.TREASURY.CONFIRM_ARCHIVE.replace("%ALIAS%", alias)
-      )
-    )
-      return;
-    try {
-      await archiveKey(alias);
-      showSnackbar(ADMIN_TEXT.WEB3.TREASURY.MSG_ARCHIVE_SUCCESS);
-    } catch {
-      showSnackbar(ADMIN_TEXT.WEB3.TREASURY.MSG_FAILED);
+      setIsProvisioning(false);
     }
   };
 
@@ -133,22 +179,15 @@ const Web3Management = () => {
             {ADMIN_TEXT.WEB3.TITLE}
           </h2>
           <div className="flex items-center gap-4 mt-2">
-            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
-              <button
-                onClick={() => setSelectedChainId("11155420")}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedChainId === "11155420" ? "bg-white text-red-500 shadow-sm" : "text-gray-400"}`}
-              >
-                OP Sepolia
-              </button>
-              <button
-                onClick={() => setSelectedChainId("84532")}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedChainId === "84532" ? "bg-white text-blue-500 shadow-sm" : "text-gray-400"}`}
-              >
-                Base Sepolia
-              </button>
-            </div>
+            <span
+              className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${selectedChainId === "11155420" ? "bg-red-50 text-red-600 border border-red-100" : "bg-blue-50 text-blue-600 border border-blue-100"}`}
+            >
+              {selectedChainId === "11155420"
+                ? "Optimism Sepolia"
+                : "Base Sepolia"}
+            </span>
             <p className="text-[10px] text-gray-400 font-medium">
-              지갑: {MONITOR_ADDRESS}
+              Wallet: {MONITOR_ADDRESS}
             </p>
           </div>
         </div>
@@ -185,18 +224,22 @@ const Web3Management = () => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                트랜잭션 ID (DB ID)
+                TX ID (DB ID)
               </label>
               <input
                 type="number"
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:border-main transition-all"
-                placeholder="ID를 입력하세요"
+                placeholder={ADMIN_TEXT.ACCOUNTS.MODAL.PLACEHOLDER_ID}
                 value={txId}
                 onChange={(e) => setTxId(e.target.value)}
               />
             </div>
             <CommonButton
-              label={isLoading ? ADMIN_TEXT.COMMON.LOADING : "성공 처리 실행"}
+              label={
+                isLoading
+                  ? ADMIN_TEXT.COMMON.LOADING
+                  : ADMIN_TEXT.WEB3.MANUAL.TITLE
+              }
               onClick={() => handleConfirm()}
               disabled={isLoading || !txId}
               className="w-full bg-main text-white py-4 rounded-2xl font-bold shadow-lg shadow-main/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"
@@ -278,7 +321,7 @@ const Web3Management = () => {
                       </div>
                     </div>
                     <a
-                      href={`https://sepolia.optimism.etherscan.io/tx/${tx.hash}`}
+                      href={`${EXPLORER_TX_URL}${tx.hash}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-[11px] font-bold text-gray-400 hover:text-main px-3 py-2 rounded-lg transition-all shrink-0"
@@ -449,24 +492,7 @@ const Web3Management = () => {
                 {ADMIN_TEXT.WEB3.MODAL.BTN_CANCEL}
               </button>
               <button
-                onClick={async () => {
-                  setIsProvisioning(true);
-                  try {
-                    const { provisionKey } = useAdminStore.getState();
-                    await provisionKey(provisionData);
-                    showSnackbar(ADMIN_TEXT.WEB3.MODAL.MSG_SUCCESS);
-                    setShowProvisionModal(false);
-                    setProvisionData({
-                      rawPrivateKey: "",
-                      role: "REWARD",
-                      expectedAddress: "",
-                    });
-                  } catch {
-                    showSnackbar(ADMIN_TEXT.WEB3.MODAL.MSG_FAILED);
-                  } finally {
-                    setIsProvisioning(false);
-                  }
-                }}
+                onClick={handleProvisionKey}
                 disabled={
                   isProvisioning ||
                   !provisionData.rawPrivateKey ||

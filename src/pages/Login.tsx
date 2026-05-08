@@ -1,19 +1,12 @@
-import { CommonButton } from "@components/common";
 import { useEffect, useState, useRef, useCallback } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/auth/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [localEmail, setLocalEmail] = useState("");
-  const [localPassword, setLocalPassword] = useState("");
-  const [localError, setLocalError] = useState("");
-  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -24,89 +17,143 @@ const Login = () => {
 
   const slides = [
     {
-      id: 1,
-      title: "매일 운동하고\n인증하세요",
+      title: "매일의 운동이\n가치가 되는 순간",
       description:
-        "러닝, 헬스, 홈트레이닝...\n어떤 운동이든 사진 한 장이면 인증 완료!",
+        "어떤 운동이든 사진 한 장으로 인증하고\nMZTK 토큰 보상을 받으세요.",
       icon: (
-        <svg
-          width="120"
-          height="120"
-          viewBox="0 0 31 31"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="text-[#FAB12F]"
-        >
-          <g clipPath="url(#clip0_7_1406)">
+        <div className="relative flex items-center justify-center">
+          <div className="absolute w-24 h-24 bg-amber-400 opacity-20 blur-[30px] rounded-full animate-pulse" />
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
-              d="M24.6305 5.47329C23.7586 6.70845 22.0633 6.99907 20.8282 6.15141C19.593 5.30376 19.3024 3.58423 20.15 2.34907C21.0219 1.11391 22.7172 0.82329 23.9524 1.67095C25.1875 2.5186 25.5024 4.23813 24.6305 5.47329ZM30.7821 8.50063L27.5852 13.1022C27.2219 13.6592 26.4711 13.7803 25.9141 13.417L21.3125 10.2202L16.3961 17.51L20.586 20.4405C20.9493 20.6827 21.2399 21.0944 21.3125 21.5303L22.4993 28.2389C22.6446 29.1592 22.0149 30.0553 21.0946 30.2249C20.1743 30.3702 19.2782 29.7405 19.1086 28.8202L18.043 22.7897L12.7633 19.0358C12.7633 19.0358 9.97817 23.0561 9.78442 23.2983C9.59067 23.5405 9.42113 23.8795 9.10629 24.0491C8.69457 24.2913 8.2102 24.3155 7.79848 24.2186L1.21098 22.4506C0.314886 22.2084 -0.217927 21.2881 0.0242603 20.3678C0.266448 19.4717 1.18676 18.9389 2.10707 19.1811L7.50785 20.61L16.1297 8.08891H12.8118L9.97817 12.1577C9.61489 12.7147 8.8641 12.8358 8.30707 12.4725C7.75004 12.1092 7.62895 11.3584 7.99223 10.8014L11.1891 6.22407C11.4313 5.86079 11.843 5.66704 12.2547 5.71548H17.7766C18.6 5.71548 19.4235 5.95766 20.1258 6.46626L21.8938 7.72563L26.2532 10.8014L28.8204 7.1686C29.1836 6.61157 29.9344 6.49048 30.4914 6.85376C31.0485 7.21704 31.1696 7.99204 30.7821 8.50063Z"
-              fill="currentColor"
+              d="M26 12C26 10.3431 24.6569 9 23 9H9C7.34315 9 6 10.3431 6 12V20C6 21.6569 7.34315 23 9 23H23C24.6569 23 26 21.6569 26 20V12Z"
+              fill="#FAB12F"
+              fillOpacity="0.15"
+              stroke="#FAB12F"
+              strokeWidth="2"
+              strokeLinejoin="round"
             />
-          </g>
-          <defs>
-            <clipPath id="clip0_7_1406">
-              <rect width="31" height="31" fill="white" />
-            </clipPath>
-          </defs>
-        </svg>
+            <path
+              d="M11 16H21"
+              stroke="#FAB12F"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M16 11V21"
+              stroke="#FAB12F"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <circle
+              cx="23"
+              cy="9"
+              r="3"
+              fill="#FFD95A"
+              stroke="#FAB12F"
+              strokeWidth="1.5"
+            />
+          </svg>
+        </div>
       ),
     },
     {
-      id: 2,
-      title: "인증하면\n코인을 드려요",
-      description: "운동 완료 후 인증만 해도\n매일매일 코인이 차곡차곡 쌓여요.",
-      icon: (
-        <svg
-          width="120"
-          height="120"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-[#FAB12F]"
-        >
-          <circle cx="12" cy="12" r="9" />
-          <path d="M8 16V8l4 5 4-5v8" />
-        </svg>
-      ),
-    },
-    {
-      id: 3,
-      title: "트레이너를 위한\n전문 관리 도구",
+      title: "기록을 넘어선\n새로운 운동 경험",
       description:
-        "나만의 클래스를 등록하고 관리하세요. \n트레이너 전용 대시보드로 통계를 한눈에 확인하세요.",
+        "블록체인 기술로 투명하게 기록되는\n당신만의 운동 히스토리를 확인하세요.",
       icon: (
-        <svg
-          width="120"
-          height="120"
-          viewBox="0 0 31 31"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="text-[#FAB12F]"
-        >
-          <path
-            d="M12.5 10L15.5 13L21.5 7"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M5 26.5V23.5C5 21.8431 6.34315 20.5 8 20.5H16C17.6569 20.5 19 21.8431 19 23.5V26.5"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          <circle
-            cx="12"
-            cy="11.5"
-            r="4"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          <rect x="3" y="27" width="25" height="1" fill="currentColor" />
-        </svg>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute w-24 h-24 bg-orange-400 opacity-20 blur-[30px] rounded-full animate-pulse" />
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="16"
+              cy="16"
+              r="10"
+              fill="#FAB12F"
+              fillOpacity="0.2"
+              stroke="#FAB12F"
+              strokeWidth="2"
+            />
+            <circle
+              cx="16"
+              cy="16"
+              r="6"
+              fill="#FFD95A"
+              stroke="#FAB12F"
+              strokeWidth="2"
+            />
+            <path
+              d="M16 13V19"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <path
+              d="M13 16H19"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      title: "함께 성장하는\n운동 커뮤니티",
+      description: "동기부여가 필요할 때,\n함께 운동하고 보상을 나눠보세요.",
+      icon: (
+        <div className="relative flex items-center justify-center">
+          <div className="absolute w-24 h-24 bg-yellow-400 opacity-20 blur-[30px] rounded-full animate-pulse" />
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="11"
+              cy="12"
+              r="4"
+              fill="#FAB12F"
+              fillOpacity="0.2"
+              stroke="#FAB12F"
+              strokeWidth="2"
+            />
+            <circle
+              cx="21"
+              cy="12"
+              r="4"
+              fill="#FAB12F"
+              fillOpacity="0.2"
+              stroke="#FAB12F"
+              strokeWidth="2"
+            />
+            <path
+              d="M6 22C6 19.7909 7.79086 18 10 18H12C14.2091 18 16 19.7909 16 22V24H6V22Z"
+              fill="#FFD95A"
+              stroke="#FAB12F"
+              strokeWidth="2"
+            />
+            <path
+              d="M16 22C16 19.7909 17.7909 18 20 18H22C24.2091 18 26 19.7909 26 22V24H16V22Z"
+              fill="#FFD95A"
+              stroke="#FAB12F"
+              strokeWidth="2"
+            />
+          </svg>
+        </div>
       ),
     },
   ];
@@ -115,7 +162,7 @@ const Login = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 3000);
+    }, 4000);
   }, [slides.length]);
 
   useEffect(() => {
@@ -125,183 +172,98 @@ const Login = () => {
     };
   }, [resetTimer]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-    const distance = touchStartX.current - touchEndX.current;
-    const threshold = 50;
-
-    if (distance > threshold) {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-      resetTimer();
-    } else if (distance < -threshold) {
-      setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-      resetTimer();
-    }
-
-    touchStartX.current = 0;
-    touchEndX.current = 0;
-  };
-
   const handleLogin = (type: "kakao" | "google") => {
     const redirectUri = `${window.location.origin}/callback`;
     let url = "";
-
     if (type === "kakao") {
-      const clientId =
-        import.meta.env.VITE_KAKAO_CLIENT_ID || "YOUR_KAKAO_CLIENT_ID";
-      url = `https://kauth.kakao.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&state=kakao`;
+      url = `https://kauth.kakao.com/oauth/authorize?client_id=${import.meta.env.VITE_KAKAO_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&state=kakao`;
     } else {
-      const clientId =
-        import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
-      url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=email profile&state=google`;
+      url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=email profile&state=google`;
     }
-
     window.location.href = url;
   };
 
-  const handleLocalLogin = async () => {
-    const email = localEmail.trim();
-
-    if (!email || !localPassword) {
-      setLocalError("이메일과 비밀번호를 입력해 주세요.");
-      return;
-    }
-
-    try {
-      setIsLocalSubmitting(true);
-      setLocalError("");
-
-      const response = await login({
-        provider: "LOCAL",
-        email,
-        password: localPassword,
-      });
-      if (response?.userInfo.walletAddress) {
-        localStorage.setItem("wallet_address", response.userInfo.walletAddress);
-      }
-      navigate("/register");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setLocalError(
-          error.response?.data?.message ??
-            "로그인에 실패했습니다. 입력값을 다시 확인해 주세요."
-        );
-      } else {
-        setLocalError("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-      }
-    } finally {
-      setIsLocalSubmitting(false);
-    }
-  };
-
   return (
-    <div className="flex flex-col h-full items-center bg-white px-5 pt-16 pb-10 overflow-y-auto">
-      <div className="font-gmarket text-[52px] leading-tight text-[#FAB12F] text-center mb-10 shrink-0">
-        몸짱
-        <br />
-        코인
+    <div className="flex flex-col min-h-screen bg-white relative overflow-hidden">
+      {/* ── Background Decoration ── */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-5%] left-[-5%] w-[100%] h-[40%] bg-main opacity-[0.03] blur-[100px] rounded-full" />
       </div>
 
-      <div
-        className="flex-1 w-full flex flex-col items-center justify-center max-w-sm mb-8"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div className="flex justify-center gap-2 mb-8">
+      {/* ── Top Logo ── */}
+      <div className="pt-16 pb-6 flex flex-col items-center z-20">
+        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-main to-orange-500 flex items-center justify-center shadow-xl shadow-main/20 mb-2.5">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+          </svg>
+        </div>
+        <span className="text-gray-400 text-[10px] font-black tracking-[0.4em] uppercase">
+          MZTK Platform
+        </span>
+      </div>
+
+      {/* ── Main Hero Section ── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-10 relative z-10">
+        <div className="mb-12 transition-all duration-700">
+          {slides[currentSlide].icon}
+        </div>
+
+        {/* Text Section with Smooth Transitions */}
+        <div className="text-center h-36 flex flex-col items-center justify-start">
+          <h2 className="text-gray-900 text-[26px] font-black leading-[1.2] tracking-tight whitespace-pre-line mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {slides[currentSlide].title}
+          </h2>
+          <p className="text-gray-400 text-[15px] font-bold leading-relaxed whitespace-pre-line animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
+            {slides[currentSlide].description}
+          </p>
+        </div>
+
+        {/* Indicators */}
+        <div className="flex gap-2 mt-4">
           {slides.map((_, index) => (
             <div
               key={index}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentSlide ? "bg-[#FAB12F] w-6" : "bg-gray-200"
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                index === currentSlide ? "bg-main w-8" : "bg-gray-100 w-1.5"
               }`}
             />
           ))}
         </div>
-
-        <div className="mb-8 p-6 bg-yellow-50 rounded-full shrink-0 transition-all duration-500 ease-in-out">
-          {slides[currentSlide].icon}
-        </div>
-
-        <h2 className="text-2xl font-bold text-gray-900 text-center whitespace-pre-line mb-4 h-16 flex items-center justify-center">
-          {slides[currentSlide].title}
-        </h2>
-        <p className="text-gray-500 text-center whitespace-pre-line text-sm leading-relaxed h-12">
-          {slides[currentSlide].description}
-        </p>
       </div>
 
-      <div className="w-full max-w-sm flex flex-col gap-3 shrink-0">
-        <CommonButton
-          label="카카오로 시작하기"
-          img="/icon/kakao.svg"
-          bgColor="bg-[#FEE500]"
-          textColor="text-black"
+      {/* ── Action Section ── */}
+      <div className="px-8 pb-14 w-full flex flex-col gap-3.5 z-20">
+        <button
           onClick={() => handleLogin("kakao")}
-          className="w-full title h-[56px] shadow-sm rounded-xl"
-        />
-        <CommonButton
-          label="구글로 시작하기"
-          img="/icon/google.svg"
-          bgColor="bg-white border border-gray-200"
-          textColor="text-black"
+          className="btn-press w-full h-[60px] bg-[#FEE500] rounded-[22px] flex items-center justify-center gap-3.5 shadow-xl shadow-yellow-100/50 border-none"
+        >
+          <img src="/icon/kakao.svg" alt="kakao" className="w-5 h-5" />
+          <span className="text-black font-black text-[16px]">
+            카카오로 로그인
+          </span>
+        </button>
+
+        <button
           onClick={() => handleLogin("google")}
-          className="w-full title h-[56px] shadow-sm rounded-xl"
-        />
-
-        <div className="mt-4 rounded-2xl border border-[#FAB12F]/20 bg-[#FFF9EC] px-4 py-4 shadow-sm">
-          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#C99924]">
-            Local Account
-          </p>
-          <p className="mt-1 text-[13px] leading-relaxed text-gray-500">
-            백엔드에 등록된 로컬 계정으로 바로 로그인할 수 있습니다.
-          </p>
-
-          <div className="mt-3 flex flex-col gap-2.5">
-            <input
-              type="email"
-              value={localEmail}
-              onChange={(event) => setLocalEmail(event.target.value)}
-              placeholder="이메일"
-              autoComplete="username"
-              className="h-11 rounded-xl border border-white bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#FAB12F]/40 focus:ring-2 focus:ring-[#FAB12F]/20"
-            />
-            <input
-              type="password"
-              value={localPassword}
-              onChange={(event) => setLocalPassword(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  void handleLocalLogin();
-                }
-              }}
-              placeholder="비밀번호"
-              autoComplete="current-password"
-              className="h-11 rounded-xl border border-white bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#FAB12F]/40 focus:ring-2 focus:ring-[#FAB12F]/20"
-            />
-            {localError && (
-              <p className="px-1 text-[12px] font-medium text-red-500">
-                {localError}
-              </p>
-            )}
-            <CommonButton
-              label={isLocalSubmitting ? "로그인 중..." : "로컬 계정 로그인"}
-              bgColor="bg-[#FAB12F]"
-              textColor="text-white"
-              onClick={handleLocalLogin}
-              disabled={isLocalSubmitting}
-              className="h-[48px] rounded-xl text-sm font-bold shadow-sm"
-            />
-          </div>
-        </div>
+          className="btn-press w-full h-[60px] bg-white border border-gray-100 rounded-[22px] flex items-center justify-center gap-3.5 shadow-xl shadow-gray-100/50"
+        >
+          <img src="/icon/google.svg" alt="google" className="w-5 h-5" />
+          <span className="text-gray-900 font-black text-[16px]">
+            구글로 로그인
+          </span>
+        </button>
       </div>
     </div>
   );

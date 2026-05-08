@@ -24,21 +24,14 @@ const DAY_LABEL_MAP: Record<string, string> = {
 };
 
 const buildMarketplaceImageUrl = (objectKey: string | null | undefined) => {
-  if (!objectKey) {
-    return PLACEHOLDER_IMAGE;
-  }
-
-  if (/^https?:\/\//.test(objectKey)) {
-    return objectKey;
-  }
-
+  if (!objectKey) return PLACEHOLDER_IMAGE;
+  if (/^https?:\/\//.test(objectKey)) return objectKey;
   const normalizedBase = IMAGE_BASE_URL.endsWith("/")
     ? IMAGE_BASE_URL
     : `${IMAGE_BASE_URL}/`;
   const normalizedKey = objectKey.startsWith("/")
     ? objectKey.slice(1)
     : objectKey;
-
   return `${normalizedBase}${normalizedKey}`;
 };
 
@@ -58,6 +51,8 @@ const formatCategory = (category: string) => {
       return "댄스";
     case "REHABILITATION":
       return "재활";
+    case "OTHER":
+      return "기타";
     default:
       return "기타";
   }
@@ -74,6 +69,7 @@ const MarketDetail = () => {
   > | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [currentImgIdx, setCurrentImgIdx] = useState(0);
 
   useEffect(() => {
     const classId = Number(id);
@@ -84,29 +80,21 @@ const MarketDetail = () => {
     }
 
     let isMounted = true;
-
     const loadDetail = async () => {
       try {
         setIsLoading(true);
         const response = await getMarketplaceClassDetail(classId);
-
-        if (!isMounted) return;
-
-        setData(response);
-        setLoadError("");
-      } catch (error) {
-        console.error("Failed to load marketplace class detail", error);
-        if (!isMounted) return;
-        setLoadError("클래스 상세를 불러오지 못했습니다.");
-      } finally {
         if (isMounted) {
-          setIsLoading(false);
+          setData(response);
+          setLoadError("");
         }
+      } catch (error) {
+        if (isMounted) setLoadError("클래스 상세를 불러오지 못했습니다.");
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
-
     void loadDetail();
-
     return () => {
       isMounted = false;
     };
@@ -114,74 +102,105 @@ const MarketDetail = () => {
 
   const imageUrls = useMemo(() => {
     if (!data) return [];
-
     const detailImages = data.images
       .sort((a, b) => a.imgOrder - b.imgOrder)
       .map((image) => buildMarketplaceImageUrl(image.finalObjectKey));
     const thumbnail = buildMarketplaceImageUrl(data.thumbnailFinalObjectKey);
-
     return Array.from(new Set([thumbnail, ...detailImages]));
   }, [data]);
 
   const tabData = useMemo(() => {
     if (!data) return null;
-
     const operatingTimes = data.classTimes.reduce<Record<string, string[]>>(
       (acc, classTime) => {
         classTime.daysOfWeek.forEach((day) => {
           const label = DAY_LABEL_MAP[day] ?? day;
           const time = classTime.startTime.slice(0, 5);
           const currentTimes = acc[label] ?? [];
-
-          if (!currentTimes.includes(time)) {
+          if (!currentTimes.includes(time))
             acc[label] = [...currentTimes, time].sort();
-          }
         });
-
         return acc;
       },
       {}
     );
-
-    const operatingDays = Object.keys(operatingTimes);
-    const address = data.store
-      ? `${data.store.address} ${data.store.detailAddress}`.trim()
-      : "등록된 매장 정보가 없습니다.";
 
     return {
       description: data.description,
       features: data.features ?? [],
       duration: `${data.durationMinutes}분`,
       supplies: data.personalItems ?? "",
-      operatingDays,
+      operatingDays: Object.keys(operatingTimes),
       operatingTimes,
       location: data.store?.storeName ?? "매장 정보 없음",
-      address,
+      address: data.store
+        ? `${data.store.address} ${data.store.detailAddress}`.trim()
+        : "등록된 매장 정보가 없습니다.",
       rating: "0.0",
       reviewCount: 0,
+      lat: data.store?.latitude,
+      lng: data.store?.longitude,
     };
   }, [data]);
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    const width = e.currentTarget.offsetWidth;
+    const idx = Math.round(scrollLeft / width);
+    setCurrentImgIdx(idx);
+  };
+
   if (isLoading) {
     return (
-      <div className="p-10 text-center text-gray-400">
-        클래스 상세를 불러오는 중입니다...
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
+        <p className="text-[13px] font-black text-gray-300">
+          클래스 상세 정보를 가져오는 중...
+        </p>
       </div>
     );
   }
 
   if (loadError || !data || !tabData) {
     return (
-      <div className="p-10 text-center">
-        {loadError || "클래스를 찾을 수 없습니다."}
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center p-10 gap-6">
+        <div className="w-16 h-16 rounded-[24px] bg-red-50 flex items-center justify-center">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#EF4444"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <p className="text-[14px] font-black text-gray-400 text-center">
+          {loadError || "클래스를 찾을 수 없습니다."}
+        </p>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-8 py-3 bg-gray-900 text-white font-black text-[13px] rounded-2xl"
+        >
+          뒤로 가기
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 min-h-screen relative pb-28">
-      <div className="relative w-full h-[280px]">
-        <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative pb-32">
+      {/* Immersive Image Banner */}
+      <div className="relative w-full h-[380px] group">
+        <div
+          className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          onScroll={handleScroll}
+        >
           {imageUrls.map((img: string, idx: number) => (
             <img
               key={idx}
@@ -191,71 +210,84 @@ const MarketDetail = () => {
             />
           ))}
         </div>
-        {imageUrls.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-            {imageUrls.map((_: string, idx: number) => (
-              <div
-                key={idx}
-                className="w-1.5 h-1.5 rounded-full bg-white/80 shadow-sm"
-              ></div>
-            ))}
-          </div>
-        )}
+
+        {/* Banner Overlay Controls */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:bg-black/50 transition-colors"
+          className="absolute top-12 left-5 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-all border border-white/30 z-30"
         >
           <svg
             width="24"
             height="24"
             viewBox="0 0 24 24"
             fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-white"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <path
-              d="M9.57 5.92993L3.5 11.9999L9.57 18.0699M20.5 11.9999H3.67"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeMiterlimit="10"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
+
+        {imageUrls.length > 1 && (
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-2 z-30">
+            {imageUrls.map((_: string, idx: number) => (
+              <div
+                key={idx}
+                className={`transition-all duration-300 ${currentImgIdx === idx ? "w-6 h-1.5 bg-main" : "w-1.5 h-1.5 bg-white/60"} rounded-full`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="bg-white px-5 py-6 flex flex-col gap-4 shadow-sm z-10 -mt-4 rounded-t-3xl relative">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg w-fit">
+      {/* Content Section */}
+      <div className="bg-white px-6 py-10 flex flex-col gap-6 -mt-8 rounded-t-[36px] relative z-20 shadow-[0_-20px_40px_rgba(0,0,0,0.05)] border-t border-gray-50/50">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="bg-gray-900 text-white text-[10px] font-black px-3 py-1.5 rounded-full tracking-widest uppercase">
               {formatCategory(data.category)}
             </span>
-            <span className="bg-green-50 text-green-700 text-xs font-bold px-3 py-1.5 rounded-lg w-fit flex items-center gap-1 border border-green-200">
-              {data.classTimes.length > 0
-                ? `운영 슬롯 ${data.classTimes.length}개`
-                : "운영 슬롯 없음"}
-            </span>
+            <div className="flex items-center gap-1 bg-main/5 px-3 py-1.5 rounded-full border border-main/10">
+              <div className="w-1.5 h-1.5 bg-main rounded-full animate-pulse" />
+              <span className="text-main text-[11px] font-black tracking-tight">
+                Active Program
+              </span>
+            </div>
           </div>
-          <h1 className="text-[22px] font-bold text-gray-900 leading-tight">
+
+          <h1 className="text-[26px] font-black text-gray-900 leading-[1.2] tracking-tighter break-keep">
             {data.title}
           </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-gray-600 font-medium text-[15px]">
-              {data.store?.storeName ?? `Trainer #${data.trainerId}`}
-            </span>
-            <div className="w-[1px] h-3 bg-gray-300"></div>
-            <span className="text-sm text-gray-400">
-              {data.durationMinutes}분 수업
-            </span>
+
+          <div className="flex items-center gap-3 mt-1">
+            <div className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
+              <img
+                src="/icon/gallery.svg"
+                alt=""
+                className="w-4 h-4 opacity-20"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-gray-900 font-black text-[14px] leading-tight">
+                {data.store?.storeName ?? `Trainer #${data.trainerId}`}
+              </span>
+              <span className="text-[11px] font-bold text-gray-400 mt-0.5 tracking-tight uppercase">
+                Verified Expert Trainer
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        {/* Tags */}
+        <div className="flex gap-2 flex-wrap pt-2">
           {data.tags.map((tag: string) => (
             <span
               key={tag}
-              className="text-[12px] font-bold text-main bg-main/10 px-2.5 py-1.5 rounded-md"
+              className="text-[12px] font-black text-gray-400 bg-gray-50 border border-gray-100 px-4 py-2 rounded-full transition-all hover:border-main/20 hover:text-main"
             >
               #{tag}
             </span>
@@ -263,56 +295,58 @@ const MarketDetail = () => {
         </div>
       </div>
 
-      <div className="sticky top-0 bg-white z-20 border-b border-gray-100 flex shadow-[0_4px_10px_rgba(0,0,0,0.02)] pt-2 relative">
+      {/* Premium Tabs */}
+      <div className="sticky top-0 bg-white/80 backdrop-blur-xl z-40 border-b border-gray-50 flex px-2">
         {[
           { id: "intro", label: "프로그램 소개" },
-          { id: "location", label: "위치" },
-          { id: "review", label: "후기(0)" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() =>
-              setActiveTab(tab.id as "intro" | "location" | "review")
-            }
-            className={`flex-1 py-3 text-[15px] font-bold transition-colors ${activeTab === tab.id ? "text-gray-900" : "text-gray-400"}`}
-          >
-            {tab.label}
-          </button>
-        ))}
-        <div
-          className="absolute bottom-0 h-0.5 bg-gray-900 transition-all duration-300"
-          style={{
-            width: "33.333%",
-            transform: `translateX(${activeTab === "intro" ? 0 : activeTab === "location" ? 100 : 200}%)`,
-          }}
-        />
+          { id: "location", label: "위치 정보" },
+          { id: "review", label: "이용 후기" },
+        ].map((tab) => {
+          const isSelected = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() =>
+                setActiveTab(tab.id as "intro" | "location" | "review")
+              }
+              className={`flex-1 py-4 text-[15px] font-black transition-all relative ${isSelected ? "text-gray-900" : "text-gray-400"}`}
+            >
+              {tab.label}
+              {isSelected && (
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-6 h-[3.5px] bg-main rounded-full animate-in zoom-in-50 duration-300" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="flex-1 px-5 pt-6 pb-6 flex flex-col gap-8 min-h-[500px]">
+      {/* Tab Content Area */}
+      <div className="flex-1 px-6 pt-10 pb-12 flex flex-col gap-10 min-h-[600px] animate-in fade-in slide-in-from-bottom-2 duration-500">
         {activeTab === "intro" && <IntroTab data={tabData} />}
         {activeTab === "location" && <LocationTab data={tabData} />}
         {activeTab === "review" && <ReviewTab data={tabData} />}
       </div>
 
-      <div className="fixed bottom-0 max-w-[450px] w-full bg-white px-5 py-4 flex items-center justify-between border-t border-gray-100 shadow-[0_-4px_15px_rgba(0,0,0,0.03)] z-50 rounded-t-2xl">
-        <div className="flex flex-col">
-          <span className="text-[11px] text-gray-400 font-bold mb-0.5">
-            1회권 구매
+      {/* Luxury Floating Footer */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-4 pb-8 flex items-center justify-between border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+            1-Class Pricing
           </span>
-          <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-main flex items-center justify-center text-white text-[11px] font-bold">
-              T
-            </div>
-            <span className="font-bold text-[22px] text-gray-900 tabular-nums leading-none tracking-tight">
-              {data.priceAmount}
+          <div className="flex items-end gap-1.5">
+            <span className="font-black text-[26px] text-gray-900 tabular-nums leading-none tracking-tighter">
+              {data.priceAmount.toLocaleString()}
+            </span>
+            <span className="text-[14px] font-black text-main uppercase pb-0.5 tracking-tight">
+              MZTK
             </span>
           </div>
         </div>
-        <div className="w-[200px]">
+        <div className="w-[180px]">
           <CommonButton
-            label="클래스 구매하기"
+            label="지금 예약하기"
             onClick={() => navigate(`/market/purchase/${data.classId}`)}
-            className="h-[52px] rounded-xl font-bold"
+            className="h-[60px] rounded-[22px] font-black text-[16px] shadow-xl shadow-main/20 active:scale-95 transition-all"
           />
         </div>
       </div>

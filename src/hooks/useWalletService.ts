@@ -3,19 +3,30 @@ import { walletService, web3Service } from "@services";
 import { ethers, getBytes } from "ethers";
 import { MZTK_ABI } from "@abi";
 import type { Web3Execution } from "@types";
+import { useUserStore } from "@store";
+import { getNetworkConfig } from "@utils";
 
-const TOKEN_ADDRESS = import.meta.env.VITE_TOKEN_ADDRESS;
 const QNA_ESCROW_ADDRESS = import.meta.env.VITE_QNA_ESCROW_CONTRACT;
 
 export const useWalletService = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleWalletRegistration = async (wallet: ethers.HDNodeWallet) => {
+  const handleWalletRegistration = async (
+    wallet: ethers.HDNodeWallet,
+    network: "OPT" | "BASE" = useUserStore.getState().selectedNetwork
+  ) => {
     setLoading(true);
 
     try {
-      const provider = new ethers.JsonRpcProvider(import.meta.env.VITE_RPC_URL);
+      // 🌐 선택된 네트워크에 따른 설정값 로드
+      const {
+        RPC_URL,
+        CHAIN_ID: TARGET_CHAIN_ID,
+        TOKEN_ADDRESS: TARGET_TOKEN_ADDRESS,
+      } = getNetworkConfig(network);
+
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
       const connectedWallet = wallet.connect(provider);
 
       // STEP 1: 챌린지 요청
@@ -31,8 +42,8 @@ export const useWalletService = () => {
         {
           name: "MomzzangSeven",
           version: "1",
-          chainId: 11155420,
-          verifyingContract: TOKEN_ADDRESS,
+          chainId: TARGET_CHAIN_ID,
+          verifyingContract: TARGET_TOKEN_ADDRESS,
         },
         {
           AuthRequest: [
@@ -53,16 +64,20 @@ export const useWalletService = () => {
         nonce: nonce,
       });
 
-      // STEP 4: 무제한 토큰 전송 권한 위임
-      const contract = new ethers.Contract(
-        TOKEN_ADDRESS,
-        MZTK_ABI[0],
-        connectedWallet
-      );
-      const allowance = ethers.MaxUint256;
-
-      const tx = await contract.approve(QNA_ESCROW_ADDRESS, allowance);
-      await tx.wait();
+      // STEP 4: 무제한 토큰 전송 권한 위임 (실패해도 등록 자체는 성공)
+      try {
+        const contract = new ethers.Contract(
+          TARGET_TOKEN_ADDRESS,
+          MZTK_ABI[0],
+          connectedWallet
+        );
+        const allowance = ethers.MaxUint256;
+        const tx = await contract.approve(QNA_ESCROW_ADDRESS, allowance);
+        await tx.wait();
+      } catch (approveErr) {
+        // approve 실패는 등록 실패가 아님 — 경고 수준으로만 로깅
+        console.warn("토큰 approve 트랜잭션 실패 (등록은 완료됨):", approveErr);
+      }
     } catch (error) {
       const errorResponse = error as {
         response?: { data?: { message?: string } };

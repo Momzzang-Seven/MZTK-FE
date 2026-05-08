@@ -11,21 +11,14 @@ const IMAGE_BASE_URL =
 const PLACEHOLDER_IMAGE = "/icon/gallery.svg";
 
 const buildMarketplaceImageUrl = (objectKey: string | null) => {
-  if (!objectKey) {
-    return PLACEHOLDER_IMAGE;
-  }
-
-  if (/^https?:\/\//.test(objectKey)) {
-    return objectKey;
-  }
-
+  if (!objectKey) return PLACEHOLDER_IMAGE;
+  if (/^https?:\/\//.test(objectKey)) return objectKey;
   const normalizedBase = IMAGE_BASE_URL.endsWith("/")
     ? IMAGE_BASE_URL
     : `${IMAGE_BASE_URL}/`;
   const normalizedKey = objectKey.startsWith("/")
     ? objectKey.slice(1)
     : objectKey;
-
   return `${normalizedBase}${normalizedKey}`;
 };
 
@@ -37,10 +30,6 @@ const formatCategory = (category: string) => {
       return "필라테스";
     case "YOGA":
       return "요가";
-    case "GOLF":
-      return "골프";
-    case "TENNIS":
-      return "테니스";
     case "CROSSFIT":
       return "크로스핏";
     case "BOXING":
@@ -49,40 +38,24 @@ const formatCategory = (category: string) => {
       return "댄스";
     case "REHABILITATION":
       return "재활";
+    case "OTHER":
+      return "기타";
     default:
       return "기타";
   }
 };
 
-const formatBalance = (balance: string) => {
-  const numericBalance = Number(balance);
-  return Number.isFinite(numericBalance)
-    ? numericBalance.toLocaleString()
-    : balance;
-};
-
 const matchesCategoryTab = (category: string, activeTab: string) => {
-  if (activeTab === MARKET_TEXT.TABS.ALL) {
-    return true;
-  }
-
-  if (activeTab === MARKET_TEXT.TABS.PT) {
-    return category === "PT";
-  }
-
-  if (activeTab === MARKET_TEXT.TABS.PILATES) {
-    return category === "PILATES" || category === "YOGA";
-  }
-
-  if (activeTab === MARKET_TEXT.TABS.GOLF) {
-    return category === "GOLF" || category === "TENNIS";
-  }
-
+  if (activeTab === MARKET_TEXT.TABS.ALL) return true;
+  if (activeTab === MARKET_TEXT.TABS.PT) return category === "PT";
+  if (activeTab === MARKET_TEXT.TABS.PILATES) return category === "PILATES";
+  if (activeTab === MARKET_TEXT.TABS.YOGA) return category === "YOGA";
+  if (activeTab === MARKET_TEXT.TABS.CROSSFIT) return category === "CROSSFIT";
   return formatCategory(category).includes(activeTab);
 };
 
 const Market = () => {
-  const { gymLocation } = useUserStore();
+  const gymLocation = useUserStore((state) => state.gymLocation);
   const { balance } = useTokenBalance();
   const [activeTab, setActiveTab] = useState(MARKET_TEXT.TABS.ALL);
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,13 +65,9 @@ const Market = () => {
   const navigate = useNavigate();
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
-
     const loadClasses = async () => {
       try {
         setIsLoading(true);
@@ -107,258 +76,234 @@ const Market = () => {
           lng: gymLocation?.lng,
           page: 0,
         });
-
-        if (!isMounted) return;
-
-        setClasses(response.items ?? []);
-        setLoadError("");
-      } catch (error) {
-        console.error("Failed to load marketplace classes", error);
-        if (!isMounted) return;
-        setLoadError("클래스 목록을 불러오지 못했습니다.");
-      } finally {
         if (isMounted) {
-          setIsLoading(false);
+          setClasses(response.items ?? []);
+          setLoadError("");
         }
+      } catch (error) {
+        if (isMounted) setLoadError("클래스 목록을 불러오지 못했습니다.");
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
-
     void loadClasses();
-
     return () => {
       isMounted = false;
     };
   }, [gymLocation?.lat, gymLocation?.lng]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - scrollRef.current.offsetLeft);
-    setScrollLeft(scrollRef.current.scrollLeft);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    scrollRef.current.scrollLeft = scrollLeft - walk;
-  };
 
   const filteredClasses = classes
     .filter((cls) => {
       const matchesTab = matchesCategoryTab(cls.category, activeTab);
       const normalizedQuery = searchQuery.trim().toLowerCase();
       const tags = cls.tags ?? [];
-      const matchesSearch =
-        normalizedQuery.length === 0 ||
-        cls.title.toLowerCase().includes(normalizedQuery) ||
-        tags.some((tag) => tag.toLowerCase().includes(normalizedQuery));
-
-      return matchesTab && matchesSearch;
+      return (
+        matchesTab &&
+        (normalizedQuery.length === 0 ||
+          cls.title.toLowerCase().includes(normalizedQuery) ||
+          tags.some((tag) => tag.toLowerCase().includes(normalizedQuery)))
+      );
     })
-    .sort(
-      (a, b) =>
-        (a.distance ?? Number.MAX_SAFE_INTEGER) -
-        (b.distance ?? Number.MAX_SAFE_INTEGER)
-    );
+    .sort((a, b) => (a.distance ?? 999999) - (b.distance ?? 999999));
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 min-h-screen">
-      <div className="flex-1 overflow-y-auto pb-24">
-        <div className="bg-main/10 px-5 pt-10 pb-6 flex flex-col gap-2 relative">
-          <h1 className="text-2xl font-bold border-b-2 border-main w-fit pb-1 border-opacity-30">
-            운동 클래스 찾기
-          </h1>
-          <p className="text-gray-600 text-sm font-medium leading-relaxed">
-            원하는 운동 클래스를 찾아
-            <br />
-            지금 바로 시작해 보세요.
-          </p>
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen">
+      <div className="flex-1 overflow-y-auto pb-32">
+        {/* Luxury Hero Header */}
+        <div className="relative px-6 pt-14 pb-12 overflow-hidden">
+          {/* Decorative background gradients */}
+          <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-main/10 rounded-full blur-[80px]" />
+          <div className="absolute bottom-[-20%] left-[-10%] w-80 h-80 bg-amber-100/20 rounded-full blur-[100px]" />
 
-          <div className="absolute top-10 right-5 bg-main text-white px-4 py-2 rounded-2xl shadow-md flex items-center gap-2 active:scale-95 transition-transform cursor-pointer select-none">
-            <img
-              src="/icon/token.svg"
-              alt="token"
-              className="w-5 h-5 brightness-0 invert drop-shadow-sm"
-            />
-            <span className="font-bold text-[17px] tabular-nums tracking-wide mt-[1px]">
-              {formatBalance(balance)}
-            </span>
-          </div>
-        </div>
+          <div className="relative z-10 flex flex-col gap-2">
+            <h1 className="text-[28px] font-black text-gray-900 tracking-tighter leading-tight">
+              나만을 위한
+              <br />
+              <span className="text-main">완벽한 운동 클래스</span>
+            </h1>
+            <p className="text-gray-400 text-[13px] font-bold leading-relaxed max-w-[200px]">
+              MZTK 토큰으로 시작하는
+              <br />
+              가장 스마트한 건강 관리
+            </p>
 
-        <div className="px-5 mt-4 mb-2">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex items-center px-4 py-3 focus-within:ring-2 focus-within:ring-main/20 focus-within:border-transparent transition-all">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-gray-400 mr-2"
+            {/* Token Balance Badge */}
+            <div
+              onClick={() => navigate("/wallet")}
+              className="absolute top-0 right-0 mt-2 bg-white rounded-[22px] px-4 py-2.5 shadow-xl shadow-gray-200/50 border border-gray-50 flex items-center gap-2.5 active:scale-95 transition-all cursor-pointer"
             >
-              <path
-                d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M22 22L20 20"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <input
-              type="text"
-              placeholder="원하는 클래스나 태그를 검색해 보세요."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-gray-400 font-medium text-gray-800"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="text-gray-400 hover:text-gray-600 font-bold ml-2"
-              >
-                ×
-              </button>
-            )}
+              <div className="w-6 h-6 rounded-full bg-main flex items-center justify-center shadow-lg shadow-main/20">
+                <img
+                  src="/icon/token.svg"
+                  alt=""
+                  className="w-3.5 h-3.5 brightness-0 invert"
+                />
+              </div>
+              <span className="font-black text-[16px] text-gray-800 tabular-nums">
+                {Number(balance).toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div
-          ref={scrollRef}
-          className="w-full overflow-x-auto scrollbar-hide sticky top-0 bg-gray-50 z-10 cursor-grab active:cursor-grabbing"
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-        >
-          <div className="flex gap-2 px-5 py-4 w-max pointer-events-none">
+        {/* Search & Categories Bar (Sticky) */}
+        <div className="sticky top-0 z-30 bg-[#FDFDFD]/80 backdrop-blur-xl border-b border-gray-50 pb-2">
+          {/* Search Input */}
+          <div className="px-5 py-4">
+            <div className="bg-white rounded-[22px] shadow-lg shadow-gray-100/60 border border-gray-100 flex items-center px-5 h-14 focus-within:border-main/30 transition-all">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#D1D5DB"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mr-3"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                type="text"
+                placeholder="어떤 운동을 찾으시나요?"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-[14px] font-black outline-none placeholder:text-gray-300 text-gray-900"
+              />
+            </div>
+          </div>
+
+          {/* Horizontal Category Tabs */}
+          <div
+            ref={scrollRef}
+            className="w-full overflow-x-auto scrollbar-hide flex gap-2.5 px-5 pb-2"
+          >
             {[
               MARKET_TEXT.TABS.ALL,
               MARKET_TEXT.TABS.PT,
               MARKET_TEXT.TABS.PILATES,
-              MARKET_TEXT.TABS.GOLF,
-            ].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap transition-all shadow-sm flex-shrink-0 border border-transparent pointer-events-auto ${activeTab === tab ? "bg-gray-800 text-white" : "bg-white text-gray-500 !border-gray-200"}`}
-              >
-                {tab}
-              </button>
-            ))}
+              MARKET_TEXT.TABS.YOGA,
+              MARKET_TEXT.TABS.CROSSFIT,
+            ].map((tab) => {
+              const isSelected = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-2.5 rounded-full text-[13px] font-black whitespace-nowrap transition-all duration-300 shadow-sm border ${
+                    isSelected
+                      ? "bg-gray-900 text-white border-gray-900 shadow-xl shadow-gray-900/10 scale-105"
+                      : "bg-white text-gray-400 border-gray-100"
+                  }`}
+                >
+                  {tab}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="px-5 py-2 flex flex-col gap-4">
+        {/* Class List Section */}
+        <div className="px-5 py-8 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {loadError && (
-            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium">
+            <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-[22px] text-[13px] font-black">
               {loadError}
             </div>
           )}
 
           {isLoading ? (
-            <div className="py-20 flex items-center justify-center text-gray-400 font-medium">
-              클래스 목록을 불러오는 중입니다...
+            <div className="py-24 flex flex-col items-center justify-center gap-4">
+              <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
+              <p className="text-[13px] font-black text-gray-300 tracking-tight">
+                클래스를 불러오는 중...
+              </p>
             </div>
           ) : filteredClasses.length > 0 ? (
             filteredClasses.map((cls) => (
               <div
                 key={cls.classId}
                 onClick={() => navigate(`/market/${cls.classId}`)}
-                className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-[0.98] transition-all"
+                className="group bg-white rounded-[32px] shadow-2xl shadow-gray-200/40 overflow-hidden flex flex-col cursor-pointer active:scale-[0.98] transition-all border border-transparent hover:border-main/10"
               >
-                <div className="h-[160px] relative overflow-hidden bg-gray-200">
+                {/* Image Area with Overlays */}
+                <div className="h-[200px] relative overflow-hidden bg-gray-100">
                   <img
                     src={buildMarketplaceImageUrl(cls.thumbnailFinalObjectKey)}
                     alt={cls.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md">
-                    {MARKET_TEXT.TICKET.NEW_BADGE}
-                  </div>
-                  <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md font-medium">
+                  {/* Category Badge */}
+                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-full tracking-wider uppercase">
                     {formatCategory(cls.category)}
                   </div>
+                  {/* New Badge */}
+                  <div className="absolute top-4 right-4 bg-main text-white text-[9px] font-black px-2.5 py-1.5 rounded-full shadow-lg shadow-main/20 animate-pulse uppercase tracking-widest">
+                    NEW
+                  </div>
+                  {/* Distance Overlay */}
+                  {cls.distance != null && (
+                    <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md text-gray-900 text-[11px] font-black px-3 py-2 rounded-[14px] flex items-center gap-1.5 shadow-sm">
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-main"
+                      >
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      {(cls.distance / 1000).toFixed(1)}km
+                    </div>
+                  )}
                 </div>
 
-                <div className="p-4 flex flex-col gap-2.5">
-                  <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-bold text-[16px] text-gray-800 leading-tight line-clamp-2 break-keep">
+                {/* Content Area */}
+                <div className="p-6 flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="font-black text-[18px] text-gray-900 leading-[1.3] line-clamp-2 break-keep">
                       {cls.title}
                     </h3>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-500">
-                      {cls.durationMinutes}분 수업
-                    </span>
-                    <div className="text-xs font-bold text-gray-400">
-                      클래스 #{cls.classId}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] font-bold text-gray-400">
+                        #{cls.classId}
+                      </span>
+                      <div className="w-1 h-1 rounded-full bg-gray-200" />
+                      <span className="text-[12px] font-bold text-gray-500">
+                        {cls.durationMinutes}분 수업
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex gap-1.5 flex-wrap">
+                  {/* Tags */}
+                  <div className="flex gap-2 flex-wrap">
                     {(cls.tags ?? []).map((tag) => (
                       <span
                         key={tag}
-                        className="text-[10px] font-bold text-main bg-main/10 px-2 py-1 rounded"
+                        className="text-[11px] font-black text-gray-400 bg-gray-50 border border-gray-100 px-3 py-1 rounded-full"
                       >
                         #{tag}
                       </span>
                     ))}
                   </div>
 
-                  <div className="h-[1px] w-full bg-gray-100 my-1"></div>
-
-                  <div className="flex justify-between items-center w-full">
-                    <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="flex-shrink-0"
-                      >
-                        <path
-                          d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-                          className="fill-main"
-                        />
-                      </svg>
-                      <span className="text-[12px] font-bold tracking-tight mt-[1px]">
-                        {cls.distance != null
-                          ? "내 위치 기준"
-                          : "위치 정보 없음"}
-                        {cls.distance != null && (
-                          <span className="text-gray-400 font-medium ml-1">
-                            ({(cls.distance / 1000).toFixed(1)}km)
-                          </span>
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-end items-center gap-1.5">
-                      <div className="w-[18px] h-[18px] rounded-full bg-main flex items-center justify-center text-white text-[10px] font-bold">
-                        {MARKET_TEXT.TICKET.PRICE_UNIT}
-                      </div>
-                      <span className="font-bold text-[17px] text-gray-800">
+                  {/* Price Area */}
+                  <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
+                    <span className="text-[12px] font-black text-gray-300 uppercase tracking-widest">
+                      Pricing
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-black text-[20px] text-gray-900 tabular-nums">
                         {cls.priceAmount.toLocaleString()}
+                      </span>
+                      <span className="text-[13px] font-black text-main">
+                        MZTK
                       </span>
                     </div>
                   </div>
@@ -366,22 +311,30 @@ const Market = () => {
               </div>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-sm">
-                <img
-                  src="/icon/search.svg"
-                  alt="empty"
-                  className="w-8 h-8 opacity-30"
-                />
+            <div className="py-28 flex flex-col items-center justify-center">
+              <div className="w-20 h-20 rounded-[28px] bg-white shadow-xl shadow-gray-200/40 flex items-center justify-center mb-6">
+                <svg
+                  width="36"
+                  height="36"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#E5E7EB"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
               </div>
-              <div className="text-center">
-                <h3 className="font-bold text-gray-700 mb-1">
-                  {MARKET_TEXT.EMPTY_STATE.TITLE}
-                </h3>
-                <p className="text-sm text-gray-400 whitespace-pre-line">
-                  {MARKET_TEXT.EMPTY_STATE.DESC}
-                </p>
-              </div>
+              <h3 className="font-black text-gray-900 text-[18px] tracking-tight mb-2">
+                검색 결과가 없습니다
+              </h3>
+              <p className="text-gray-400 text-[13px] font-bold text-center leading-relaxed">
+                다른 검색어를 입력하거나
+                <br />
+                카테고리를 변경해 보세요.
+              </p>
             </div>
           )}
         </div>

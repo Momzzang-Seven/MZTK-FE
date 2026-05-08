@@ -21,35 +21,55 @@ const UserManagement = () => {
   }, [fetchUsers]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Stats */}
-      <div className="flex justify-end items-center gap-3">
-        <div className="flex items-center gap-2 px-4 py-2 bg-main rounded-lg text-white font-bold text-sm shadow-sm">
-          <span>{ADMIN_TEXT.USER.TITLE_TOTAL}</span>
-          <span className="text-lg">{(totalUsers ?? 0).toLocaleString()}</span>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-[#FF4500] rounded-lg text-white font-bold text-sm shadow-sm">
-          <span>{ADMIN_TEXT.USER.TITLE_BANNED}</span>
-          <span className="text-lg">
-            {(blockedUsers ?? 0).toLocaleString()}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            User Database
           </span>
+          <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+            {ADMIN_TEXT.USER.TABLE.USER} 관리
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                {ADMIN_TEXT.USER.TITLE_TOTAL}
+              </span>
+              <span className="text-xl font-black text-gray-900 tabular-nums">
+                {(totalUsers ?? 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="w-[1px] h-8 bg-gray-100" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">
+                {ADMIN_TEXT.USER.TITLE_BANNED}
+              </span>
+              <span className="text-xl font-black text-red-500 tabular-nums">
+                {(blockedUsers ?? 0).toLocaleString()}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Search & Filter Section */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
+      <div className="bg-white p-5 rounded-[28px] shadow-[0_10px_30px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
+        <div className="flex-1 w-full">
           <AdminSearchBar
             placeholder={ADMIN_TEXT.USER.SEARCH_PLACEHOLDER}
             onSearch={searchUsers}
           />
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full md:w-auto">
           {/* Status Filter */}
-          <div className="relative">
+          <div className="relative flex-1 md:flex-initial">
             <select
-              className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-4 pl-4 pr-10 rounded-xl focus:outline-none focus:border-main text-sm font-bold min-w-[130px] cursor-pointer"
+              className="appearance-none w-full bg-gray-50/50 border border-gray-100 text-gray-700 py-3.5 pl-5 pr-12 rounded-[18px] focus:outline-none focus:border-main focus:bg-white text-[13px] font-black transition-all cursor-pointer shadow-sm"
               value={statusFilter}
               onChange={(e) =>
                 setStatusFilter(
@@ -58,24 +78,34 @@ const UserManagement = () => {
               }
             >
               <option value="ALL">{ADMIN_TEXT.COMMON.FILTER.ALL}</option>
-              <option value="ACTIVE">{ADMIN_TEXT.COMMON.FILTER.ACTIVE}</option>
-              <option value="BLOCKED">{ADMIN_TEXT.COMMON.FILTER.BANNED}</option>
+              <option value="ACTIVE">
+                {ADMIN_TEXT.COMMON.FILTER.ACTIVE} 회원
+              </option>
+              <option value="BLOCKED">
+                {ADMIN_TEXT.COMMON.FILTER.BANNED} 회원
+              </option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
               <svg
-                className="fill-current h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="3"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
 
           {/* Role Filter */}
-          <div className="relative">
+          <div className="relative flex-1 md:flex-initial">
             <select
-              className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-4 pl-4 pr-10 rounded-xl focus:outline-none focus:border-main text-sm font-bold min-w-[130px] cursor-pointer"
+              className="appearance-none w-full bg-gray-50/50 border border-gray-100 text-gray-700 py-3.5 pl-5 pr-12 rounded-[18px] focus:outline-none focus:border-main focus:bg-white text-[13px] font-black transition-all cursor-pointer shadow-sm"
               value={roleFilter}
               onChange={(e) =>
                 setRoleFilter(
@@ -91,11 +121,17 @@ const UserManagement = () => {
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
               <svg
-                className="fill-current h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="3"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>

@@ -59,10 +59,12 @@ const PostManagement = () => {
     isLoading: isFetchingPosts,
   });
 
-  // Initial Fetch
+  // 마운트 시 1회만 실행 — fetchPosts를 deps에 넣으면 스토어 상태 변경마다
+  // 새 함수 참조가 생성되어 무한 루프 발생
   useEffect(() => {
     fetchPosts(true);
-  }, [fetchPosts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handlers
   const handleOpenDeleteModal = (
@@ -96,7 +98,9 @@ const PostManagement = () => {
           reasonLabel,
           deleteReason as BanRequest["reasonCode"]
         );
-        showSnackbar("게시글이 삭제되었습니다.");
+        showSnackbar(
+          `${ADMIN_TEXT.COMMON.FILTER.POSTING} ${ADMIN_TEXT.COMMON.FILTER.DELETED} 완료`
+        );
       } else if (modalData.type === "COMMENT" && modalData.subTargetId) {
         await deleteComment(
           modalData.targetId,
@@ -104,10 +108,12 @@ const PostManagement = () => {
           reasonLabel,
           deleteReason as BanRequest["reasonCode"]
         );
-        showSnackbar("댓글이 삭제되었습니다.");
+        showSnackbar(
+          `${ADMIN_TEXT.POST.LABEL_COMMENT} ${ADMIN_TEXT.COMMON.FILTER.DELETED} 완료`
+        );
       }
     } catch (error) {
-      showSnackbar("삭제 처리에 실패했습니다.");
+      showSnackbar(`${ADMIN_TEXT.SETTINGS.RECOVERY.MSG_FAILED}`);
       console.error("Failed to delete post/comment:", error);
     } finally {
       handleCloseModal();
@@ -117,9 +123,9 @@ const PostManagement = () => {
   const handleRestorePost = async (postId: number) => {
     try {
       await unbanPost(postId);
-      showSnackbar("게시글이 복구되었습니다.");
+      showSnackbar(`${ADMIN_TEXT.POST.BTN_RESTORE_POST} 완료`);
     } catch (error) {
-      showSnackbar("복구 처리에 실패했습니다.");
+      showSnackbar(`${ADMIN_TEXT.SETTINGS.RECOVERY.MSG_FAILED}`);
       console.error(error);
     }
   };
@@ -127,9 +133,9 @@ const PostManagement = () => {
   const handleRestoreComment = async (postId: number, commentId: number) => {
     try {
       await restoreComment(postId, commentId);
-      showSnackbar("댓글이 복구되었습니다.");
+      showSnackbar(`${ADMIN_TEXT.POST.BTN_RESTORE_COMMENT} 완료`);
     } catch (error) {
-      showSnackbar("복구 처리에 실패했습니다.");
+      showSnackbar(`${ADMIN_TEXT.SETTINGS.RECOVERY.MSG_FAILED}`);
       console.error(error);
     }
   };

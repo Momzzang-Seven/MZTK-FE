@@ -1,90 +1,46 @@
-import { useEffect, useRef, useState } from "react";
-
 interface CommonButtonProps {
-  textColor?: string;
-  bgColor?: string;
-  border?: string;
-  shadow?: boolean;
-  label?: string | React.ReactNode;
-  img?: string;
-  className?: string;
-  icon?: React.ReactNode;
-  width?: string;
-  padding?: string;
-  onClick?: () => void | Promise<void>;
+  label: string;
+  onClick?: () => void;
   disabled?: boolean;
-  ariaLabel?: string;
+  type?: "button" | "submit" | "reset";
+  className?: string;
+  bgColor?: string;
+  textColor?: string;
+  border?: string;
+  icon?: React.ReactNode;
 }
+
 export const CommonButton = ({
-  textColor,
-  bgColor,
-  border,
-  shadow = false,
   label,
-  className,
-  width,
-  img,
-  icon,
-  padding,
   onClick,
   disabled = false,
-  ariaLabel,
+  type = "button",
+  className = "",
+  bgColor = "bg-main",
+  textColor = "text-black",
+  border = "border-none",
+  icon,
 }: CommonButtonProps) => {
-  const clickLockedRef = useRef(false);
-  const unlockTimerRef = useRef<number | null>(null);
-  const [isClickLocked, setIsClickLocked] = useState(false);
-  const isDisabled = disabled || isClickLocked;
-
-  useEffect(() => {
-    return () => {
-      if (unlockTimerRef.current) {
-        window.clearTimeout(unlockTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handleClick = async () => {
-    if (!onClick || disabled || clickLockedRef.current) return;
-
-    clickLockedRef.current = true;
-    setIsClickLocked(true);
-
-    try {
-      await onClick();
-    } finally {
-      if (unlockTimerRef.current) {
-        window.clearTimeout(unlockTimerRef.current);
-      }
-
-      unlockTimerRef.current = window.setTimeout(() => {
-        clickLockedRef.current = false;
-        setIsClickLocked(false);
-      }, 300);
-    }
-  };
-
   return (
     <button
-      aria-label={ariaLabel}
-      onClick={handleClick}
-      disabled={isDisabled}
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
       className={`
-        ${textColor ? textColor : "text-[#ffffff]"} 
-        ${bgColor ? bgColor : "bg-[#fab12f]"}
-        ${border}
-        ${shadow ? "shadow-[0_2px_2px_rgba(0,0,0,0.12)]" : ""}
-        ${width ? width : "w-full"}
-        ${padding ? padding : "p-[11.5px]"}
+        btn-press
+        w-full h-[60px] 
+        ${bgColor} ${textColor} ${border}
+        rounded-[22px] 
+        text-[16px] font-black tracking-tight
+        flex items-center justify-center gap-2
+        shadow-lg ${bgColor === "bg-main" ? "shadow-main/20" : "shadow-gray-100"}
+        disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none
+        transition-all duration-200
         ${className}
-        flex flex-row items-center justify-center
-        ${isDisabled ? "cursor-not-allowed" : ""}
-        `}
+      `}
     >
-      {icon && <span className="flex items-center">{icon}</span>}
-      <div className="flex gap-3 items-center">
-        {img && <img src={img} alt="buttonImage" width="20px" />}
-        {label && <div>{label}</div>}
-      </div>
+      {icon && <span className="shrink-0">{icon}</span>}
+      {label}
     </button>
   );
 };

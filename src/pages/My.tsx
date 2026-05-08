@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   CurrentTkn,
   LevelProgress,
@@ -6,6 +7,7 @@ import {
   UserProfile,
 } from "@components/my";
 import { useNavigate } from "react-router-dom";
+import { useUserStore } from "@store";
 
 const ACTIVITY_BUTTONS = [
   {
@@ -13,26 +15,17 @@ const ACTIVITY_BUTTONS = [
     tab: "written",
     icon: (
       <svg
-        width="16"
-        height="16"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
         fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       >
-        <path
-          d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.43739 22.1213 4.00001C22.1213 4.56263 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" />
       </svg>
     ),
   },
@@ -41,19 +34,16 @@ const ACTIVITY_BUTTONS = [
     tab: "liked",
     icon: (
       <svg
-        width="16"
-        height="16"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
         fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       >
-        <path
-          d="M20.84 4.61C20.3292 4.099 19.7228 3.69365 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69365 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.57831 8.50903 2.99871 7.05 2.99871C5.59096 2.99871 4.19169 3.57831 3.16 4.61C2.1283 5.64169 1.54871 7.04097 1.54871 8.5C1.54871 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.0621 22.0329 6.39462C21.7563 5.72715 21.351 5.12076 20.84 4.61Z"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
       </svg>
     ),
   },
@@ -62,19 +52,16 @@ const ACTIVITY_BUTTONS = [
     tab: "commented",
     icon: (
       <svg
-        width="16"
-        height="16"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
         fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       >
-        <path
-          d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
     ),
   },
@@ -82,51 +69,336 @@ const ACTIVITY_BUTTONS = [
 
 const My = () => {
   const navigate = useNavigate();
+  const user = useUserStore((state) => state.user);
+  const updateRole = useUserStore((state) => state.updateRole);
+  const showSnackbar = useUserStore((state) => state.showSnackbar);
+  const [isChangingRole, setIsChangingRole] = useState(false);
+
+  const isTrainer = user?.role === "TRAINER";
+  const targetRole = isTrainer ? "USER" : "TRAINER";
+  const targetRoleLabel = isTrainer ? "일반 회원" : "트레이너";
+
+  const handleRoleSwitch = async () => {
+    if (isChangingRole) return;
+    setIsChangingRole(true);
+    try {
+      await updateRole(targetRole);
+      showSnackbar(`역할이 ${targetRoleLabel}(으)로 변경되었습니다.`);
+    } catch {
+      showSnackbar("역할 변경에 실패했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsChangingRole(false);
+    }
+  };
 
   return (
-    <div className="flex flex-1 flex-col pt-[38px] px-[22px] gap-y-5 items-start justify-start pb-20 overflow-y-auto w-full">
-      <UserProfile />
-
-      {/* 인증 위치 변경 버튼 */}
-      <button
-        onClick={() =>
-          navigate("/location-register", { state: { from: "my" } })
-        }
-        className="w-full bg-gray-50 text-gray-500 font-bold py-3.5 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors text-sm"
-      >
-        인증 위치 변경하기
-      </button>
-
-      <div className="flex flex-col gap-3 w-full">
-        <CurrentTkn />
-        <TokenActionButtons />
+    <div className="flex flex-col min-h-screen bg-[#FDFDFD] pb-28">
+      {/* ── Header bg ── */}
+      <div className="relative pt-12 pb-20 px-6 overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-56 h-56 bg-main opacity-[0.07] blur-[60px] rounded-full pointer-events-none" />
+        <p className="text-gray-400 text-xs font-black tracking-widest uppercase mb-1">
+          My Profile
+        </p>
+        <h1 className="text-gray-900 text-2xl font-black tracking-tight">
+          마이페이지
+        </h1>
       </div>
-      <LevelProgress />
-      <LevelReward />
 
-      {/* 내 커뮤니티 활동 — 1열 3행 버튼 */}
-      <div className="w-full h-px bg-gray-100" />
-      <div className="flex flex-col w-full gap-2">
-        <h2 className="font-bold text-[15px] text-gray-800">
-          내 커뮤니티 활동
-        </h2>
-        <div className="flex flex-col gap-2 w-full">
-          {ACTIVITY_BUTTONS.map(({ label, tab, icon }) => (
+      {/* ── Stacked cards ── */}
+      <div className="flex flex-col gap-4 px-5 -mt-12 relative z-10">
+        {/* Profile */}
+        <UserProfile />
+
+        {/* Role switch + location change */}
+        <div
+          className="bg-white rounded-[28px] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden animate-fade-slide-up"
+          style={{ animationDelay: "0.05s" }}
+        >
+          {/* Role row */}
+          <div className="flex flex-col gap-3 px-5 py-4 border-b border-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                  현재 역할
+                </span>
+                <span
+                  className={`text-[11px] font-black px-2 py-0.5 rounded-md ${
+                    isTrainer
+                      ? "bg-main/10 text-main"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {isTrainer ? "TRAINER" : "USER"}
+                </span>
+              </div>
+              {/* Arrow indicator */}
+              <div className="flex items-center gap-1.5 text-gray-300">
+                <span className="text-[11px] font-bold">{targetRoleLabel}</span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </div>
+            </div>
+
             <button
-              key={tab}
-              onClick={() => navigate(`/my/activity/${tab}`)}
-              className="w-full bg-white text-main font-bold py-3.5 px-4 rounded-xl border-2 border-main hover:bg-main/5 transition-colors text-sm flex items-center gap-2.5"
+              id="role-switch-btn"
+              onClick={() => void handleRoleSwitch()}
+              disabled={isChangingRole}
+              className={`btn-press w-full flex items-center justify-center gap-2.5 py-3 rounded-[18px] border-none font-black text-[14px] transition-all ${
+                isChangingRole
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : isTrainer
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-main/8 text-main hover:bg-main/15"
+              }`}
             >
-              <span className="text-main shrink-0">{icon}</span>
-              {label}
+              {isChangingRole ? (
+                <>
+                  <svg
+                    className="animate-spin"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  역할 변경 중...
+                </>
+              ) : (
+                <>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17 2l4 4-4 4" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <path d="m7 22-4-4 4-4" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                  {targetRoleLabel}으로 전환하기
+                </>
+              )}
             </button>
+          </div>
+
+          {/* Location row */}
+          <button
+            onClick={() =>
+              navigate("/location-register", { state: { from: "my" } })
+            }
+            className="btn-press w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors border-none bg-transparent"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#F97316"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-[11px] text-gray-400 font-black uppercase tracking-wider">
+                  인증 위치
+                </p>
+                <p className="text-gray-900 font-black text-[13px]">
+                  위치 변경하기
+                </p>
+              </div>
+            </div>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#9CA3AF"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Token balance */}
+        <div
+          className="animate-fade-slide-up"
+          style={{ animationDelay: "0.1s" }}
+        >
+          <CurrentTkn />
+        </div>
+
+        {/* Token action mini-cards */}
+        <div
+          className="animate-fade-slide-up"
+          style={{ animationDelay: "0.15s" }}
+        >
+          <TokenActionButtons />
+        </div>
+
+        {/* XP progress */}
+        <LevelProgress />
+
+        {/* Level reward */}
+        <div
+          className="animate-fade-slide-up"
+          style={{ animationDelay: "0.2s" }}
+        >
+          <LevelReward />
+        </div>
+
+        {/* Network Settings */}
+        <div
+          className="bg-white rounded-[28px] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden animate-fade-slide-up"
+          style={{ animationDelay: "0.22s" }}
+        >
+          <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#FAB12F"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[11px] text-gray-400 font-black uppercase tracking-wider">
+                  Network
+                </p>
+                <p className="text-gray-900 font-black text-[13px]">
+                  네트워크 설정
+                </p>
+              </div>
+            </div>
+            <div className="px-2.5 py-1 rounded-lg bg-gray-50 text-[10px] font-black text-gray-400 uppercase">
+              {useUserStore((state) =>
+                state.selectedNetwork === "OPT" ? "Optimism" : "Base"
+              )}
+            </div>
+          </div>
+          <div className="p-4 flex gap-2">
+            {(["OPT", "BASE"] as const).map((net) => {
+              const isActive =
+                useUserStore((state) => state.selectedNetwork) === net;
+              return (
+                <button
+                  key={net}
+                  onClick={() =>
+                    useUserStore.getState().setSelectedNetwork(net)
+                  }
+                  className={`btn-press flex-1 py-3.5 rounded-[18px] font-black text-[14px] transition-all border-none ${
+                    isActive
+                      ? "bg-main text-white shadow-lg shadow-main/25"
+                      : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    {isActive && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    )}
+                    {net === "OPT" ? "Optimism" : "Base"}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="px-5 pb-4">
+            <p className="text-[11px] text-gray-400 font-bold leading-relaxed">
+              * 선택한 네트워크의 토큰 주소로 서명 및 지갑 등록이 진행됩니다.
+            </p>
+          </div>
+        </div>
+
+        {/* Community activity */}
+        <div
+          className="bg-white rounded-[28px] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden animate-fade-slide-up"
+          style={{ animationDelay: "0.25s" }}
+        >
+          <div className="px-5 pt-5 pb-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              Activity
+            </p>
+            <h2 className="text-gray-900 font-black text-[16px] mt-0.5">
+              내 커뮤니티 활동
+            </h2>
+          </div>
+          {ACTIVITY_BUTTONS.map(({ label, tab, icon }, i) => (
+            <div key={tab}>
+              <button
+                onClick={() => navigate(`/my/activity/${tab}`)}
+                className="btn-press w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors border-none bg-transparent"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-main/8 flex items-center justify-center text-main">
+                    {icon}
+                  </div>
+                  <span className="text-gray-800 font-black text-[14px]">
+                    {label}
+                  </span>
+                </div>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9CA3AF"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
+              {i < ACTIVITY_BUTTONS.length - 1 && (
+                <div className="h-px bg-gray-50 mx-5" />
+              )}
+            </div>
           ))}
         </div>
-      </div>
 
-      <div className="caption text-center flex justify-center w-full text-grey-main">
-        지급 오류 또는 지연 관련 문의는
-        <span className="text-main"> 다음 링크 </span>를 이용해 주세요.
+        {/* Support link */}
+        <p className="text-center text-[12px] text-gray-400 font-bold pb-4">
+          지급 오류 또는 지연 관련 문의는{" "}
+          <span className="text-main font-black underline underline-offset-2 cursor-pointer">
+            다음 링크
+          </span>
+          를 이용해 주세요.
+        </p>
       </div>
     </div>
   );

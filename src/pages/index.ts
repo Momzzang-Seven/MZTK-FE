@@ -13,6 +13,7 @@ export { default as RecordAuth } from "./RecordAuth";
 export { default as LocationRegister } from "./LocationRegister";
 export { default as Err404 } from "./Err404";
 export { default as Leaderboard } from "./Leaderboard";
+export { default as Notifications } from "./Notifications";
 export { default as Community } from "./community/Community";
 export { default as FreeBoard } from "./community/FreeBoard";
 export { default as QuestionBoard } from "./community/QuestionBoard";

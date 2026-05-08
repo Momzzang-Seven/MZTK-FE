@@ -105,78 +105,119 @@ const CreateWallet = () => {
   }, [authPin, pin, confirmPin, step, finalize]);
 
   return (
-    <FullScreenPage className="overflow-hidden">
-      {step === "AUTH_PIN" && (
-        <PinPad
-          title="기존 PIN 번호 인증"
-          desc="새 지갑을 생성하기 위해 기존에 설정한 PIN 번호를 입력해주세요"
-          pin={authPin}
-          onInput={(n) => setAuthPin((p) => p + n)}
-          onDelete={() => setAuthPin((p) => p.slice(0, -1))}
-        />
-      )}
+    <FullScreenPage className="overflow-hidden bg-white">
+      {/* ── Background Decoration ── */}
+      <div className="absolute top-[-10%] left-[-10%] w-[80%] h-[40%] bg-main opacity-[0.03] blur-[120px] rounded-full pointer-events-none" />
 
-      {step === "SHOW" && (
-        <MnemonicDisplay
-          mnemonics={mnemonics}
-          onNext={() => setStep("VERIFY")}
-        />
-      )}
+      <div className="relative z-10 h-full flex flex-col">
+        {step === "AUTH_PIN" && (
+          <PinPad
+            title="기존 PIN 번호 인증"
+            desc="새 지갑을 생성하기 위해 기존에 설정한 PIN 번호를 입력해주세요"
+            pin={authPin}
+            onInput={(n) => setAuthPin((p) => p + n)}
+            onDelete={() => setAuthPin((p) => p.slice(0, -1))}
+          />
+        )}
 
-      {step === "VERIFY" && (
-        <MnemonicVerify
-          userInputs={userInputs}
-          emptyIndices={emptyIndices}
-          onChange={(i, v) => {
-            const next = [...userInputs];
-            next[i] = v;
-            setUserInputs(next);
-          }}
-          onVerify={handleVerify}
-        />
-      )}
+        {step === "SHOW" && (
+          <MnemonicDisplay
+            mnemonics={mnemonics}
+            onNext={() => setStep("VERIFY")}
+          />
+        )}
 
-      {(step === "PIN_SET" || step === "PIN_CONFIRM") && (
-        <PinPad
-          title={
-            step === "PIN_SET"
-              ? "PIN 번호를 등록해주세요"
-              : "PIN 번호를 확인해주세요"
-          }
-          pin={step === "PIN_SET" ? pin : confirmPin}
-          onInput={(n) =>
-            step === "PIN_SET"
-              ? setPin((p) => p + n)
-              : setConfirmPin((p) => p + n)
-          }
-          onDelete={() =>
-            step === "PIN_SET"
-              ? setPin((p) => p.slice(0, -1))
-              : setConfirmPin((p) => p.slice(0, -1))
-          }
-        />
-      )}
+        {step === "VERIFY" && (
+          <MnemonicVerify
+            userInputs={userInputs}
+            emptyIndices={emptyIndices}
+            onChange={(i, v) => {
+              const next = [...userInputs];
+              next[i] = v;
+              setUserInputs(next);
+            }}
+            onVerify={handleVerify}
+          />
+        )}
 
-      {step === "SUCCESS" && (
-        <WalletSuccessSection
-          description={
-            <>
-              비밀 복구 구문을 안전하게 보관할 책임은 <br /> 본인에게 있습니다.
-            </>
-          }
-          onConfirm={() => navigate("/home")}
-        >
-          <div className="bg-gray-50 p-6 rounded-2xl mb-2">
-            <p className="body-bold text-black mb-3">안전한 보관 관련 팁</p>
-            <ul className="text-[12.5px] text-color-grey-deep space-y-1.5 list-disc pl-4">
-              <li>백업을 여러 장소에 보관하세요.</li>
-              <li>구문을 누구와도 공유하지 마세요.</li>
-              <li>피싱에 유의하세요.</li>
-              <li>저희 서비스에선 비밀 복구 구문을 복구할 수 없습니다.</li>
-            </ul>
-          </div>
-        </WalletSuccessSection>
-      )}
+        {(step === "PIN_SET" || step === "PIN_CONFIRM") && (
+          <PinPad
+            title={
+              step === "PIN_SET"
+                ? "PIN 번호를 등록해주세요"
+                : "PIN 번호를 확인해주세요"
+            }
+            desc={
+              step === "PIN_SET"
+                ? "지갑 사용 시 필요한 6자리 보안 번호입니다."
+                : "앞서 입력한 PIN 번호와 동일하게 입력해 주세요."
+            }
+            pin={step === "PIN_SET" ? pin : confirmPin}
+            onInput={(n) =>
+              step === "PIN_SET"
+                ? setPin((p) => p + n)
+                : setConfirmPin((p) => p + n)
+            }
+            onDelete={() =>
+              step === "PIN_SET"
+                ? setPin((p) => p.slice(0, -1))
+                : setConfirmPin((p) => p.slice(0, -1))
+            }
+          />
+        )}
+
+        {step === "SUCCESS" && (
+          <WalletSuccessSection
+            description={
+              <>
+                비밀 복구 구문을 안전하게 보관할 책임은 <br />
+                <span className="text-gray-900 font-black">
+                  본인에게 있습니다.
+                </span>
+              </>
+            }
+            onConfirm={() => navigate("/home")}
+          >
+            <div className="bg-gray-50/50 border border-gray-100 p-6 rounded-[24px] mb-2">
+              <p className="text-[14px] font-black text-gray-900 mb-3 flex items-center gap-2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#FAB12F"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+                안전한 보관 관련 팁
+              </p>
+              <ul className="text-[12.5px] text-gray-400 font-bold space-y-2.5 list-none">
+                <li className="flex gap-2">
+                  <span className="text-main">•</span>
+                  백업을 여러 장소에 보관하세요.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-main">•</span>
+                  구문을 누구와도 공유하지 마세요.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-main">•</span>
+                  피싱 및 스캠 사이트에 유의하세요.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-main">•</span>
+                  저희 서비스에선 비밀 구문을 복구할 수 없습니다.
+                </li>
+              </ul>
+            </div>
+          </WalletSuccessSection>
+        )}
+      </div>
 
       {modal && (
         <CommonModal

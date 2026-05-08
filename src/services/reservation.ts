@@ -68,6 +68,12 @@ export interface RejectReservationRequest {
   rejectionReason: string;
 }
 
+export interface CursorSlice<T> {
+  reservations: T[];
+  nextCursor: string | null;
+  hasNext: boolean;
+}
+
 const unwrap = <T>(response: { data: { data: T } }) => response.data.data;
 
 export const getClassReservationInfo = async (
@@ -91,12 +97,14 @@ export const createClassReservation = async (
 };
 
 export const getMyReservations = async (
-  status?: MarketplaceReservationStatus
-): Promise<ReservationSummary[]> => {
+  status?: MarketplaceReservationStatus,
+  cursor?: string,
+  size: number = 10
+): Promise<CursorSlice<ReservationSummary>> => {
   const response = await api.get("/marketplace/me/reservations", {
-    params: { status },
+    params: { status, cursor, size },
   });
-  return unwrap<ReservationSummary[]>(response);
+  return unwrap<CursorSlice<ReservationSummary>>(response);
 };
 
 export const getReservationDetail = async (
@@ -125,12 +133,14 @@ export const completeMyReservation = async (
 };
 
 export const getTrainerReservations = async (
-  status?: MarketplaceReservationStatus
-): Promise<ReservationSummary[]> => {
+  status?: MarketplaceReservationStatus,
+  cursor?: string,
+  size: number = 10
+): Promise<CursorSlice<ReservationSummary>> => {
   const response = await api.get("/marketplace/trainer/reservations", {
-    params: { status },
+    params: { status, cursor, size },
   });
-  return unwrap<ReservationSummary[]>(response);
+  return unwrap<CursorSlice<ReservationSummary>>(response);
 };
 
 export const getTrainerReservationDetail = async (

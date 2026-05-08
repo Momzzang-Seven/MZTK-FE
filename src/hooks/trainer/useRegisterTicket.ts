@@ -60,6 +60,7 @@ export const useRegisterTicket = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isCheckingStore, setIsCheckingStore] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     category: EXERCISE_CATEGORIES[1],
@@ -271,8 +272,7 @@ export const useRegisterTicket = () => {
         classTimes,
       });
 
-      alert("클래스가 성공적으로 등록되었습니다!");
-      navigate("/trainer/list");
+      setIsSuccessModalOpen(true);
     } catch (error) {
       const err = error as {
         response?: { data?: { message?: string } };
@@ -302,12 +302,11 @@ export const useRegisterTicket = () => {
   const isSubmitDisabled =
     isCheckingStore ||
     isSubmitting ||
-    !formData.title ||
+    !formData.title.trim() ||
     !formData.price ||
     !formData.capacity ||
-    !formData.description ||
-    !formData.duration ||
-    !formData.supplies ||
+    !formData.description.trim() ||
+    !formData.duration.trim() ||
     formData.operatingDays.length === 0;
 
   return {
@@ -330,5 +329,7 @@ export const useRegisterTicket = () => {
     isSubmitDisabled,
     isCheckingStore,
     isSubmitting,
+    isSuccessModalOpen,
+    setIsSuccessModalOpen,
   };
 };

@@ -46,7 +46,7 @@ interface TicketFormProps {
 
 /**
  * 클래스 등록/수정 공통 폼 컴포넌트
- * UI Style: RegisterTicket의 InfoStep 스타일을 그대로 이식
+ * UI Style: Luxury Minimalist (Refined)
  */
 const TicketForm = ({
   mode,
@@ -65,8 +65,16 @@ const TicketForm = ({
   onSubmit,
   isSubmitting = false,
 }: TicketFormProps) => {
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    desc: string;
+    variant?: "error" | "success" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    desc: "",
+  });
 
   const texts =
     mode === "create"
@@ -75,8 +83,12 @@ const TicketForm = ({
 
   const handleSubmit = async () => {
     if (formData.operatingDays.length === 0) {
-      setErrorMessage("최소 하나 이상의 운영 요일을 선택해 주세요.");
-      setShowErrorModal(true);
+      setModalState({
+        isOpen: true,
+        title: "운영 요일 미선택",
+        desc: "최소 하나 이상의 운영 요일을 선택해 주세요.",
+        variant: "error",
+      });
       return;
     }
 
@@ -84,8 +96,12 @@ const TicketForm = ({
       (day: string) => formData.operatingTimes[day].length === 0
     );
     if (hasNoTimeRegistered) {
-      setErrorMessage("선택한 운영 요일의 클래스 시작 시간을 추가해 주세요.");
-      setShowErrorModal(true);
+      setModalState({
+        isOpen: true,
+        title: "시간 미입력",
+        desc: "선택한 운영 요일의 클래스 시작 시간을 추가해 주세요.",
+        variant: "error",
+      });
       return;
     }
 
@@ -96,335 +112,360 @@ const TicketForm = ({
         response?: { data?: { message?: string } };
         message?: string;
       };
-      const backendErrorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
-        "서버 요청 중 오류가 발생했습니다. 다시 시도해주세요.";
-      setErrorMessage(backendErrorMessage);
-      setShowErrorModal(true);
+      setModalState({
+        isOpen: true,
+        title: mode === "create" ? "등록 실패" : "수정 실패",
+        desc:
+          err?.response?.data?.message ||
+          err?.message ||
+          "서버 요청 중 오류가 발생했습니다.",
+        variant: "error",
+      });
     }
   };
 
+  // Custom Image Change Handler with Modal instead of alert
+  const onImageChangeWrapper = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (imagePreviews.length + files.length > 5) {
+      setModalState({
+        isOpen: true,
+        title: "이미지 개수 초과",
+        desc: "클래스 이미지는 최대 5장까지 등록 가능합니다.",
+        variant: "warning",
+      });
+      return;
+    }
+    handleImageChange(e);
+  };
+
   return (
-    <div className="flex flex-col h-full bg-white pb-20 animate-in fade-in duration-500">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen">
       <TrainerHeader title={texts.TITLE} showBack />
 
-      <div className="flex-1 overflow-y-auto">
-        {/* 1. Instagram Style Top Section (Thumbnail + Description) */}
-        <div className="flex px-4 py-5 gap-4 border-b border-gray-100">
-          <button
-            onClick={triggerFileInput}
-            className="w-24 aspect-square rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100 shadow-sm relative group"
-          >
-            {imagePreviews.length > 0 ? (
-              <>
+      <div className="flex-1 overflow-y-auto pb-32 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        {/* 1. Media Section */}
+        <section className="px-5 py-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-1 h-4 bg-main rounded-full" />
+            <h2 className="text-[15px] font-black text-gray-900 tracking-tight">
+              클래스 미디어
+            </h2>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+            <button
+              onClick={triggerFileInput}
+              className="w-24 h-24 rounded-[22px] bg-white border-2 border-dashed border-gray-100 flex flex-col items-center justify-center shrink-0 active:scale-95 transition-all group hover:border-main/30"
+            >
+              <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mb-1.5 group-hover:bg-amber-50">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#D1D5DB"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="group-hover:stroke-main"
+                >
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </div>
+              <span className="text-[10px] font-black text-gray-400">
+                {imagePreviews.length} / 5
+              </span>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={onImageChangeWrapper}
+                accept="image/*"
+                multiple
+                className="hidden"
+              />
+            </button>
+
+            {imagePreviews.map((preview, idx) => (
+              <div
+                key={idx}
+                className="relative w-24 h-24 rounded-[22px] overflow-hidden border border-gray-100 shadow-sm shrink-0"
+              >
                 <img
-                  src={imagePreviews[0]}
-                  alt="Thumbnail"
+                  src={preview}
+                  alt="preview"
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="text-[10px] text-white font-bold font-main">
-                    변경
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center opacity-40">
-                <img
-                  src="/icon/camera.svg"
-                  alt="camera"
-                  className="w-6 h-6 mb-1"
-                />
-                <span className="text-[10px] font-bold">사진</span>
+                {idx === 0 && (
+                  <div className="absolute top-2 left-2 px-2 py-0.5 bg-main text-white text-[8px] font-black rounded-full uppercase tracking-widest">
+                    Cover
+                  </div>
+                )}
               </div>
-            )}
+            ))}
+          </div>
+        </section>
+
+        {/* 2. Basic Info Section */}
+        <section className="px-5 py-6 flex flex-col gap-6">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-1 h-4 bg-main rounded-full" />
+            <h2 className="text-[15px] font-black text-gray-900 tracking-tight">
+              클래스 정보
+            </h2>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[12px] font-black text-gray-400 ml-1">
+              제목
+            </label>
             <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageChange}
-              accept="image/*"
-              multiple
-              className="hidden"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.TITLE}
+              className="w-full h-14 rounded-[20px] bg-white border border-gray-100 px-5 text-[15px] font-bold text-gray-900 outline-none focus:border-main/30 shadow-sm transition-all"
             />
-          </button>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.DESC}
-            className="flex-1 py-1 text-[15px] outline-none resize-none leading-relaxed placeholder:text-gray-300"
-            rows={4}
-          />
-        </div>
+          </div>
 
-        <div className="flex flex-col">
-          {/* 2. 기본 정보 섹션 - Grids & Labels */}
-          <div className="px-5 py-6 flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <label className="text-[12px] font-black text-gray-400 ml-1">
+              설명
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.DESC}
+              rows={4}
+              className="w-full rounded-[20px] bg-white border border-gray-100 p-5 text-[15px] font-bold text-gray-900 outline-none focus:border-main/30 shadow-sm transition-all resize-none leading-relaxed"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-                {CREATE_TICKET_TEXT.LABELS.TITLE}
+              <label className="text-[12px] font-black text-gray-400 ml-1">
+                카테고리
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full h-14 rounded-[20px] bg-white border border-gray-100 px-5 text-[15px] font-bold text-gray-900 outline-none appearance-none"
+              >
+                {EXERCISE_CATEGORIES.filter((cat) => cat.key !== "ALL").map(
+                  (cat) => (
+                    <option key={cat.key} value={cat.key}>
+                      {cat.label}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[12px] font-black text-gray-400 ml-1">
+                가격 (MZTK)
               </label>
               <input
-                name="title"
-                value={formData.title}
+                name="price"
+                type="number"
+                value={formData.price}
                 onChange={handleChange}
-                placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.TITLE}
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[15px] outline-none border border-transparent focus:border-main/30 focus:bg-white transition-all shadow-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-                  {CREATE_TICKET_TEXT.LABELS.CATEGORY}
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[15px] outline-none border border-transparent focus:border-main/30 focus:bg-white transition-all shadow-sm appearance-none"
-                >
-                  {EXERCISE_CATEGORIES.filter((cat) => cat !== "전체").map(
-                    (cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-                  {CREATE_TICKET_TEXT.LABELS.PRICE}
-                </label>
-                <div className="relative">
-                  <input
-                    name="price"
-                    type="number"
-                    value={formData.price}
-                    onChange={handleChange}
-                    placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.PRICE}
-                    className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[15px] outline-none border border-transparent focus:border-main/30 focus:bg-white transition-all shadow-sm pr-14"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-main font-bold text-xs">
-                    MZTK
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-                  {CREATE_TICKET_TEXT.LABELS.CAPACITY}
-                </label>
-                <input
-                  name="capacity"
-                  type="number"
-                  value={formData.capacity}
-                  onChange={handleChange}
-                  placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.CAPACITY}
-                  className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[15px] outline-none border border-transparent focus:border-main/30 focus:bg-white transition-all shadow-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-                  {CREATE_TICKET_TEXT.LABELS.DURATION}
-                </label>
-                <input
-                  name="duration"
-                  value={formData.duration}
-                  onChange={handleChange}
-                  placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.DURATION}
-                  className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[15px] outline-none border border-transparent focus:border-main/30 focus:bg-white transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-                {CREATE_TICKET_TEXT.LABELS.SUPPLIES}
-              </label>
-              <input
-                name="supplies"
-                value={formData.supplies}
-                onChange={handleChange}
-                placeholder={CREATE_TICKET_TEXT.PLACEHOLDERS.SUPPLIES}
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-[15px] outline-none border border-transparent focus:border-main/30 focus:bg-white transition-all shadow-sm"
+                placeholder="0"
+                className="w-full h-14 rounded-[20px] bg-white border border-gray-100 px-5 text-[15px] font-black text-main outline-none"
               />
             </div>
           </div>
 
-          {/* 3. 해시태그 섹션 - Gray Background */}
-          <div className="bg-gray-50 px-5 py-6 flex flex-col gap-4">
-            <label className="text-[13px] font-bold text-gray-500">
-              해시태그 (최대 3개)
-            </label>
-            <div className="flex gap-2">
-              {formData.tags.map((tag: string, index: number) => (
-                <div
-                  key={index}
-                  className="flex-1 relative flex items-center bg-white rounded-xl px-3 py-3 shadow-sm border border-gray-100 focus-within:border-main/30 transition-all"
-                >
-                  <span className="text-main font-bold mr-1">#</span>
-                  <input
-                    value={tag}
-                    onChange={(e) => handleTagChange(index, e.target.value)}
-                    placeholder={`태그${index + 1}`}
-                    className="w-full bg-transparent text-sm outline-none"
-                  />
-                </div>
-              ))}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-[12px] font-black text-gray-400 ml-1">
+                최대 인원
+              </label>
+              <input
+                name="capacity"
+                type="number"
+                value={formData.capacity}
+                onChange={handleChange}
+                placeholder="0"
+                className="w-full h-14 rounded-[20px] bg-white border border-gray-100 px-5 text-[15px] font-bold text-gray-900 outline-none"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[12px] font-black text-gray-400 ml-1">
+                진행 시간 (분)
+              </label>
+              <input
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                placeholder="60"
+                className="w-full h-14 rounded-[20px] bg-white border border-gray-100 px-5 text-[15px] font-bold text-gray-900 outline-none"
+              />
             </div>
           </div>
+        </section>
 
-          {/* 4. 프로그램 특징 섹션 */}
-          <div className="px-5 py-8 flex flex-col gap-5">
-            <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-              {CREATE_TICKET_TEXT.LABELS.FEATURES}
-            </label>
+        {/* 3. Features & Tags Section */}
+        <section className="px-5 py-6 flex flex-col gap-8">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-1 h-4 bg-main rounded-full" />
+              <h2 className="text-[15px] font-black text-gray-900 tracking-tight">
+                프로그램 특징
+              </h2>
+            </div>
             <div className="flex flex-col gap-3">
-              {formData.features.map((feature: string, index: number) => (
-                <div key={index} className="flex gap-3 items-center group">
-                  <span className="text-main font-black text-lg w-6 opacity-40 group-focus-within:opacity-100 transition-opacity">
-                    {index + 1}
-                  </span>
+              {formData.features.map((feature, index) => (
+                <div key={index} className="relative">
                   <input
                     value={feature}
                     onChange={(e) => handleFeatureChange(index, e.target.value)}
-                    placeholder={
-                      index === 0 ? CREATE_TICKET_TEXT.PLACEHOLDERS.FEATURE : ""
-                    }
-                    className="flex-1 bg-white border-b border-gray-100 py-3 text-[15px] outline-none focus:border-main transition-colors"
+                    placeholder={`특징 ${index + 1}`}
+                    className="w-full h-12 bg-white border-b border-gray-100 px-1 text-[14px] font-bold text-gray-800 outline-none focus:border-main/40 transition-all"
                   />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* 5. 스케줄 섹션 - Gray Background */}
-          <div className="bg-gray-50 px-5 py-8 flex flex-col gap-8 pb-32">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-                  {CREATE_TICKET_TEXT.LABELS.OPERATING_DAYS}
-                </label>
-                <p className="text-[11px] text-gray-400">
-                  {CREATE_TICKET_TEXT.LABELS.OPERATING_DAYS_DESC}
-                </p>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-1 h-4 bg-main rounded-full" />
+              <h2 className="text-[15px] font-black text-gray-900 tracking-tight">
+                검색 태그
+              </h2>
+            </div>
+            <div className="flex gap-2">
+              {formData.tags.map((tag, index) => (
+                <div
+                  key={index}
+                  className="flex-1 flex items-center h-12 bg-white border border-gray-100 rounded-xl px-3 group focus-within:border-main/30 transition-all"
+                >
+                  <span className="text-main font-black text-sm mr-1.5 opacity-40">
+                    #
+                  </span>
+                  <input
+                    value={tag}
+                    onChange={(e) => handleTagChange(index, e.target.value)}
+                    placeholder="태그"
+                    className="w-full bg-transparent text-[13px] font-bold outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Schedule Section */}
+        <section className="px-5 py-6 flex flex-col gap-6 bg-gray-50/50">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-1 h-4 bg-main rounded-full" />
+            <h2 className="text-[15px] font-black text-gray-900 tracking-tight">
+              스케줄 관리
+            </h2>
+          </div>
+
+          <div className="flex justify-between items-center gap-2 px-1">
+            {["월", "화", "수", "목", "금", "토", "일"].map((day) => {
+              const isSelected = formData.operatingDays.includes(day);
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => handleDayToggle(day)}
+                  className={`w-10 h-10 rounded-full font-black text-[13px] transition-all flex items-center justify-center shadow-sm ${isSelected ? "bg-main text-white scale-110" : "bg-white text-gray-300"}`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+
+          {formData.operatingDays.map((day) => (
+            <div
+              key={day}
+              className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm animate-in zoom-in-95 duration-300"
+            >
+              <div className="flex items-center justify-between mb-3 border-b border-gray-50 pb-3">
+                <span className="text-[14px] font-black text-gray-800">
+                  {day}요일 클래스
+                </span>
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    id={`time-${day}`}
+                    className="bg-gray-50 border-none rounded-lg px-2 py-1.5 text-xs font-bold outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.getElementById(
+                        `time-${day}`
+                      ) as HTMLInputElement;
+                      if (input?.value) {
+                        handleAddTime(day, input.value);
+                        input.value = "";
+                      }
+                    }}
+                    className="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-[11px] font-black btn-press"
+                  >
+                    추가
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-between items-center gap-2">
-                {["월", "화", "수", "목", "금", "토", "일"].map((day) => {
-                  const isSelected = formData.operatingDays.includes(day);
-                  return (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => handleDayToggle(day)}
-                      className={`w-10 h-10 rounded-full font-bold text-sm transition-all flex items-center justify-center shadow-sm ${isSelected ? "bg-main text-white scale-110" : "bg-white text-gray-400 hover:bg-gray-100"}`}
+
+              <div className="flex flex-wrap gap-2">
+                {formData.operatingTimes[day].length === 0 ? (
+                  <p className="text-[11px] text-gray-300 font-bold py-1">
+                    추가된 시간이 없습니다.
+                  </p>
+                ) : (
+                  formData.operatingTimes[day].map((time) => (
+                    <div
+                      key={time}
+                      className="flex items-center gap-2 bg-amber-50 text-main px-3 py-1.5 rounded-xl text-[12px] font-black border border-main/10 group"
                     >
-                      {day}
-                    </button>
-                  );
-                })}
+                      <span>
+                        {time}{" "}
+                        {formData.duration &&
+                          `~ ${calculateEndTime(time, formData.duration)}`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTime(day, time)}
+                        className="hover:text-red-500 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-
-            {formData.operatingDays.length > 0 && (
-              <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-top duration-300">
-                <div className="flex flex-col gap-1 border-t border-gray-200 pt-6">
-                  <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">
-                    {CREATE_TICKET_TEXT.LABELS.OPERATING_HOURS}
-                  </label>
-                  <p className="text-[11px] text-gray-400">
-                    {CREATE_TICKET_TEXT.LABELS.OPERATING_HOURS_DESC}
-                  </p>
-                </div>
-
-                {["월", "화", "수", "목", "금", "토", "일"]
-                  .filter((day) => formData.operatingDays.includes(day))
-                  .map((day) => (
-                    <div
-                      key={day}
-                      className="flex flex-col gap-3 p-4 bg-white rounded-2xl shadow-sm border border-gray-100"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="text-base font-black text-gray-800 w-6">
-                          {day}
-                        </div>
-                        <div className="flex flex-1 gap-2">
-                          <input
-                            type="time"
-                            id={`time-${day}`}
-                            className="flex-1 bg-gray-50 border border-transparent rounded-xl py-2.5 px-3 text-sm font-medium outline-none focus:bg-white focus:border-main/20"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const input = document.getElementById(
-                                `time-${day}`
-                              ) as HTMLInputElement;
-                              if (input && input.value) {
-                                handleAddTime(day, input.value);
-                                input.value = "";
-                              }
-                            }}
-                            className="bg-main text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-main/20 active:scale-95 transition-all"
-                          >
-                            추가
-                          </button>
-                        </div>
-                      </div>
-
-                      {formData.operatingTimes[day].length > 0 && (
-                        <div className="flex flex-wrap gap-2 pl-10">
-                          {formData.operatingTimes[day].map((time: string) => (
-                            <div
-                              key={time}
-                              className="flex items-center gap-1.5 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg text-[12px] font-bold border border-gray-100 group"
-                            >
-                              <span>
-                                {formData.duration
-                                  ? `${time} ~ ${calculateEndTime(time, formData.duration)}`
-                                  : time}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveTime(day, time)}
-                                className="text-gray-300 hover:text-red-500 transition-colors"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        </div>
+          ))}
+        </section>
       </div>
 
-      {/* 하단 버튼 섹션 - Sticky */}
-      <div className="p-5 border-t border-gray-100 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.02)] fixed bottom-[82px] left-0 right-0 z-50 w-full max-w-[420px] mx-auto">
+      {/* Fixed Footer */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] p-5 bg-white/90 backdrop-blur-md border-t border-gray-100 z-50">
         <CommonButton
           label={isSubmitting ? "저장 중..." : texts.SUBMIT}
-          className="h-[60px] rounded-2xl title shadow-sm active:scale-95 transition-all font-bold"
           onClick={handleSubmit}
           disabled={isSubmitDisabled || isSubmitting}
+          className="h-[60px] rounded-[22px] shadow-lg shadow-main/10 font-black text-[16px]"
         />
       </div>
 
-      {/* Error Modal */}
-      {showErrorModal && (
+      {/* Integrated Modals */}
+      {modalState.isOpen && (
         <CommonModal
-          title={mode === "create" ? "등록 실패" : "수정 실패"}
-          desc={errorMessage}
+          variant={modalState.variant}
+          title={modalState.title}
+          desc={modalState.desc}
           confirmLabel="확인"
-          onConfirmClick={() => setShowErrorModal(false)}
+          onConfirmClick={() => setModalState({ ...modalState, isOpen: false })}
         />
       )}
     </div>

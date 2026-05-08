@@ -20,6 +20,7 @@ import {
   FreePostDetail,
   QuestionDetail,
   Leaderboard,
+  Notifications,
   CreateWallet,
   RegisterWallet,
   AdminLogin,
@@ -54,7 +55,10 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
-  const { user, checkAnalysisCompletion } = useUserStore();
+  const user = useUserStore((state) => state.user);
+  const checkAnalysisCompletion = useUserStore(
+    (state) => state.checkAnalysisCompletion
+  );
 
   useEffect(() => {
     // Skip analysis completion check for ADMIN users or unauthenticated users
@@ -116,6 +120,7 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/verify" element={<Verify />} />
                     <Route path="/leaderboard" element={<Leaderboard />} />
+                    <Route path="/notifications" element={<Notifications />} />
                     <Route path="/community" element={<Community />}>
                       <Route index element={<Navigate to="free" replace />} />
                       <Route path="free" element={<FreeBoard />} />

@@ -85,6 +85,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingSlotIds, setExistingSlotIds] = useState<
     Record<string, number>
@@ -354,12 +355,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
         });
       }
 
-      window.alert(
-        mode === "edit"
-          ? "클래스가 성공적으로 수정되었습니다."
-          : "클래스가 성공적으로 등록되었습니다."
-      );
-      navigate("/trainer/list", { replace: true });
+      setIsSuccessModalOpen(true);
     } catch (error) {
       console.error("Failed to submit ticket form", error);
       const message = axios.isAxiosError(error)
@@ -379,7 +375,6 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
     !formData.capacity ||
     !formData.description ||
     !formData.duration ||
-    !formData.supplies ||
     formData.operatingDays.length === 0;
 
   return {
@@ -399,5 +394,8 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
     isSubmitDisabled,
     isSubmitting,
     isLoading,
+    isSuccessModalOpen,
+    setIsSuccessModalOpen,
+    navigate,
   };
 };
