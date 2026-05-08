@@ -9,6 +9,7 @@ import Market from "@pages/market/Market";
 import MarketDetail from "@pages/market/MarketDetail";
 import MarketPurchase from "@pages/market/MarketPurchase";
 import MarketReservation from "@pages/market/MarketReservation";
+import TrainerReservations from "@pages/trainer/TrainerReservations";
 import AdminDashboard from "@pages/admin/Dashboard";
 import UserManagement from "@pages/admin/UserManagement";
 import PostManagement from "@pages/admin/PostManagement";
@@ -21,6 +22,16 @@ const {
   mockFetchUsers,
   mockGetMarketClasses,
   mockGetMarketplaceClassDetail,
+  mockGetClassReservationInfo,
+  mockCreateClassReservation,
+  mockGetMyReservations,
+  mockGetReservationDetail,
+  mockCancelMyReservation,
+  mockCompleteMyReservation,
+  mockGetTrainerReservations,
+  mockGetTrainerReservationDetail,
+  mockApproveTrainerReservation,
+  mockRejectTrainerReservation,
   mockLocationStoreState,
   mockLevelUp,
   mockSearchPosts,
@@ -36,6 +47,16 @@ const {
   mockFetchUsers: vi.fn(),
   mockGetMarketClasses: vi.fn(),
   mockGetMarketplaceClassDetail: vi.fn(),
+  mockGetClassReservationInfo: vi.fn(),
+  mockCreateClassReservation: vi.fn(),
+  mockGetMyReservations: vi.fn(),
+  mockGetReservationDetail: vi.fn(),
+  mockCancelMyReservation: vi.fn(),
+  mockCompleteMyReservation: vi.fn(),
+  mockGetTrainerReservations: vi.fn(),
+  mockGetTrainerReservationDetail: vi.fn(),
+  mockApproveTrainerReservation: vi.fn(),
+  mockRejectTrainerReservation: vi.fn(),
   mockLocationStoreState: {
     coor: null as { lat: number; lng: number } | null,
   },
@@ -149,6 +170,16 @@ const sampleAdminUser = {
 vi.mock("@services", () => ({
   getMarketClasses: mockGetMarketClasses,
   getMarketplaceClassDetail: mockGetMarketplaceClassDetail,
+  getClassReservationInfo: mockGetClassReservationInfo,
+  createClassReservation: mockCreateClassReservation,
+  getMyReservations: mockGetMyReservations,
+  getReservationDetail: mockGetReservationDetail,
+  cancelMyReservation: mockCancelMyReservation,
+  completeMyReservation: mockCompleteMyReservation,
+  getTrainerReservations: mockGetTrainerReservations,
+  getTrainerReservationDetail: mockGetTrainerReservationDetail,
+  approveTrainerReservation: mockApproveTrainerReservation,
+  rejectTrainerReservation: mockRejectTrainerReservation,
 }));
 
 vi.mock("@hooks", () => ({
@@ -247,6 +278,78 @@ beforeEach(() => {
     totalElements: 1,
   });
   mockGetMarketplaceClassDetail.mockResolvedValue(sampleClassDetail);
+  mockGetClassReservationInfo.mockResolvedValue({
+    classId: 101,
+    classTitle: "아침 PT 클래스",
+    trainerId: 7,
+    priceAmount: 300,
+    durationMinutes: 50,
+    availableDates: [
+      {
+        date: "2026-05-04",
+        availableTimes: [
+          {
+            slotId: 1,
+            startTime: "10:00:00",
+            capacity: 4,
+            availableCapacity: 3,
+          },
+        ],
+      },
+    ],
+  });
+  mockCreateClassReservation.mockResolvedValue({
+    reservationId: 1,
+    status: "PENDING",
+  });
+  mockGetMyReservations.mockResolvedValue([]);
+  mockGetReservationDetail.mockResolvedValue({
+    reservationId: 1,
+    slotId: 1,
+    trainerId: 7,
+    userId: 2,
+    reservationDate: "2026-05-04",
+    reservationTime: "10:00:00",
+    durationMinutes: 50,
+    status: "PENDING",
+    userRequest: null,
+    orderId: null,
+    txHash: null,
+    createdAt: "2026-05-01T00:00:00",
+    updatedAt: "2026-05-01T00:00:00",
+  });
+  mockCancelMyReservation.mockResolvedValue({
+    reservationId: 1,
+    status: "USER_CANCELLED",
+  });
+  mockCompleteMyReservation.mockResolvedValue({
+    reservationId: 1,
+    status: "SETTLED",
+  });
+  mockGetTrainerReservations.mockResolvedValue([]);
+  mockGetTrainerReservationDetail.mockResolvedValue({
+    reservationId: 1,
+    slotId: 1,
+    trainerId: 7,
+    userId: 2,
+    reservationDate: "2026-05-04",
+    reservationTime: "10:00:00",
+    durationMinutes: 50,
+    status: "PENDING",
+    userRequest: null,
+    orderId: null,
+    txHash: null,
+    createdAt: "2026-05-01T00:00:00",
+    updatedAt: "2026-05-01T00:00:00",
+  });
+  mockApproveTrainerReservation.mockResolvedValue({
+    reservationId: 1,
+    status: "APPROVED",
+  });
+  mockRejectTrainerReservation.mockResolvedValue({
+    reservationId: 1,
+    status: "REJECTED",
+  });
 });
 
 describe("주요 페이지 smoke test", () => {
@@ -286,7 +389,9 @@ describe("주요 페이지 smoke test", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(`${VERIFY_TEXT.DISTANCE_PREFIX}0${VERIFY_TEXT.DISTANCE_UNIT}`)
+        screen.getByText(
+          `${VERIFY_TEXT.DISTANCE_PREFIX}0${VERIFY_TEXT.DISTANCE_UNIT}`
+        )
       ).toBeInTheDocument();
     });
     expect(
@@ -410,11 +515,27 @@ describe("주요 페이지 smoke test", () => {
     }
   });
 
-  it("마켓 예약 내역 화면이 탭과 빈 상태를 렌더링한다", () => {
+  it("마켓 예약 내역 화면이 탭과 빈 상태를 렌더링한다", async () => {
     renderWithRouter(<MarketReservation />, "/market/reservations");
 
     expect(screen.getByText("다가오는 클래스")).toBeInTheDocument();
     expect(screen.getByText("지난 클래스")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("예정된 클래스가 없습니다.")).toBeInTheDocument();
+    });
+  });
+
+  it("트레이너 예약 확인 화면이 탭과 빈 상태를 렌더링한다", async () => {
+    renderWithRouter(<TrainerReservations />, "/trainer/reservations");
+
+    expect(screen.getByText("예약 확인하기")).toBeInTheDocument();
+    expect(screen.getByText("승인 대기")).toBeInTheDocument();
+    expect(screen.getByText("확정 예약")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByText("승인 대기 중인 예약이 없습니다")
+      ).toBeInTheDocument();
+    });
   });
 
   it("관리자 대시보드가 주요 카드와 차트 영역을 렌더링한다", () => {

@@ -30,6 +30,7 @@ dist-ssr
 /playwright-report/
 /test-results/
 /blob-report/
+/output/
 
 # Temporary logs and reports
 *.txt

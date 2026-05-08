@@ -8,6 +8,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -22,7 +24,11 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
+      "prettier --write",
       "eslint --fix"
+    ],
+    "*.{js,jsx,json,css,md,html,yml,yaml}": [
+      "prettier --write"
     ]
   },
   "dependencies": {
