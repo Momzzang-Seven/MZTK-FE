@@ -192,10 +192,10 @@ const Market = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2.5 rounded-full text-[13px] font-black whitespace-nowrap transition-all duration-300 shadow-sm border ${
+                  className={`px-5 py-2 rounded-full text-[12px] font-black whitespace-nowrap transition-all duration-300 border ${
                     isSelected
-                      ? "bg-gray-900 text-white border-gray-900 shadow-xl shadow-gray-900/10 scale-105"
-                      : "bg-white text-gray-400 border-gray-100"
+                      ? "bg-gray-900 text-white border-gray-900 shadow-lg shadow-gray-900/10"
+                      : "bg-white text-gray-400 border-gray-100 hover:bg-gray-50"
                   }`}
                 >
                   {tab}

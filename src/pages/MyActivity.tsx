@@ -151,10 +151,10 @@ const MyActivity = () => {
           <button
             key={t}
             onClick={() => handleTabSwitch(t)}
-            className={`btn-press flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[12px] font-black transition-all border-none ${
+            className={`btn-press flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black transition-all border-none ${
               activeTab === t
-                ? "bg-main text-white shadow-md shadow-main/25"
-                : "bg-white text-gray-400 shadow-sm"
+                ? "bg-main text-white shadow-lg shadow-main/20"
+                : "bg-white text-gray-400 shadow-sm border border-gray-50"
             }`}
           >
             <span className={activeTab === t ? "opacity-100" : "opacity-50"}>
@@ -171,10 +171,10 @@ const MyActivity = () => {
           <button
             key={key}
             onClick={() => switchType(key)}
-            className={`btn-press px-3.5 py-1.5 rounded-xl text-[12px] font-black transition-all border-none ${
+            className={`btn-press px-3 py-1 rounded-lg text-[11px] font-black transition-all border-none ${
               activeType === key
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-400 shadow-sm"
+                ? "bg-gray-900 text-white shadow-md shadow-gray-900/10"
+                : "bg-white text-gray-400 shadow-sm border border-gray-50"
             }`}
           >
             {label}
