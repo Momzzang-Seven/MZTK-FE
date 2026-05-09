@@ -3,6 +3,8 @@ import { PhotoUploader } from "@components/common/PhotoUploader";
 import { RecordAnalyzing } from "@components/record/RecordAnalyzing";
 import { RECORD_TEXT } from "@constant/record";
 import { useWorkoutVerification } from "@hooks/useWorkoutVerification";
+import { AuthSuccessOverlay } from "@components/common/AuthSuccessOverlay";
+import { useNavigate } from "react-router-dom";
 
 const RecordAuth = () => {
   const {
@@ -12,10 +14,24 @@ const RecordAuth = () => {
     hasSelectedFile,
     handleFileChange,
     handleUpload,
+    successData,
   } = useWorkoutVerification({
     mode: "record",
     alertNoFileText: RECORD_TEXT.ALERT_NO_FILE,
   });
+
+  const navigate = useNavigate();
+
+  if (successData) {
+    return (
+      <AuthSuccessOverlay
+        title="운동 기록 인증 성공!"
+        subTitle="AI가 운동 기록 캡처본을 성공적으로 분석했습니다"
+        rewardXp={successData.grantedXp}
+        onClose={() => navigate("/")}
+      />
+    );
+  }
 
   const icon = (
     <svg

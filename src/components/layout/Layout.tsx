@@ -10,6 +10,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const hideFooterPages = [
     "/login",
+    "/callback",
     "/onboarding",
     "/register",
     "/create-wallet",

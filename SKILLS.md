@@ -25,8 +25,7 @@
 
 ### 폰트
 
-- **Pretendard Variable** — 본문 폰트 (CDN)
-- **GMarketSans Bold** — 강조 폰트 (CDN)
+- **Pretendard Variable** — 통합 폰트 (CDN)
 
 ### 디자인 토큰 (`src/index.css` `@theme`)
 

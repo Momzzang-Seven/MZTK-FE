@@ -3,6 +3,8 @@ import { PhotoUploader } from "@components/common/PhotoUploader";
 import { ExerciseAnalyzing } from "@components/exercise/ExerciseAnalyzing";
 import { EXERCISE_TEXT } from "@constant/exercise";
 import { useWorkoutVerification } from "@hooks/useWorkoutVerification";
+import { AuthSuccessOverlay } from "@components/common/AuthSuccessOverlay";
+import { useNavigate } from "react-router-dom";
 
 const ExerciseAuth = () => {
   const {
@@ -12,10 +14,24 @@ const ExerciseAuth = () => {
     hasSelectedFile,
     handleFileChange,
     handleUpload,
+    successData,
   } = useWorkoutVerification({
     mode: "exercise",
     alertNoFileText: EXERCISE_TEXT.ALERT_NO_FILE,
   });
+
+  const navigate = useNavigate();
+
+  if (successData) {
+    return (
+      <AuthSuccessOverlay
+        title="운동 사진 인증 성공!"
+        subTitle="AI가 운동 사진을 성공적으로 분석했습니다"
+        rewardXp={successData.grantedXp}
+        onClose={() => navigate("/")}
+      />
+    );
+  }
 
   const icon = (
     <svg

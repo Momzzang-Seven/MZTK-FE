@@ -54,6 +54,8 @@ import Onboarding from "./pages/Onboarding";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+import { AdminRedirectModal } from "@components/auth/AdminRedirectModal";
+
 function App() {
   const user = useUserStore((state) => state.user);
   const checkAnalysisCompletion = useUserStore(
@@ -106,6 +108,7 @@ function App() {
             <Layout>
               <div className="flex flex-1 w-full mx-auto h-full bg-white flex flex-col relative overflow-hidden max-w-[450px]">
                 <GlobalSnackbar />
+                <AdminRedirectModal />
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/login" element={<Login />} />

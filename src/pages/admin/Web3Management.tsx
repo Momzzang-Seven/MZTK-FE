@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAdminStore, useUserStore, useConfirmModalStore } from "@store";
 import { CommonButton } from "@components/common";
 import { ADMIN_TEXT } from "@constant/admin";
@@ -52,7 +52,7 @@ const Web3Management = () => {
   const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
   const { ETHERSCAN_URL, EXPLORER_TX_URL } = getNetworkConfig();
 
-  const fetchWalletActivity = async () => {
+  const fetchWalletActivity = useCallback(async () => {
     if (!MONITOR_ADDRESS || isPollingSuspended) return;
     setFetching(true);
     try {
@@ -81,7 +81,13 @@ const Web3Management = () => {
     } finally {
       setFetching(false);
     }
-  };
+  }, [
+    MONITOR_ADDRESS,
+    isPollingSuspended,
+    ETHERSCAN_URL,
+    selectedChainId,
+    ETHERSCAN_API_KEY,
+  ]);
 
   useEffect(() => {
     if (isPollingSuspended) return;
@@ -95,7 +101,12 @@ const Web3Management = () => {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [selectedChainId, isPollingSuspended]);
+  }, [
+    selectedChainId,
+    isPollingSuspended,
+    fetchWalletActivity,
+    fetchTreasuryKeys,
+  ]);
 
   const handleConfirm = (id?: number) => {
     const targetId = id || Number(txId);

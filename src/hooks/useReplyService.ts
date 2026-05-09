@@ -40,13 +40,13 @@ export const useReplyService = <T extends Comment>(parentId: number) => {
         setIsLoading(false);
       }
     },
-    [page]
+    [parentId, page]
   );
 
   const loadMore = useCallback(() => {
     if (isLoading || isLast) return;
     getReplies(false);
-  }, [isLoading, isLast, page, getReplies]);
+  }, [isLoading, isLast, getReplies]);
 
   const refetch = useCallback(async () => {
     await getReplies(true);

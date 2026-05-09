@@ -190,30 +190,6 @@ const Login = () => {
         <div className="absolute top-[-5%] left-[-5%] w-[100%] h-[40%] bg-main opacity-[0.03] blur-[100px] rounded-full" />
       </div>
 
-      {/* ── Top Logo ── */}
-      <div className="pt-16 pb-6 flex flex-col items-center z-20">
-        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-main to-orange-500 flex items-center justify-center shadow-xl shadow-main/20 mb-2.5">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-            <path d="M4 22h16" />
-            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-          </svg>
-        </div>
-        <span className="text-gray-400 text-[10px] font-black tracking-[0.4em] uppercase">
-          MZTK Platform
-        </span>
-      </div>
-
       {/* ── Main Hero Section ── */}
       <div className="flex-1 flex flex-col items-center justify-center px-10 relative z-10">
         <div className="mb-12 transition-all duration-700">
