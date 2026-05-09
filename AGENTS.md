@@ -1,6 +1,6 @@
 # AGENTS.md — MZTK_FE 에이전트 지침서
 
-> **최종 업데이트:** 2026-03-16
+> **최종 업데이트:** 2026-05-09
 
 ---
 
@@ -142,3 +142,30 @@ src/
 - **관리자 분리**: `/admin` prefix, 별도 `AdminLayout`, 별도 `adminStore`
 - **모바일 전용**: 유저 라우트 `max-w-[450px]` 강제
 - **Vite proxy**: 개발환경에서 `/auth`, `/users`, `/api` → `localhost:8080` 프록시
+
+---
+
+## DESIGN SYSTEM: LUXURY MINIMALIST
+
+### Core Philosophy
+
+"불필요한 요소를 덜어내고, 공백과 그림자를 통해 깊이감을 부여하는 프리미엄 미니멀리즘"
+
+### Visual Elements
+
+- **Immersive Header**: 스크롤 시 유리 질감(`backdrop-blur-xl`)으로 변하며, 배경과 경계가 모호한 상단 디자인.
+- **Glass-morphism**: 반투명 배경(`bg-white/90`), 미세한 테두리(`border-white/50`), 강력한 블러 효과.
+- **Premium Shadow**: 단순한 `shadow-md` 대신 중첩된 그림자(`shadow-[0_20px_50px_rgba(0,0,0,0.04)]`) 사용.
+- **Typography**: `font-black` (900)을 사용하여 정보 계층을 극명하게 구분.
+
+### Component Rules
+
+- **Header**: `RegisterHeader`, `CommonHeader` 등 몰입형 헤더 필수 사용.
+- **Buttons**: `active:scale-95 transition-all`을 통한 즉각적인 피드백.
+- **Radius**: 과감한 라운드 처리 (`rounded-[32px]`, `rounded-full`).
+- **Icons**: `lucide-react`를 사용하되, `strokeWidth={3}` 또는 그라데이션 배경과 조합.
+
+### Motion UX
+
+- `animate-in fade-in slide-in-from-bottom-4 duration-700` 패턴을 모든 페이지 진입 시 적용.
+- 상태 변화 시 `transition-all duration-500`을 통해 부드러운 전환 보장.

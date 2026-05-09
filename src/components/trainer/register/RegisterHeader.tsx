@@ -35,6 +35,7 @@ const RegisterHeader = ({
       <div className="sticky top-10 z-[100] px-6 h-0 flex items-center justify-between pointer-events-none">
         <button
           onClick={onBack}
+          aria-label="back"
           className="w-12 h-12 bg-white/90 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-[0_10px_35px_rgba(0,0,0,0.12)] border border-white/50 active:scale-95 transition-all pointer-events-auto"
         >
           <ChevronLeft size={26} className="text-gray-900" />
