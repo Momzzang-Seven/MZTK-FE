@@ -37,7 +37,9 @@ describe("AuthActionButtons", () => {
 
     render(<AuthActionButtons onExerciseClick={onExerciseClick} />);
 
-    const exerciseButton = screen.getByRole("button", { name: /운동 인증/i });
+    const exerciseButton = screen.getByRole("button", {
+      name: /운동 분석 중/i,
+    });
 
     expect(screen.getByText(/운동 분석 중/i)).toBeInTheDocument();
     expect(exerciseButton).toBeDisabled();
