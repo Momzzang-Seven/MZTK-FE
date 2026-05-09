@@ -136,6 +136,7 @@ const CreateWallet = () => {
               next[i] = v;
               setUserInputs(next);
             }}
+            onBulkChange={setUserInputs}
             onVerify={handleVerify}
           />
         )}
