@@ -129,8 +129,13 @@ describe("RecordAuth Page", () => {
         grantedXp: 100,
         exerciseDate: "2026-04-25",
       });
-      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
     });
+
+    // 성공 오버레이에서 '확인' 버튼 클릭
+    const confirmBtn = screen.getByRole("button", { name: /확인/ });
+    fireEvent.click(confirmBtn);
+
+    expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
   });
 
   it("운동 기록 인증이 거절되면 한글 오류 문구를 표시한다", async () => {
