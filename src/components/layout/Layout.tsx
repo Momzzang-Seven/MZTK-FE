@@ -33,9 +33,17 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     "/trainer/register-ticket",
     "/trainer/create",
     "/trainer/edit",
+    "/market/",
+    "/market/reservations",
     "/market/purchase",
     "/market/review",
+    "/verify",
+    "/my/activity",
+    "/mytkntx",
+    "/my-tkn-history",
     "/verify-wallet",
+    "/leaderboard",
+    "/notifications",
   ];
   const showHeaderPages: string[] = [];
   const shouldShowHeader = showHeaderPages.includes(location.pathname);

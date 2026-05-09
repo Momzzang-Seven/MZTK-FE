@@ -5,10 +5,12 @@ import { MapView } from "@components/verify";
 import { VerifyStatusOverlay } from "@components/verify/VerifyStatusOverlay";
 import { CommonModal } from "@components/common";
 import { AuthSuccessOverlay } from "@components/common/AuthSuccessOverlay";
+import { LocationLoadingOverlay } from "@components/location/LocationLoadingOverlay";
 
 import { useNavigate } from "react-router-dom";
 import { getDistanceFromLatLonInMeters } from "@utils/geo";
 import { LOCATION_CONSTANTS, VERIFY_TEXT } from "@constant/location";
+import { ChevronLeft, MapPin, Navigation, Info } from "lucide-react";
 
 const Verify = () => {
   const MAP_KEY = import.meta.env.VITE_GOOGLE_MAP_API;
@@ -22,6 +24,7 @@ const Verify = () => {
   const [failMsg, setFailMsg] = useState("");
   const [distance, setDistance] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isMapLoading, setIsMapLoading] = useState(true);
 
   const { coor, setCoor } = useLocationStore();
   const { gymLocation, completeExercise } = useUserStore();
@@ -76,7 +79,7 @@ const Verify = () => {
         if (result.isVerified) {
           completeExercise(result.grantedXp || 100);
           setSuccessModalOpen(true);
-          setTimeout(() => navigate("/"), 2000);
+          setTimeout(() => navigate("/"), 2500);
         } else {
           setFailMsg(result.xpGrantMessage || VERIFY_TEXT.MODAL_FAIL_TITLE);
           setFailModalOpen(true);
@@ -98,65 +101,56 @@ const Verify = () => {
     distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS;
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] relative">
-      {/* ── Floating Header ── */}
-      <div className="absolute top-0 left-0 right-0 z-20 px-5 pt-10 pb-4">
-        <div className="flex items-center justify-between">
-          {/* Back */}
+    <div className="flex flex-col h-screen bg-[#FDFDFD] relative overflow-hidden font-pretendard">
+      {/* ── Loading State ── */}
+      {isMapLoading && <LocationLoadingOverlay />}
+
+      {/* ── Persistent Sticky Header ── */}
+      <div className="sticky top-6 z-[100] px-6 h-0 pointer-events-none">
+        <div className="flex items-center justify-between pointer-events-auto">
           <button
             onClick={() => navigate("/")}
-            className="btn-press w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md shadow-lg flex items-center justify-center border-none"
+            className="w-12 h-12 bg-white/90 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-white/50 active:scale-90 transition-all"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#111827"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="m15 18-6-6 6-6" />
-            </svg>
+            <ChevronLeft size={26} className="text-gray-900" />
           </button>
 
-          {/* Title chip */}
-          <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl px-4 py-2.5 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#F97316"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
+          <div className="bg-white/90 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] rounded-[20px] px-5 py-2.5 flex items-center gap-2.5 border border-white/50 animate-in slide-in-from-top-4 duration-700">
+            <div className="w-8 h-8 rounded-xl bg-main/10 flex items-center justify-center">
+              <MapPin size={16} className="text-main" />
             </div>
-            <span className="text-gray-900 font-black text-[14px]">
+            <span className="text-gray-900 font-black text-[14px] tracking-tight">
               {VERIFY_TEXT.TITLE}
             </span>
-          </div>
-
-          {/* Distance badge */}
-          <div
-            className={`px-3 py-2 rounded-xl text-[12px] font-black backdrop-blur-md shadow-lg ${
-              isNear ? "bg-green-500 text-white" : "bg-white/90 text-gray-500"
-            }`}
-          >
-            {distance !== null ? `${distance}m` : "측정 중"}
           </div>
         </div>
       </div>
 
-      {/* ── Map ── */}
-      <div className="flex-1 w-full relative">
-        <MapView center={coor} mapKey={MAP_KEY} mapId={MAP_ID} />
+      {/* ── Full Background Map ── */}
+      <div className="flex-1 w-full relative z-10">
+        <MapView
+          center={coor}
+          mapKey={MAP_KEY}
+          mapId={MAP_ID}
+          onMapLoad={() => setTimeout(() => setIsMapLoading(false), 1000)}
+        />
+
+        {/* Distance Indicator floating on map */}
+        {!isMapLoading && (
+          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 animate-in fade-in zoom-in-95 duration-700">
+            <div
+              className={`px-5 py-2 rounded-full backdrop-blur-md shadow-xl border text-[13px] font-black flex items-center gap-2 transition-all duration-500 ${
+                isNear
+                  ? "bg-green-500 border-green-400 text-white"
+                  : "bg-white/80 border-white text-gray-500"
+              }`}
+            >
+              <Navigation size={14} className={isNear ? "animate-pulse" : ""} />
+              {distance !== null ? `${distance}m` : "측정 중..."}
+            </div>
+          </div>
+        )}
+
         <VerifyStatusOverlay
           gymLocation={gymLocation}
           distance={distance}
@@ -164,39 +158,54 @@ const Verify = () => {
         />
       </div>
 
-      {/* ── CTA Button (floating above footer) ── */}
-      <div className="absolute bottom-[100px] left-0 right-0 px-5 z-20">
-        <button
-          onClick={handleVerify}
-          disabled={isVerifying}
-          className={`btn-press w-full py-4 rounded-[20px] font-black text-[16px] border-none transition-all shadow-xl ${
-            isNear && !isVerifying
-              ? "bg-main text-white shadow-main/30"
-              : "bg-white text-gray-400 shadow-gray-100/50"
-          }`}
-        >
-          {isVerifying ? (
-            <div className="flex items-center justify-center gap-2">
-              <svg
-                className="animate-spin"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-              인증 중...
+      {/* ── Bottom Action Card ── */}
+      <div className="absolute bottom-10 left-6 right-6 z-[100] animate-in slide-in-from-bottom-10 duration-700 delay-300">
+        <div className="bg-white/90 backdrop-blur-2xl rounded-[32px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white flex flex-col gap-5">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-500 ${isNear ? "bg-green-50" : "bg-orange-50"}`}
+            >
+              <Info
+                size={20}
+                className={isNear ? "text-green-500" : "text-main"}
+              />
             </div>
-          ) : isNear ? (
-            VERIFY_TEXT.BTN_VERIFY
-          ) : (
-            VERIFY_TEXT.BTN_MOVE_TO_RANGE
-          )}
-        </button>
+            <div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                Verification Status
+              </p>
+              <p className="text-[14px] font-black text-gray-800 leading-tight">
+                {isNear
+                  ? "인증 가능한 범위에 있습니다"
+                  : "운동 장소로 이동해주세요"}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleVerify}
+            disabled={isVerifying}
+            className={`w-full py-5 rounded-2xl font-black text-[16px] transition-all duration-500 shadow-xl flex items-center justify-center gap-3 active:scale-[0.98] ${
+              isNear && !isVerifying
+                ? "bg-main text-white shadow-main/30"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {isVerifying ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                <span>데이터 검증 중...</span>
+              </>
+            ) : isNear ? (
+              <>
+                <CheckCircle2 size={20} strokeWidth={3} />
+                <span>{VERIFY_TEXT.BTN_VERIFY}</span>
+              </>
+            ) : (
+              <span>{VERIFY_TEXT.BTN_MOVE_TO_RANGE}</span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ── Modals ── */}
@@ -238,5 +247,8 @@ const Verify = () => {
     </div>
   );
 };
+
+// Mock Lucide components if needed or import correctly
+import { CheckCircle2 } from "lucide-react";
 
 export default Verify;

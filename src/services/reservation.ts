@@ -45,16 +45,28 @@ export interface ReservationMutationResponse {
   status: MarketplaceReservationStatus;
 }
 
+export interface ReservationTime {
+  hour: number;
+  minute: number;
+  second: number;
+  nano: number;
+}
+
 export interface ReservationSummary {
   reservationId: number;
   slotId: number;
   trainerId: number;
   userId: number;
   reservationDate: string;
-  reservationTime: string;
+  reservationTime: ReservationTime;
   durationMinutes: number;
   status: MarketplaceReservationStatus;
   userRequest: string | null;
+  classTitle: string;
+  trainerNickname: string;
+  userNickname: string;
+  priceAmount: number;
+  thumbnailFinalObjectKey: string | null;
 }
 
 export interface ReservationDetail extends ReservationSummary {

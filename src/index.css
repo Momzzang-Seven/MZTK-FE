@@ -91,14 +91,10 @@ p {
 }
 
 button {
-  border-radius: 4px;
-  font-size: 18px;
-  font-weight: 800;
+  font-size: inherit;
   font-family: inherit;
+  font-weight: 800;
   cursor: pointer;
-}
-button:disabled {
-  background-color: #e2dfdb;
 }
 
 ::-webkit-scrollbar {

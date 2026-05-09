@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 import { CommonButton, CommonModal } from "@components/common";
-import { SimpleHeader } from "@components/layout";
+import { getKoreanErrorMessage } from "@constant";
+import axios from "axios";
 import {
   createClassReservation,
   getClassReservationInfo,
@@ -44,13 +46,18 @@ const MarketPurchase = () => {
   > | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState("");
   const [selectedDate, setSelectedDate] =
     useState<AvailableReservationDate | null>(null);
   const [selectedTime, setSelectedTime] =
     useState<AvailableReservationTime | null>(null);
   const [requestMsg, setRequestMsg] = useState("");
-  const [modalState, setModalState] = useState({
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    desc: string;
+    variant?: "success" | "error" | "warning" | "info";
+    onConfirm?: () => void;
+  }>({
     isOpen: false,
     title: "",
     desc: "",
@@ -59,7 +66,6 @@ const MarketPurchase = () => {
   useEffect(() => {
     const classId = Number(id);
     if (!Number.isFinite(classId)) {
-      setLoadError("클래스를 찾을 수 없습니다.");
       setIsLoading(false);
       return;
     }
@@ -75,10 +81,15 @@ const MarketPurchase = () => {
         if (isMounted) {
           setData(detailResponse);
           setReservationInfo(reservationInfoResponse);
-          setLoadError("");
         }
       } catch {
-        if (isMounted) setLoadError("클래스 정보를 불러오지 못했습니다.");
+        if (isMounted) {
+          setModalState({
+            isOpen: true,
+            title: "정보 로드 실패",
+            desc: "클래스 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+          });
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -119,6 +130,7 @@ const MarketPurchase = () => {
     try {
       setIsSubmitting(true);
       const signatures = getReservationSignatures();
+
       await createClassReservation(classId, {
         slotId: selectedTime.slotId,
         reservationDate: selectedDate.date,
@@ -127,12 +139,26 @@ const MarketPurchase = () => {
         signedAmount: reservationInfo.priceAmount,
         ...signatures,
       });
-      navigate("/market/reservations");
-    } catch {
+
+      // Show success modal
       setModalState({
         isOpen: true,
-        title: "예약 실패",
-        desc: "예약 요청을 처리하지 못했습니다.",
+        title: "예약 성공!",
+        desc: "수업 예약이 성공적으로 완료되었습니다.<br/>트레이너의 승인을 기다려 주세요.",
+        variant: "success",
+        onConfirm: () => navigate("/market/reservations"),
+      });
+    } catch (error) {
+      const axiosError = axios.isAxiosError(error) ? error : null;
+      const code = axiosError?.response?.data?.code;
+      const message = axiosError?.response?.data?.message;
+      setModalState({
+        isOpen: true,
+        title: "결제 실패",
+        desc:
+          getKoreanErrorMessage(code, message) ||
+          "예약 요청을 처리하지 못했습니다. 다시 시도해 주세요.",
+        variant: "error",
       });
     } finally {
       setIsSubmitting(false);
@@ -150,27 +176,45 @@ const MarketPurchase = () => {
     );
   }
 
-  if (loadError || !data || !reservationInfo) {
+  // 데이터가 없을 때의 기본 빈 상태 (모달이 띄워질 것임)
+  if (!data || !reservationInfo) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center p-10 gap-6">
-        <p className="text-[14px] font-black text-gray-400 text-center">
-          {loadError || "클래스를 찾을 수 없습니다."}
-        </p>
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative">
         <button
           onClick={() => navigate(-1)}
-          className="px-8 py-3 bg-gray-900 text-white font-black text-[13px] rounded-2xl"
+          className="fixed top-6 left-6 z-[100] w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100/50"
         >
-          뒤로 가기
+          <ChevronLeft size={26} className="text-gray-900" />
         </button>
+        {modalState.isOpen && (
+          <CommonModal
+            title={modalState.title}
+            desc={modalState.desc}
+            confirmLabel="확인"
+            onConfirmClick={() => {
+              setModalState({ ...modalState, isOpen: false });
+              navigate(-1);
+            }}
+          />
+        )}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen">
-      <SimpleHeader />
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative">
+      {/* Floating Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-6 left-6 z-[100] w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100/50 cursor-pointer active:scale-95 transition-all group"
+      >
+        <ChevronLeft
+          size={26}
+          className="text-gray-900 group-hover:text-main transition-colors"
+        />
+      </button>
 
-      <div className="flex-1 overflow-y-auto px-5 pt-10 pb-40 flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex-1 overflow-y-auto px-5 pt-24 pb-40 flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* 1. Summary Card */}
         <section className="bg-white rounded-[28px] p-7 shadow-2xl shadow-gray-200/40 border border-gray-50 flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
@@ -341,7 +385,11 @@ const MarketPurchase = () => {
           title={modalState.title}
           desc={modalState.desc}
           confirmLabel="확인"
-          onConfirmClick={() => setModalState({ ...modalState, isOpen: false })}
+          variant={modalState.variant}
+          onConfirmClick={() => {
+            if (modalState.onConfirm) modalState.onConfirm();
+            setModalState({ ...modalState, isOpen: false });
+          }}
         />
       )}
     </div>
