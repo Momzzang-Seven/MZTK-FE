@@ -28,7 +28,7 @@ const ExerciseAuth = () => {
         title="운동 사진 인증 성공!"
         subTitle="AI가 운동 사진을 성공적으로 분석했습니다"
         rewardXp={successData.grantedXp}
-        onClose={() => navigate("/")}
+        onClose={() => navigate("/", { replace: true })}
       />
     );
   }

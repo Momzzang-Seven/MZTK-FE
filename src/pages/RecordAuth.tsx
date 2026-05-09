@@ -28,7 +28,7 @@ const RecordAuth = () => {
         title="운동 기록 인증 성공!"
         subTitle="AI가 운동 기록 캡처본을 성공적으로 분석했습니다"
         rewardXp={successData.grantedXp}
-        onClose={() => navigate("/")}
+        onClose={() => navigate("/", { replace: true })}
       />
     );
   }
