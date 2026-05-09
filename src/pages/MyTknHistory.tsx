@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store";
 import { ethers } from "ethers";
+import { getNetworkConfig } from "@utils/network";
 
 interface TokenTx {
   id: string;
@@ -25,23 +26,14 @@ const MyTknHistory = () => {
     }
 
     setLoading(true);
+    const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL } =
+      getNetworkConfig(selectedNetwork);
     const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
 
-    // 네트워크별 설정 선택
-    const isBase = selectedNetwork === "BASE";
-    const TOKEN_ADDRESS = isBase
-      ? import.meta.env.VITE_BASE_SEPOLIA_TOKEN_ADDRESS
-      : import.meta.env.VITE_OPT_SEPOLIA_TOKEN_ADDRESS;
+    // Etherscan V2 API: 단일 엔드포인트에 chainid 파라미터 추가
+    const fetchUrl = `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&address=${user.walletAddress}&page=1&offset=50&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
 
-    // Etherscan API URL은 현재 Optimism용으로 고정되어 있을 수 있으므로 환경변수 확인
-    // 실제 운영 시에는 네트워크별 API URL이 필요함
-    const ETHERSCAN_API_URL = isBase
-      ? "https://api-sepolia.basescan.org/api"
-      : "https://api-sepolia-optimistic.etherscan.io/api";
-
-    fetch(
-      `${ETHERSCAN_API_URL}?module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&address=${user.walletAddress}&page=1&offset=50&sort=desc&apikey=${ETHERSCAN_API_KEY}`
-    )
+    fetch(fetchUrl)
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "1") {
