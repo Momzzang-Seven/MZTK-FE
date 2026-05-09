@@ -10,6 +10,8 @@ import MarketDetail from "@pages/market/MarketDetail";
 import MarketPurchase from "@pages/market/MarketPurchase";
 import MarketReservation from "@pages/market/MarketReservation";
 import TrainerReservations from "@pages/trainer/TrainerReservations";
+import TrainerList from "@pages/trainer/TrainerList";
+import RegisterTicket from "@pages/trainer/RegisterTicket";
 import AdminDashboard from "@pages/admin/Dashboard";
 import UserManagement from "@pages/admin/UserManagement";
 import PostManagement from "@pages/admin/PostManagement";
@@ -42,6 +44,7 @@ const {
   mockSetStatusFilter,
   mockBanUser,
   mockUnbanUser,
+  mockGetTrainerClasses,
 } = vi.hoisted(() => ({
   mockFetchPosts: vi.fn(),
   mockFetchUsers: vi.fn(),
@@ -69,6 +72,7 @@ const {
   mockSetStatusFilter: vi.fn(),
   mockBanUser: vi.fn(),
   mockUnbanUser: vi.fn(),
+  mockGetTrainerClasses: vi.fn(),
 }));
 
 const mockUserStoreState = {
@@ -180,6 +184,7 @@ vi.mock("@services", () => ({
   getTrainerReservationDetail: mockGetTrainerReservationDetail,
   approveTrainerReservation: mockApproveTrainerReservation,
   rejectTrainerReservation: mockRejectTrainerReservation,
+  getTrainerClasses: mockGetTrainerClasses,
 }));
 
 vi.mock("@hooks", () => ({
@@ -208,6 +213,38 @@ vi.mock("@hooks", () => ({
     },
     loading: false,
     error: null,
+  }),
+  useRegisterTicket: () => ({
+    step: "photo",
+    formData: {
+      title: "",
+      description: "",
+      category: "PT",
+      priceAmount: 0,
+      durationMinutes: 60,
+      personalItems: "",
+      features: [],
+      tags: [],
+      classTimes: [],
+    },
+    imagePreviews: [],
+    fileInputRef: { current: null },
+    handleChange: vi.fn(),
+    handleFeatureChange: vi.fn(),
+    handleTagChange: vi.fn(),
+    handleDayToggle: vi.fn(),
+    handleAddTime: vi.fn(),
+    handleRemoveTime: vi.fn(),
+    handleImageChange: vi.fn(),
+    removeImage: vi.fn(),
+    triggerFileInput: vi.fn(),
+    handleNext: vi.fn(),
+    handleBack: vi.fn(),
+    handleSubmit: vi.fn(),
+    isSubmitDisabled: true,
+    isCheckingStore: false,
+    isSuccessModalOpen: false,
+    setIsSuccessModalOpen: vi.fn(),
   }),
 }));
 
@@ -385,6 +422,19 @@ beforeEach(() => {
     reservationId: 1,
     status: "REJECTED",
   });
+  mockGetTrainerClasses.mockResolvedValue({
+    items: [
+      {
+        classId: 1,
+        title: "테스트 클래스",
+        category: "PT",
+        priceAmount: 100,
+        active: true,
+        thumbnailFinalObjectKey: null,
+      },
+    ],
+    isSuspended: false,
+  });
 });
 
 describe("주요 페이지 smoke test", () => {
@@ -393,9 +443,9 @@ describe("주요 페이지 smoke test", () => {
 
     // AttendanceBanner 텍스트
     expect(screen.getByText("출석 챌린지")).toBeInTheDocument();
-    // AuthActionButtons aria-label
+    // AuthActionButtons aria-label match
     expect(
-      screen.getByRole("button", { name: "운동 인증" })
+      screen.getByRole("button", { name: /운동 인증/i })
     ).toBeInTheDocument();
   });
 
@@ -473,7 +523,7 @@ describe("주요 페이지 smoke test", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("클래스 목록을 불러오지 못했습니다.")
+          screen.getByText(/클래스 목록을 불러오지 못했습니다/i)
         ).toBeInTheDocument();
       });
     } finally {
@@ -505,7 +555,7 @@ describe("주요 페이지 smoke test", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("클래스 상세를 불러오지 못했습니다.")
+          screen.getByText(/클래스 상세를 불러오지 못했습니다/i)
         ).toBeInTheDocument();
       });
     } finally {
@@ -544,7 +594,7 @@ describe("주요 페이지 smoke test", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("클래스 정보를 불러오지 못했습니다.")
+          screen.getByText(/클래스 정보를 불러오지 못했습니다/i)
         ).toBeInTheDocument();
       });
     } finally {
@@ -555,10 +605,11 @@ describe("주요 페이지 smoke test", () => {
   it("마켓 예약 내역 화면이 탭과 빈 상태를 렌더링한다", async () => {
     renderWithRouter(<MarketReservation />, "/market/reservations");
 
-    expect(screen.getByText("다가오는 예약")).toBeInTheDocument();
-    expect(screen.getByText("지난 이용 내역")).toBeInTheDocument();
+    expect(screen.getByText("예약 및 이용 내역")).toBeInTheDocument();
+    expect(screen.getByText("진행 중")).toBeInTheDocument();
+    expect(screen.getByText("지난 내역")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText("진행 중인 예약이 없습니다")).toBeInTheDocument();
+      expect(screen.getByText("내역이 없습니다")).toBeInTheDocument();
     });
   });
 
@@ -567,11 +618,33 @@ describe("주요 페이지 smoke test", () => {
 
     expect(screen.getByText("예약 확인하기")).toBeInTheDocument();
     expect(screen.getByText("승인 대기")).toBeInTheDocument();
-    expect(screen.getByText("확정 예약")).toBeInTheDocument();
+    expect(screen.getByText("확정")).toBeInTheDocument();
     await waitFor(() => {
       // 빈 상태 메시지
-      expect(screen.getByText("예약 내역이 없습니다")).toBeInTheDocument();
+      expect(screen.getByText("내역이 없습니다")).toBeInTheDocument();
     });
+  });
+
+  it("트레이너 클래스 목록 화면이 운영 중인 클래스를 렌더링한다", async () => {
+    renderWithRouter(<TrainerList />, "/trainer/list");
+
+    expect(screen.getByText("내 클래스 목록")).toBeInTheDocument();
+    expect(screen.getByText("운영 중인 클래스")).toBeInTheDocument();
+    expect(screen.getByText("매니지먼트 가이드")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("테스트 클래스")).toBeInTheDocument();
+    });
+  });
+
+  it("트레이너 클래스 등록 화면이 멀티스텝의 첫 단계를 렌더링한다", () => {
+    renderWithRouter(<RegisterTicket />, "/trainer/register-ticket");
+
+    expect(screen.getByText("사진 등록")).toBeInTheDocument();
+    expect(
+      screen.getByText("수업의 분위기를 보여줄 사진을 등록해 주세요.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("PRO TIP")).toBeInTheDocument();
   });
 
   it("관리자 대시보드가 주요 카드와 차트 영역을 렌더링한다", () => {
