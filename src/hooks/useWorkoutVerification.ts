@@ -1,5 +1,4 @@
 import { type ChangeEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { imageService } from "@services/image";
 import { verificationService } from "@services/verification";
 import { useUserStore } from "@store/userStore";
@@ -18,7 +17,6 @@ export const useWorkoutVerification = ({
   mode,
   alertNoFileText,
 }: UseWorkoutVerificationOptions) => {
-  const navigate = useNavigate();
   const {
     applyWorkoutVerificationSuccess,
     finishAnalysis,
@@ -29,6 +27,10 @@ export const useWorkoutVerification = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successData, setSuccessData] = useState<{
+    grantedXp: number;
+    exerciseDate: string;
+  } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -83,9 +85,6 @@ export const useWorkoutVerification = ({
       );
 
       startAnalysis(mode);
-      window.setTimeout(() => {
-        navigate("/", { replace: true });
-      }, 500);
 
       const verificationRequest =
         mode === "record"
@@ -106,6 +105,10 @@ export const useWorkoutVerification = ({
               mode,
               grantedXp: result.grantedXp,
               exerciseDate: result.exerciseDate,
+            });
+            setSuccessData({
+              grantedXp: result.grantedXp || 100,
+              exerciseDate: result.exerciseDate || "",
             });
             return;
           }
@@ -137,5 +140,6 @@ export const useWorkoutVerification = ({
     hasSelectedFile: selectedFile !== null,
     handleFileChange,
     handleUpload,
+    successData,
   };
 };

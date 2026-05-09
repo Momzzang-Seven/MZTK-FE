@@ -1,4 +1,4 @@
-import { CommonButton, CommonModal } from "@components/common";
+import { CommonModal } from "@components/common";
 import InfoStep from "@components/trainer/register/InfoStep";
 import PhotoStep from "@components/trainer/register/PhotoStep";
 import RegisterHeader from "@components/trainer/register/RegisterHeader";
@@ -23,10 +23,8 @@ const RegisterTicket = () => {
     triggerFileInput,
     handleNext,
     handleBack,
-    handleSubmit,
     isSubmitDisabled,
     isCheckingStore,
-    isSubmitting,
     isSuccessModalOpen,
     setIsSuccessModalOpen,
   } = useRegisterTicket();
@@ -45,17 +43,25 @@ const RegisterTicket = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white min-h-screen">
-      {step === "photo" && (
-        <div className="flex flex-col flex-1 overflow-y-auto bg-[#FDFDFD]">
-          <RegisterHeader
-            title="클래스 등록"
-            onBack={handleBack}
-            nextLabel="다음"
-            onNext={handleNext}
-            isNextDisabled={imagePreviews.length === 0}
-            step="photo"
-          />
+    <div className="flex flex-col min-h-screen bg-[#FDFDFD] font-pretendard">
+      <RegisterHeader
+        title={step === "photo" ? "사진 등록" : "정보 입력"}
+        desc={
+          step === "photo"
+            ? "수업의 분위기를 보여줄 사진을 등록해 주세요."
+            : "클래스에 대한 상세 정보를 입력해 주세요."
+        }
+        onBack={handleBack}
+        nextLabel={step === "photo" ? "다음으로" : "등록 완료"}
+        onNext={handleNext}
+        isNextDisabled={
+          step === "photo" ? imagePreviews.length === 0 : isSubmitDisabled
+        }
+        step={step}
+      />
+
+      <div className="flex-1 overflow-y-auto">
+        {step === "photo" ? (
           <PhotoStep
             imagePreviews={imagePreviews}
             onImageChange={handleImageChange}
@@ -63,34 +69,19 @@ const RegisterTicket = () => {
             triggerFileInput={triggerFileInput}
             fileInputRef={fileInputRef}
           />
-        </div>
-      )}
-
-      {step === "info" && (
-        <>
-          <div className="flex flex-col flex-1 overflow-y-auto bg-[#F9FAFB]">
-            <RegisterHeader title="상세 정보" onBack={handleBack} step="info" />
-            <InfoStep
-              formData={formData}
-              imagePreviews={imagePreviews}
-              handleChange={handleChange}
-              handleFeatureChange={handleFeatureChange}
-              handleTagChange={handleTagChange}
-              handleDayToggle={handleDayToggle}
-              handleAddTime={handleAddTime}
-              handleRemoveTime={handleRemoveTime}
-            />
-          </div>
-          <div className="p-5 border-t border-gray-100 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.02)] sticky bottom-0 z-50">
-            <CommonButton
-              label={isSubmitting ? "등록 중..." : "등록하기"}
-              className="h-[60px] rounded-[22px] shadow-lg shadow-main/10 active:opacity-90 transition-all font-black text-[16px]"
-              onClick={handleSubmit}
-              disabled={isSubmitDisabled}
-            />
-          </div>
-        </>
-      )}
+        ) : (
+          <InfoStep
+            formData={formData}
+            imagePreviews={imagePreviews}
+            handleChange={handleChange}
+            handleFeatureChange={handleFeatureChange}
+            handleTagChange={handleTagChange}
+            handleDayToggle={handleDayToggle}
+            handleAddTime={handleAddTime}
+            handleRemoveTime={handleRemoveTime}
+          />
+        )}
+      </div>
 
       {isSuccessModalOpen && (
         <CommonModal

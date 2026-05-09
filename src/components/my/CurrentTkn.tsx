@@ -40,7 +40,7 @@ export const CurrentTkn = () => {
 
         {/* Right — balance */}
         <div className="text-right">
-          <p className="text-white font-black text-[28px] leading-none font-gmarket">
+          <p className="text-white font-black text-[28px] leading-none">
             {loading ? (
               <span className="animate-pulse opacity-50">···</span>
             ) : (

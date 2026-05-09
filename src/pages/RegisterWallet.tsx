@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
@@ -55,7 +56,19 @@ const RegisterWallet = () => {
     try {
       const existingWalletAddress = localStorage.getItem("wallet_address");
       if (existingWalletAddress) {
-        await handleUnlinkWallet(existingWalletAddress);
+        try {
+          await handleUnlinkWallet(existingWalletAddress);
+        } catch (unlinkErr: unknown) {
+          // If 404, the wallet is already gone from server, ignore and proceed
+          if (
+            axios.isAxiosError(unlinkErr) &&
+            unlinkErr.response?.status === 404
+          ) {
+            // ignore
+          } else {
+            throw unlinkErr;
+          }
+        }
         localStorage.removeItem("encrypted_wallet");
         localStorage.removeItem("wallet_address");
       }

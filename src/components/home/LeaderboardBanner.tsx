@@ -83,7 +83,7 @@ export const LeaderboardBanner = () => {
             현재 내 순위
           </h4>
           <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-black text-main font-gmarket leading-none">
+            <span className="text-3xl font-black text-main leading-none">
               {myRank || "—"}
             </span>
             <span className="text-xs text-gray-400 font-bold uppercase">

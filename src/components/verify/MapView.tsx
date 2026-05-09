@@ -10,9 +10,10 @@ interface MapViewProps {
   center: { lat: number; lng: number } | null;
   mapKey: string;
   mapId?: string;
+  onMapLoad?: () => void;
 }
 
-export const MapView = ({ center, mapKey, mapId }: MapViewProps) => {
+export const MapView = ({ center, mapKey, mapId, onMapLoad }: MapViewProps) => {
   if (!center) return null;
   const isAutomatedBrowser =
     typeof navigator !== "undefined" && navigator.webdriver;
@@ -31,6 +32,7 @@ export const MapView = ({ center, mapKey, mapId }: MapViewProps) => {
           defaultZoom={18}
           gestureHandling="greedy"
           disableDefaultUI
+          onIdle={() => onMapLoad?.()}
         >
           <RangeCircle center={center} radius={20} />
           <AdvancedMarker position={center}>

@@ -1,6 +1,6 @@
 # SKILLS.md — MZTK_FE 기술 스택 명세
 
-> **최종 업데이트:** 2026-03-16
+> **최종 업데이트:** 2026-05-09
 
 ---
 
@@ -25,8 +25,7 @@
 
 ### 폰트
 
-- **Pretendard Variable** — 본문 폰트 (CDN)
-- **GMarketSans Bold** — 강조 폰트 (CDN)
+- **Pretendard Variable** — 통합 폰트 (CDN)
 
 ### 디자인 토큰 (`src/index.css` `@theme`)
 

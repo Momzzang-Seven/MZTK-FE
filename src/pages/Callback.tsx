@@ -95,11 +95,64 @@ const Callback = () => {
 
   return (
     <>
-      <div className="flex justify-center items-center h-screen flex-col gap-4">
-        <div className="text-xl font-bold">
-          {providerName} 로그인 중입니다...
+      <div className="relative flex flex-col items-center justify-center h-screen bg-[#FDFDFD] overflow-hidden">
+        {/* Luxury Background Accents */}
+        <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-main/5 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute bottom-[-15%] left-[-10%] w-80 h-80 bg-orange-100/10 rounded-full blur-[100px] animate-pulse" />
+
+        <div className="relative z-10 flex flex-col items-center gap-8 animate-fade-in">
+          {/* Refined Spinner Container */}
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-gray-100 border-t-main rounded-full animate-spin shadow-sm" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-2 h-2 bg-main rounded-full animate-ping" />
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-3 text-center">
+            <h1 className="text-gray-900 text-2xl font-black tracking-tight flex items-center gap-2">
+              <span className="text-main">{providerName}</span> 로그인 진행 중
+            </h1>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-gray-400 text-[14px] font-bold tracking-tight">
+                안전하게 계정 정보를 확인하고 있습니다
+              </p>
+              <div className="flex items-center justify-center gap-1">
+                <span
+                  className="w-1 h-1 bg-gray-200 rounded-full animate-bounce"
+                  style={{ animationDelay: "0s" }}
+                />
+                <span
+                  className="w-1 h-1 bg-gray-200 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                />
+                <span
+                  className="w-1 h-1 bg-gray-200 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.4s" }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="text-gray-500">잠시만 기다려주세요.</div>
+
+        {/* Brand Footer */}
+        <div className="absolute bottom-12 flex items-center gap-2.5 opacity-30 grayscale pointer-events-none">
+          <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <span className="font-black text-[12px] tracking-[0.3em] text-gray-900 uppercase">
+            MOMZZANG-7
+          </span>
+        </div>
       </div>
 
       {isErrorModalOpen && (

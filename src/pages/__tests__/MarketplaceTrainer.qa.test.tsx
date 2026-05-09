@@ -255,13 +255,13 @@ describe("예약 외 마켓플레이스/트레이너 QA", () => {
       expect(screen.getByText("아침 PT 클래스")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("수강생에게 노출 중")).toBeInTheDocument();
+    expect(screen.getByText("수강생에게 공개 중")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("checkbox"));
 
     await waitFor(() => {
       expect(mockToggleTrainerClassStatus).toHaveBeenCalledWith(101);
-      expect(screen.getByText("현재 비공개 상태")).toBeInTheDocument();
+      expect(screen.getByText("수강생에게 비공개")).toBeInTheDocument();
     });
   });
 
@@ -272,10 +272,8 @@ describe("예약 외 마켓플레이스/트레이너 QA", () => {
       expect(mockGetTrainerStore).toHaveBeenCalled();
     });
 
-    expect(
-      screen.getByText("클래스 대표 사진을 선택하세요")
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "다음" })).toBeDisabled();
+    expect(screen.getByText("대표 사진을 선택하세요")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다음으로" })).toBeDisabled();
   });
 
   it("클래스 수정 화면은 기존 클래스 정보를 초기값으로 채운다", async () => {

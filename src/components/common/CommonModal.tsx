@@ -114,7 +114,7 @@ export const CommonModal = ({
   const portalTarget = document.getElementById("app-root") ?? document.body;
 
   return createPortal(
-    <div className="z-[9990] fixed inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col justify-center items-center px-6 animate-scale-in">
+    <div className="z-[9990] fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] h-full bg-black/40 backdrop-blur-[2px] flex flex-col justify-center items-center px-6 animate-scale-in">
       <div
         className="w-full max-w-[360px] bg-white rounded-[28px] overflow-hidden shadow-2xl"
         style={{

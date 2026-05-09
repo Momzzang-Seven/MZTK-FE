@@ -9,16 +9,11 @@ export const LevelProgress = () => {
   const maxXp = useUserStore((state) => state.maxXp);
   const levelUp = useUserStore((state) => state.levelUp);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
-  const [animatedXp, setAnimatedXp] = useState(0);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [animatedXp, setAnimatedXp] = useState(xp);
+  const [isLoaded, _setIsLoaded] = useState(true);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setAnimatedXp(xp), 300);
-    const t2 = setTimeout(() => setIsLoaded(true), 100);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    setAnimatedXp(xp);
   }, [xp]);
 
   const percentage = Math.min((animatedXp / maxXp) * 100, 100);
@@ -104,7 +99,7 @@ export const LevelProgress = () => {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-main text-[40px] font-black font-gmarket leading-none tracking-tighter">
+            <span className="text-main text-[32px] font-black leading-none tracking-tighter">
               LV.{level}
             </span>
           </div>

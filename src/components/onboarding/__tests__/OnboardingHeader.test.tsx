@@ -45,7 +45,7 @@ describe("OnboardingHeader", () => {
     render(<OnboardingHeader />);
 
     const heading = screen.getByRole("heading");
-    expect(heading).toHaveClass("font-gmarket", "text-[28px]", "text-black");
+    expect(heading).toHaveClass("font-bold", "text-[28px]", "text-black");
   });
 
   it("설명 스타일 클래스가 적용된다", () => {

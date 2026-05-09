@@ -263,7 +263,12 @@ const TrainerStoreRegister = () => {
   return (
     <div className="relative flex min-h-screen flex-col bg-[#F9FAFB]">
       <TrainerHeader
-        title={hasExistingStore ? "매장 관리" : "매장 등록"}
+        title={hasExistingStore ? "매장 정보 관리" : "신규 매장 등록"}
+        desc={
+          hasExistingStore
+            ? "매장 정보를 최신 상태로 유지해 주세요."
+            : "수강생들이 찾아올 매장 정보를 등록해 주세요."
+        }
         showBack
       />
 

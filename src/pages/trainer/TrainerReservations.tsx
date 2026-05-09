@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import TrainerHeader from "@components/trainer/TrainerHeader";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 import { CommonModal } from "@components/common";
 import {
   getReservationStatusLabel,
-  isReservationPast,
   RESERVATION_STATUS,
+  type ReservationStatus,
 } from "@constant/reservation";
 import {
   approveTrainerReservation,
@@ -12,9 +13,13 @@ import {
   getTrainerReservations,
   rejectTrainerReservation,
 } from "@services";
-import type { ReservationDetail, ReservationSummary } from "@services";
+import type {
+  ReservationDetail,
+  ReservationSummary,
+  ReservationTime,
+} from "@services";
 
-type TrainerReservationTab = "pending" | "approved" | "history";
+type TrainerReservationTab = "pending" | "approved" | "completed" | "cancelled";
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat("ko-KR", {
@@ -23,23 +28,38 @@ const formatDate = (date: string) =>
     weekday: "short",
   }).format(new Date(`${date}T00:00:00`));
 
-const formatTime = (time: string) => time.slice(0, 5);
+const formatTime = (time: ReservationTime | string | null | undefined) => {
+  if (!time) return "--:--";
+  if (typeof time === "string") return time.slice(0, 5);
+  const hh = String(time.hour ?? 0).padStart(2, "0");
+  const mm = String(time.minute ?? 0).padStart(2, "0");
+  return `${hh}:${mm}`;
+};
+
+const formatPrice = (price: number) => {
+  return `${new Intl.NumberFormat("ko-KR").format(price)} MZTK`;
+};
 
 const getStatusBadgeStyles = (status: ReservationSummary["status"]) => {
   switch (status) {
     case RESERVATION_STATUS.PENDING:
-      return "bg-red-50 text-red-500 border-red-100";
+      return "bg-amber-50 text-amber-600 border-amber-100";
     case RESERVATION_STATUS.APPROVED:
       return "bg-main/5 text-main border-main/10";
     case RESERVATION_STATUS.SETTLED:
     case RESERVATION_STATUS.AUTO_SETTLED:
-      return "bg-blue-50 text-blue-600 border-blue-100";
+      return "bg-orange-50 text-orange-700 border-orange-100";
+    case RESERVATION_STATUS.USER_CANCELLED:
+    case RESERVATION_STATUS.REJECTED:
+    case RESERVATION_STATUS.TIMEOUT_CANCELLED:
+      return "bg-gray-100 text-gray-400 border-gray-200";
     default:
       return "bg-gray-50 text-gray-400 border-gray-100";
   }
 };
 
 const TrainerReservations = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TrainerReservationTab>("pending");
   const [reservations, setReservations] = useState<ReservationSummary[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -100,22 +120,57 @@ const TrainerReservations = () => {
       approved: reservations.filter(
         (r) => r.status === RESERVATION_STATUS.APPROVED
       ).length,
-      history: reservations.filter((r) => isReservationPast(r.status)).length,
+      completed: reservations.filter(
+        (r) =>
+          r.status === RESERVATION_STATUS.SETTLED ||
+          r.status === RESERVATION_STATUS.AUTO_SETTLED
+      ).length,
+      cancelled: reservations.filter(
+        (r) =>
+          r.status === RESERVATION_STATUS.USER_CANCELLED ||
+          r.status === RESERVATION_STATUS.REJECTED ||
+          r.status === RESERVATION_STATUS.TIMEOUT_CANCELLED
+      ).length,
     }),
     [reservations]
   );
 
-  const filteredReservations = useMemo(
-    () =>
-      reservations.filter((r) => {
-        if (activeTab === "pending")
-          return r.status === RESERVATION_STATUS.PENDING;
-        if (activeTab === "approved")
-          return r.status === RESERVATION_STATUS.APPROVED;
-        return isReservationPast(r.status);
-      }),
-    [activeTab, reservations]
-  );
+  const filteredReservations = useMemo(() => {
+    const filtered = reservations.filter((r) => {
+      if (activeTab === "pending")
+        return r.status === RESERVATION_STATUS.PENDING;
+      if (activeTab === "approved")
+        return r.status === RESERVATION_STATUS.APPROVED;
+      if (activeTab === "completed")
+        return (
+          r.status === RESERVATION_STATUS.SETTLED ||
+          r.status === RESERVATION_STATUS.AUTO_SETTLED
+        );
+      return (
+        r.status === RESERVATION_STATUS.USER_CANCELLED ||
+        r.status === RESERVATION_STATUS.REJECTED ||
+        r.status === RESERVATION_STATUS.TIMEOUT_CANCELLED
+      );
+    });
+
+    return filtered.sort((a, b) => {
+      const getTimeStr = (res: ReservationSummary) => {
+        const date = res.reservationDate;
+        const time = res.reservationTime;
+        let timeStr = "00:00";
+        if (time && typeof time === "object" && "hour" in time) {
+          timeStr = `${String(time.hour ?? 0).padStart(2, "0")}:${String(time.minute ?? 0).padStart(2, "0")}`;
+        }
+        return `${date}T${timeStr}`;
+      };
+
+      const timeA = getTimeStr(a);
+      const timeB = getTimeStr(b);
+
+      const isAsc = activeTab === "pending" || activeTab === "approved";
+      return isAsc ? timeA.localeCompare(timeB) : timeB.localeCompare(timeA);
+    });
+  }, [activeTab, reservations]);
 
   const closeModal = () =>
     setModal((prev) => ({ ...prev, isOpen: false, onConfirm: undefined }));
@@ -198,13 +253,20 @@ const TrainerReservations = () => {
   ) => (
     <button
       onClick={() => setActiveTab(tab)}
-      className={`flex-1 py-4 text-[14px] font-black transition-all relative ${
+      className={`flex-1 py-4 text-[13px] font-black transition-all relative ${
         activeTab === tab ? "text-gray-900" : "text-gray-400"
       }`}
     >
       <span className="relative z-10">{label}</span>
-      {typeof count === "number" && count > 0 && (
-        <span className="ml-1.5 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 align-middle shadow-lg shadow-red-500/20">
+      {/* Red dot for pending counts */}
+      {tab === "pending" && typeof count === "number" && count > 0 && (
+        <span className="ml-1 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 align-middle shadow-lg shadow-red-500/20">
+          {count}
+        </span>
+      )}
+      {/* Grey badges for others if count > 0 */}
+      {tab !== "pending" && typeof count === "number" && count > 0 && (
+        <span className="ml-1 text-[10px] bg-gray-100 text-gray-500 rounded-full px-1.5 py-0.5 align-middle">
           {count}
         </span>
       )}
@@ -215,33 +277,46 @@ const TrainerReservations = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD]">
-      <TrainerHeader title="예약 확인하기" showBack />
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] font-pretendard relative">
+      {/* Immersive Floating Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-6 left-6 z-50 w-11 h-11 bg-white/80 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white/50 active:scale-95 transition-all"
+      >
+        <ChevronLeft size={24} className="text-gray-900" />
+      </button>
 
-      {/* Tabs Section */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex px-2">
+      <div className="px-6 pt-24 pb-4">
+        <h1 className="text-[28px] font-black text-gray-900 tracking-tight leading-tight">
+          예약 확인하기
+        </h1>
+        <p className="text-[14px] font-bold text-gray-400 mt-2">
+          상태별 예약 내역을 체계적으로 관리하세요.
+        </p>
+      </div>
+
+      {/* Premium Glass Tabs - Updated with 4 tabs */}
+      <div className="sticky top-0 z-30 bg-[#F8F9FA]/80 backdrop-blur-md border-b border-gray-100/50 flex px-1">
         {renderTabButton("pending", "승인 대기", counts.pending)}
-        {renderTabButton("approved", "확정 예약", counts.approved)}
-        {renderTabButton("history", "완료 내역", counts.history)}
+        {renderTabButton("approved", "확정", counts.approved)}
+        {renderTabButton("completed", "완료", counts.completed)}
+        {renderTabButton("cancelled", "취소", counts.cancelled)}
       </div>
 
       <div className="flex-1 px-5 py-8 pb-32 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {activeTab === "pending" && (
-          <div className="bg-amber-50/50 border border-main/10 rounded-[22px] p-5 flex gap-4 shadow-sm">
+          <div className="bg-amber-50/50 border border-main/10 rounded-[24px] p-5 flex gap-4 shadow-sm">
             <div className="w-10 h-10 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0">
               <svg
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#FAB12F"
+                stroke="#FF6B00"
                 strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
               >
                 <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4" />
-                <path d="M12 8h.01" />
+                <path d="M12 16v-4M12 8h.01" />
               </svg>
             </div>
             <p className="text-[12px] font-bold text-amber-600 leading-relaxed">
@@ -261,131 +336,220 @@ const TrainerReservations = () => {
         {isLoading ? (
           <div className="py-24 flex flex-col items-center justify-center gap-4">
             <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
-            <p className="text-[13px] font-black text-gray-300 tracking-tight">
-              예약 현황을 불러오고 있습니다...
+            <p className="text-[13px] font-bold text-gray-300">
+              데이터 로딩 중...
             </p>
           </div>
         ) : filteredReservations.length > 0 ? (
-          filteredReservations.map((item) => (
-            <div
-              key={item.reservationId}
-              className="bg-white rounded-[26px] border border-gray-100 shadow-xl shadow-gray-200/30 overflow-hidden group hover:border-main/20 transition-all duration-300"
-            >
-              <div className="p-6">
-                {/* Card Top: Status & Date */}
-                <div className="flex justify-between items-start mb-6">
-                  <div
-                    className={`px-3 py-1 rounded-full border text-[11px] font-black tracking-tight ${getStatusBadgeStyles(item.status)}`}
-                  >
-                    {getReservationStatusLabel(item.status)}
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[13px] font-black text-gray-900">
-                      {formatDate(item.reservationDate)}
-                    </span>
-                    <span className="text-[11px] font-bold text-gray-400 mt-0.5">
-                      {formatTime(item.reservationTime)}
-                    </span>
-                  </div>
-                </div>
+          filteredReservations.map((item) => {
+            const isCancelledItem = (
+              [
+                RESERVATION_STATUS.USER_CANCELLED,
+                RESERVATION_STATUS.REJECTED,
+                RESERVATION_STATUS.TIMEOUT_CANCELLED,
+              ] as ReservationStatus[]
+            ).includes(item.status as ReservationStatus);
 
-                {/* Card Middle: User & Class */}
-                <div className="flex items-center gap-5 mb-8">
-                  <div className="w-14 h-14 rounded-[22px] bg-gray-50 flex items-center justify-center border border-gray-100 shadow-inner group-hover:bg-amber-50 transition-colors">
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#D1D5DB"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="group-hover:stroke-main transition-colors"
+            return (
+              <div
+                key={item.reservationId}
+                className={`bg-white rounded-[28px] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all active:scale-[0.99] ${
+                  isCancelledItem ? "opacity-60 grayscale-[0.5]" : ""
+                }`}
+              >
+                <div className="p-6">
+                  {/* Header: Status & Time */}
+                  <div className="flex justify-between items-start mb-6">
+                    <div
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-black ${getStatusBadgeStyles(item.status)}`}
                     >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-[18px] font-black text-gray-900 tracking-tight mb-1">
-                      {`User #${item.userId}`} 회원님
-                    </h3>
-                    <p className="text-[12px] font-bold text-gray-400 line-clamp-1">
-                      슬롯 ID: {item.slotId}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Request Box */}
-                {item.userRequest && (
-                  <div className="mb-6 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
-                    <div className="flex items-center gap-1.5 mb-2 opacity-40">
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
-                      </svg>
-                      <span className="text-[10px] font-black uppercase tracking-widest">
-                        User Request
-                      </span>
+                      {getReservationStatusLabel(item.status)}
                     </div>
-                    <p className="text-[13px] font-bold text-gray-600 leading-relaxed italic">
-                      "{item.userRequest}"
-                    </p>
+                    <div className="text-right">
+                      <p className="text-[14px] font-black text-gray-900">
+                        {formatDate(item.reservationDate)}
+                      </p>
+                      <p
+                        className={`text-[12px] font-bold mt-0.5 ${isCancelledItem ? "text-gray-400" : "text-main"}`}
+                      >
+                        {formatTime(item.reservationTime)} (
+                        {item.durationMinutes}분 수업)
+                      </p>
+                    </div>
                   </div>
-                )}
 
-                {/* Actions */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleDetailClick(item.reservationId)}
-                    className="flex-1 h-12 bg-white border border-gray-100 text-gray-400 rounded-[18px] text-[13px] font-black btn-press hover:bg-gray-50 transition-all"
-                  >
-                    상세 정보
-                  </button>
+                  {/* Body: Program & User Info */}
+                  <div className="flex flex-col gap-4 mb-6">
+                    <div>
+                      <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">
+                        PROGRAM
+                      </span>
+                      <h3
+                        className={`text-[18px] font-black text-gray-900 leading-tight ${isCancelledItem ? "line-through text-gray-400" : ""}`}
+                      >
+                        {item.classTitle}
+                      </h3>
+                    </div>
 
-                  {item.status === RESERVATION_STATUS.PENDING && (
-                    <>
-                      <button
-                        onClick={() => openRejectModal(item.reservationId)}
-                        disabled={isMutating}
-                        className="flex-1 h-12 bg-red-50 text-red-500 rounded-[18px] text-[13px] font-black btn-press"
-                      >
-                        반려
-                      </button>
-                      <button
-                        onClick={() => openApproveModal(item.reservationId)}
-                        disabled={isMutating}
-                        className="flex-1 h-12 bg-main text-white rounded-[18px] text-[13px] font-black shadow-lg shadow-main/20 btn-press"
-                      >
-                        승인하기
-                      </button>
-                    </>
+                    <div className="flex items-center justify-between bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 border border-gray-100">
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#D1D5DB"
+                            strokeWidth="2.5"
+                          >
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                            STUDENT
+                          </p>
+                          <p className="text-[14px] font-black text-gray-700">
+                            {item.userNickname} 회원님
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                          PRICE
+                        </p>
+                        <p className="text-[14px] font-black text-main">
+                          {formatPrice(item.priceAmount || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User Request */}
+                  {item.userRequest && (
+                    <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 relative">
+                      <div className="absolute -left-1 top-0 text-main/10 text-3xl font-serif">
+                        "
+                      </div>
+                      <p className="text-[13px] font-bold text-gray-600 leading-relaxed pl-3 italic line-clamp-2">
+                        {item.userRequest}
+                      </p>
+                    </div>
                   )}
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-3 pt-5 border-t border-gray-50">
+                    {item.status === RESERVATION_STATUS.PENDING ? (
+                      (() => {
+                        const resTime = item.reservationTime;
+                        const resDate = item.reservationDate;
+
+                        let timeStr = "00:00:00";
+                        if (
+                          resTime &&
+                          typeof resTime === "object" &&
+                          "hour" in resTime
+                        ) {
+                          timeStr = `${String(resTime.hour ?? 0).padStart(2, "0")}:${String(resTime.minute ?? 0).padStart(2, "0")}:00`;
+                        }
+
+                        const resDateTime = new Date(`${resDate}T${timeStr}`);
+                        const now = new Date();
+                        const isPast =
+                          !isNaN(resDateTime.getTime()) && now > resDateTime;
+
+                        return (
+                          <div className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  openRejectModal(item.reservationId)
+                                }
+                                disabled={isMutating}
+                                className="flex-1 h-12 bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-xl text-[13px] font-black transition-all"
+                              >
+                                반려하기
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDetailClick(item.reservationId)
+                                }
+                                className="flex-1 h-12 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-[13px] font-black transition-all"
+                              >
+                                상세정보
+                              </button>
+                            </div>
+
+                            {isPast && (
+                              <div className="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-xl border border-red-100">
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="#EF4444"
+                                  strokeWidth="3"
+                                >
+                                  <circle cx="12" cy="12" r="10" />
+                                  <line x1="12" y1="8" x2="12" y2="12" />
+                                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                <span className="text-[11px] font-black text-red-500 italic">
+                                  예약 시간이 경과하여 승인이 불가능합니다.
+                                </span>
+                              </div>
+                            )}
+
+                            <button
+                              onClick={() =>
+                                openApproveModal(item.reservationId)
+                              }
+                              disabled={isMutating || isPast}
+                              className={`w-full h-14 rounded-2xl text-[15px] font-black shadow-[0_12px_24px_rgba(255,107,0,0.25)] active:scale-95 transition-all flex items-center justify-center gap-2 ${
+                                isPast
+                                  ? "bg-gray-100 text-gray-300 shadow-none cursor-not-allowed"
+                                  : "bg-main text-white"
+                              }`}
+                            >
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                              >
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              {isPast ? "승인 기간 만료" : "예약 승인하기"}
+                            </button>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <button
+                        onClick={() => handleDetailClick(item.reservationId)}
+                        className="w-full h-12 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-[13px] font-black transition-colors"
+                      >
+                        상세정보 확인
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="py-28 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500">
-            <div className="w-20 h-20 rounded-[28px] bg-white shadow-xl shadow-gray-200/40 flex items-center justify-center mb-6">
+          <div className="py-28 flex flex-col items-center justify-center">
+            <div className="w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center mb-8">
               <svg
-                width="36"
-                height="36"
+                width="32"
+                height="32"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#E5E7EB"
                 strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
               >
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
@@ -393,13 +557,11 @@ const TrainerReservations = () => {
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
             </div>
-            <h3 className="font-black text-gray-900 text-[18px] tracking-tight mb-2">
-              예약 내역이 없습니다
+            <h3 className="font-black text-gray-900 text-[19px] mb-3">
+              내역이 없습니다
             </h3>
-            <p className="text-gray-400 text-[13px] font-bold text-center leading-relaxed">
-              수강생의 새로운 예약 요청이 오면
-              <br />
-              이곳에서 확인하실 수 있습니다.
+            <p className="text-gray-400 text-[14px] font-bold text-center">
+              선택하신 상태의 예약 요청이 없습니다.
             </p>
           </div>
         )}
@@ -408,9 +570,9 @@ const TrainerReservations = () => {
           <button
             onClick={() => void loadReservations(nextCursor || undefined)}
             disabled={isFetchingNext}
-            className="w-full h-14 bg-white border border-gray-100 rounded-2xl text-[14px] font-black text-gray-400 btn-press shadow-sm mt-4"
+            className="w-full h-14 bg-white border border-gray-100 rounded-2xl text-[14px] font-black text-gray-400 mt-4 shadow-sm"
           >
-            {isFetchingNext ? "로딩 중..." : "예약 내역 더 보기"}
+            {isFetchingNext ? "로딩 중..." : "내역 더 보기"}
           </button>
         )}
       </div>
@@ -432,8 +594,8 @@ const TrainerReservations = () => {
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="예: 해당 시간대는 외부 일정으로 인해 수업이 어렵습니다."
-              className="w-full h-[120px] bg-gray-50 border border-gray-100 rounded-2xl p-4 text-[14px] font-bold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:border-main transition-all resize-none shadow-inner"
+              placeholder="반려 사유를 입력하세요 (예: 외부 일정 등)"
+              className="w-full h-[120px] bg-gray-50 border border-gray-100 rounded-2xl p-4 text-[14px] font-bold text-gray-800 focus:outline-none focus:border-main transition-all resize-none shadow-inner"
             />
           </div>
         </CommonModal>
@@ -441,44 +603,38 @@ const TrainerReservations = () => {
 
       {selectedDetail && (
         <CommonModal
-          title="예약 상세 정보"
+          title="상세 예약 정보"
           desc="선택하신 예약의 세부 정보입니다."
-          confirmLabel="확인"
+          confirmLabel="닫기"
           onConfirmClick={() => setSelectedDetail(null)}
         >
-          <div className="w-full mt-6 text-left flex flex-col gap-6">
-            <div className="bg-[#F9FAFB] rounded-[28px] p-6 border border-gray-100 flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Reservation ID
-                </span>
-                <p className="text-[15px] font-black text-gray-900">
-                  #{selectedDetail.reservationId}
-                </p>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Reservation Date
-                </span>
-                <p className="text-[15px] font-black text-gray-900">
-                  {formatDate(selectedDetail.reservationDate)}{" "}
-                  {formatTime(selectedDetail.reservationTime)}
-                </p>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Status
-                </span>
-                <p className="text-[15px] font-black text-main">
-                  {getReservationStatusLabel(selectedDetail.status)}
-                </p>
-              </div>
-              <div className="pt-4 border-t border-gray-100">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+          <div className="w-full mt-6 text-left flex flex-col gap-4">
+            <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 flex flex-col gap-4">
+              <DetailRow label="프로그램" value={selectedDetail.classTitle} />
+              <DetailRow
+                label="회원 정보"
+                value={`${selectedDetail.userNickname} 회원님`}
+              />
+              <DetailRow
+                label="수업 일정"
+                value={`${formatDate(selectedDetail.reservationDate)} ${formatTime(selectedDetail.reservationTime)} (${selectedDetail.durationMinutes}분 수업)`}
+              />
+              <DetailRow
+                label="결제 금액"
+                value={formatPrice(selectedDetail.priceAmount || 0)}
+                highlight
+              />
+              <DetailRow
+                label="상태"
+                value={getReservationStatusLabel(selectedDetail.status)}
+                highlight
+              />
+              <div className="pt-4 border-t border-gray-200">
+                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
                   Transaction Hash
                 </span>
-                <p className="text-[11px] font-bold text-gray-500 break-all bg-white p-3 rounded-xl border border-gray-100 mt-2 shadow-inner font-mono leading-relaxed">
-                  {selectedDetail.txHash || "기록된 해시 정보가 없습니다."}
+                <p className="text-[11px] font-medium text-gray-400 break-all bg-white p-3 rounded-lg border border-gray-100 mt-2 font-mono">
+                  {selectedDetail.txHash || "기록된 해시가 없습니다."}
                 </p>
               </div>
             </div>
@@ -499,5 +655,26 @@ const TrainerReservations = () => {
     </div>
   );
 };
+
+const DetailRow = ({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) => (
+  <div className="flex flex-col gap-1">
+    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+      {label}
+    </span>
+    <p
+      className={`text-[15px] font-black ${highlight ? "text-main" : "text-gray-800"}`}
+    >
+      {value}
+    </p>
+  </div>
+);
 
 export default TrainerReservations;

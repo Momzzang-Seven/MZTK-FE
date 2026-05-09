@@ -1,12 +1,13 @@
 ## 🛠️ Tech Stack
 
-| Category        | Technology  |
-| --------------- | ----------- |
-| Framework       | React 18    |
-| Bundler         | Vite        |
-| Language        | TypeScript  |
-| Styling         | TailwindCSS |
-| Package Manager | pnpm        |
+| Category        | Technology                   |
+| --------------- | ---------------------------- |
+| Framework       | React 19.2                   |
+| Bundler         | Vite 7.2                     |
+| Language        | TypeScript 5.9               |
+| Styling         | TailwindCSS 4.1 (Pretendard) |
+| State           | Zustand 5.0                  |
+| Package Manager | pnpm                         |
 
 ## 📂 Folder & File Naming
 

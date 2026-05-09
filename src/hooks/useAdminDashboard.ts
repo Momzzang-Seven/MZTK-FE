@@ -3,8 +3,6 @@ import { ethers } from "ethers";
 import { fetchUserStats, fetchPostStats } from "@services";
 import type { UserStatsResponse, PostStatsResponse } from "@types";
 import { getNetworkConfig } from "@utils";
-import { useUserStore } from "@store";
-
 interface EtherscanTxItem {
   from: string;
   to: string;
@@ -68,10 +66,7 @@ export const useAdminDashboardData = () => {
     error: null,
   });
 
-  // selectedNetwork를 직접 구독해야 네트워크 변경 시 리페치가 트리거됨
-  const selectedNetwork = useUserStore((state) => state.selectedNetwork);
-  const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL, EXPLORER_TX_URL } =
-    getNetworkConfig();
+  const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL } = getNetworkConfig();
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -138,13 +133,7 @@ export const useAdminDashboardData = () => {
         error: "데이터를 불러오는데 실패했습니다.",
       }));
     }
-  }, [
-    TOKEN_ADDRESS,
-    CHAIN_ID,
-    ETHERSCAN_URL,
-    EXPLORER_TX_URL,
-    selectedNetwork,
-  ]);
+  }, [TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL]);
 
   useEffect(() => {
     fetchDashboardData();

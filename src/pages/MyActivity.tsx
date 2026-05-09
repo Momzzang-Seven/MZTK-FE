@@ -1,5 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  ChevronLeft,
+  MessageSquare,
+  Heart,
+  PenTool,
+  Search,
+} from "lucide-react";
 import { MyPostCard } from "@components/my";
 import { useMyPosts } from "@hooks";
 import type { MyPostTab } from "@hooks";
@@ -12,49 +19,9 @@ const TAB_LABELS: Record<MyPostTab, string> = {
 };
 
 const TAB_ICONS: Record<MyPostTab, React.ReactNode> = {
-  written: (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" />
-    </svg>
-  ),
-  liked: (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
-    </svg>
-  ),
-  commented: (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  ),
+  written: <PenTool size={14} />,
+  liked: <Heart size={14} />,
+  commented: <MessageSquare size={14} />,
 };
 
 const TYPE_OPTIONS: { key: PostType; label: string }[] = [
@@ -62,10 +29,19 @@ const TYPE_OPTIONS: { key: PostType; label: string }[] = [
   { key: "QUESTION", label: "Q&A" },
 ];
 
-const EMPTY_MESSAGES: Record<MyPostTab, string> = {
-  written: "아직 작성한 글이 없습니다.",
-  liked: "좋아요한 글이 없습니다.",
-  commented: "댓글 단 글이 없습니다.",
+const EMPTY_MESSAGES: Record<MyPostTab, { title: string; desc: string }> = {
+  written: {
+    title: "아직 작성한 글이 없어요",
+    desc: "커뮤니티에 소중한 일상이나 질문을 남겨보세요.",
+  },
+  liked: {
+    title: "좋아요한 글이 없어요",
+    desc: "관심 있는 글에 마음을 표현해보세요.",
+  },
+  commented: {
+    title: "댓글 단 글이 없어요",
+    desc: "다른 회원들의 글에 따뜻한 응원을 남겨보세요.",
+  },
 };
 
 const isValidTab = (tab: string | undefined): tab is MyPostTab =>
@@ -90,13 +66,11 @@ const MyActivity = () => {
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // URL 탭으로 초기화
   useEffect(() => {
     switchTab(resolvedTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 무한 스크롤
   useEffect(() => {
     const el = bottomRef.current;
     if (!el) return;
@@ -116,136 +90,137 @@ const MyActivity = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD]">
-      {/* ── Header ── */}
-      <div className="relative pt-12 pb-6 px-6 overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-52 h-52 bg-main opacity-[0.07] blur-[60px] rounded-full pointer-events-none" />
+    <div className="flex flex-col min-h-screen bg-[#FDFDFD] font-pretendard relative">
+      {/* Immersive Floating Header Background */}
+      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-main/5 via-transparent to-transparent pointer-events-none" />
+
+      {/* Floating Back Button & Title */}
+      <div className="relative pt-12 pb-8 px-6 flex flex-col gap-5 z-10">
         <button
           onClick={() => navigate("/my")}
-          className="btn-press mb-5 w-10 h-10 rounded-xl bg-white shadow-md shadow-gray-100 flex items-center justify-center border-none"
+          className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 active:scale-90 transition-all"
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#111827"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m15 18-6-6 6-6" />
-          </svg>
+          <ChevronLeft size={24} className="text-gray-900" />
         </button>
-        <p className="text-gray-400 text-xs font-black tracking-widest uppercase mb-1">
-          My Activity
-        </p>
-        <h1 className="text-gray-900 text-2xl font-black tracking-tight">
-          {TAB_LABELS[activeTab]}
-        </h1>
+
+        <div className="animate-in slide-in-from-left-4 duration-700 ease-out">
+          <p className="text-[11px] font-black tracking-[0.2em] text-main uppercase mb-1.5 flex items-center gap-2">
+            <span className="w-4 h-[2px] bg-main rounded-full" />
+            My Activity
+          </p>
+          <h1 className="text-[28px] font-black text-gray-900 tracking-tight leading-none">
+            {TAB_LABELS[activeTab]}
+          </h1>
+        </div>
       </div>
 
-      {/* ── Tab pills ── */}
-      <div className="flex gap-2 px-6 pb-4">
-        {(["written", "liked", "commented"] as MyPostTab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => handleTabSwitch(t)}
-            className={`btn-press flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[12px] font-black transition-all border-none ${
-              activeTab === t
-                ? "bg-main text-white shadow-md shadow-main/25"
-                : "bg-white text-gray-400 shadow-sm"
-            }`}
-          >
-            <span className={activeTab === t ? "opacity-100" : "opacity-50"}>
-              {TAB_ICONS[t]}
-            </span>
-            {TAB_LABELS[t]}
-          </button>
-        ))}
+      {/* Glassmorphic Navigation Section */}
+      <div className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-gray-100/50 pb-4">
+        {/* Main Tab Pills */}
+        <div className="flex gap-2 px-6 pt-2 pb-4 overflow-x-auto no-scrollbar">
+          {(["written", "liked", "commented"] as MyPostTab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => handleTabSwitch(t)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[13px] font-black transition-all border-none whitespace-nowrap ${
+                activeTab === t
+                  ? "bg-main text-white shadow-[0_8px_20px_rgba(255,107,0,0.25)] scale-[1.02]"
+                  : "bg-white text-gray-400 shadow-sm border border-gray-100 hover:bg-gray-50"
+              }`}
+            >
+              <span
+                className={activeTab === t ? "text-white" : "text-gray-300"}
+              >
+                {TAB_ICONS[t]}
+              </span>
+              {TAB_LABELS[t]}
+            </button>
+          ))}
+        </div>
+
+        {/* Sub-type Filter Chips */}
+        <div className="flex gap-2 px-6">
+          {TYPE_OPTIONS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => switchType(key)}
+              className={`px-3.5 py-1.5 rounded-xl text-[11px] font-bold transition-all border-none ${
+                activeType === key
+                  ? "bg-gray-900 text-white shadow-md shadow-gray-900/10"
+                  : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ── Type filter chips ── */}
-      <div className="flex gap-2 px-6 pb-4">
-        {TYPE_OPTIONS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => switchType(key)}
-            className={`btn-press px-3.5 py-1.5 rounded-xl text-[12px] font-black transition-all border-none ${
-              activeType === key
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-400 shadow-sm"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Post list ── */}
-      <div className="flex-1 px-5 pb-28 flex flex-col gap-3">
-        {/* Error */}
+      {/* Scrollable Content Area */}
+      <div className="flex-1 px-5 py-8 pb-32 flex flex-col gap-4">
         {error && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="w-16 h-16 rounded-[24px] bg-red-50 flex items-center justify-center border border-red-100/50 animate-bounce">
               <svg
-                width="22"
-                height="22"
+                width="24"
+                height="24"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#EF4444"
                 strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
               >
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v4" />
                 <path d="M12 16h.01" />
               </svg>
             </div>
-            <p className="text-[13px] text-gray-500 font-bold">{error}</p>
+            <p className="text-[14px] text-red-500 font-black">{error}</p>
           </div>
         )}
 
-        {/* Empty */}
         {!isLoading && posts.length === 0 && !error && (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#D1D5DB"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
+          <div className="flex flex-col items-center justify-center py-32 animate-in fade-in zoom-in-95 duration-700">
+            <div className="relative mb-8">
+              <div className="w-24 h-24 rounded-[36px] bg-gray-50 flex items-center justify-center border border-gray-100 shadow-inner">
+                <Search size={32} className="text-gray-200" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-white shadow-lg border border-gray-50 flex items-center justify-center text-main animate-pulse">
+                {TAB_ICONS[activeTab]}
+              </div>
             </div>
             <div className="text-center">
-              <p className="text-gray-500 font-black text-[15px]">
-                {EMPTY_MESSAGES[activeTab]}
-              </p>
-              <p className="text-gray-400 text-[12px] font-bold mt-1">
-                커뮤니티에서 활동을 시작해보세요
+              <h3 className="font-black text-gray-900 text-[20px] tracking-tight">
+                {EMPTY_MESSAGES[activeTab].title}
+              </h3>
+              <p className="text-gray-400 text-[14px] font-bold mt-2 leading-relaxed px-10">
+                {EMPTY_MESSAGES[activeTab].desc}
               </p>
             </div>
+            <button
+              onClick={() => navigate("/community/free")}
+              className="mt-10 px-6 py-3 bg-main/10 text-main rounded-2xl text-[13px] font-black hover:bg-main/20 transition-all border-none"
+            >
+              커뮤니티 둘러보기
+            </button>
           </div>
         )}
 
-        {/* Posts */}
-        {posts.map((post) => (
-          <MyPostCard key={post.postId} post={post} />
-        ))}
+        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {posts.map((post) => (
+            <MyPostCard key={post.postId} post={post} />
+          ))}
+        </div>
 
-        <div ref={bottomRef} className="h-1" />
+        <div ref={bottomRef} className="h-4" />
 
-        {/* Loading spinner */}
         {isLoading && (
-          <div className="py-6 flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-main border-t-transparent rounded-full animate-spin" />
+          <div className="py-10 flex items-center justify-center">
+            <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-full shadow-sm border border-gray-100">
+              <div className="w-4 h-4 border-2 border-main border-t-transparent rounded-full animate-spin" />
+              <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                Fetching Content
+              </span>
+            </div>
           </div>
         )}
       </div>

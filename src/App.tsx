@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useUserStore } from "@store/userStore";
 import { AdminLayout, Layout } from "@components/layout"; // AdminLayout 추가
 import GlobalSnackbar from "@components/common/GlobalSnackbar";
+import ScrollToTop from "@components/common/ScrollToTop";
 import {
   Callback,
   Err404,
@@ -54,6 +55,8 @@ import Onboarding from "./pages/Onboarding";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+import { AdminRedirectModal } from "@components/auth/AdminRedirectModal";
+
 function App() {
   const user = useUserStore((state) => state.user);
   const checkAnalysisCompletion = useUserStore(
@@ -73,6 +76,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* admin */}
         <Route path="/admin" element={<AdminLogin />} />
@@ -106,6 +110,7 @@ function App() {
             <Layout>
               <div className="flex flex-1 w-full mx-auto h-full bg-white flex flex-col relative overflow-hidden max-w-[450px]">
                 <GlobalSnackbar />
+                <AdminRedirectModal />
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/login" element={<Login />} />

@@ -8,6 +8,8 @@ import {
 } from "@components/my";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store";
+import { CommonModal } from "@components/common";
+import { INQUIRY_FORM_URL } from "@constant/inquiry";
 
 const ACTIVITY_BUTTONS = [
   {
@@ -71,10 +73,12 @@ const My = () => {
   const navigate = useNavigate();
   const user = useUserStore((state) => state.user);
   const updateRole = useUserStore((state) => state.updateRole);
+  const clearUser = useUserStore((state) => state.clearUser);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
   const selectedNetwork = useUserStore((state) => state.selectedNetwork);
   const setSelectedNetwork = useUserStore((state) => state.setSelectedNetwork);
   const [isChangingRole, setIsChangingRole] = useState(false);
+  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
 
   const isTrainer = user?.role === "TRAINER";
   const targetRole = isTrainer ? "USER" : "TRAINER";
@@ -85,12 +89,17 @@ const My = () => {
     setIsChangingRole(true);
     try {
       await updateRole(targetRole);
-      showSnackbar(`역할이 ${targetRoleLabel}(으)로 변경되었습니다.`);
+      setIsSwitchModalOpen(true);
     } catch {
       showSnackbar("역할 변경에 실패했습니다. 다시 시도해 주세요.");
     } finally {
       setIsChangingRole(false);
     }
+  };
+
+  const handleConfirmLogout = () => {
+    clearUser();
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -391,12 +400,24 @@ const My = () => {
         {/* Support link */}
         <p className="text-center text-[12px] text-gray-400 font-bold pb-4">
           지급 오류 또는 지연 관련 문의는{" "}
-          <span className="text-main font-black underline underline-offset-2 cursor-pointer">
+          <span
+            onClick={() => window.open(INQUIRY_FORM_URL, "_blank")}
+            className="text-main font-black underline underline-offset-2 cursor-pointer"
+          >
             다음 링크
           </span>
           를 이용해 주세요.
         </p>
       </div>
+
+      {isSwitchModalOpen && (
+        <CommonModal
+          title="역할 변경 안내"
+          desc="원활한 접속 및 캐시 정리를 위해<br/>재로그인이 필요합니다.<br/>확인을 누르면 로그인 화면으로 이동합니다."
+          confirmLabel="확인"
+          onConfirmClick={handleConfirmLogout}
+        />
+      )}
     </div>
   );
 };

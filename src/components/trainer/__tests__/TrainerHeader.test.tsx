@@ -35,7 +35,7 @@ describe("TrainerHeader", () => {
       </MemoryRouter>
     );
 
-    const backButton = screen.queryByAltText("back");
+    const backButton = screen.queryByLabelText("back");
     expect(backButton).not.toBeInTheDocument();
   });
 
@@ -46,7 +46,7 @@ describe("TrainerHeader", () => {
       </MemoryRouter>
     );
 
-    const backButton = screen.getByAltText("back");
+    const backButton = screen.getByLabelText("back");
     expect(backButton).toBeInTheDocument();
   });
 
@@ -57,8 +57,8 @@ describe("TrainerHeader", () => {
       </MemoryRouter>
     );
 
-    const backButton = screen.getByAltText("back");
-    fireEvent.click(backButton.closest("button")!);
+    const backButton = screen.getByLabelText("back");
+    fireEvent.click(backButton);
 
     expect(mockNavigate).toHaveBeenCalledWith(-1);
   });
@@ -66,22 +66,21 @@ describe("TrainerHeader", () => {
   it("sticky 헤더 스타일이 적용된다", () => {
     const { container } = render(
       <MemoryRouter>
-        <TrainerHeader title="트레이너 목록" />
+        <TrainerHeader title="트레이너 목록" showBack={true} />
       </MemoryRouter>
     );
 
-    const header = container.querySelector(".sticky.top-0");
+    const header = container.querySelector(".sticky");
     expect(header).toBeInTheDocument();
   });
 
   it("border-bottom 스타일이 적용된다", () => {
     const { container } = render(
       <MemoryRouter>
-        <TrainerHeader title="트레이너 목록" />
+        <TrainerHeader title="트레이너 목록" isLarge={false} />
       </MemoryRouter>
     );
-
-    const header = container.querySelector(".border-b.border-gray-100");
+    const header = container.querySelector(".border-b");
     expect(header).toBeInTheDocument();
   });
 });

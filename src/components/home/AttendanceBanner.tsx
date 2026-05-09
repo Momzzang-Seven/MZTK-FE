@@ -56,7 +56,7 @@ export const AttendanceBanner = () => {
       </div>
 
       <div className="flex items-end justify-between mt-2">
-        <span className="text-2xl font-black text-gray-900 font-gmarket">
+        <span className="text-2xl font-black text-gray-900">
           {attendedCount}
           <span className="text-xs text-gray-400 ml-0.5">/7</span>
         </span>

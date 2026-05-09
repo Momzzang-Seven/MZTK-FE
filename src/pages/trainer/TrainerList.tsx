@@ -8,6 +8,16 @@ import {
 } from "@services";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Plus,
+  ChevronRight,
+  Tag,
+  Coins,
+  EyeOff,
+  AlertCircle,
+  TrendingUp,
+  LayoutGrid,
+} from "lucide-react";
 
 const IMAGE_BASE_URL =
   (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
@@ -108,73 +118,91 @@ const TrainerList = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD]">
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] font-pretendard">
       <TrainerHeader title="내 클래스 목록" showBack backTo="/trainer" />
 
-      <div className="flex-1 px-5 pt-6 pb-28 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {/* Info Banner */}
-        <div className="bg-white rounded-[24px] border border-amber-100/50 p-5 shadow-xl shadow-gray-200/30 relative overflow-hidden">
-          <div className="absolute -top-6 -right-6 w-20 h-20 bg-main/5 rounded-full blur-2xl" />
-          <div className="relative flex items-start gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#FAB12F"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4" />
-                <path d="M12 8h.01" />
-              </svg>
+      <div className="flex-1 px-5 pt-8 pb-32 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Header Section with Floating Add Button */}
+        <div className="flex justify-between items-end px-1">
+          <div>
+            <h2 className="text-[24px] font-black text-gray-900 leading-tight tracking-tight">
+              운영 중인 클래스
+            </h2>
+            <p className="text-[13px] font-bold text-gray-400 mt-1">
+              총 {tickets.length}개의 프로그램이 등록되어 있습니다.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/trainer/register-ticket")}
+            className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center shadow-[0_12px_24px_rgba(0,0,0,0.15)] active:scale-95 transition-all"
+          >
+            <Plus size={24} strokeWidth={3} />
+          </button>
+        </div>
+
+        {/* Business Intelligence Banner */}
+        <div className="bg-white rounded-[32px] border border-amber-100/50 p-6 shadow-[0_15px_40px_rgba(0,0,0,0.03)] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-main/5 rounded-full -mr-16 -mt-16 blur-3xl transition-all group-hover:scale-150" />
+          <div className="relative flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0 shadow-inner">
+              <TrendingUp size={24} className="text-main" />
             </div>
-            <div className="flex flex-col">
-              <h4 className="text-[14px] font-black text-gray-900 mb-1">
-                비즈니스 가이드
-              </h4>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-[15px] font-black text-gray-900">
+                  매니지먼트 가이드
+                </h4>
+                <div className="w-1.5 h-1.5 rounded-full bg-main animate-pulse" />
+              </div>
               <p className="text-[12px] font-bold text-gray-400 leading-relaxed">
-                클래스 카드를 터치하여 상세 내용을 수정할 수 있으며, 토글
-                스위치를 통해 수강생에게 노출 여부를 즉시 결정할 수 있습니다.
+                클래스 카드를 터치해 내용을 수정하고, 토글로 노출 상태를
+                제어하세요.
               </p>
             </div>
           </div>
         </div>
 
         {loadError && (
-          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-[13px] font-black">
+          <div className="bg-red-50 border border-red-100 text-red-500 px-5 py-4 rounded-2xl text-[13px] font-black flex items-center gap-3">
+            <AlertCircle size={18} />
             {loadError}
           </div>
         )}
 
         {isSuspended && (
-          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-[13px] font-black flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            현재 이용 제한 상태입니다. 관리자에게 문의해 주세요.
+          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-5 rounded-2xl text-[13px] font-black flex items-center gap-4 shadow-sm">
+            <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse shrink-0 shadow-[0_0_12px_rgba(239,68,68,0.5)]" />
+            <p>현재 계정 이용이 제한되어 클래스 수정 및 노출이 불가능합니다.</p>
           </div>
         )}
 
         {/* List Content */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           {isLoading ? (
-            <div className="py-24 flex flex-col items-center justify-center gap-4">
-              <div className="w-12 h-12 border-4 border-main/20 border-t-main rounded-full animate-spin" />
-              <p className="text-[13px] font-black text-gray-300">
-                목록을 구성하고 있습니다...
+            <div className="py-32 flex flex-col items-center justify-center gap-5">
+              <div className="relative">
+                <div className="w-16 h-16 border-[5px] border-main/10 border-t-main rounded-full animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <LayoutGrid size={24} className="text-main/30" />
+                </div>
+              </div>
+              <p className="text-[14px] font-black text-gray-300 tracking-widest">
+                FETCHING DATA...
               </p>
             </div>
           ) : tickets.length > 0 ? (
             tickets.map((ticket) => (
               <div
                 key={ticket.classId}
-                className={`bg-white rounded-[26px] flex flex-col border transition-all duration-300 ${ticket.active ? "border-gray-100 shadow-xl shadow-gray-200/40" : "border-gray-50 opacity-70 grayscale-[0.5]"}`}
+                className={`group bg-white rounded-[32px] flex flex-col border transition-all duration-500 ${
+                  ticket.active
+                    ? "border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:shadow-[0_25px_60px_rgba(255,107,0,0.08)] hover:border-main/10"
+                    : "border-gray-50 opacity-60 grayscale-[0.3]"
+                }`}
               >
                 <div
                   onClick={() => navigate(`/trainer/edit/${ticket.classId}`)}
-                  className="flex p-5 gap-4.5 items-center cursor-pointer active:scale-[0.98] transition-transform"
+                  className="flex p-6 gap-6 items-center cursor-pointer active:scale-[0.98] transition-all"
                 >
                   <div className="relative">
                     <img
@@ -182,10 +210,11 @@ const TrainerList = () => {
                         ticket.thumbnailFinalObjectKey
                       )}
                       alt=""
-                      className="w-20 h-20 rounded-[20px] object-cover bg-gray-50 shadow-inner"
+                      className="w-24 h-24 rounded-full object-cover bg-gray-50 shadow-inner ring-4 ring-gray-50/50 transition-transform duration-500 group-hover:scale-105"
                     />
                     {!ticket.active && (
-                      <div className="absolute inset-0 bg-black/40 rounded-[20px] flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gray-900/40 rounded-full backdrop-blur-[2px] flex flex-col items-center justify-center gap-1 animate-in fade-in duration-300">
+                        <EyeOff size={16} className="text-white" />
                         <span className="text-[10px] font-black text-white uppercase tracking-tighter">
                           Hidden
                         </span>
@@ -193,52 +222,62 @@ const TrainerList = () => {
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="text-[10px] font-black text-main bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-tight">
-                        {formatCategory(ticket.category)}
-                      </span>
+                  <div className="flex-1 min-w-0 flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 rounded-full border border-gray-100">
+                        <Tag size={10} className="text-gray-400" />
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-tight">
+                          {formatCategory(ticket.category)}
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="font-black text-gray-900 text-[16px] truncate leading-tight">
+
+                    <h3 className="font-black text-gray-900 text-[18px] truncate leading-tight tracking-tight">
                       {ticket.title}
                     </h3>
-                    <div className="flex items-baseline gap-1 mt-2">
-                      <span className="text-[15px] font-black text-gray-900">
-                        {ticket.priceAmount.toLocaleString()}
-                      </span>
-                      <span className="text-[10px] font-black text-gray-400">
-                        MZTK
-                      </span>
+
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                        <Coins size={12} className="text-main" />
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-[17px] font-black text-gray-900">
+                          {ticket.priceAmount.toLocaleString()}
+                        </span>
+                        <span className="text-[10px] font-black text-gray-400 tracking-widest uppercase">
+                          MZTK
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#D1D5DB"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m9 18 6-6-6-6" />
-                    </svg>
+                  <div className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-main group-hover:text-white transition-all shadow-sm">
+                    <ChevronRight size={20} strokeWidth={3} />
                   </div>
                 </div>
 
-                <div className="px-5 py-4 bg-[#F9FAFB]/50 border-t border-gray-50 flex items-center justify-between rounded-b-[26px]">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full ${ticket.active ? "bg-green-500" : "bg-gray-300"}`}
-                    />
+                <div
+                  className={`px-6 py-5 border-t transition-colors duration-500 flex items-center justify-between rounded-b-[32px] ${
+                    ticket.active
+                      ? "bg-[#F9FAFB]/50 border-gray-50"
+                      : "bg-gray-50/30 border-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div
+                        className={`w-3 h-3 rounded-full ${ticket.active ? "bg-green-500" : "bg-gray-300"}`}
+                      />
+                      {ticket.active && (
+                        <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-30" />
+                      )}
+                    </div>
                     <span
-                      className={`text-[12px] font-black ${ticket.active ? "text-gray-700" : "text-gray-400"}`}
+                      className={`text-[13px] font-black tracking-tight ${ticket.active ? "text-gray-700" : "text-gray-400"}`}
                     >
                       {ticket.active
-                        ? "수강생에게 노출 중"
-                        : "현재 비공개 상태"}
+                        ? "수강생에게 공개 중"
+                        : "수강생에게 비공개"}
                     </span>
                   </div>
 
@@ -250,10 +289,10 @@ const TrainerList = () => {
                       onChange={(e) => void handleToggle(ticket.classId, e)}
                       disabled={togglingIdSet.has(ticket.classId)}
                     />
-                    <div className="w-12 h-6.5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5.5 after:w-5.5 after:transition-all peer-checked:bg-main shadow-inner"></div>
+                    <div className="w-14 h-8 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-main shadow-inner"></div>
                     {togglingIdSet.has(ticket.classId) && (
                       <div className="absolute inset-0 bg-white/40 rounded-full flex items-center justify-center">
-                        <div className="w-3 h-3 border-2 border-main border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-main border-t-transparent rounded-full animate-spin" />
                       </div>
                     )}
                   </label>
@@ -261,34 +300,27 @@ const TrainerList = () => {
               </div>
             ))
           ) : (
-            <div className="py-28 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500">
-              <div className="w-20 h-20 rounded-[28px] bg-white shadow-xl shadow-gray-200/40 flex items-center justify-center mb-6">
-                <svg
-                  width="36"
-                  height="36"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#E5E7EB"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                  <polyline points="14.5 2 14.5 7.5 20 7.5" />
-                </svg>
+            <div className="py-32 flex flex-col items-center justify-center animate-in zoom-in-95 duration-700">
+              <div className="relative mb-8">
+                <div className="w-24 h-24 rounded-[32px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.06)] flex items-center justify-center">
+                  <EyeOff size={40} className="text-gray-100" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-main rounded-2xl flex items-center justify-center shadow-lg text-white">
+                  <Plus size={20} strokeWidth={3} />
+                </div>
               </div>
-              <h3 className="font-black text-gray-900 text-[18px] mb-2 tracking-tight">
-                클래스가 비어있습니다
+              <h3 className="font-black text-gray-900 text-[20px] mb-2 tracking-tight">
+                클래스 목록이 비어있습니다
               </h3>
-              <p className="text-gray-400 text-[13px] font-bold text-center leading-relaxed mb-8">
-                아직 등록된 클래스가 없습니다.
-                <br />첫 번째 클래스를 열고 수강생을 맞이해 보세요.
+              <p className="text-gray-400 text-[14px] font-bold text-center leading-relaxed mb-10 px-10">
+                아직 등록된 수업이 없습니다. 트레이너님의 전문성을 담은 클래스를
+                개설해 보세요.
               </p>
               <button
                 onClick={() => navigate("/trainer/register-ticket")}
-                className="px-8 py-4 bg-gray-900 text-white rounded-[20px] text-[14px] font-black shadow-xl shadow-gray-900/20 btn-press"
+                className="px-10 py-5 bg-gray-900 text-white rounded-[24px] text-[15px] font-black shadow-[0_15px_30px_rgba(0,0,0,0.2)] active:scale-95 transition-all flex items-center gap-2"
               >
-                첫 클래스 등록하기
+                <Plus size={20} strokeWidth={3} />첫 클래스 등록하기
               </button>
             </div>
           )}
