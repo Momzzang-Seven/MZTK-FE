@@ -23,10 +23,8 @@ const RegisterTicket = () => {
     triggerFileInput,
     handleNext,
     handleBack,
-    handleSubmit,
     isSubmitDisabled,
     isCheckingStore,
-    isSubmitting,
     isSuccessModalOpen,
     setIsSuccessModalOpen,
   } = useRegisterTicket();

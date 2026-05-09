@@ -10,7 +10,7 @@ import { LocationLoadingOverlay } from "@components/location/LocationLoadingOver
 import { useNavigate } from "react-router-dom";
 import { getDistanceFromLatLonInMeters } from "@utils/geo";
 import { LOCATION_CONSTANTS, VERIFY_TEXT } from "@constant/location";
-import { ChevronLeft, MapPin, Navigation, Info } from "lucide-react";
+import { ChevronLeft, MapPin, Navigation, Info, Loader2 } from "lucide-react";
 
 const Verify = () => {
   const MAP_KEY = import.meta.env.VITE_GOOGLE_MAP_API;
