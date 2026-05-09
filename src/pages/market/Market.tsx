@@ -232,7 +232,7 @@ const Market = () => {
                   <img
                     src={buildMarketplaceImageUrl(cls.thumbnailFinalObjectKey)}
                     alt={cls.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 scale-110 group-hover:scale-120"
                   />
                   {/* Category Badge */}
                   <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-full tracking-wider uppercase">

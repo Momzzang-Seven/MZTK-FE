@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SimpleHeader } from "@components/layout";
+import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonButton, CommonModal } from "@components/common";
 import { PhotoUploader } from "@components/common/PhotoUploader";
 
@@ -62,7 +62,11 @@ const ReviewWrite = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen">
-      <SimpleHeader title="수강평 작성" onBackClick={() => navigate(-1)} />
+      <TrainerHeader
+        title="수강평 작성"
+        desc="수업에 대한 솔직한 후기를 남겨주세요."
+        showBack
+      />
 
       <div className="flex-1 overflow-y-auto px-6 py-10 flex flex-col gap-10 pb-40 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Rating Section */}
