@@ -22,6 +22,7 @@ const RegisterTicket = () => {
     removeImage,
     triggerFileInput,
     handleNext,
+    handleSubmit,
     handleBack,
     isSubmitDisabled,
     isCheckingStore,
@@ -53,7 +54,7 @@ const RegisterTicket = () => {
         }
         onBack={handleBack}
         nextLabel={step === "photo" ? "다음으로" : "등록 완료"}
-        onNext={handleNext}
+        onNext={step === "photo" ? handleNext : handleSubmit}
         isNextDisabled={
           step === "photo" ? imagePreviews.length === 0 : isSubmitDisabled
         }
