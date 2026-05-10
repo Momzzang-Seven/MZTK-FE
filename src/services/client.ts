@@ -81,8 +81,8 @@ const attachInterceptors = (instance: AxiosInstance) => {
         return Promise.reject({
           response,
           config: response.config,
-          message: response.data.message,
-          code: response.data.code,
+          message: response.data?.message,
+          code: response.data?.code,
         });
       }
       return response;

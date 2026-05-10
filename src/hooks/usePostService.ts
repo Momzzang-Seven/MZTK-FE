@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePostStore } from "@store";
+import { ethers } from "ethers";
+import { usePostStore, useUserStore } from "@store";
+import { useWalletService } from "@hooks/useWalletService";
 import { buildPostPayload } from "@utils/buildPostPayload";
 import { postService, web3Service } from "@services";
 import type {
@@ -52,6 +54,8 @@ export const usePostService = () => {
     return true; // 신규 생성 모드
   })();
 
+  const { getAllowance } = useWalletService();
+
   /**
    * 게시물 생성
    * 양식 검사 + 제출
@@ -68,6 +72,32 @@ export const usePostService = () => {
       if (postType === "FREE") {
         await postService.createFreePost(payload);
       } else if (postType === "QUESTION") {
+        // 🛡️ Allowance 체크
+        const user = useUserStore.getState().user;
+        const walletAddress =
+          localStorage.getItem("wallet_address") || user?.walletAddress;
+
+        if (walletAddress) {
+          try {
+            const allowance = await getAllowance(walletAddress);
+            const requiredAmount = ethers.parseUnits(reward.toString(), 18);
+
+            if (allowance < requiredAmount) {
+              setError("ALLOWANCE_REQUIRED");
+              setIsPostLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.error("Allowance check failed:", e);
+            // 체크 자체가 실패한 경우, 일단 진행하되 백엔드 에러 처리에 맡김
+          }
+        } else {
+          // 지갑 주소가 아예 없는 경우
+          setError("지갑 연동이 필요합니다.");
+          setIsPostLoading(false);
+          return;
+        }
+
         const response = await postService.createQuestion(payload);
         if (response?.web3) {
           addPendingAction(response.web3, title);
@@ -93,15 +123,28 @@ export const usePostService = () => {
 
       if (!hasWeb3Action) {
         if (postType === "QUESTION" || postType === "ANSWER") navigate(-1);
-        else navigate(-2);
+        else navigate("/community");
       }
-    } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message || "게시물 등록에 실패했습니다.";
-      setError(message);
+    } catch (err: unknown) {
+      console.error("Post creation failed:", err);
+
+      let errorCode: string | undefined;
+      let message = "게시물 등록에 실패했습니다.";
+
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosError = err as {
+          response: { data: { code?: string; message?: string } };
+        };
+        errorCode = axiosError.response?.data?.code;
+        message = axiosError.response?.data?.message || message;
+      }
+
+      // 백엔드에서 명시적으로 WEB3_001 에러를 뱉었을 경우 안내 강화 및 모달 유도
+      if (errorCode === "WEB3_001") {
+        setError("ALLOWANCE_REQUIRED");
+      } else {
+        setError(message);
+      }
     } finally {
       setIsPostLoading(false);
     }
@@ -188,7 +231,7 @@ export const usePostService = () => {
 
       if (!hasWeb3Action) {
         if (postType === "QUESTION" || postType === "ANSWER") navigate(-1);
-        else navigate(-2);
+        else navigate("/community");
       }
     } catch (error) {
       console.log(error);
@@ -247,7 +290,7 @@ export const usePostService = () => {
 
       if (!hasWeb3Action) {
         if (postType === "QUESTION" || postType === "ANSWER") navigate(-1);
-        else navigate(-2);
+        else navigate("/community");
       }
     } catch (error) {
       const errorResponse = error as {

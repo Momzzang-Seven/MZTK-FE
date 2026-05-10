@@ -46,15 +46,15 @@ export const postService = {
     type: PostType,
     tag?: string,
     search?: string,
-    page?: number,
-    size?: number
+    cursor?: string | null,
+    size: number = 10
   ): Promise<GetPostsResponse> {
-    const response = await api.get("/posts", {
+    const response = await api.get("/v2/posts", {
       params: {
         type,
         tag,
         search,
-        page,
+        cursor,
         size,
       },
     });
