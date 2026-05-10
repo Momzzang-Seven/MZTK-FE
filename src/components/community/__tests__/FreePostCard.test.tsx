@@ -105,7 +105,7 @@ describe("FreePostCard", () => {
   describe("게시물 이미지 분기", () => {
     it("images가 있을 때 이미지를 렌더링한다", () => {
       render(<FreePostCard post={defaultPost} />);
-      const postImage = screen.getByAltText(defaultPost.images[0].imageUrl);
+      const postImage = screen.getByAltText("post");
 
       expect(postImage).toBeInTheDocument();
       expect(postImage).toHaveAttribute("src", "https://example.com/post.png");
@@ -123,9 +123,7 @@ describe("FreePostCard", () => {
         />
       );
 
-      expect(
-        screen.queryByAltText(defaultPost.images[0].imageUrl)
-      ).not.toBeInTheDocument();
+      expect(screen.queryByAltText("post")).not.toBeInTheDocument();
     });
   });
 
@@ -165,14 +163,14 @@ describe("FreePostCard", () => {
     it("태그가 정상적으로 렌더링된다", () => {
       render(<FreePostCard post={defaultPost} />);
 
-      expect(screen.getByText("#react")).toBeInTheDocument();
-      expect(screen.getByText("#frontend")).toBeInTheDocument();
+      expect(screen.getByText("# react")).toBeInTheDocument();
+      expect(screen.getByText("# frontend")).toBeInTheDocument();
     });
 
     it("태그 클릭 시 해당 태그 검색 결과 페이지로 이동한다", () => {
       render(<FreePostCard post={defaultPost} />);
 
-      const reactTag = screen.getByText("#react");
+      const reactTag = screen.getByText("# react");
       fireEvent.click(reactTag);
 
       expect(mockNavigate).toHaveBeenCalledWith("/community/free?tag=react");

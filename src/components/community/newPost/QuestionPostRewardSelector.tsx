@@ -28,8 +28,10 @@ const QuestionPostRewardSelector = ({
     const value = e.target.value;
     setCustomValue(value);
 
+    if (value === "") return;
+
     const numberValue = Number(value);
-    if (!isNaN(numberValue)) {
+    if (!isNaN(numberValue) && numberValue >= 0) {
       const finalValue = numberValue > balanceNum ? balanceNum : numberValue;
       setReward(finalValue);
     }

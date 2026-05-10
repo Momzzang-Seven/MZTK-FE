@@ -119,7 +119,7 @@ describe("Answer 컴포넌트", () => {
     expect(screen.getByText("방금 전")).toBeInTheDocument(); // formatTimeAgo
   });
 
-  it("isAccepted가 true일 때 '✓ 채택된 답변'이 표시된다", () => {
+  it("isAccepted가 true일 때 '질문자 채택 답변'이 표시된다", () => {
     const acceptedAnswer = { ...mockAnswer, isAccepted: true };
     render(
       <Answer
@@ -130,7 +130,7 @@ describe("Answer 컴포넌트", () => {
       />
     );
 
-    expect(screen.getByText("✓ 채택된 답변")).toBeInTheDocument();
+    expect(screen.getByText("질문자 채택 답변")).toBeInTheDocument();
   });
 
   it("profileImageUrl이 없을 때 기본 이미지를 렌더링한다", () => {
@@ -180,7 +180,7 @@ describe("Answer 컴포넌트", () => {
 
     expect(screen.queryByTestId("mock-comment-input")).not.toBeInTheDocument();
 
-    const commentToggle = screen.getByAltText("comment");
+    const commentToggle = screen.getByText(mockAnswer.commentCount.toString());
     fireEvent.click(commentToggle);
 
     await waitFor(() => {
@@ -192,7 +192,7 @@ describe("Answer 컴포넌트", () => {
     expect(screen.queryByTestId("mock-comment-input")).not.toBeInTheDocument();
   });
 
-  it("댓글이 없을 때 '댓글이 없습니다.' 문구를 표시한다", async () => {
+  it("댓글이 없을 때 '아직 댓글이 없습니다.' 문구를 표시한다", async () => {
     commentServiceState.comments = [];
 
     render(
@@ -202,10 +202,10 @@ describe("Answer 컴포넌트", () => {
       />
     );
 
-    fireEvent.click(screen.getByAltText("comment"));
+    fireEvent.click(screen.getByText(mockAnswer.commentCount.toString()));
 
     await waitFor(() => {
-      expect(screen.getByText("댓글이 없습니다.")).toBeInTheDocument();
+      expect(screen.getByText("아직 댓글이 없습니다.")).toBeInTheDocument();
     });
     expect(commentServiceState.fetchComments).toHaveBeenCalledWith(true);
   });
@@ -222,7 +222,7 @@ describe("Answer 컴포넌트", () => {
       />
     );
 
-    fireEvent.click(screen.getByAltText("comment"));
+    fireEvent.click(screen.getByText(mockAnswer.commentCount.toString()));
 
     await waitFor(() => {
       expect(screen.getByText("답글 펼쳐보기 (2개)")).toBeInTheDocument();
@@ -239,7 +239,7 @@ describe("Answer 컴포넌트", () => {
       />
     );
 
-    fireEvent.click(screen.getByAltText("comment"));
+    fireEvent.click(screen.getByText(mockAnswer.commentCount.toString()));
 
     await waitFor(() => {
       expect(screen.getByTestId("mock-comment-input")).toBeInTheDocument();

@@ -5,10 +5,9 @@ import {
   expect,
   vi,
   beforeEach,
-  beforeAll,
-  afterAll,
 } from "vitest";
 import ActionList from "../postActions/ActionList";
+import { useUserStore } from "@store";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", () => ({
@@ -107,39 +106,29 @@ vi.mock("@components/community", () => ({
   ),
 }));
 
+vi.mock("@store", () => ({
+  useUserStore: vi.fn(),
+}));
+
 describe("ActionList 컴포넌트", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let mockGetItem: any;
-
-  beforeAll(() => {
-    mockGetItem = vi.spyOn(Storage.prototype, "getItem");
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterAll(() => {
-    mockGetItem.mockRestore();
   });
 
   const setup = (props: Record<string, unknown> = {}) => {
     return render(<ActionList type="FREE" id={1} authorId={100} {...props} />);
   };
 
-  const setLocalStorageUser = (userId: number | null) => {
-    if (userId === null) {
-      mockGetItem.mockReturnValue(null);
-    } else {
-      mockGetItem.mockReturnValue(
-        JSON.stringify({ state: { user: { userId } } })
-      );
-    }
+  const setUserInStore = (userId: number | null) => {
+    const user = userId ? { userId } : null;
+    vi.mocked(useUserStore).mockImplementation((selector) =>
+      selector({ user })
+    );
   };
 
   describe("기본 렌더링", () => {
     it("더보기 버튼(img alt='더보기') 정상적으로 렌더링된다", () => {
-      setLocalStorageUser(null);
+      setUserInStore(null);
       setup();
 
       const moreBtn = screen.getByAltText("더보기");
@@ -149,7 +138,7 @@ describe("ActionList 컴포넌트", () => {
 
   describe("내 글인 경우", () => {
     it("더보기 클릭 시 MyPostActions가 렌더링된다", () => {
-      setLocalStorageUser(100); // authorId와 일치하는 userId
+      setUserInStore(100); // authorId와 일치하는 userId
       setup({ authorId: 100 });
 
       fireEvent.click(screen.getByAltText("더보기"));
@@ -163,7 +152,7 @@ describe("ActionList 컴포넌트", () => {
 
   describe("남의 글인 경우", () => {
     it("더보기 클릭 시 OtherPostActions가 렌더링된다", () => {
-      setLocalStorageUser(200); // authorId와 다른 userId
+      setUserInStore(200); // authorId와 다른 userId
       setup({ authorId: 100 });
 
       fireEvent.click(screen.getByAltText("더보기"));
@@ -175,7 +164,7 @@ describe("ActionList 컴포넌트", () => {
 
   describe("수정 버튼 동작", () => {
     beforeEach(() => {
-      setLocalStorageUser(100); // 내 단일 권한
+      setUserInStore(100); // 내 단일 권한
     });
 
     it('type이 "free"일 때 수정 클릭 시 navigate("/community/free/edit/{id}/select-image")가 호출된다', () => {
@@ -218,7 +207,7 @@ describe("ActionList 컴포넌트", () => {
 
   describe("댓글 수정 케이스", () => {
     it('type이 "comment"일 때 수정 클릭 시 EditComment 모달이 렌더링된다', () => {
-      setLocalStorageUser(100);
+      setUserInStore(100);
       setup({ type: "COMMENT", authorId: 100 });
 
       fireEvent.click(screen.getByAltText("더보기"));
@@ -231,7 +220,7 @@ describe("ActionList 컴포넌트", () => {
 
   describe("삭제 플로우", () => {
     it("삭제 클릭 시 ConfirmDelete 렌더링되고, 확인 클릭 시 모달이 닫힌다", async () => {
-      setLocalStorageUser(100);
+      setUserInStore(100);
       setup({ authorId: 100 });
 
       // 더보기 -> 삭제
@@ -251,7 +240,7 @@ describe("ActionList 컴포넌트", () => {
 
   describe("신고 플로우", () => {
     it("신고 클릭 시 ConfirmReport 렌더링되고, 확인 클릭 시 모달이 닫힌다", () => {
-      setLocalStorageUser(200); // 남의 글
+      setUserInStore(200); // 남의 글
       setup({ authorId: 100 });
 
       // 더보기 -> 신고
@@ -269,7 +258,7 @@ describe("ActionList 컴포넌트", () => {
 
   describe("채택 플로우", () => {
     it("채택 버튼 클릭 시 ConfirmSelect 렌더링되고, 확인 클릭 시 모달이 닫힌다", () => {
-      setLocalStorageUser(200); // 남의 글
+      setUserInStore(200); // 남의 글
       setup({ authorId: 100 });
 
       // 더보기 -> 채택

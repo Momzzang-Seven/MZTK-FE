@@ -14,27 +14,27 @@ describe("TokenSelect", () => {
   });
 
   describe("기본 렌더링", () => {
-    it("10부터 100까지 10단위 버튼이 10개 렌더링되어야 한다", () => {
+    it("10, 30, 50, 100, 200 버튼이 렌더링되어야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
 
       const buttons = screen.getAllByRole("button");
-      expect(buttons).toHaveLength(10);
+      expect(buttons).toHaveLength(5);
 
-      for (let i = 1; i <= 10; i++) {
+      [10, 30, 50, 100, 200].forEach((amount) => {
         expect(
-          screen.getByRole("button", { name: String(i * 10) })
+          screen.getByRole("button", { name: String(amount) })
         ).toBeInTheDocument();
-      }
+      });
     });
 
-    it('"보유 토큰: 80"이 표시되어야 한다', () => {
+    it('"보유: 80 MZTK"이 표시되어야 한다', () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
-      expect(screen.getByText("보유 토큰: 80")).toBeInTheDocument();
+      expect(screen.getByText("보유: 80 MZTK")).toBeInTheDocument();
     });
 
     it("직접 입력 input이 렌더링되어야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
-      expect(screen.getByPlaceholderText("직접 입력")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("0")).toBeInTheDocument();
     });
   });
 
@@ -57,40 +57,40 @@ describe("TokenSelect", () => {
       let button30 = screen.getByRole("button", { name: "30" });
       expect(button30).toHaveClass("bg-main");
 
-      let button40 = screen.getByRole("button", { name: "40" });
-      expect(button40).not.toHaveClass("bg-main");
+      let button50 = screen.getByRole("button", { name: "50" });
+      expect(button50).not.toHaveClass("bg-main");
 
       // prop이 변경될 경우 스타일이 바뀌는지 추가 검증
-      rerender(<TokenSelector reward={40} setReward={setRewardMock} />);
+      rerender(<TokenSelector reward={50} setReward={setRewardMock} />);
       button30 = screen.getByRole("button", { name: "30" });
-      button40 = screen.getByRole("button", { name: "40" });
+      button50 = screen.getByRole("button", { name: "50" });
 
       expect(button30).not.toHaveClass("bg-main");
-      expect(button40).toHaveClass("bg-main");
+      expect(button50).toHaveClass("bg-main");
     });
   });
 
   describe("비활성화 버튼", () => {
-    it("dummyBalance(80)보다 큰 버튼은 disabled 상태여야 한다", () => {
+    it("balance(80)보다 큰 버튼은 disabled 상태여야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
 
       // 80 이하 버튼은 활성화 상태
-      for (let i = 1; i <= 8; i++) {
+      [10, 30, 50].forEach((amount) => {
         expect(
-          screen.getByRole("button", { name: String(i * 10) })
+          screen.getByRole("button", { name: String(amount) })
         ).not.toBeDisabled();
-      }
+      });
 
       // 80 초과 버튼은 비활성화 상태
-      expect(screen.getByRole("button", { name: "90" })).toBeDisabled();
       expect(screen.getByRole("button", { name: "100" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "200" })).toBeDisabled();
     });
 
     it("disabled 버튼 클릭 시 setReward가 호출되지 않아야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
 
-      const button90 = screen.getByRole("button", { name: "90" });
-      fireEvent.click(button90);
+      const button100 = screen.getByRole("button", { name: "100" });
+      fireEvent.click(button100);
 
       expect(setRewardMock).not.toHaveBeenCalled();
     });
@@ -100,7 +100,7 @@ describe("TokenSelect", () => {
     it("숫자 입력 시 setReward가 호출되어야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
 
-      const input = screen.getByPlaceholderText("직접 입력");
+      const input = screen.getByPlaceholderText("0");
       fireEvent.change(input, { target: { value: "50" } });
 
       expect(setRewardMock).toHaveBeenCalledWith(50);
@@ -109,7 +109,7 @@ describe("TokenSelect", () => {
     it("80 초과 입력 시 80으로 제한되어야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
 
-      const input = screen.getByPlaceholderText("직접 입력");
+      const input = screen.getByPlaceholderText("0");
       fireEvent.change(input, { target: { value: "100" } });
 
       expect(setRewardMock).toHaveBeenCalledWith(80);
@@ -118,7 +118,7 @@ describe("TokenSelect", () => {
     it("음수 입력 시 setReward가 호출되지 않아야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
 
-      const input = screen.getByPlaceholderText("직접 입력");
+      const input = screen.getByPlaceholderText("0");
       fireEvent.change(input, { target: { value: "-10" } });
 
       expect(setRewardMock).not.toHaveBeenCalled();
@@ -127,7 +127,7 @@ describe("TokenSelect", () => {
     it("숫자가 아닌 값 입력 시 setReward가 호출되지 않아야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
 
-      const input = screen.getByPlaceholderText("직접 입력");
+      const input = screen.getByPlaceholderText("0");
 
       fireEvent.change(input, { target: { value: "abc" } });
 
@@ -137,9 +137,9 @@ describe("TokenSelect", () => {
 
   describe("경계값", () => {
     it("0 입력 시 정상 동작해야 한다", () => {
-      render(<TokenSelector reward={0} setReward={setRewardMock} />);
+      render(<TokenSelector reward={10} setReward={setRewardMock} />);
 
-      const input = screen.getByPlaceholderText("직접 입력");
+      const input = screen.getByPlaceholderText("0");
       fireEvent.change(input, { target: { value: "0" } });
 
       expect(setRewardMock).toHaveBeenCalledWith(0);
@@ -148,7 +148,7 @@ describe("TokenSelect", () => {
     it("80 입력 시 정상 동작해야 한다", () => {
       render(<TokenSelector reward={0} setReward={setRewardMock} />);
 
-      const input = screen.getByPlaceholderText("직접 입력");
+      const input = screen.getByPlaceholderText("0");
       fireEvent.change(input, { target: { value: "80" } });
 
       expect(setRewardMock).toHaveBeenCalledWith(80);
