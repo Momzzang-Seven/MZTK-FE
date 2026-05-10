@@ -95,9 +95,10 @@ const MarketReservation = () => {
       else setIsFetchingNext(true);
 
       const response = await getMyReservations(undefined, cursor);
+      const newReservations = response.reservations ?? [];
 
-      if (!cursor) setReservations(response.reservations);
-      else setReservations((prev) => [...prev, ...response.reservations]);
+      if (!cursor) setReservations(newReservations);
+      else setReservations((prev) => [...prev, ...newReservations]);
 
       setNextCursor(response.nextCursor);
       setHasNext(response.hasNext);
@@ -115,7 +116,7 @@ const MarketReservation = () => {
   }, [loadReservations]);
 
   const filteredReservations = useMemo(() => {
-    const filtered = reservations.filter((r) => {
+    const filtered = (reservations ?? []).filter((r) => {
       const isPast = isReservationPast(r.status);
       return activeTab === "active" ? !isPast : isPast;
     });
