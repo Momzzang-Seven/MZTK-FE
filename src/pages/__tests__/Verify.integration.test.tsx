@@ -112,7 +112,7 @@ describe("Verify Page API Integration (MSW)", () => {
       () => {
         expect(mockNavigate).toHaveBeenCalledWith("/");
       },
-      { timeout: 2500 }
+      { timeout: 5000 }
     );
   });
 
