@@ -1,11 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-} from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import ActionList from "../postActions/ActionList";
 import { useUserStore } from "@store";
 
@@ -120,7 +114,16 @@ describe("ActionList 컴포넌트", () => {
   };
 
   const setUserInStore = (userId: number | null) => {
-    const user = userId ? { userId } : null;
+    const user = userId
+      ? {
+          userId,
+          email: "test@test.com",
+          nickname: "tester",
+          profileImage: "",
+          role: "USER",
+          walletAddress: "0x123",
+        }
+      : null;
     vi.mocked(useUserStore).mockImplementation((selector) =>
       selector({ user })
     );
