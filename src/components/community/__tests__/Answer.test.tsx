@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import Answer from "../Answer";
 import { formatTimeAgo } from "@utils";
-import { useCommentService } from "@hooks";
+import { useCommentService, usePostService } from "@hooks";
 
 vi.mock("@utils", () => ({
   formatTimeAgo: vi.fn(),
@@ -53,21 +53,31 @@ vi.mock("@components/community", () => ({
 const commentServiceState: {
   comments: Array<{ commentId: number; content: string; replyCount: number }>;
   isLoading: boolean;
+  isLast: boolean;
   error: string | null;
   fetchComments: ReturnType<typeof vi.fn>;
   createComment: ReturnType<typeof vi.fn>;
   refetch: ReturnType<typeof vi.fn>;
+  loadMore: ReturnType<typeof vi.fn>;
 } = {
   comments: [],
   isLoading: false,
+  isLast: true,
   error: null,
   fetchComments: vi.fn(),
   createComment: vi.fn(),
   refetch: vi.fn(),
+  loadMore: vi.fn(),
+};
+
+const postServiceState = {
+  likePost: vi.fn(),
+  unlikePost: vi.fn(),
 };
 
 vi.mock("@hooks", () => ({
   useCommentService: vi.fn(() => commentServiceState),
+  usePostService: vi.fn(() => postServiceState),
 }));
 
 describe("Answer 컴포넌트", () => {
@@ -88,6 +98,9 @@ describe("Answer 컴포넌트", () => {
     isAccepted: false,
     commentCount: 5,
     images: [],
+    isLiked: false,
+    likeCount: 0,
+    web3Execution: null,
   };
 
   beforeEach(() => {
@@ -96,12 +109,20 @@ describe("Answer 컴포넌트", () => {
 
     commentServiceState.comments = [];
     commentServiceState.isLoading = false;
+    commentServiceState.isLast = true;
     commentServiceState.error = null;
     commentServiceState.fetchComments = vi.fn();
     commentServiceState.createComment = vi.fn().mockResolvedValue(undefined);
     commentServiceState.refetch = vi.fn();
+    commentServiceState.loadMore = vi.fn();
     (useCommentService as unknown as import("vitest").Mock).mockReturnValue(
       commentServiceState
+    );
+
+    postServiceState.likePost = vi.fn();
+    postServiceState.unlikePost = vi.fn();
+    (usePostService as unknown as import("vitest").Mock).mockReturnValue(
+      postServiceState
     );
   });
 

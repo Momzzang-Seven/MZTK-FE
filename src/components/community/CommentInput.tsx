@@ -23,7 +23,7 @@ const CommentInput = ({
   handleCommentSubmit,
 }: Props) => {
   const isActive = content.trim().length > 0;
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (parentNickname && inputRef.current) {
@@ -36,7 +36,9 @@ const CommentInput = ({
     setParentId(undefined);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     if (e.key === "Backspace" && content === "" && parentNickname) {
       e.preventDefault();
       handleRemoveReplyTarget();
@@ -69,7 +71,7 @@ const CommentInput = ({
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
               <input
-                ref={inputRef}
+                ref={inputRef as React.RefObject<HTMLInputElement>}
                 type="text"
                 placeholder={
                   parentNickname
@@ -113,12 +115,37 @@ const CommentInput = ({
           </span>
         </div>
 
+        {parentNickname && (
+          <div className="flex items-center justify-between px-1 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-black text-main bg-main/5 px-2 py-0.5 rounded-full border border-main/10">
+                @{parentNickname}
+              </span>
+              <span className="text-[10px] font-bold text-gray-400">
+                님에게 답글
+              </span>
+            </div>
+            <button
+              onClick={handleRemoveReplyTarget}
+              className="text-gray-300 hover:text-gray-500 transition-colors"
+            >
+              <X size={14} strokeWidth={3} />
+            </button>
+          </div>
+        )}
+
         <div className="relative group">
           <textarea
+            ref={inputRef as React.RefObject<HTMLTextAreaElement>}
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onKeyDown={handleKeyDown}
             maxLength={maxLength}
-            placeholder="전문적이고 따뜻한 조언을 남겨주세요."
+            placeholder={
+              parentNickname
+                ? "따뜻한 답글을 남겨주세요"
+                : "전문적이고 따뜻한 조언을 남겨주세요."
+            }
             className="w-full resize-none rounded-[24px] border-2 border-transparent bg-white p-5 text-[15px] font-bold text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-main/10 shadow-sm transition-all"
             rows={4}
           />

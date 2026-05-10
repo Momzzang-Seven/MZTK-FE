@@ -5,14 +5,7 @@ import { usePostStore, useUserStore } from "@store";
 import { useWalletService } from "@hooks/useWalletService";
 import { buildPostPayload } from "@utils/buildPostPayload";
 import { postService, web3Service } from "@services";
-import type {
-  FreePost,
-  QuestionPost,
-  PostPayload,
-  Web3Execution,
-  StoredWeb3Action,
-  AnswerPost,
-} from "@types";
+import type { FreePost, QuestionPost, PostPayload, AnswerPost } from "@types";
 import type { PostType } from "@store";
 
 export const usePostService = () => {
@@ -100,7 +93,6 @@ export const usePostService = () => {
 
         const response = await postService.createQuestion(payload);
         if (response?.web3) {
-          addPendingAction(response.web3, title);
           navigate(
             `/verify-wallet/${response.web3.resource.type}/${response.postId}`,
             { state: { intent: response.web3 } }
@@ -110,7 +102,6 @@ export const usePostService = () => {
       } else if (postType === "ANSWER" && parentPostId) {
         const response = await postService.createAnswer(parentPostId, payload);
         if (response?.web3) {
-          addPendingAction(response.web3);
           navigate(
             `/verify-wallet/${response.web3.resource.type}/${response.postId}`,
             { state: { intent: response.web3 } }
@@ -202,7 +193,6 @@ export const usePostService = () => {
       } else if (postType === "QUESTION") {
         const response = await postService.updateQuestion(postId, payload);
         if (response?.web3) {
-          addPendingAction(response.web3, title);
           navigate(
             `/verify-wallet/${response.web3.resource.type}/${response.postId}`,
             { state: { intent: response.web3 } }
@@ -218,7 +208,6 @@ export const usePostService = () => {
           payload
         );
         if (response?.web3) {
-          addPendingAction(response.web3);
           navigate(
             `/verify-wallet/${response.web3.resource.type}/${response.postId}`,
             { state: { intent: response.web3 } }
@@ -267,7 +256,6 @@ export const usePostService = () => {
       } else if (type === "QUESTION") {
         const response = await postService.deletePost(postId);
         if (response?.web3) {
-          addPendingAction(response.web3, title);
           navigate(
             `/verify-wallet/${response.web3.resource.type}/${response.postId}`,
             { state: { intent: response.web3 } }
@@ -279,7 +267,6 @@ export const usePostService = () => {
           throw Error("답변은 부모 게시글 정보가 있어야 합니다.");
         const response = await postService.deleteAnswer(parentPostId, postId);
         if (response?.web3) {
-          addPendingAction(response.web3);
           navigate(
             `/verify-wallet/${response.web3.resource.type}/${response.postId}`,
             { state: { intent: response.web3 } }
@@ -329,25 +316,6 @@ export const usePostService = () => {
     []
   );
 
-  const addPendingAction = (data: Web3Execution, summary?: string) => {
-    if (!data) return;
-
-    const existingActions: StoredWeb3Action[] = JSON.parse(
-      localStorage.getItem("pendingWeb3Actions") || "[]"
-    );
-
-    const newAction: StoredWeb3Action = {
-      ...data,
-      summary:
-        summary || (postType === "QUESTION" ? title : content.substring(0, 20)),
-    };
-
-    localStorage.setItem(
-      "pendingWeb3Actions",
-      JSON.stringify([...existingActions, newAction])
-    );
-  };
-
   const getIncompletedPostTransaction = async (executionIntentId: string) => {
     if (isPostLoading) return null;
 
@@ -372,55 +340,6 @@ export const usePostService = () => {
   };
 
   /**
-   * 로컬 생성된 게시글의 Intent Refresh
-   */
-  const refreshPendingPosts = async () => {
-    const storedData = localStorage.getItem("pendingWeb3Actions");
-    if (!storedData) return;
-
-    const actions: StoredWeb3Action[] = JSON.parse(storedData);
-    if (actions.length === 0) return;
-
-    setIsPostLoading(true);
-
-    try {
-      // 1. 모든 Pending 액션에 대해 병렬로 온체인 상태 조회 API 호출
-      const updatePromises = actions.map(async (intent) => {
-        try {
-          // API URL: /users/me/web3/execution-intents/{executionIntentId}
-          const newData = await web3Service.getWeb3TransactionStatus(
-            intent.executionIntent.id
-          );
-
-          if (newData) {
-            // 2. 응답 데이터 기반으로 액션 정보 업데이트
-            return {
-              ...newData,
-              summary: intent.summary,
-            };
-          }
-          return intent; // 실패 시 기존 데이터 유지
-        } catch (err) {
-          console.log(err);
-          return intent;
-        }
-      });
-
-      const updatedActions = await Promise.all(updatePromises);
-      localStorage.setItem(
-        "pendingWeb3Actions",
-        JSON.stringify(updatedActions)
-      );
-      // 페이지 리렌더링을 위해 필요 시 상태를 반환하거나 window 이벤트를 발생시킬 수 있음
-      window.dispatchEvent(new Event("storage"));
-    } catch (error) {
-      console.error("복구 프로세스 중 에러 발생:", error);
-    } finally {
-      setIsPostLoading(false);
-    }
-  };
-
-  /**
    * intent 재생성
    */
   const recoverCreate = async (
@@ -439,31 +358,6 @@ export const usePostService = () => {
         response = await postService.recoverCreateAnswer(parentPostId, postId);
       } else {
         throw Error("게시글 타입이 올바르지 않습니다.");
-      }
-
-      // 1. 응답에 web3 정보가 포함되어 있는지 확인
-      if (response?.web3) {
-        const storedData = localStorage.getItem("pendingWeb3Actions");
-        if (storedData) {
-          const actions: StoredWeb3Action[] = JSON.parse(storedData);
-
-          // 2. 같은 resourceId를 가진 기존 액션을 찾아 업데이트
-          const updatedActions = actions.map((intent) => {
-            if (Number(intent.resource.id) === postId) {
-              return {
-                ...response.web3!,
-                summary: intent.summary,
-              };
-            }
-            return intent;
-          });
-
-          localStorage.setItem(
-            "pendingWeb3Actions",
-            JSON.stringify(updatedActions)
-          );
-          window.dispatchEvent(new Event("storage"));
-        }
       }
       return response;
     } catch (error) {
@@ -512,12 +406,14 @@ export const usePostService = () => {
   /**
    * 게시물 좋아요
    */
-  const likePost = async (postId: number) => {
+  const likePost = async (postId: number, answerId?: number) => {
     if (isPostLoading) return;
 
     setIsPostLoading(true);
     try {
-      const response = await postService.likePost(postId);
+      const response = answerId
+        ? await postService.likeAnswer(postId, answerId)
+        : await postService.likePost(postId);
       return response;
     } catch (error) {
       const errorResponse = error as {
@@ -536,12 +432,14 @@ export const usePostService = () => {
   /**
    * 게시물 좋아요 취소
    */
-  const unlikePost = async (postId: number) => {
+  const unlikePost = async (postId: number, answerId?: number) => {
     if (isPostLoading) return;
 
     setIsPostLoading(true);
     try {
-      const response = await postService.unlikePost(postId);
+      const response = answerId
+        ? await postService.unlikeAnswer(postId, answerId)
+        : await postService.unlikePost(postId);
       return response;
     } catch (error) {
       const errorResponse = error as {
@@ -569,7 +467,6 @@ export const usePostService = () => {
     deletePost,
     getAnswers,
     getIncompletedPostTransaction,
-    refreshPendingPosts,
     recoverCreate,
     acceptAnswer,
     likePost,

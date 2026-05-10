@@ -6,6 +6,7 @@ import {
   Loader2,
   AlertCircle,
   Clock,
+  ArrowDown,
 } from "lucide-react";
 import type { AnswerPost, Comment } from "@types";
 import {
@@ -16,7 +17,7 @@ import {
 } from "@components/community";
 import { LoadingSpinner } from "@components/common";
 import { formatTimeAgo, replaceImageSrc } from "@utils";
-import { useCommentService } from "@hooks";
+import { useCommentService, usePostService } from "@hooks";
 
 interface AnswerProps {
   answer: AnswerPost;
@@ -42,8 +43,34 @@ const Answer = ({
   const [parentCommentNickname, setParentCommentNickname] = useState<
     string | null
   >(null);
-  const { comments, isLoading, refetch, fetchComments, createComment, error } =
-    useCommentService<Comment>(answer.answerId, true);
+
+  const {
+    comments,
+    isLoading,
+    refetch,
+    fetchComments,
+    createComment,
+    loadMore,
+    isLast,
+    error,
+  } = useCommentService<Comment>(answer.answerId, true);
+
+  const { likePost, unlikePost } = usePostService();
+  const [liked, setLiked] = useState(answer.isLiked);
+  const [likeCount, setLikeCount] = useState(answer.likeCount);
+
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextLiked = !liked;
+    if (liked) {
+      unlikePost(parenPostId, answer.answerId);
+    } else {
+      likePost(parenPostId, answer.answerId);
+    }
+
+    setLiked(nextLiked);
+    setLikeCount((prev) => (nextLiked ? prev + 1 : prev - 1));
+  };
 
   const processedContent = answer.content
     ? replaceImageSrc(answer.content, answer.images)
@@ -184,12 +211,34 @@ const Answer = ({
 
       {/* Footer Stats */}
       <div className="flex items-center gap-4 mt-1">
+        <div
+          onClick={handleLikeClick}
+          className="flex items-center gap-2 text-gray-400 group cursor-pointer"
+        >
+          <div
+            className={`p-1 rounded-full transition-colors group-hover/btn:bg-gray-100 hover:bg-red-50`}
+          >
+            <Heart
+              size={20}
+              strokeWidth={2.5}
+              className={`transition-all ${
+                liked ? "fill-red-500 text-red-500 scale-110" : "text-gray-400"
+              }`}
+            />
+          </div>
+          <span
+            className={`text-[14px] font-black ${liked ? "text-red-500" : "text-gray-500"}`}
+          >
+            {likeCount}
+          </span>
+        </div>
+
         <button
           onClick={toggleComment}
           className="flex items-center gap-2 text-gray-400 hover:text-main transition-colors active:scale-95 group"
         >
           <div
-            className={`p-2 rounded-full transition-colors ${isCommentsOpen ? "bg-main/10 text-main" : "group-hover:bg-gray-100"}`}
+            className={`p-2 rounded-full transition-colors hover:bg-main/10 ${isCommentsOpen ? "text-main" : "group-hover:bg-gray-100"}`}
           >
             <MessageCircle size={20} strokeWidth={2.5} />
           </div>
@@ -199,23 +248,6 @@ const Answer = ({
             {answer.commentCount}
           </span>
         </button>
-
-        <div className="flex items-center gap-2 text-gray-400 group cursor-default">
-          <div
-            className={`p-2 rounded-full transition-colors ${answer.isLiked ? "bg-red-50 text-red-500" : ""}`}
-          >
-            <Heart
-              size={20}
-              strokeWidth={2.5}
-              className={answer.isLiked ? "fill-red-500" : ""}
-            />
-          </div>
-          <span
-            className={`text-[14px] font-black ${answer.isLiked ? "text-red-500" : "text-gray-500"}`}
-          >
-            {answer.likeCount}
-          </span>
-        </div>
 
         {statusConfig && (
           <div
@@ -261,8 +293,18 @@ const Answer = ({
                     onReplyClick={handleStartReply}
                     targetId={answer.answerId}
                     isAnswer={true}
+                    isRootComment={true}
                   />
                 ))}
+                {!isLast && !isLoading && (
+                  <div
+                    onClick={loadMore}
+                    className="flex rounded-full items-center justify-center py-1 gap-2 cursor-pointer text-sm text-gray-500 hover:text-main"
+                  >
+                    <ArrowDown size={20} strokeWidth={2.5} />
+                    <span>댓글 더보기</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

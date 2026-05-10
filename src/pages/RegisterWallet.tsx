@@ -41,6 +41,18 @@ const RegisterWallet = () => {
       const phrase = mnemonics.map((m) => m.trim().toLowerCase()).join(" ");
       // HDNodeWallet을 사용하여 니모닉 정보를 명시적으로 유지
       const recoveredWallet = ethers.HDNodeWallet.fromPhrase(phrase);
+
+      const existingWalletAddress = localStorage.getItem("wallet_address");
+      if (
+        existingWalletAddress &&
+        existingWalletAddress === recoveredWallet.address
+      ) {
+        setModal({
+          title: "기존 지갑과 동일한 지갑입니다.",
+          desc: "기존 지갑과 다른 지갑을 연결해 주세요.",
+        });
+        return;
+      }
       setWallet(recoveredWallet);
       setStep("PIN_SET");
     } catch {

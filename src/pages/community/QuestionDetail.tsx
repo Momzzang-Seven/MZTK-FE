@@ -117,7 +117,7 @@ const QuestionDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
+    <div className="min-h-screen bg-gray-50/50 pb-35">
       <QuestionHeader
         isMine={isMine}
         type="QUESTION"

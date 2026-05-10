@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Coins, Clock } from "lucide-react";
+import { MessageCircle, Coins, Clock, Heart } from "lucide-react";
 import type { QuestionPost } from "@types";
 import { getQuestionStatus, statusStyleMap, formatTimeAgo } from "@utils";
 
@@ -72,7 +72,7 @@ const QuestionPostCard = ({ post }: Props) => {
       </div>
 
       {/* Tags */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-1 flex flex-wrap gap-2">
         {post.tags.map((tag) => (
           <span
             key={tag}
@@ -108,17 +108,37 @@ const QuestionPostCard = ({ post }: Props) => {
         </div>
 
         <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2 group/stat">
-            <div className="p-2 rounded-full group-hover/stat:bg-gray-100 transition-colors">
-              <MessageCircle
-                size={18}
-                strokeWidth={3}
-                className="text-gray-300 group-hover/stat:text-main"
-              />
+          <div>
+            <div className="flex items-center gap-1 group/stat">
+              <div className="p-2 rounded-full">
+                <Heart
+                  size={20}
+                  className={`transition-all ${
+                    post.isLiked
+                      ? "fill-red-500 text-red-500 scale-110"
+                      : "text-gray-300"
+                  }`}
+                  strokeWidth={2.5}
+                />
+              </div>
+              <span className="text-[13px] font-black text-gray-500">
+                {post.likeCount}
+              </span>
             </div>
-            <span className="text-[13px] font-black text-gray-500">
-              {post.commentCount}
-            </span>
+          </div>
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-1 group/stat">
+              <div className="p-2 rounded-full">
+                <MessageCircle
+                  size={18}
+                  strokeWidth={3}
+                  className="text-gray-300"
+                />
+              </div>
+              <span className="text-[13px] font-black text-gray-500">
+                {post.commentCount}
+              </span>
+            </div>
           </div>
         </div>
       </div>

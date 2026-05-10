@@ -37,6 +37,16 @@ export const useCommentService = <T extends Comment>(
             },
           };
           setComments((prev) => [...prev, commentWithWriter as T]);
+        } else {
+          // 답글이 달린 부모 댓글의 replyCount를 낙관적으로 증가시킨다.
+          // ReplySection이 이 변화를 감지해 새 답글을 목록에 반영한다.
+          setComments((prev) =>
+            prev.map((c) =>
+              c.commentId === payload.parentId
+                ? { ...c, replyCount: c.replyCount + 1 }
+                : c
+            )
+          );
         }
         return newComment;
       } catch (error) {
