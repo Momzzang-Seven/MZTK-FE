@@ -37,7 +37,8 @@ const CreateWallet = () => {
   const emptyIndices = useMemo(() => [1, 4, 7, 10], []);
 
   useEffect(() => {
-    const newWallet = ethers.Wallet.createRandom();
+    // HDNodeWallet.createRandom은 니모닉을 포함한 HD 지갑을 생성합니다.
+    const newWallet = ethers.HDNodeWallet.createRandom();
     const words = newWallet.mnemonic?.phrase.split(" ") || [];
     setWallet(newWallet);
     setMnemonics(words);
@@ -60,6 +61,7 @@ const CreateWallet = () => {
   const finalize = useCallback(async () => {
     if (!wallet) return;
     try {
+      // HDNodeWallet.encrypt는 니모닉 구문을 포함하여 암호화합니다.
       const encrypted = await wallet.encrypt(pin);
       localStorage.setItem("encrypted_wallet", encrypted);
       localStorage.setItem("wallet_address", wallet.address);
@@ -79,6 +81,7 @@ const CreateWallet = () => {
             setStep("SHOW");
             return;
           }
+          // 복구 시에도 Wallet.fromEncryptedJson 사용 (니모닉이 있으면 Wallet 객체 내에 포함됨)
           await ethers.Wallet.fromEncryptedJson(encryptedJson, authPin);
           setStep("SHOW");
         } catch {
