@@ -48,6 +48,12 @@ interface UserState {
   analysisType: "exercise" | "record" | null;
   analysisTargetTime: number | null;
   analysisStartedAt: number | null;
+  attendanceResult: {
+    success: boolean;
+    message: string;
+    rewardedXp: number;
+    streakDays: number;
+  } | null;
   selectedNetwork: NetworkType;
 
   setUser: (user: UserInfo) => void;
@@ -78,6 +84,7 @@ interface UserState {
     message: string;
     rewardedXp: number;
   }>;
+  clearAttendanceResult: () => void;
   completeExercise: (reward?: number) => {
     success: boolean;
     message: string;
@@ -142,6 +149,8 @@ export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       ...initialState,
+
+      attendanceResult: null,
 
       setUser: (user) => set({ user, isAuthenticated: true }),
       setAccessToken: (token) => set({ accessToken: token }),
@@ -222,6 +231,11 @@ export const useUserStore = create<UserState>()(
           const result = await attendanceService.checkIn();
 
           if (result.success) {
+            const successMessage =
+              result.bonusXp > 0
+                ? `연속 출석 보너스! ${result.grantedXp + result.bonusXp} XP를 획득했어요.`
+                : `오늘의 출석 완료! ${result.grantedXp} XP를 획득했습니다.`;
+
             set((state) => ({
               lastAttendanceDate: today,
               attendanceStreak: result.streakDays,
@@ -233,12 +247,22 @@ export const useUserStore = create<UserState>()(
                       result.streakDays > 7 ? 1 : result.streakDays,
                   },
               xp: state.xp + result.grantedXp + result.bonusXp,
-              snackbar: { isOpen: true, message: result.message },
+              snackbar: {
+                isOpen: true,
+                message: successMessage,
+                variant: "success",
+              },
+              attendanceResult: {
+                success: true,
+                message: successMessage,
+                rewardedXp: result.grantedXp + result.bonusXp,
+                streakDays: result.streakDays,
+              },
             }));
 
             return {
               success: true,
-              message: result.message,
+              message: successMessage,
               rewardedXp: result.grantedXp + result.bonusXp,
             };
           }
@@ -258,6 +282,8 @@ export const useUserStore = create<UserState>()(
           };
         }
       },
+
+      clearAttendanceResult: () => set({ attendanceResult: null }),
 
       completeExercise: (rewardAmount = 100) => {
         const { lastExerciseDate } = get();
