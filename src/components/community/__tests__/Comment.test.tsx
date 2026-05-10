@@ -32,7 +32,11 @@ describe("Comment", () => {
 
   it("댓글 내용이 렌더링된다", () => {
     render(
-      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+      <CommentItem
+        comment={mockComment}
+        onReplyClick={mockOnReplyClick}
+        targetId={1}
+      />
     );
 
     expect(screen.getByText("이것은 테스트 댓글입니다.")).toBeInTheDocument();
@@ -40,7 +44,11 @@ describe("Comment", () => {
 
   it("작성자 닉네임이 표시된다", () => {
     render(
-      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+      <CommentItem
+        comment={mockComment}
+        onReplyClick={mockOnReplyClick}
+        targetId={1}
+      />
     );
 
     expect(screen.getByText("테스트유저")).toBeInTheDocument();
@@ -48,7 +56,11 @@ describe("Comment", () => {
 
   it("프로필 이미지가 표시된다", () => {
     render(
-      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+      <CommentItem
+        comment={mockComment}
+        onReplyClick={mockOnReplyClick}
+        targetId={1}
+      />
     );
 
     const profileImage = screen.getByAltText("테스트유저");
@@ -72,6 +84,7 @@ describe("Comment", () => {
       <CommentItem
         comment={commentWithoutImage}
         onReplyClick={mockOnReplyClick}
+        targetId={1}
       />
     );
 
@@ -87,6 +100,7 @@ describe("Comment", () => {
         comment={mockComment}
         isRootComment={false}
         onReplyClick={mockOnReplyClick}
+        targetId={1}
       />
     );
 
@@ -101,7 +115,11 @@ describe("Comment", () => {
 
   it("formatTimeAgo 함수가 호출되어 시간이 표시된다", () => {
     render(
-      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+      <CommentItem
+        comment={mockComment}
+        onReplyClick={mockOnReplyClick}
+        targetId={1}
+      />
     );
 
     expect(screen.getByText("5분 전")).toBeInTheDocument();
@@ -109,7 +127,11 @@ describe("Comment", () => {
 
   it("ActionList 컴포넌트가 렌더링된다", () => {
     render(
-      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+      <CommentItem
+        comment={mockComment}
+        onReplyClick={mockOnReplyClick}
+        targetId={1}
+      />
     );
 
     expect(screen.getByTestId("action-list-COMMENT-1")).toBeInTheDocument();
@@ -117,7 +139,11 @@ describe("Comment", () => {
 
   it("댓글 레이아웃이 올바르게 구성된다", () => {
     const { container } = render(
-      <CommentItem comment={mockComment} onReplyClick={mockOnReplyClick} />
+      <CommentItem
+        comment={mockComment}
+        onReplyClick={mockOnReplyClick}
+        targetId={1}
+      />
     );
 
     const commentContainer = container.querySelector(".flex.gap-3.p-2");
