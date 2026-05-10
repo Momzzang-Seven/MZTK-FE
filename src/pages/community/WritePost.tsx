@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { SimpleHeader } from "@components/layout";
 import { LoadingSpinner, CommonModal } from "@components/common";
 import { usePostStore } from "@store";
@@ -14,6 +14,7 @@ import { replaceImageSrc } from "@utils";
 import type { Image } from "@types";
 
 const WritePost = () => {
+  const navigate = useNavigate();
   const { type, postId, parentId } = useParams();
   const location = useLocation();
   const { pathname } = useLocation();
@@ -62,7 +63,12 @@ const WritePost = () => {
       }
     } else {
       // 새 게시물 모드
-      if (urlType !== "FREE") reset(); // 질문, 답변만 이 페이지에서 reset
+      // 이미 내용이 있는 경우(예: 승인 후 복귀) reset을 건너뜀
+      const hasContent =
+        (storeTitle?.trim() ?? "") !== "" ||
+        (storeContent?.trim() ?? "") !== "";
+      if (urlType !== "FREE" && !hasContent) reset();
+
       setPostType(urlType);
 
       if (urlType === "ANSWER" && postId) {
@@ -110,26 +116,42 @@ const WritePost = () => {
         </div>
       )}
 
-      {error && (
+      {error && error === "ALLOWANCE_REQUIRED" ? (
         <CommonModal
-          title="오류 발생"
-          desc={error}
-          confirmLabel="재시도"
-          onConfirmClick={handleSubmit}
-          cancelLabel="닫기"
+          title="토큰 사용 승인 필요"
+          desc="질문 보상을 예치하려면 지갑의 토큰 사용 권한 승인이 필요합니다. 지금 승인하시겠습니까?"
+          confirmLabel="승인하기"
+          onConfirmClick={() => {
+            setError(null);
+            navigate("/verify-approve", {
+              state: { amount: usePostStore.getState().reward },
+            });
+          }}
+          cancelLabel="나중에"
           onCancelClick={() => setError(null)}
         />
+      ) : (
+        error && (
+          <CommonModal
+            title="오류 발생"
+            desc={error}
+            confirmLabel="재시도"
+            onConfirmClick={handleSubmit}
+            cancelLabel="닫기"
+            onCancelClick={() => setError(null)}
+          />
+        )
       )}
 
       <SimpleHeader
         button={
           <div
-            className={`font-semibold text-sm cursor-pointer ${
-              !isActive ? "text-gray-400" : "text-main"
+            className={`font-black text-[15px] cursor-pointer transition-all active:scale-95 px-2 py-1 ${
+              !isActive ? "text-gray-300 pointer-events-none" : "text-main"
             }`}
             onClick={isActive ? handleSubmit : undefined}
           >
-            {isEditMode ? "수정하기" : "등록하기"}
+            {isEditMode ? "수정" : "등록"}
           </div>
         }
       />
