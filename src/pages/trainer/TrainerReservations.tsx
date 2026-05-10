@@ -93,9 +93,10 @@ const TrainerReservations = () => {
       else setIsFetchingNext(true);
 
       const response = await getTrainerReservations(undefined, cursor);
+      const newReservations = response.reservations ?? [];
 
-      if (!cursor) setReservations(response.reservations);
-      else setReservations((prev) => [...prev, ...response.reservations]);
+      if (!cursor) setReservations(newReservations);
+      else setReservations((prev) => [...prev, ...newReservations]);
 
       setNextCursor(response.nextCursor);
       setHasNext(response.hasNext);
@@ -112,31 +113,31 @@ const TrainerReservations = () => {
     void loadReservations();
   }, [loadReservations]);
 
-  const counts = useMemo(
-    () => ({
-      pending: reservations.filter(
+  const counts = useMemo(() => {
+    const safeReservations = reservations ?? [];
+    return {
+      pending: safeReservations.filter(
         (r) => r.status === RESERVATION_STATUS.PENDING
       ).length,
-      approved: reservations.filter(
+      approved: safeReservations.filter(
         (r) => r.status === RESERVATION_STATUS.APPROVED
       ).length,
-      completed: reservations.filter(
+      completed: safeReservations.filter(
         (r) =>
           r.status === RESERVATION_STATUS.SETTLED ||
           r.status === RESERVATION_STATUS.AUTO_SETTLED
       ).length,
-      cancelled: reservations.filter(
+      cancelled: safeReservations.filter(
         (r) =>
           r.status === RESERVATION_STATUS.USER_CANCELLED ||
           r.status === RESERVATION_STATUS.REJECTED ||
           r.status === RESERVATION_STATUS.TIMEOUT_CANCELLED
       ).length,
-    }),
-    [reservations]
-  );
+    };
+  }, [reservations]);
 
   const filteredReservations = useMemo(() => {
-    const filtered = reservations.filter((r) => {
+    const filtered = (reservations ?? []).filter((r) => {
       if (activeTab === "pending")
         return r.status === RESERVATION_STATUS.PENDING;
       if (activeTab === "approved")

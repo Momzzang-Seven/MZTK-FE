@@ -74,7 +74,7 @@ const TrainerList = () => {
       try {
         const response = await getTrainerClasses();
         if (!isMounted) return;
-        setTickets(response.items);
+        setTickets(response.items ?? []);
         setIsSuspended(response.isSuspended);
         setLoadError("");
       } catch {
