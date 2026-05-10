@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Verify from "../Verify";
@@ -39,6 +40,17 @@ vi.mock("@services/location", () => ({
   },
 }));
 
+vi.mock("@components/verify", () => ({
+  MapView: ({ onMapLoad }: { onMapLoad: () => void }) => {
+    useEffect(() => {
+      onMapLoad();
+    }, [onMapLoad]);
+    return <div data-testid="mock-map-view" />;
+  },
+  VerifyStatusOverlay: () => <div data-testid="mock-status-overlay" />,
+  RangeCircle: () => null,
+}));
+
 // Geolocation 모킹
 const mockWatchPosition = vi.fn();
 const mockClearWatch = vi.fn();
@@ -61,9 +73,12 @@ describe("Verify Page", () => {
     );
 
     // 버튼이 '인증 위치로 이동해주세요'에서 '위치 인증하기'로 바뀔 때까지 대기
-    const verifyButton = await screen.findByRole("button", {
-      name: VERIFY_TEXT.BTN_VERIFY,
-    });
+    // Verify.tsx에서 setTimeout 1000ms가 있으므로 timeout을 넉넉히 준다
+    const verifyButton = await screen.findByRole(
+      "button",
+      { name: VERIFY_TEXT.BTN_VERIFY },
+      { timeout: 3000 }
+    );
     fireEvent.click(verifyButton);
 
     await waitFor(
