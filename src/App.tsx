@@ -24,6 +24,7 @@ import {
   Notifications,
   CreateWallet,
   RegisterWallet,
+  RestoreWallet,
   AdminLogin,
   AdminDashboard,
   TokenLog,
@@ -120,6 +121,7 @@ function App() {
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/create-wallet" element={<CreateWallet />} />
                   <Route path="/register-wallet" element={<RegisterWallet />} />
+                  <Route path="/restore-wallet" element={<RestoreWallet />} />
                   <Route path="/register" element={<Register />} />
 
                   {/* Protected Routes */}
