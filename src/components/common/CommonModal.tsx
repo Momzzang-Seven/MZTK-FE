@@ -11,6 +11,8 @@ interface CommonModalProps {
   /** icon variant — controls the header visual */
   variant?: "warning" | "error" | "info" | "success";
   children?: React.ReactNode;
+  /** If true, ignores the mobile max-width constraint for the overlay background */
+  fullWidth?: boolean;
 }
 
 const VARIANT_CONFIG = {
@@ -108,13 +110,21 @@ export const CommonModal = ({
   onCancelClick,
   variant = "warning",
   children,
+  fullWidth: providedFullWidth,
 }: CommonModalProps) => {
   const config = VARIANT_CONFIG[variant];
+
+  const isAdmin = window.location.pathname.startsWith("/admin");
+  const fullWidth = providedFullWidth ?? isAdmin;
 
   const portalTarget = document.getElementById("app-root") ?? document.body;
 
   return createPortal(
-    <div className="z-[9990] fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] h-full bg-black/40 backdrop-blur-[2px] flex flex-col justify-center items-center px-6 animate-scale-in">
+    <div
+      className={`z-[9990] fixed top-0 left-1/2 -translate-x-1/2 w-full h-full bg-black/40 backdrop-blur-[2px] flex flex-col justify-center items-center px-6 animate-scale-in ${
+        fullWidth ? "" : "max-w-[450px]"
+      }`}
+    >
       <div
         className="w-full max-w-[360px] bg-white rounded-[28px] overflow-hidden shadow-2xl"
         style={{
