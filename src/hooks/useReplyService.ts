@@ -6,7 +6,7 @@ const PAGE_SIZE = 5;
 
 export const useReplyService = <T extends Comment>(parentId: number) => {
   const [replies, setReplies] = useState<T[]>([]);
-  const [page, setPage] = useState(0);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLast, setIsLast] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,19 +16,19 @@ export const useReplyService = <T extends Comment>(parentId: number) => {
       setIsLoading(true);
       setError(null);
       try {
-        const targetPage = isRefresh ? 0 : page;
+        const cursor = isRefresh ? null : nextCursor;
         const data = await commentService.getReplies(
           parentId,
-          targetPage,
+          cursor,
           PAGE_SIZE
         );
-        const newReplies = data.content as T[];
+        const newReplies = data.comments as T[];
 
         setReplies((prev) =>
           isRefresh ? newReplies : [...prev, ...newReplies]
         );
-        setIsLast(data.last);
-        setPage(isRefresh ? 1 : targetPage + 1);
+        setIsLast(!data.hasNext);
+        setNextCursor(data.nextCursor);
       } catch (error) {
         const errorResponse = error as {
           response?: { data?: { message?: string } };
@@ -40,7 +40,7 @@ export const useReplyService = <T extends Comment>(parentId: number) => {
         setIsLoading(false);
       }
     },
-    [parentId, page]
+    [parentId, nextCursor]
   );
 
   const loadMore = useCallback(() => {

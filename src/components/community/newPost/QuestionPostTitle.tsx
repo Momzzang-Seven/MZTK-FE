@@ -17,11 +17,8 @@ const QuestionPostTitle = ({
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-
     el.style.height = "auto";
-
     el.style.height = `${el.scrollHeight}px`;
-
     el.style.overflowY = "hidden";
   }, [value]);
 
@@ -32,19 +29,14 @@ const QuestionPostTitle = ({
   };
 
   return (
-    <div className="w-full px-4 border-b border-gray-200">
+    <div className="w-full px-5 py-4 border-b border-gray-50">
       <textarea
         ref={textareaRef}
         value={value}
         onChange={handleChange}
-        placeholder="제목을 입력하세요."
-        className="
-          w-full bg-transparent
-          text-lg font-semibold leading-relaxed text-gray-900
-          placeholder:text-gray-400
-          resize-none outline-none
-          border-none
-        "
+        placeholder="어떤 것이 궁금하신가요?"
+        rows={1}
+        className="w-full bg-transparent text-[22px] font-black leading-tight text-gray-900 placeholder:text-gray-300 resize-none outline-none border-none tracking-tight"
       />
     </div>
   );

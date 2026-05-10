@@ -39,7 +39,8 @@ const RegisterWallet = () => {
   const validateMnemonic = () => {
     try {
       const phrase = mnemonics.map((m) => m.trim().toLowerCase()).join(" ");
-      const recoveredWallet = ethers.Wallet.fromPhrase(phrase);
+      // HDNodeWallet을 사용하여 니모닉 정보를 명시적으로 유지
+      const recoveredWallet = ethers.HDNodeWallet.fromPhrase(phrase);
       setWallet(recoveredWallet);
       setStep("PIN_SET");
     } catch {
@@ -59,7 +60,6 @@ const RegisterWallet = () => {
         try {
           await handleUnlinkWallet(existingWalletAddress);
         } catch (unlinkErr: unknown) {
-          // If 404, the wallet is already gone from server, ignore and proceed
           if (
             axios.isAxiosError(unlinkErr) &&
             unlinkErr.response?.status === 404
@@ -75,6 +75,7 @@ const RegisterWallet = () => {
 
       await handleWalletRegistration(wallet);
 
+      // HDNodeWallet.encrypt는 니모닉 정보가 있으면 함께 암호화하여 저장합니다.
       const encryptedJson = await wallet.encrypt(pin);
       localStorage.setItem("encrypted_wallet", encryptedJson);
       localStorage.setItem("wallet_address", wallet.address);
@@ -104,7 +105,7 @@ const RegisterWallet = () => {
             setStep("MNEMONIC");
             return;
           }
-          // PIN 검증용 (에러 안나면 성공)
+          // PIN 검증 시에도 Wallet.fromEncryptedJson 사용
           await ethers.Wallet.fromEncryptedJson(encryptedJson, authPin);
           setStep("MNEMONIC");
         } catch {

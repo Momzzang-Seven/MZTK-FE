@@ -74,6 +74,23 @@ const showSanctionedModal = () => {
 };
 
 const attachInterceptors = (instance: AxiosInstance) => {
+  // 1. 비즈니스 에러 인터셉터: 서버 응답 바디의 status가 FAIL인 경우를 에러로 변환
+  instance.interceptors.response.use(
+    (response) => {
+      if (response.data?.status === "FAIL") {
+        return Promise.reject({
+          response,
+          config: response.config,
+          message: response.data?.message,
+          code: response.data?.code,
+        });
+      }
+      return response;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // 2. 공통 UI 및 인증 인터셉터
   instance.interceptors.response.use(
     (response) => response,
     (error) => {

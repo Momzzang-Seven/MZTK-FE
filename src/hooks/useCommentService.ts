@@ -1,15 +1,18 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { Comment, CommentPayload } from "@types";
 import { commentService } from "@services";
 import { useUserStore } from "@store";
 
 const PAGE_SIZE = 10;
 
-export const useCommentService = <T extends Comment>(postId: number) => {
+export const useCommentService = <T extends Comment>(
+  targetId: number,
+  isAnswer: boolean = false
+) => {
   const { user } = useUserStore();
   const [comments, setComments] = useState<T[]>([]);
-  const [page, setPage] = useState(0);
-  const [isLast, setIsLast] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLast, setIsLast] = useState(true); // 초기에는 더 불러올 데이터가 없다고 가정 (첫 로드 전 차단)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +21,11 @@ export const useCommentService = <T extends Comment>(postId: number) => {
       setIsLoading(true);
       setError(null);
       try {
-        const newComment = await commentService.createComment(postId, payload);
+        const newComment = await commentService.createComment(
+          targetId,
+          payload,
+          isAnswer
+        );
         if (!payload.parentId) {
           const commentWithWriter = {
             ...newComment,
@@ -43,7 +50,7 @@ export const useCommentService = <T extends Comment>(postId: number) => {
         setIsLoading(false);
       }
     },
-    [postId, user, setComments]
+    [targetId, isAnswer, user, setComments]
   );
 
   const fetchComments = useCallback(
@@ -51,19 +58,27 @@ export const useCommentService = <T extends Comment>(postId: number) => {
       setIsLoading(true);
       setError(null);
       try {
-        const targetPage = isRefresh ? 0 : page;
+        const cursor = isRefresh ? null : nextCursor;
         const data = await commentService.getComments(
-          postId,
-          targetPage,
-          PAGE_SIZE
+          targetId,
+          cursor,
+          PAGE_SIZE,
+          isAnswer
         );
-        const newComments = data.content as T[];
+        const newComments = data.comments as T[];
 
-        setComments((prev) =>
-          isRefresh ? newComments : [...prev, ...newComments]
-        );
-        setIsLast(data.last);
-        setPage(isRefresh ? 1 : targetPage + 1);
+        setComments((prev) => {
+          if (isRefresh) return newComments;
+
+          // ID 중복 제거 로직 추가
+          const existingIds = new Set(prev.map((c) => c.commentId));
+          const filteredNew = newComments.filter(
+            (c) => !existingIds.has(c.commentId)
+          );
+          return [...prev, ...filteredNew];
+        });
+        setIsLast(!data.hasNext);
+        setNextCursor(data.nextCursor);
       } catch (error) {
         const errorResponse = error as {
           response?: { data?: { message?: string } };
@@ -75,7 +90,7 @@ export const useCommentService = <T extends Comment>(postId: number) => {
         setIsLoading(false);
       }
     },
-    [postId, page]
+    [targetId, isAnswer, nextCursor]
   );
 
   const loadMore = useCallback(() => {
@@ -92,7 +107,12 @@ export const useCommentService = <T extends Comment>(postId: number) => {
       setIsLoading(true);
       setError(null);
       try {
-        await commentService.updateComment(commentId, content);
+        await commentService.updateComment(
+          commentId,
+          content,
+          targetId,
+          isAnswer
+        );
       } catch (error) {
         const errorResponse = error as {
           response?: { data?: { message?: string } };
@@ -104,25 +124,35 @@ export const useCommentService = <T extends Comment>(postId: number) => {
         setIsLoading(false);
       }
     },
-    []
+    [targetId, isAnswer]
   );
 
-  const deleteComment = useCallback(async (commentId: number) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await commentService.deleteComment(commentId);
-    } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message || "댓글 삭제에 실패했습니다.";
-      setError(message);
-    } finally {
-      setIsLoading(false);
+  const deleteComment = useCallback(
+    async (commentId: number) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        await commentService.deleteComment(commentId, targetId, isAnswer);
+      } catch (error) {
+        const errorResponse = error as {
+          response?: { data?: { message?: string } };
+        };
+        const message =
+          errorResponse.response?.data?.message || "댓글 삭제에 실패했습니다.";
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [targetId, isAnswer]
+  );
+
+  // 초기 데이터 로드
+  useEffect(() => {
+    if (targetId) {
+      fetchComments(true);
     }
-  }, []);
+  }, [targetId, isAnswer]);
 
   return {
     comments,

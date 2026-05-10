@@ -8,6 +8,10 @@ import { getNetworkConfig } from "@utils";
 
 const QNA_ESCROW_ADDRESS = import.meta.env.VITE_QNA_ESCROW_CONTRACT;
 
+if (!QNA_ESCROW_ADDRESS) {
+  console.error("CRITICAL: VITE_QNA_ESCROW_CONTRACT is not defined in .env");
+}
+
 export const useWalletService = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,6 +169,47 @@ export const useWalletService = () => {
     }
   };
 
+  const getAllowance = async (
+    ownerAddress: string,
+    network: "OPT" | "BASE" = useUserStore.getState().selectedNetwork
+  ): Promise<bigint> => {
+    if (!QNA_ESCROW_ADDRESS)
+      throw new Error("QnA Escrow 주소가 설정되지 않았습니다.");
+    const { RPC_URL, TOKEN_ADDRESS } = getNetworkConfig(network);
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const contract = new ethers.Contract(TOKEN_ADDRESS, MZTK_ABI[0], provider);
+    return await contract.allowance(ownerAddress, QNA_ESCROW_ADDRESS);
+  };
+
+  const approveEscrow = async (
+    wallet: ethers.HDNodeWallet,
+    amount: bigint = ethers.MaxUint256,
+    network: "OPT" | "BASE" = useUserStore.getState().selectedNetwork
+  ) => {
+    if (!QNA_ESCROW_ADDRESS)
+      throw new Error("QnA Escrow 주소가 설정되지 않았습니다.");
+    setLoading(true);
+    try {
+      const { RPC_URL, TOKEN_ADDRESS } = getNetworkConfig(network);
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const connectedWallet = wallet.connect(provider);
+      const contract = new ethers.Contract(
+        TOKEN_ADDRESS,
+        MZTK_ABI[0],
+        connectedWallet
+      );
+      const tx = await contract.approve(QNA_ESCROW_ADDRESS, amount);
+      await tx.wait();
+      return tx.hash;
+    } catch (error) {
+      console.error("Approve failed:", error);
+      setError("토큰 승인(Approve)에 실패했습니다.");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     error,
@@ -172,5 +217,7 @@ export const useWalletService = () => {
     handleWalletRegistration,
     handleUnlinkWallet,
     handleWeb3Signature,
+    getAllowance,
+    approveEscrow,
   };
 };

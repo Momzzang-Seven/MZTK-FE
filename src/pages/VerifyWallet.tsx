@@ -136,6 +136,7 @@ const VerifyWallet = () => {
             setStep("NO_WALLET");
             return;
           }
+          // Wallet.fromEncryptedJson을 사용하여 니모닉을 포함한 지갑 객체 복구
           const decryptedWallet = await ethers.Wallet.fromEncryptedJson(
             encryptedJson,
             authPin
@@ -180,39 +181,94 @@ const VerifyWallet = () => {
   };
 
   return (
-    <FullScreenPage className="overflow-hidden">
-      {(isWalletLoading || isPostLoading) && (
-        <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
-          <LoadingSpinner size="lg" color="text-white" />
+    <FullScreenPage className="overflow-hidden bg-white">
+      {/* ── Background Decoration ── */}
+      <div className="fixed -top-20 -right-20 w-64 h-64 bg-main opacity-[0.05] blur-[80px] rounded-full pointer-events-none" />
+      <div className="fixed -bottom-20 -left-20 w-64 h-64 bg-main opacity-[0.03] blur-[80px] rounded-full pointer-events-none" />
+
+      {/* ── Navigation ── */}
+      {step !== "SUCCESS" && (
+        <div className="absolute top-6 left-6 z-50">
+          <button
+            onClick={() => navigate(-1)}
+            className="btn-press w-10 h-10 rounded-xl bg-white shadow-md shadow-gray-100 flex items-center justify-center border-none transition-all active:scale-95"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#111827"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
         </div>
       )}
 
-      {step === "NO_WALLET" && (
-        <WalletSuccessSection
-          title={"지갑을 찾을 수 없어요"}
-          description={"토큰 보상을 받기 위해 지갑이 필요해요."}
-          onConfirm={() => navigate(`/register-wallet`)}
-          buttonLabel="지갑 등록하기"
-        />
+      {(isWalletLoading || isPostLoading) && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <LoadingSpinner size="lg" color="text-main" />
+          <p className="mt-4 text-[14px] font-black text-gray-900 animate-pulse">
+            블록체인 트랜잭션을 안전하게 처리하고 있습니다...
+          </p>
+        </div>
       )}
 
-      {step === "AUTH_PIN" && (
-        <PinPad
-          title="PIN 번호 인증"
-          desc="토큰 보상 예치를 위해 PIN 번호를 입력해주세요."
-          pin={authPin}
-          onInput={(n) => setAuthPin((p) => p + n)}
-          onDelete={() => setAuthPin((p) => p.slice(0, -1))}
-        />
-      )}
+      <div className="h-full pt-16 flex flex-col">
+        {step === "NO_WALLET" && (
+          <WalletSuccessSection
+            title={"지갑을 찾을 수 없어요"}
+            description={"토큰 보상을 받기 위해 지갑이 필요해요."}
+            onConfirm={() => navigate(`/register-wallet`)}
+            buttonLabel="지갑 등록하기"
+          />
+        )}
 
-      {step === "SUCCESS" && (
-        <WalletSuccessSection
-          title={"트랜잭션 수행 요청이 완료되었어요"}
-          description={"블록체인 처리가 완료되면 알려드릴게요."}
-          onConfirm={handleSuccessConfirm}
-        />
-      )}
+        {step === "AUTH_PIN" && (
+          <PinPad
+            title="PIN 번호 인증"
+            desc={
+              <>
+                {intent?.resource.type === "QUESTION"
+                  ? "질문 보상 예치 및 게시글 등록을 위해"
+                  : intent?.resource.type === "ANSWER"
+                    ? "답변 등록 및 보상 수령 권한 인증을 위해"
+                    : "트랜잭션 실행 및 블록체인 서명을 위해"}
+                <br />
+                PIN 번호를 입력해주세요
+              </>
+            }
+            pin={authPin}
+            onInput={(n) => setAuthPin((p) => p + n)}
+            onDelete={() => setAuthPin((p) => p.slice(0, -1))}
+          />
+        )}
+
+        {step === "SUCCESS" && (
+          <WalletSuccessSection
+            title={
+              intent?.resource.type === "QUESTION"
+                ? "질문 등록 요청이 완료되었어요"
+                : intent?.resource.type === "ANSWER"
+                  ? "답변 등록 요청이 완료되었어요"
+                  : "트랜잭션 수행 요청이 완료되었어요"
+            }
+            description={
+              <>
+                블록체인 네트워크에서 처리가 완료되면
+                <br />
+                커뮤니티에서 게시글을 확인하실 수 있습니다.
+              </>
+            }
+            onConfirm={handleSuccessConfirm}
+            buttonLabel="확인"
+          />
+        )}
+      </div>
 
       {modal && (
         <CommonModal

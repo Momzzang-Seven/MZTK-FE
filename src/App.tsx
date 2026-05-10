@@ -47,6 +47,8 @@ import {
   ReviewWrite,
   RegisterTicket,
   MyTknHistory,
+  VerifyWallet,
+  VerifyApprove,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -207,6 +209,11 @@ function App() {
                       path="/market/purchase-fail"
                       element={<MarketPurchaseFail />}
                     />
+                    <Route
+                      path="/verify-wallet/:type/:id/:parentId?"
+                      element={<VerifyWallet />}
+                    />
+                    <Route path="/verify-approve" element={<VerifyApprove />} />
                   </Route>
 
                   <Route path="/404" element={<Err404 />} />

@@ -29,11 +29,11 @@ const FreePostForm = ({ initialContent }: FreePostFormProps) => {
         </div>
       )}
 
+      <TagInput tags={tags} onChange={setTags} />
       <FreePostContentInput
         onChange={setContent}
         initialValue={initialContent}
       />
-      <TagInput tags={tags} onChange={setTags} />
     </div>
   );
 };

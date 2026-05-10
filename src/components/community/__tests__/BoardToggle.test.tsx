@@ -38,20 +38,20 @@ describe("BoardToggle", () => {
   it("자유게시판 경로일 때 자유게시판이 활성화된다", () => {
     renderWithRouter("/community/free");
 
-    const freeBoard = screen.getByText("자유게시판");
-    const questionBoard = screen.getByText("질문게시판");
+    const freeBoard = screen.getByText("자유게시판").parentElement;
+    const questionBoard = screen.getByText("질문게시판").parentElement;
 
     expect(freeBoard).toHaveClass("text-white");
-    expect(questionBoard).toHaveClass("text-[#777]");
+    expect(questionBoard).toHaveClass("text-gray-400");
   });
 
   it("질문게시판 경로일 때 질문게시판이 활성화된다", () => {
     renderWithRouter("/community/question");
 
-    const freeBoard = screen.getByText("자유게시판");
-    const questionBoard = screen.getByText("질문게시판");
+    const freeBoard = screen.getByText("자유게시판").parentElement;
+    const questionBoard = screen.getByText("질문게시판").parentElement;
 
-    expect(freeBoard).toHaveClass("text-[#777]");
+    expect(freeBoard).toHaveClass("text-gray-400");
     expect(questionBoard).toHaveClass("text-white");
   });
 
@@ -76,7 +76,9 @@ describe("BoardToggle", () => {
   it("슬라이드 배경이 올바른 위치에 있다 (자유게시판)", () => {
     const { container } = renderWithRouter("/community/free");
 
-    const slideBackground = container.querySelector(".absolute.top-1.left-1");
+    const slideBackground = container.querySelector(
+      ".absolute.top-1\\.5.left-1\\.5"
+    );
     expect(slideBackground).toHaveClass("translate-x-0");
     expect(slideBackground).not.toHaveClass("translate-x-full");
   });
@@ -84,7 +86,9 @@ describe("BoardToggle", () => {
   it("슬라이드 배경이 올바른 위치에 있다 (질문게시판)", () => {
     const { container } = renderWithRouter("/community/question");
 
-    const slideBackground = container.querySelector(".absolute.top-1.left-1");
+    const slideBackground = container.querySelector(
+      ".absolute.top-1\\.5.left-1\\.5"
+    );
     expect(slideBackground).toHaveClass("translate-x-full");
   });
 });

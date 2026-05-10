@@ -9,6 +9,8 @@ interface ReplySectionProps {
   parentId: number;
   replyCount: number;
   onReplyClick: (commentId: number, nickname: string) => void;
+  targetId: number;
+  isAnswer?: boolean;
 }
 
 const ReplySection = ({
@@ -16,6 +18,8 @@ const ReplySection = ({
   parentId,
   replyCount,
   onReplyClick,
+  targetId,
+  isAnswer = false,
 }: ReplySectionProps) => {
   const { replies, isLoading, isLast, refetch, getReplies, loadMore } =
     useReplyService<Comment>(parentId);
@@ -47,6 +51,8 @@ const ReplySection = ({
           isRootComment={false}
           onUpdateReplySuccess={refetch}
           onReplyClick={onReplyClick}
+          targetId={targetId}
+          isAnswer={isAnswer}
         />
       ))}
       {!isLast && !isLoading && (

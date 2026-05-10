@@ -15,7 +15,6 @@ const SelectImage = () => {
 
   const reset = usePostStore((s) => s.reset);
   const setPostType = usePostStore((s) => s.setPostType);
-  const images = usePostStore((s) => s.images);
 
   const { isFetching, loadPost } = useLoadPostForEdit();
 
@@ -44,9 +43,6 @@ const SelectImage = () => {
     }
   };
 
-  // 수정 모드에서는 새 이미지 없이도 진행 가능
-  const canProceed = images.length > 0 || isEditMode;
-
   if (isFetching) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -61,10 +57,8 @@ const SelectImage = () => {
         onBackClick={handleBackClick}
         button={
           <div
-            className={`font-semibold text-sm cursor-pointer ${
-              canProceed ? "text-main" : "text-gray-400"
-            }`}
-            onClick={canProceed ? handleNextClick : undefined}
+            className="font-black text-[15px] cursor-pointer text-main active:scale-95 transition-all hover:opacity-80 px-2 py-1"
+            onClick={handleNextClick}
           >
             다음
           </div>

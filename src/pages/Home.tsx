@@ -8,6 +8,8 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store/userStore";
+import { CommonModal } from "@components/common";
+import { Trophy, Sparkles } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -18,6 +20,11 @@ const Home = () => {
     (state) => state.initWorkoutCompletion
   );
   const user = useUserStore((state) => state.user);
+  const attendanceResult = useUserStore((state) => state.attendanceResult);
+  const clearAttendanceResult = useUserStore(
+    (state) => state.clearAttendanceResult
+  );
+
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
@@ -29,6 +36,63 @@ const Home = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FDFDFD] overflow-y-auto pb-28">
+      {/* ── Attendance Success Modal ── */}
+      {attendanceResult && (
+        <CommonModal onCancelClick={clearAttendanceResult}>
+          <div className="flex flex-col items-center gap-6 py-4 animate-in fade-in zoom-in-95 duration-500">
+            <div className="relative">
+              <div className="absolute -top-4 -right-4 animate-bounce">
+                <Sparkles className="text-main" size={28} />
+              </div>
+              <div className="w-24 h-24 bg-main/10 rounded-[32px] flex items-center justify-center shadow-xl shadow-main/10 ring-4 ring-white">
+                <Trophy size={48} className="text-main" strokeWidth={2.5} />
+              </div>
+            </div>
+
+            <div className="text-center flex flex-col gap-2">
+              <h3 className="text-[22px] font-black text-gray-900 tracking-tight leading-tight">
+                오늘의 첫 발걸음 성공!
+              </h3>
+              <p className="text-[14px] font-bold text-gray-400">
+                꾸준한 출석이 가장 강력한 무기입니다.
+              </p>
+            </div>
+
+            <div className="w-full bg-gray-50 rounded-[28px] p-6 flex flex-col gap-4 border border-gray-100">
+              <div className="flex items-center justify-between">
+                <span className="text-[14px] font-black text-gray-400 uppercase tracking-wider">
+                  Earned XP
+                </span>
+                <span className="text-[18px] font-black text-main">
+                  +{attendanceResult.rewardedXp} XP
+                </span>
+              </div>
+              <div className="h-px bg-gray-200/50 w-full" />
+              <div className="flex items-center justify-between">
+                <span className="text-[14px] font-black text-gray-400 uppercase tracking-wider">
+                  Streak
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[18px] font-black text-gray-900">
+                    {attendanceResult.streakDays}
+                  </span>
+                  <span className="text-[14px] font-bold text-gray-400">
+                    일 연속
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={clearAttendanceResult}
+              className="w-full py-4.5 bg-gray-900 text-white rounded-[22px] text-[15px] font-black shadow-xl shadow-black/10 active:scale-95 transition-all mt-2"
+            >
+              운동하러 가기
+            </button>
+          </div>
+        </CommonModal>
+      )}
+
       {/* ── Header Section ── */}
       <div className="relative pt-12 pb-24 px-6 overflow-hidden">
         {/* Background Decorative Blobs */}

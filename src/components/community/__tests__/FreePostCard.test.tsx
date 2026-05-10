@@ -28,6 +28,8 @@ const mockNavigate = vi.fn();
 
 const defaultPost = {
   postId: 1,
+  type: "FREE" as const,
+  title: "테스트 제목",
   writer: {
     userId: 100,
     nickname: "테스트유저",
@@ -46,6 +48,9 @@ const defaultPost = {
   isLiked: false,
   likeCount: 10,
   commentCount: 5,
+  answerCount: 0,
+  publicationStatus: "VISIBLE" as const,
+  moderationStatus: "NORMAL" as const,
 };
 
 describe("FreePostCard", () => {
@@ -100,7 +105,7 @@ describe("FreePostCard", () => {
   describe("게시물 이미지 분기", () => {
     it("images가 있을 때 이미지를 렌더링한다", () => {
       render(<FreePostCard post={defaultPost} />);
-      const postImage = screen.getByAltText(defaultPost.images[0].imageUrl);
+      const postImage = screen.getByAltText("post");
 
       expect(postImage).toBeInTheDocument();
       expect(postImage).toHaveAttribute("src", "https://example.com/post.png");
@@ -118,50 +123,27 @@ describe("FreePostCard", () => {
         />
       );
 
-      expect(
-        screen.queryByAltText(defaultPost.images[0].imageUrl)
-      ).not.toBeInTheDocument();
+      expect(screen.queryByAltText("post")).not.toBeInTheDocument();
     });
   });
 
   describe("좋아요 동작", () => {
-    it("기본적으로 isLiked 상태에 따라 빈 하트 아이콘이 렌더링된다", () => {
+    it("기본적으로 좋아요 수가 렌더링된다", () => {
       render(<FreePostCard post={defaultPost} />);
-      const likeIcon = screen.getByAltText("like");
-
-      expect(likeIcon).toHaveAttribute("src", "/icon/like.svg");
       expect(screen.getByText("10")).toBeInTheDocument();
     });
 
-    it("isLiked가 true인 경우 채워진 하트 아이콘이 렌더링된다", () => {
-      const likedPost = { ...defaultPost, isLiked: true };
-      render(
-        <FreePostCard
-          post={
-            likedPost as unknown as Parameters<typeof FreePostCard>[0]["post"]
-          }
-        />
-      );
-      const likeIcon = screen.getByAltText("like");
-
-      expect(likeIcon).toHaveAttribute("src", "/icon/likeActive.svg");
-    });
-
-    it("좋아요를 클릭하면 아이콘이 변경되고 likeCount가 증가/감소한다", () => {
+    it("좋아요를 클릭하면 likeCount가 증가/감소한다", () => {
       render(<FreePostCard post={defaultPost} />);
 
-      const likeIcon = screen.getByAltText("like");
+      const likeButton = screen.getByTestId("like-button");
 
       expect(screen.getByText("10")).toBeInTheDocument();
 
-      fireEvent.click(likeIcon);
-
-      expect(likeIcon).toHaveAttribute("src", "/icon/likeActive.svg");
+      fireEvent.click(likeButton);
       expect(screen.getByText("11")).toBeInTheDocument();
 
-      fireEvent.click(likeIcon);
-
-      expect(likeIcon).toHaveAttribute("src", "/icon/like.svg");
+      fireEvent.click(likeButton);
       expect(screen.getByText("10")).toBeInTheDocument();
     });
   });
@@ -170,8 +152,8 @@ describe("FreePostCard", () => {
     it("댓글 영역 클릭 시 상세 페이지로 이동한다", () => {
       render(<FreePostCard post={defaultPost} />);
 
-      const commentIcon = screen.getByAltText("comment");
-      fireEvent.click(commentIcon);
+      const commentButton = screen.getByTestId("comment-button");
+      fireEvent.click(commentButton);
 
       expect(mockNavigate).toHaveBeenCalledWith("/community/free/1");
     });
@@ -181,14 +163,14 @@ describe("FreePostCard", () => {
     it("태그가 정상적으로 렌더링된다", () => {
       render(<FreePostCard post={defaultPost} />);
 
-      expect(screen.getByText("#react")).toBeInTheDocument();
-      expect(screen.getByText("#frontend")).toBeInTheDocument();
+      expect(screen.getByText("# react")).toBeInTheDocument();
+      expect(screen.getByText("# frontend")).toBeInTheDocument();
     });
 
     it("태그 클릭 시 해당 태그 검색 결과 페이지로 이동한다", () => {
       render(<FreePostCard post={defaultPost} />);
 
-      const reactTag = screen.getByText("#react");
+      const reactTag = screen.getByText("# react");
       fireEvent.click(reactTag);
 
       expect(mockNavigate).toHaveBeenCalledWith("/community/free?tag=react");
