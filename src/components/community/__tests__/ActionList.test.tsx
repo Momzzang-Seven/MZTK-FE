@@ -125,7 +125,7 @@ describe("ActionList 컴포넌트", () => {
         }
       : null;
     vi.mocked(useUserStore).mockImplementation((selector) =>
-      selector({ user })
+      selector({ user } as unknown as Parameters<typeof selector>[0])
     );
   };
 
