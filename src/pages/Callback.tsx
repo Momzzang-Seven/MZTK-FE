@@ -57,6 +57,11 @@ const Callback = () => {
 
           if (isNewUser) {
             navigate("/register");
+          } else if (
+            userInfo.walletAddress &&
+            !localStorage.getItem("encrypted_wallet")
+          ) {
+            navigate("/restore-wallet");
           } else if (userInfo.role === "TRAINER") {
             navigate("/trainer");
           } else {

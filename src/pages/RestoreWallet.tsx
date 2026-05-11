@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
@@ -8,51 +7,50 @@ import { CommonModal, LoadingSpinner } from "@components/common";
 import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useUserStore } from "@store";
-import { useWalletService } from "@hooks";
 
-const RegisterWallet = () => {
+const RestoreWallet = () => {
   const navigate = useNavigate();
+  const user = useUserStore((state) => state.user);
   const setWalletAddress = useUserStore((state) => state.setWalletAddress);
-  const {
-    loading,
-    error,
-    setError,
-    handleWalletRegistration,
-    handleUnlinkWallet,
-  } = useWalletService();
+
+  const expectedWalletAddress =
+    user?.walletAddress || localStorage.getItem("wallet_address") || "";
 
   const [step, setStep] = useState<
-    "AUTH_PIN" | "MNEMONIC" | "PIN_SET" | "PIN_CONFIRM" | "SUCCESS"
-  >(() => {
-    return localStorage.getItem("encrypted_wallet") ? "AUTH_PIN" : "MNEMONIC";
-  });
+    "MNEMONIC" | "PIN_SET" | "PIN_CONFIRM" | "SUCCESS"
+  >("MNEMONIC");
 
   const [mnemonics, setMnemonics] = useState<string[]>(Array(12).fill(""));
-  const [authPin, setAuthPin] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [wallet, setWallet] = useState<ethers.HDNodeWallet | null>(null);
+  const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState<{ title: string; desc: string } | null>(
     null
   );
 
+  useEffect(() => {
+    if (!expectedWalletAddress) {
+      navigate("/register-wallet", { replace: true });
+    }
+  }, [expectedWalletAddress, navigate]);
+
   const validateMnemonic = () => {
     try {
       const phrase = mnemonics.map((m) => m.trim().toLowerCase()).join(" ");
-      // HDNodeWallet을 사용하여 니모닉 정보를 명시적으로 유지
       const recoveredWallet = ethers.HDNodeWallet.fromPhrase(phrase);
 
-      const existingWalletAddress = localStorage.getItem("wallet_address");
       if (
-        existingWalletAddress &&
-        existingWalletAddress === recoveredWallet.address
+        recoveredWallet.address.toLowerCase() !==
+        expectedWalletAddress.toLowerCase()
       ) {
         setModal({
-          title: "기존 지갑과 동일한 지갑입니다.",
-          desc: "기존 지갑과 다른 지갑을 연결해 주세요.",
+          title: "지갑 정보가 일치하지 않습니다",
+          desc: "입력하신 비밀복구 구문이 등록된 지갑 주소와 일치하지 않습니다. 다시 확인해 주세요.",
         });
         return;
       }
+
       setWallet(recoveredWallet);
       setStep("PIN_SET");
     } catch {
@@ -63,77 +61,34 @@ const RegisterWallet = () => {
     }
   };
 
-  const handleFinalize = useCallback(async () => {
+  const finalize = useCallback(async () => {
     if (!wallet || loading) return;
 
     try {
-      const existingWalletAddress = localStorage.getItem("wallet_address");
-      if (existingWalletAddress) {
-        try {
-          await handleUnlinkWallet(existingWalletAddress);
-        } catch (unlinkErr: unknown) {
-          if (
-            axios.isAxiosError(unlinkErr) &&
-            unlinkErr.response?.status === 404
-          ) {
-            // ignore
-          } else {
-            throw unlinkErr;
-          }
-        }
-        localStorage.removeItem("encrypted_wallet");
-        localStorage.removeItem("wallet_address");
-      }
-
-      await handleWalletRegistration(wallet);
-
-      // HDNodeWallet.encrypt는 니모닉 정보가 있으면 함께 암호화하여 저장합니다.
+      setLoading(true);
       const encryptedJson = await wallet.encrypt(pin);
       localStorage.setItem("encrypted_wallet", encryptedJson);
       localStorage.setItem("wallet_address", wallet.address);
       setWalletAddress(wallet.address);
       setStep("SUCCESS");
     } catch (err) {
-      console.error("Registration finalize error:", err);
+      console.error("Restore finalize error:", err);
+      setModal({
+        title: "지갑 복원 실패",
+        desc: "지갑을 안전하게 저장하는 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      });
       setPin("");
       setConfirmPin("");
       setStep("PIN_SET");
+    } finally {
+      setLoading(false);
     }
-  }, [
-    loading,
-    wallet,
-    pin,
-    setWalletAddress,
-    handleUnlinkWallet,
-    handleWalletRegistration,
-  ]);
+  }, [wallet, pin, loading, setWalletAddress]);
 
   useEffect(() => {
-    const verifyPin = async () => {
-      if (authPin.length === 6 && step === "AUTH_PIN") {
-        try {
-          const encryptedJson = localStorage.getItem("encrypted_wallet");
-          if (!encryptedJson) {
-            setStep("MNEMONIC");
-            return;
-          }
-          // PIN 검증 시에도 Wallet.fromEncryptedJson 사용
-          await ethers.Wallet.fromEncryptedJson(encryptedJson, authPin);
-          setStep("MNEMONIC");
-        } catch {
-          setModal({
-            title: "PIN 번호 인증 실패",
-            desc: "잘못된 PIN 번호입니다. 다시 입력해 주세요.",
-          });
-          setAuthPin("");
-        }
-      }
-    };
-    void verifyPin();
-
     if (pin.length === 6 && step === "PIN_SET") setStep("PIN_CONFIRM");
     if (confirmPin.length === 6 && step === "PIN_CONFIRM") {
-      if (pin === confirmPin) void handleFinalize();
+      if (pin === confirmPin) void finalize();
       else {
         setModal({
           title: "PIN 번호 불일치",
@@ -142,15 +97,13 @@ const RegisterWallet = () => {
         setConfirmPin("");
       }
     }
-  }, [authPin, pin, step, confirmPin, handleFinalize]);
+  }, [pin, confirmPin, step, finalize]);
 
   return (
     <FullScreenPage className="overflow-hidden bg-white">
-      {/* ── Background Decoration ── */}
       <div className="fixed -top-20 -right-20 w-64 h-64 bg-main opacity-[0.05] blur-[80px] rounded-full pointer-events-none" />
       <div className="fixed -bottom-20 -left-20 w-64 h-64 bg-main opacity-[0.03] blur-[80px] rounded-full pointer-events-none" />
 
-      {/* ── Navigation ── */}
       {step !== "SUCCESS" && (
         <div className="absolute top-6 left-6 z-50">
           <button
@@ -177,33 +130,19 @@ const RegisterWallet = () => {
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
           <LoadingSpinner size="lg" color="text-main" />
           <p className="mt-4 text-[14px] font-black text-gray-900 animate-pulse">
-            안전하게 지갑을 등록하고 있습니다...
+            지갑을 안전하게 복원하고 있습니다...
           </p>
         </div>
       )}
 
       <div className="h-full pt-16 flex flex-col">
-        {step === "AUTH_PIN" && (
-          <PinPad
-            title="기존 PIN 번호 인증"
-            desc={
-              <>
-                지갑을 변경하기 위해 <br /> 기존에 설정한 PIN 번호를
-                입력해주세요
-              </>
-            }
-            pin={authPin}
-            onInput={(n) => setAuthPin((p) => p + n)}
-            onDelete={() => setAuthPin((p) => p.slice(0, -1))}
-          />
-        )}
-
         {step === "MNEMONIC" && (
           <MnemonicForm
             mnemonics={mnemonics}
             description={
               <>
-                연결하실 지갑의 비밀복구구문 <br /> 12개 단어를 입력해주세요
+                기존 지갑을 이 기기에서 다시 사용하려면 <br /> 비밀복구구문 12개
+                단어를 입력해주세요
               </>
             }
             onChange={(idx, val) => {
@@ -221,7 +160,7 @@ const RegisterWallet = () => {
             title="새로운 PIN 번호 설정"
             desc={
               <>
-                앞으로 지갑 이용 승인 시 사용하실 <br /> 6자리 숫자를
+                이 기기에서 지갑 이용 승인 시 사용하실 <br /> 6자리 숫자를
                 입력해주세요
               </>
             }
@@ -246,7 +185,21 @@ const RegisterWallet = () => {
         )}
 
         {step === "SUCCESS" && (
-          <WalletSuccessSection onConfirm={() => navigate("/my")} />
+          <WalletSuccessSection
+            title={
+              <>
+                지갑이 안전하게 <br /> 복원되었습니다
+              </>
+            }
+            description={
+              <>
+                이제 이 기기에서 다시 토큰 보상을 <br /> 받고 거래에 참여하실 수
+                있습니다.
+              </>
+            }
+            onConfirm={() => navigate("/")}
+            buttonLabel="확인"
+          />
         )}
       </div>
 
@@ -258,21 +211,11 @@ const RegisterWallet = () => {
           onConfirmClick={() => {
             setModal(null);
             if (step === "PIN_CONFIRM") setConfirmPin("");
-            if (step === "AUTH_PIN") setAuthPin("");
           }}
-        />
-      )}
-
-      {error && (
-        <CommonModal
-          title="등록 실패"
-          desc={error}
-          confirmLabel="확인"
-          onConfirmClick={() => setError(null)}
         />
       )}
     </FullScreenPage>
   );
 };
 
-export default RegisterWallet;
+export default RestoreWallet;
