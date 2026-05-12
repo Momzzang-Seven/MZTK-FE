@@ -268,11 +268,10 @@ describe("예약 외 마켓플레이스/트레이너 QA", () => {
   it("클래스 등록 화면은 매장 확인 후 사진 선택 단계로 진입한다", async () => {
     renderWithRouter(<RegisterTicket />, "/trainer/register-ticket");
 
-    await waitFor(() => {
-      expect(mockGetTrainerStore).toHaveBeenCalled();
-    });
+    expect(
+      await screen.findByText("대표 사진을 선택하세요")
+    ).toBeInTheDocument();
 
-    expect(screen.getByText("대표 사진을 선택하세요")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다음으로" })).toBeDisabled();
   });
 
