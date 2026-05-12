@@ -123,9 +123,7 @@ const FreePostCard = ({ post, onDeletePostSuccess }: Props) => {
           data-testid="like-button"
           className="flex items-center gap-2 transition-all active:scale-90 group/btn"
         >
-          <div
-            className={`p-2 rounded-full transition-colors ${liked ? "bg-red-50" : "group-hover/btn:bg-gray-100"}`}
-          >
+          <div className="p-2 rounded-full transition-colors group-hover/btn:bg-gray-100">
             <Heart
               size={22}
               className={`transition-all ${
