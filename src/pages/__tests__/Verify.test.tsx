@@ -9,6 +9,7 @@ import { VERIFY_TEXT } from "@constant/location";
 const mockNavigate = vi.fn();
 const mockCompleteExercise = vi.fn();
 const mockSetCoor = vi.fn();
+const mockVerifyLocation = vi.fn();
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -34,9 +35,7 @@ vi.mock("@store/userStore", () => ({
 
 vi.mock("@services/location", () => ({
   locationService: {
-    verifyLocation: vi
-      .fn()
-      .mockResolvedValue({ isVerified: true, grantedXp: 100 }),
+    verifyLocation: mockVerifyLocation,
   },
 }));
 
@@ -63,6 +62,11 @@ const mockClearWatch = vi.fn();
 describe("Verify Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockVerifyLocation.mockResolvedValue({
+      isVerified: true,
+      xpGranted: true,
+      grantedXp: 100,
+    });
   });
 
   it("인증 버튼 클릭 시 성공 오버레이가 표시되고 2초 후 홈으로 이동한다", async () => {
@@ -94,5 +98,34 @@ describe("Verify Page", () => {
       },
       { timeout: 3000 }
     );
+  });
+
+  it("서버 기준 위치 인증 실패 메시지를 보여주고 XP를 반영하지 않는다", async () => {
+    mockVerifyLocation.mockResolvedValue({
+      isVerified: false,
+      xpGranted: false,
+      grantedXp: 0,
+      distance: 13,
+      xpGrantMessage: "XP not granted",
+    });
+
+    render(
+      <BrowserRouter>
+        <Verify />
+      </BrowserRouter>
+    );
+
+    const verifyButton = await screen.findByRole(
+      "button",
+      { name: VERIFY_TEXT.BTN_VERIFY },
+      { timeout: 3000 }
+    );
+    fireEvent.click(verifyButton);
+
+    expect(
+      await screen.findByText(/서버 기준 위치 인증 범위를 벗어났습니다/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/현재 거리: 13m/)).toBeInTheDocument();
+    expect(mockCompleteExercise).not.toHaveBeenCalled();
   });
 });

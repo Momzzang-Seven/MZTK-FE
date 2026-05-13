@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { HOME_TEXT } from "@constant/home";
@@ -82,17 +81,10 @@ const AUTH_OPTIONS = [
 
 export const AuthChoiceModal = ({ isOpen, onClose }: AuthChoiceModalProps) => {
   const navigate = useNavigate();
-  const portalTargetRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    // 앱 컨테이너 안에만 오버레이가 적용되도록 포털 타겟 설정
-    portalTargetRef.current =
-      document.getElementById("app-root") ?? document.body;
-  }, []);
 
   if (!isOpen) return null;
 
-  const target = portalTargetRef.current ?? document.body;
+  const target = document.getElementById("app-root") ?? document.body;
 
   const handleSelect = (path: string) => {
     navigate(path);

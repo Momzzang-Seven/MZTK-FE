@@ -4,7 +4,7 @@ import { ethers, getBytes } from "ethers";
 import { MZTK_ABI } from "@abi";
 import type { Web3Execution } from "@types";
 import { useUserStore } from "@store";
-import { getNetworkConfig } from "@utils";
+import { getNetworkConfig, getWalletRegistrationEip712Domain } from "@utils";
 
 const QNA_ESCROW_ADDRESS = import.meta.env.VITE_QNA_ESCROW_CONTRACT;
 
@@ -24,11 +24,9 @@ export const useWalletService = () => {
 
     try {
       // 🌐 선택된 네트워크에 따른 설정값 로드
-      const {
-        RPC_URL,
-        CHAIN_ID: TARGET_CHAIN_ID,
-        TOKEN_ADDRESS: TARGET_TOKEN_ADDRESS,
-      } = getNetworkConfig(network);
+      const { RPC_URL, TOKEN_ADDRESS: TARGET_TOKEN_ADDRESS } =
+        getNetworkConfig(network);
+      const walletRegistrationDomain = getWalletRegistrationEip712Domain();
 
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const connectedWallet = wallet.connect(provider);
@@ -43,12 +41,7 @@ export const useWalletService = () => {
 
       // STEP 2: EIP-712 서명 수행
       const signature = await wallet.signTypedData(
-        {
-          name: "MomzzangSeven",
-          version: "1",
-          chainId: TARGET_CHAIN_ID,
-          verifyingContract: TARGET_TOKEN_ADDRESS,
-        },
+        walletRegistrationDomain,
         {
           AuthRequest: [
             { name: "content", type: "string" },

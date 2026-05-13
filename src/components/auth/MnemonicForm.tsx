@@ -29,18 +29,37 @@ export const MnemonicForm = ({
     }
   };
 
+  const applyMnemonicText = (text: string) => {
+    const words = text.trim().toLowerCase().split(/\s+/).filter(Boolean);
+
+    if (words.length === 12) {
+      onBulkChange(words);
+      return true;
+    }
+
+    showToast("12개 단어를 붙여넣어 주세요.");
+    return false;
+  };
+
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      const words = text.trim().split(/\s+/);
-      if (words.length === 12) {
-        onBulkChange(words);
-      } else {
-        showToast("12개의 단어가 필요합니다");
-      }
+      applyMnemonicText(text);
     } catch {
-      showToast("클립보드 접근 실패");
+      showToast("클립보드 접근에 실패했습니다.");
     }
+  };
+
+  const handleInputPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData("text");
+    const words = pastedText.trim().split(/\s+/).filter(Boolean);
+
+    if (words.length <= 1) {
+      return;
+    }
+
+    e.preventDefault();
+    applyMnemonicText(pastedText);
   };
 
   const handleClearAll = () => {
@@ -55,7 +74,7 @@ export const MnemonicForm = ({
           <br /> 입력해 주세요
         </h1>
         <p className="text-gray-400 text-[14px] font-bold leading-relaxed tracking-tight">
-          {description || "사용 중인 지갑의 12개 단어를 입력하세요."}
+          {description || "사용 중인 지갑의 12개 단어를 입력하세요"}
         </p>
       </div>
 
@@ -94,6 +113,7 @@ export const MnemonicForm = ({
                 value={word}
                 onChange={(e) => onChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, idx)}
+                onPaste={handleInputPaste}
                 className="w-full h-[52px] pt-2 text-center bg-gray-50/50 border border-transparent rounded-xl text-[14px] font-black text-gray-900 focus:bg-white focus:border-main outline-none transition-all"
                 autoComplete="off"
               />
