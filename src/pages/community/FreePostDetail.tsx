@@ -1,15 +1,16 @@
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SimpleHeader } from "@components/layout";
-import { CommentItem, CommentInput } from "@components/community";
+import { CommentItem, CommentInput, FreePostCard } from "@components/community";
 import { LoadingSpinner } from "@components/common";
-import type { Comment } from "@types";
-import { useCommentService, useInfiniteScroll } from "@hooks";
+import type { Comment, FreePost } from "@types";
+import { useCommentService, useInfiniteScroll, usePostService } from "@hooks";
 
 const FreePostDetail = () => {
   const { postId } = useParams();
   const postIdNum = Number(postId);
 
+  const [post, setPost] = useState<FreePost | null>(null);
   const [writingComment, setWritingComment] = useState("");
   const [parentCommentId, setParentCommentId] = useState<number | undefined>(
     undefined
@@ -17,13 +18,24 @@ const FreePostDetail = () => {
   const [parentCommentNickname, setParentCommentNickname] = useState<
     string | null
   >(null);
+
+  const { getPost, isPostLoading } = usePostService();
   const { comments, isLoading, isLast, loadMore, refetch, createComment } =
     useCommentService<Comment>(postIdNum);
+
   const observerRef = useInfiniteScroll({
     onLoadMore: loadMore,
     hasMore: !isLast,
     isLoading,
   });
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      const data = await getPost(postIdNum);
+      if (data) setPost(data as FreePost);
+    };
+    fetchPost();
+  }, [getPost, postIdNum]);
 
   const handleStartReply = (commentId: number, nickname: string) => {
     setParentCommentId(commentId);
@@ -38,35 +50,65 @@ const FreePostDetail = () => {
     setParentCommentNickname(null);
   };
 
-  if (isLoading && comments.length === 0) {
+  if (isPostLoading && !post) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <LoadingSpinner size="lg" color="text-gray-400" />
+      <div className="flex items-center justify-center h-screen bg-white">
+        <LoadingSpinner size="lg" color="text-main" />
       </div>
     );
   }
 
   return (
-    <div className="pt-20 pb-15">
-      <SimpleHeader />
+    <div className="min-h-screen bg-gray-50/50 pb-28">
+      <SimpleHeader title="게시글 상세" />
 
-      <section>
-        {comments.map((comment) => (
-          <div key={comment.commentId} className="mb-1">
-            <CommentItem
-              comment={comment}
-              onUpdateReplySuccess={refetch}
-              onReplyClick={handleStartReply}
-            />
+      <div className="pt-[88px]">
+        {post && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 mb-6">
+            <FreePostCard post={post} />
           </div>
-        ))}
-        {isLoading && (
-          <div className="text-center py-4 text-gray-500">불러오는 중...</div>
         )}
-        {!isLast && !isLoading && (
-          <div ref={observerRef} className="h-1 w-full" />
-        )}
-      </section>
+
+        <section className="px-4">
+          <div className="flex items-center gap-2 mb-4 px-2">
+            <h2 className="text-[17px] font-black text-gray-900">댓글</h2>
+            <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md text-[12px] font-bold">
+              {comments.length}
+            </span>
+          </div>
+
+          <div className="bg-white rounded-[32px] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.02)] border border-gray-100">
+            {comments.map((comment) => (
+              <div key={comment.commentId} className="mb-1">
+                <CommentItem
+                  comment={comment}
+                  onUpdateReplySuccess={refetch}
+                  onReplyClick={handleStartReply}
+                  targetId={postIdNum}
+                />
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="text-center py-6">
+                <LoadingSpinner size="sm" color="text-main" />
+              </div>
+            )}
+
+            {comments.length === 0 && !isLoading && (
+              <div className="py-12 text-center">
+                <p className="text-gray-400 font-medium text-[14px]">
+                  첫 댓글을 남겨보세요.
+                </p>
+              </div>
+            )}
+
+            {!isLast && !isLoading && (
+              <div ref={observerRef} className="h-4 w-full" />
+            )}
+          </div>
+        </section>
+      </div>
 
       <CommentInput
         setParentId={setParentCommentId}

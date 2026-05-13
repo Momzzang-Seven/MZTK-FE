@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useReplyService } from "@hooks";
 import { CommentItem } from "@components/community";
 import { LoadingSpinner } from "@components/common";
@@ -9,6 +9,8 @@ interface ReplySectionProps {
   parentId: number;
   replyCount: number;
   onReplyClick: (commentId: number, nickname: string) => void;
+  targetId: number;
+  isAnswer?: boolean;
 }
 
 const ReplySection = ({
@@ -16,15 +18,31 @@ const ReplySection = ({
   parentId,
   replyCount,
   onReplyClick,
+  targetId,
+  isAnswer = false,
 }: ReplySectionProps) => {
   const { replies, isLoading, isLast, refetch, getReplies, loadMore } =
     useReplyService<Comment>(parentId);
+
+  const prevReplyCountRef = useRef<number>(replyCount);
 
   useEffect(() => {
     if (isOpen && replies.length === 0) {
       getReplies(true);
     }
   }, [isOpen, replies.length, getReplies]);
+
+  // replyCount가 증가하면 새 답글이 달린 것으로 보고 목록을 갱신한다.
+  useEffect(() => {
+    if (!isOpen) {
+      prevReplyCountRef.current = replyCount;
+      return;
+    }
+    if (replyCount > prevReplyCountRef.current && replies.length > 0) {
+      refetch();
+    }
+    prevReplyCountRef.current = replyCount;
+  }, [replyCount, isOpen, replies.length, refetch]);
 
   if (replyCount === 0) return null;
 
@@ -47,6 +65,8 @@ const ReplySection = ({
           isRootComment={false}
           onUpdateReplySuccess={refetch}
           onReplyClick={onReplyClick}
+          targetId={targetId}
+          isAnswer={isAnswer}
         />
       ))}
       {!isLast && !isLoading && (

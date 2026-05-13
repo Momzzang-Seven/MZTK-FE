@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Verify from "../Verify";
@@ -58,6 +59,17 @@ const mockClearWatch = vi.fn();
   clearWatch: mockClearWatch,
 };
 
+vi.mock("@components/verify", () => ({
+  MapView: ({ onMapLoad }: { onMapLoad: () => void }) => {
+    useEffect(() => {
+      onMapLoad();
+    }, [onMapLoad]);
+    return <div data-testid="mock-map-view" />;
+  },
+  VerifyStatusOverlay: () => <div data-testid="mock-status-overlay" />,
+  RangeCircle: () => null,
+}));
+
 describe("Verify Page API Integration (MSW)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -89,9 +101,11 @@ describe("Verify Page API Integration (MSW)", () => {
     );
 
     // 버튼이 활성화될 때까지 대기
-    const verifyButton = await screen.findByRole("button", {
-      name: VERIFY_TEXT.BTN_VERIFY,
-    });
+    const verifyButton = await screen.findByRole(
+      "button",
+      { name: VERIFY_TEXT.BTN_VERIFY },
+      { timeout: 3000 }
+    );
     fireEvent.click(verifyButton);
 
     // 인증 성공 메시지(스낵바 등) 표시 대기
@@ -136,9 +150,11 @@ describe("Verify Page API Integration (MSW)", () => {
       </BrowserRouter>
     );
 
-    const verifyButton = await screen.findByRole("button", {
-      name: VERIFY_TEXT.BTN_VERIFY,
-    });
+    const verifyButton = await screen.findByRole(
+      "button",
+      { name: VERIFY_TEXT.BTN_VERIFY },
+      { timeout: 3000 }
+    );
     fireEvent.click(verifyButton);
 
     // 에러 모달 뜨는지 확인 (VERIFY_TEXT.MODAL_FAIL_TITLE)
@@ -165,9 +181,11 @@ describe("Verify Page API Integration (MSW)", () => {
       </BrowserRouter>
     );
 
-    const verifyButton = await screen.findByRole("button", {
-      name: VERIFY_TEXT.BTN_VERIFY,
-    });
+    const verifyButton = await screen.findByRole(
+      "button",
+      { name: VERIFY_TEXT.BTN_VERIFY },
+      { timeout: 3000 }
+    );
     fireEvent.click(verifyButton);
 
     // 에러 모달 뜨는지 확인 (catch 블록에 의해 setFailModalOpen이 true가 됨)

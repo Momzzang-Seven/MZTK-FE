@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { Search } from "lucide-react";
 
 const SearchBar = () => {
   const navigate = useNavigate();
@@ -9,8 +10,8 @@ const SearchBar = () => {
   const isFree = pathname.startsWith("/community/free");
 
   const placeholder = isQuestion
-    ? "제목 검색: 검색어만 / 태그 검색: #운동"
-    : "태그 검색...";
+    ? "제목 혹은 #태그 검색"
+    : "태그 검색 (#오운완)";
 
   const [searchParams] = useSearchParams();
   const initialTag = searchParams.get("tag");
@@ -36,7 +37,6 @@ const SearchBar = () => {
     let url = "";
 
     if (isQuestion) {
-      // 질문 게시판은 #으로 시작하면 태그 검색, 아니면 키워드 검색
       if (trimmed.startsWith("#")) {
         const tagValue = trimmed.replace("#", "").trim();
         url = `/community/question?tag=${encodeURIComponent(tagValue)}`;
@@ -44,7 +44,6 @@ const SearchBar = () => {
         url = `/community/question?keyword=${encodeURIComponent(trimmed)}`;
       }
     } else if (isFree) {
-      // 자유게시판은 태그 검색만 지원
       const tagValue = trimmed.startsWith("#")
         ? trimmed.replace("#", "")
         : trimmed;
@@ -61,23 +60,22 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="relative flex w-full max-w-md">
-      <div className="relative flex w-full items-center rounded-xl border-1 border-gray-200 bg-white">
-        <img
-          src="/icon/search.svg"
-          alt="search"
-          className="absolute left-3 h-4 w-4"
-        />
-
-        <input
-          type="search"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className="w-full rounded-full bg-transparent py-3 pl-12 pr-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-transparent"
-        />
+    <div className="relative flex w-full group">
+      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-main group-focus-within:scale-110 transition-all duration-500 ease-out">
+        <Search size={20} strokeWidth={3} />
       </div>
+
+      <input
+        type="search"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        className="w-full rounded-[22px] bg-gray-50/50 backdrop-blur-md border border-gray-100 focus:border-main/30 focus:bg-white py-4.5 pl-14 pr-6 text-[15px] font-black text-gray-900 placeholder:text-gray-300 placeholder:font-bold outline-none transition-all duration-500 shadow-sm focus:shadow-[0_15px_30px_rgba(250,177,47,0.08)]"
+      />
+
+      {/* Subtle bottom line indicator */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-main rounded-full group-focus-within:w-[80%] transition-all duration-700 ease-out opacity-40" />
     </div>
   );
 };

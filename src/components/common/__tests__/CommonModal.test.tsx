@@ -96,7 +96,7 @@ describe("CommonModal", () => {
   it("모달 컨텐츠 영역이 올바른 스타일을 가진다", () => {
     render(<CommonModal title="스타일 테스트" confirmLabel="확인" />);
 
-    const modalContent = document.body.querySelector(".rounded-\\[28px\\]");
+    const modalContent = document.body.querySelector(".rounded-\\[40px\\]");
     expect(modalContent).toBeInTheDocument();
     expect(modalContent).toHaveClass("bg-white", "max-w-[360px]");
   });

@@ -24,6 +24,7 @@ import {
   Notifications,
   CreateWallet,
   RegisterWallet,
+  RestoreWallet,
   AdminLogin,
   AdminDashboard,
   TokenLog,
@@ -47,6 +48,8 @@ import {
   ReviewWrite,
   RegisterTicket,
   MyTknHistory,
+  VerifyWallet,
+  VerifyApprove,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -118,6 +121,7 @@ function App() {
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/create-wallet" element={<CreateWallet />} />
                   <Route path="/register-wallet" element={<RegisterWallet />} />
+                  <Route path="/restore-wallet" element={<RestoreWallet />} />
                   <Route path="/register" element={<Register />} />
 
                   {/* Protected Routes */}
@@ -207,6 +211,11 @@ function App() {
                       path="/market/purchase-fail"
                       element={<MarketPurchaseFail />}
                     />
+                    <Route
+                      path="/verify-wallet/:type/:id/:parentId?"
+                      element={<VerifyWallet />}
+                    />
+                    <Route path="/verify-approve" element={<VerifyApprove />} />
                   </Route>
 
                   <Route path="/404" element={<Err404 />} />

@@ -11,7 +11,7 @@ const openLocationAuthFromHome = async (page: Page) => {
   await page.waitForLoadState("networkidle");
 
   await page.getByRole("button", { name: "운동 인증" }).click();
-  await page.getByRole("button", { name: "위치 인증" }).click();
+  await page.getByRole("button", { name: /위치\s*인증/ }).click();
 };
 
 test.describe("위치 인증 흐름", () => {

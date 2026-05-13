@@ -11,6 +11,29 @@ import { useNavigate } from "react-router-dom";
 import { getDistanceFromLatLonInMeters } from "@utils/geo";
 import { LOCATION_CONSTANTS, VERIFY_TEXT } from "@constant/location";
 import { ChevronLeft, MapPin, Navigation, Info, Loader2 } from "lucide-react";
+import type { VerifyLocationResponse } from "@types";
+
+const getVerificationFailMessage = (result: VerifyLocationResponse) => {
+  if (!result.isVerified) {
+    const distanceText = Number.isFinite(result.distance)
+      ? ` 현재 거리: ${Math.round(result.distance)}m.`
+      : "";
+
+    return `${VERIFY_TEXT.MODAL_DISTANCE_FAIL_DESC}${distanceText}`;
+  }
+
+  return result.xpGrantMessage || VERIFY_TEXT.MODAL_XP_FAIL_DESC;
+};
+
+const getLocationRequestErrorMessage = (error: unknown) => {
+  const responseMessage = (
+    error as {
+      response?: { data?: { message?: string } };
+    }
+  ).response?.data?.message;
+
+  return responseMessage || "서버 통신 중 오류가 발생했습니다.";
+};
 
 const Verify = () => {
   const MAP_KEY = import.meta.env.VITE_GOOGLE_MAP_API;
@@ -25,6 +48,7 @@ const Verify = () => {
   const [distance, setDistance] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(true);
+  const [successXp, setSuccessXp] = useState(100);
 
   const { coor, setCoor } = useLocationStore();
   const { gymLocation, completeExercise } = useUserStore();
@@ -63,7 +87,17 @@ const Verify = () => {
   }, [coor, gymLocation]);
 
   const handleVerify = async () => {
-    if (!gymLocation?.locationId || !coor) return;
+    if (!gymLocation?.locationId) {
+      setRegisterModalOpen(true);
+      return;
+    }
+
+    if (!coor) {
+      setFailMsg(VERIFY_TEXT.WARNING_WAIT_CURRENT_LOCATION);
+      setFailModalOpen(true);
+      return;
+    }
+
     if (
       distance !== null &&
       distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS
@@ -76,17 +110,20 @@ const Verify = () => {
           currentLatitude: coor.lat,
           currentLongitude: coor.lng,
         });
-        if (result.isVerified) {
-          completeExercise(result.grantedXp || 100);
+
+        if (result.isVerified && result.xpGranted !== false) {
+          const grantedXp = result.grantedXp || 100;
+          completeExercise(grantedXp);
+          setSuccessXp(grantedXp);
           setSuccessModalOpen(true);
           setTimeout(() => navigate("/"), 2500);
         } else {
-          setFailMsg(result.xpGrantMessage || VERIFY_TEXT.MODAL_FAIL_TITLE);
+          setFailMsg(getVerificationFailMessage(result));
           setFailModalOpen(true);
         }
       } catch (e: unknown) {
         console.error("위치 인증 실패:", e);
-        setFailMsg("서버 통신 중 오류가 발생했습니다.");
+        setFailMsg(getLocationRequestErrorMessage(e));
         setFailModalOpen(true);
       } finally {
         setIsVerifying(false);
@@ -103,7 +140,9 @@ const Verify = () => {
   return (
     <div className="flex flex-col h-screen bg-[#FDFDFD] relative overflow-hidden font-pretendard">
       {/* ── Loading State ── */}
-      {isMapLoading && <LocationLoadingOverlay />}
+      {isMapLoading && (
+        <LocationLoadingOverlay title={VERIFY_TEXT.LOADING_TITLE} />
+      )}
 
       {/* ── Persistent Sticky Header ── */}
       <div className="sticky top-6 z-[100] px-6 h-0 pointer-events-none">
@@ -159,90 +198,96 @@ const Verify = () => {
       </div>
 
       {/* ── Bottom Action Card ── */}
-      <div className="absolute bottom-10 left-6 right-6 z-[100] animate-in slide-in-from-bottom-10 duration-700 delay-300">
-        <div className="bg-white/90 backdrop-blur-2xl rounded-[32px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white flex flex-col gap-5">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-500 ${isNear ? "bg-green-50" : "bg-orange-50"}`}
-            >
-              <Info
-                size={20}
-                className={isNear ? "text-green-500" : "text-main"}
-              />
+      {!isMapLoading && (
+        <div className="absolute bottom-10 left-6 right-6 z-[100] animate-in slide-in-from-bottom-10 duration-700 delay-300">
+          <div className="bg-white/90 backdrop-blur-2xl rounded-[32px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-500 ${isNear ? "bg-green-50" : "bg-orange-50"}`}
+              >
+                <Info
+                  size={20}
+                  className={isNear ? "text-green-500" : "text-main"}
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Verification Status
+                </p>
+                <p className="text-[14px] font-black text-gray-800 leading-tight">
+                  {isNear
+                    ? "인증 가능한 범위에 있습니다"
+                    : "운동 장소로 이동해주세요"}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Verification Status
-              </p>
-              <p className="text-[14px] font-black text-gray-800 leading-tight">
-                {isNear
-                  ? "인증 가능한 범위에 있습니다"
-                  : "운동 장소로 이동해주세요"}
-              </p>
-            </div>
-          </div>
 
-          <button
-            onClick={handleVerify}
-            disabled={isVerifying}
-            className={`w-full py-5 rounded-2xl font-black text-[16px] transition-all duration-500 shadow-xl flex items-center justify-center gap-3 active:scale-[0.98] ${
-              isNear && !isVerifying
-                ? "bg-main text-white shadow-main/30"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            {isVerifying ? (
-              <>
-                <Loader2 size={20} className="animate-spin" />
-                <span>데이터 검증 중...</span>
-              </>
-            ) : isNear ? (
-              <>
-                <CheckCircle2 size={20} strokeWidth={3} />
-                <span>{VERIFY_TEXT.BTN_VERIFY}</span>
-              </>
-            ) : (
-              <span>{VERIFY_TEXT.BTN_MOVE_TO_RANGE}</span>
-            )}
-          </button>
+            <button
+              onClick={handleVerify}
+              disabled={isVerifying}
+              className={`w-full py-5 rounded-2xl font-black text-[16px] transition-all duration-500 shadow-xl flex items-center justify-center gap-3 active:scale-[0.98] ${
+                isNear && !isVerifying
+                  ? "bg-main text-white shadow-main/30"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              {isVerifying ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  <span>데이터 검증 중...</span>
+                </>
+              ) : isNear ? (
+                <>
+                  <CheckCircle2 size={20} strokeWidth={3} />
+                  <span>{VERIFY_TEXT.BTN_VERIFY}</span>
+                </>
+              ) : (
+                <span>{VERIFY_TEXT.BTN_MOVE_TO_RANGE}</span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Modals ── */}
-      {errModalOpen && (
-        <CommonModal
-          variant="error"
-          title={VERIFY_TEXT.MODAL_PERM_TITLE}
-          desc={VERIFY_TEXT.MODAL_PERM_DESC}
-          confirmLabel={VERIFY_TEXT.MODAL_RETRY}
-          onConfirmClick={() => window.location.reload()}
-        />
-      )}
-      {registerModalOpen && (
-        <CommonModal
-          variant="info"
-          title="헬스장을 등록해주세요"
-          desc={VERIFY_TEXT.MODAL_REG_DESC}
-          confirmLabel={VERIFY_TEXT.MODAL_REG_CONFIRM}
-          onConfirmClick={() => navigate("/location-register")}
-        />
-      )}
-      {failModalOpen && (
-        <CommonModal
-          variant="warning"
-          title={VERIFY_TEXT.MODAL_FAIL_TITLE}
-          desc={failMsg}
-          confirmLabel={VERIFY_TEXT.MODAL_RETRY}
-          onConfirmClick={() => setFailModalOpen(false)}
-        />
-      )}
-      {successModalOpen && (
-        <AuthSuccessOverlay
-          title={VERIFY_TEXT.SUCCESS_TITLE}
-          subTitle="지정한 장소에서 운동 인증을 성공했습니다"
-          rewardXp={100}
-          onClose={() => navigate("/")}
-        />
+      {!isMapLoading && (
+        <>
+          {errModalOpen && (
+            <CommonModal
+              variant="error"
+              title={VERIFY_TEXT.MODAL_PERM_TITLE}
+              desc={VERIFY_TEXT.MODAL_PERM_DESC}
+              confirmLabel={VERIFY_TEXT.MODAL_RETRY}
+              onConfirmClick={() => window.location.reload()}
+            />
+          )}
+          {registerModalOpen && (
+            <CommonModal
+              variant="info"
+              title={VERIFY_TEXT.MODAL_REG_TITLE}
+              desc={VERIFY_TEXT.MODAL_REG_DESC}
+              confirmLabel={VERIFY_TEXT.MODAL_REG_CONFIRM}
+              onConfirmClick={() => navigate("/location-register")}
+            />
+          )}
+          {failModalOpen && (
+            <CommonModal
+              variant="warning"
+              title={VERIFY_TEXT.MODAL_FAIL_TITLE}
+              desc={failMsg}
+              confirmLabel={VERIFY_TEXT.MODAL_RETRY}
+              onConfirmClick={() => setFailModalOpen(false)}
+            />
+          )}
+          {successModalOpen && (
+            <AuthSuccessOverlay
+              title={VERIFY_TEXT.SUCCESS_TITLE}
+              subTitle="지정한 장소에서 운동 인증을 성공했습니다"
+              rewardXp={successXp}
+              onClose={() => navigate("/")}
+            />
+          )}
+        </>
       )}
     </div>
   );

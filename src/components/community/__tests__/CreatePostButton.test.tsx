@@ -31,7 +31,7 @@ describe("CreatePostButton", () => {
   it("버튼이 렌더링된다", () => {
     renderWithRouter();
 
-    const button = screen.getByAltText("새 글");
+    const button = screen.getByRole("button");
     expect(button).toBeInTheDocument();
   });
 
@@ -58,23 +58,23 @@ describe("CreatePostButton", () => {
   it("버튼이 고정 위치에 있다", () => {
     const { container } = renderWithRouter();
 
-    const wrapper = container.querySelector(".fixed.bottom-\\[100px\\]");
+    const wrapper = container.querySelector(".fixed.bottom-\\[110px\\]");
     expect(wrapper).toBeInTheDocument();
   });
 
-  it("버튼이 원형이고 shadow를 가진다", () => {
+  it("버튼이 특정 라운드값과 shadow를 가진다", () => {
     renderWithRouter();
 
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("!rounded-full");
-    expect(button).toHaveClass("shadow-xl");
+    expect(button).toHaveClass("rounded-[24px]");
+    expect(button).toHaveClass("shadow-[0_20px_40px_rgba(250,177,47,0.3)]");
   });
 
-  it("버튼 크기가 60x60이다", () => {
+  it("버튼 크기가 64x64(h-16 w-16)이다", () => {
     renderWithRouter();
 
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("!w-[70px]");
-    expect(button).toHaveClass("h-[70px]");
+    expect(button).toHaveClass("w-16");
+    expect(button).toHaveClass("h-16");
   });
 });

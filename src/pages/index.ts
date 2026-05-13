@@ -8,6 +8,7 @@ export { default as Callback } from "./Callback";
 export { default as Onboarding } from "./Onboarding";
 export { default as CreateWallet } from "./CreateWallet";
 export { default as RegisterWallet } from "./RegisterWallet";
+export { default as RestoreWallet } from "./RestoreWallet";
 export { default as ExerciseAuth } from "./ExerciseAuth";
 export { default as RecordAuth } from "./RecordAuth";
 export { default as LocationRegister } from "./LocationRegister";
@@ -21,7 +22,6 @@ export { default as FreePostDetail } from "./community/FreePostDetail";
 export { default as QuestionDetail } from "./community/QuestionDetail";
 export { default as SelectImage } from "./community/SelectImage";
 export { default as WritePost } from "./community/WritePost";
-export { default as LocalPosts } from "./community/LocalPosts";
 export { default as Register } from "./Register";
 export { default as TrainerDashboard } from "./trainer/TrainerDashboard";
 export { default as CreateTicket } from "./trainer/CreateTicket";
@@ -39,6 +39,7 @@ export { default as MarketReservation } from "./market/MarketReservation";
 export { default as ReviewWrite } from "./market/ReviewWrite";
 export { default as MyTknHistory } from "./MyTknHistory";
 export { default as VerifyWallet } from "./VerifyWallet";
+export { default as VerifyApprove } from "./VerifyApprove";
 
 // admin page
 export { default as AdminDashboard } from "./admin/Dashboard";

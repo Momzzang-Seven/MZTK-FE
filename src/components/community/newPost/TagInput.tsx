@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { Hash, X } from "lucide-react";
 
 interface TagInputProps {
   tags: string[];
@@ -35,38 +36,40 @@ const TagInput = ({ tags, onChange, maxTags = 5 }: TagInputProps) => {
   };
 
   return (
-    <div className="w-full px-4">
-      <div className="flex flex-wrap items-center gap-2 py-2">
+    <div className="w-full px-5 py-2">
+      <div className="flex flex-wrap items-center gap-2">
         {tags.map((tag, index) => (
           <span
             key={tag}
-            className="flex items-center gap-1 px-2.5 py-1 text-sm font-medium text-main bg-main/10 rounded-full"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-black text-main bg-main/5 rounded-full border border-main/10 animate-in zoom-in duration-300"
           >
-            #{tag}
+            <Hash size={12} strokeWidth={3} className="opacity-50" />
+            {tag}
             <button
               type="button"
               onClick={() => removeTag(index)}
-              className="text-main/60 hover:text-main ml-0.5"
+              className="hover:bg-main/10 rounded-full p-0.5 transition-colors"
             >
-              ×
+              <X size={12} strokeWidth={3} />
             </button>
           </span>
         ))}
 
         {tags.length < maxTags && (
-          <input
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={() => addTag(inputValue)}
-            placeholder={
-              tags.length === 0
-                ? "게시물에 관련된 태그를 입력해주세요. 예) 운동루틴, 오운완"
-                : ""
-            }
-            className="flex-1 min-w-[80px] text-sm text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
-          />
+          <div className="flex items-center gap-2 flex-1 min-w-[120px]">
+            <Hash size={16} className="text-gray-300" strokeWidth={2.5} />
+            <input
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={() => addTag(inputValue)}
+              placeholder={
+                tags.length === 0 ? "관련 태그 (최대 5개)" : "태그 추가..."
+              }
+              className="w-full text-[14px] text-gray-900 font-bold placeholder:text-gray-300 outline-none bg-transparent"
+            />
+          </div>
         )}
       </div>
     </div>

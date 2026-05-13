@@ -15,6 +15,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     "/register",
     "/create-wallet",
     "/register-wallet",
+    "/restore-wallet",
     "/community/free/",
     "/community/question/",
     "/community/free/new",

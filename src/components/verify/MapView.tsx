@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   APIProvider,
   Map,
@@ -14,9 +15,16 @@ interface MapViewProps {
 }
 
 export const MapView = ({ center, mapKey, mapId, onMapLoad }: MapViewProps) => {
-  if (!center) return null;
   const isAutomatedBrowser =
     typeof navigator !== "undefined" && navigator.webdriver;
+
+  useEffect(() => {
+    if (!center || (mapKey && !isAutomatedBrowser)) return;
+
+    onMapLoad?.();
+  }, [center, isAutomatedBrowser, mapKey, onMapLoad]);
+
+  if (!center) return null;
 
   if (!mapKey || isAutomatedBrowser) {
     return <div className="w-screen h-screen bg-gray-100" />;

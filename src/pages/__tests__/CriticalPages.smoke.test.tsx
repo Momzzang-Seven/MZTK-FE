@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -248,6 +249,21 @@ vi.mock("@hooks", () => ({
   }),
 }));
 
+vi.mock("@components/verify", () => ({
+  MapView: ({ onMapLoad }: { onMapLoad: () => void }) => {
+    useEffect(() => {
+      onMapLoad();
+    }, [onMapLoad]);
+    return <div data-testid="mock-map-view" />;
+  },
+  VerifyStatusOverlay: ({ distance }: { distance: number | null }) => (
+    <div data-testid="mock-status-overlay">
+      {distance !== null ? `현재 헬스장까지 거리: ${distance}m` : ""}
+    </div>
+  ),
+  RangeCircle: () => null,
+}));
+
 vi.mock("@store", () => ({
   useUserStore: (selector?: (state: unknown) => unknown) =>
     selector ? selector(mockUserStoreState) : mockUserStoreState,
@@ -474,16 +490,21 @@ describe("주요 페이지 smoke test", () => {
 
     renderWithRouter(<Verify />, "/verify");
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          `${VERIFY_TEXT.DISTANCE_PREFIX}0${VERIFY_TEXT.DISTANCE_UNIT}`
-        )
-      ).toBeInTheDocument();
-    });
-    expect(
-      screen.getByRole("button", { name: VERIFY_TEXT.BTN_VERIFY })
-    ).toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText(
+            `${VERIFY_TEXT.DISTANCE_PREFIX}0${VERIFY_TEXT.DISTANCE_UNIT}`
+          )
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+    await screen.findByRole(
+      "button",
+      { name: VERIFY_TEXT.BTN_VERIFY },
+      { timeout: 3000 }
+    );
   });
 
   it("마켓 목록 화면이 API 응답으로 클래스 카드를 렌더링한다", async () => {

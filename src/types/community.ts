@@ -36,36 +36,35 @@ export interface Image {
 }
 
 export interface Post {
-  type?: PostType;
+  postId: number;
+  type: PostType;
+  title: string;
   content: string;
   writer: Writer;
   createdAt: string;
   updatedAt: string;
   images: Image[];
   commentCount: number;
+  answerCount: number;
   tags: string[];
+  likeCount: number;
+  isLiked: boolean;
+  publicationStatus: PublicationStatus;
+  moderationStatus: ModerationStatus;
 }
 
 export type PublicationStatus = "PENDING" | "VISIBLE" | "FAILED";
 
 export type ModerationStatus = "NORMAL" | "BLOCKED";
 
-export interface FreePost extends Post {
-  postId: number;
-  isLiked: boolean;
-  likeCount: number;
-}
+export type FreePost = Post;
 
 export interface QuestionPost extends Post {
-  postId: number;
-  title: string;
   question: {
     isSolved: boolean;
     reward: number;
     web3Execution: Web3Execution;
   };
-  publicationStatus: PublicationStatus;
-  moderationStatus: ModerationStatus;
 }
 
 export interface AnswerPost {
@@ -80,6 +79,8 @@ export interface AnswerPost {
   updatedAt: string;
   web3Execution: Web3Execution;
   commentCount: number;
+  likeCount: number;
+  isLiked: boolean;
 }
 
 export interface Comment {
@@ -97,8 +98,9 @@ export interface Reply extends Comment {
 }
 
 export interface GetPostsResponse {
-  posts: FreePost[] | QuestionPost[];
+  posts: (FreePost | QuestionPost | MyPost)[];
   hasNext: boolean;
+  nextCursor: string | null;
 }
 
 export interface CreateFreePostResponse {
@@ -147,6 +149,7 @@ export interface GetMyPostsResponse {
 }
 
 export interface GetCommentsResponse {
-  content: Comment[];
-  last: boolean;
+  comments: Comment[];
+  hasNext: boolean;
+  nextCursor: string | null;
 }

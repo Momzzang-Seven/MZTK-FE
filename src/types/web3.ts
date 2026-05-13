@@ -62,6 +62,9 @@ export interface Web3Execution {
     signCount: number; // 사용자가 몇 번 사용해야 하는지
   };
   signRequest: SignRequest; // 실제 서명 대상 데이터
+  transaction?: {
+    txHash: string;
+  };
 }
 
 // 프론트 -> 백엔드

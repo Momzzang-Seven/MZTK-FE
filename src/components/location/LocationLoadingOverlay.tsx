@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import { UI_TEXT } from "@constant/index";
 import { ShieldCheck, Radar, Satellite, Database } from "lucide-react";
 
-export const LocationLoadingOverlay = () => {
+interface LocationLoadingOverlayProps {
+  title?: string;
+}
+
+export const LocationLoadingOverlay = ({
+  title,
+}: LocationLoadingOverlayProps) => {
   const [step, setStep] = useState(0);
   const [coords, setCoords] = useState({ lat: 37.5665, lng: 126.978 });
 
@@ -71,7 +77,7 @@ export const LocationLoadingOverlay = () => {
       <div className="w-full max-w-[240px] space-y-6">
         <div className="space-y-1">
           <h2 className="text-xl font-black text-gray-900 tracking-tight">
-            {UI_TEXT.LOADING_TITLE}
+            {title || UI_TEXT.LOADING_TITLE}
           </h2>
           <div className="h-1 w-full bg-gray-50 rounded-full overflow-hidden">
             <div

@@ -8,6 +8,8 @@ interface Props {
   isRootComment?: boolean;
   onUpdateReplySuccess?: () => void;
   onReplyClick: (commentId: number, nickname: string) => void;
+  targetId: number;
+  isAnswer?: boolean;
 }
 
 const CommentItem = ({
@@ -15,6 +17,8 @@ const CommentItem = ({
   isRootComment = true,
   onUpdateReplySuccess,
   onReplyClick,
+  targetId,
+  isAnswer = false,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -51,6 +55,8 @@ const CommentItem = ({
               authorId={comment.writer?.userId}
               commentContent={comment.content}
               onUpdateReplySuccess={onUpdateReplySuccess}
+              targetId={targetId}
+              isAnswer={isAnswer}
             />
           </div>
 
@@ -90,6 +96,8 @@ const CommentItem = ({
           parentId={comment.commentId}
           replyCount={comment.replyCount}
           onReplyClick={onReplyClick}
+          targetId={targetId}
+          isAnswer={isAnswer}
         />
       )}
     </div>
