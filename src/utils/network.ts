@@ -1,5 +1,7 @@
 import { useUserStore, type NetworkType } from "@store/userStore";
 
+const WALLET_REGISTRATION_NETWORK: NetworkType = "OPT";
+
 export const getNetworkConfig = (network?: NetworkType) => {
   const selectedNetwork = network || useUserStore.getState().selectedNetwork;
   const isBase = selectedNetwork === "BASE";
@@ -23,5 +25,27 @@ export const getNetworkConfig = (network?: NetworkType) => {
       ? "https://sepolia.basescan.org/tx/"
       : "https://sepolia-optimism.etherscan.io/tx/",
     NAME: isBase ? "Base Sepolia" : "Optimism Sepolia",
+  };
+};
+
+const parsePositiveNumber = (value: unknown, fallback: number) => {
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+export const getWalletRegistrationEip712Domain = () => {
+  const fallbackConfig = getNetworkConfig(WALLET_REGISTRATION_NETWORK);
+
+  return {
+    name: import.meta.env.VITE_WEB3_EIP712_DOMAIN_NAME || "MomzzangSeven",
+    version: import.meta.env.VITE_WEB3_EIP712_DOMAIN_VERSION || "1",
+    chainId: parsePositiveNumber(
+      import.meta.env.VITE_WEB3_EIP712_CHAIN_ID,
+      fallbackConfig.CHAIN_ID
+    ),
+    verifyingContract:
+      import.meta.env.VITE_WEB3_EIP712_VERIFYING_CONTRACT ||
+      fallbackConfig.TOKEN_ADDRESS,
   };
 };
