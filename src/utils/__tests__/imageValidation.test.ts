@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   ACCEPTED_IMAGE_INPUT_TYPES,
+  MAX_IMAGE_FILE_SIZE_BYTES,
+  findInvalidImageFileMessage,
   getInvalidImageFileMessage,
 } from "../imageValidation";
 
@@ -30,6 +32,29 @@ describe("imageValidation", () => {
 
     expect(getInvalidImageFileMessage(file)).toContain(
       "이미지 파일로 인식되지 않습니다"
+    );
+  });
+
+  it("최대 이미지 용량보다 큰 파일은 거부한다", () => {
+    const file = new File(
+      [new Uint8Array(MAX_IMAGE_FILE_SIZE_BYTES + 1)],
+      "photo.jpg",
+      {
+        type: "image/jpeg",
+      }
+    );
+
+    expect(getInvalidImageFileMessage(file)).toContain("10MB보다 큽니다");
+  });
+
+  it("여러 파일 중 하나라도 유효하지 않으면 해당 메시지를 반환한다", () => {
+    const files = [
+      new File(["image"], "photo.jpg", { type: "image/jpeg" }),
+      new File(["pdf"], "manual.pdf", { type: "application/pdf" }),
+    ];
+
+    expect(findInvalidImageFileMessage(files)).toContain(
+      "지원하지 않는 이미지 형식"
     );
   });
 });

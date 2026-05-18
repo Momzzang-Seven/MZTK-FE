@@ -1,8 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MZTK_ABI } from "@abi";
-import { walletService } from "@services";
+import { walletService, web3Service } from "@services";
 import { useWalletService } from "../useWalletService";
+import type { Web3Execution } from "@types";
 
 const ethersMocks = vi.hoisted(() => ({
   approve: vi.fn(),
@@ -40,6 +41,53 @@ const WALLET_ADDRESS = "0x2222222222222222222222222222222222222222";
 const OPT_TOKEN_ADDRESS = "0x815B53fD2D56044BaC39c1f7a9C7d3E67322f0F5";
 const BASE_TOKEN_ADDRESS = "0xfd6c0dc7fbe6a200d53d00bbaa2a276d02865de8";
 const SIGNATURE = `0x${"aa".repeat(65)}`;
+const AUTH_SIGNATURE = `0x${"bb".repeat(65)}`;
+const SUBMIT_SIGNATURE = `0x${"cc".repeat(65)}`;
+
+const createWeb3Intent = (
+  overrides: Partial<Web3Execution> = {}
+): Web3Execution => ({
+  resource: {
+    type: "QUESTION",
+    id: "post-1",
+    status: "PENDING_EXECUTION",
+  },
+  actionType: "QNA_QUESTION_CREATE",
+  executionIntent: {
+    id: "intent-1",
+    status: "AWAITING_SIGNATURE",
+    expiresAt: "2026-05-13T00:00:00Z",
+  },
+  execution: {
+    mode: "EIP7702",
+    signCount: 2,
+  },
+  signRequest: {
+    authorization: {
+      chainId: 11155420,
+      delegateTarget: "0x3333333333333333333333333333333333333333",
+      authorityNonce: 1,
+      payloadHashToSign: "0x1111",
+    },
+    submit: {
+      executionDigest: "0x2222",
+      deadlineEpochSeconds: 1770000000,
+    },
+    transaction: {
+      chainId: 11155420,
+      fromAddress: WALLET_ADDRESS,
+      toAddress: "0x4444444444444444444444444444444444444444",
+      valueHex: "0x0",
+      data: "0x1234",
+      nonce: 1,
+      gasLimitHex: "0x5208",
+      maxPriorityFeePerGasHex: "0x1",
+      maxFeePerGasHex: "0x2",
+      expectedNonce: 1,
+    },
+  },
+  ...overrides,
+});
 
 describe("useWalletService", () => {
   beforeEach(() => {
@@ -127,6 +175,77 @@ describe("useWalletService", () => {
       BASE_TOKEN_ADDRESS,
       MZTK_ABI[0],
       wallet
+    );
+  });
+
+  it("sends complete EIP-7702 signatures for QnA web3 execution", async () => {
+    vi.mocked(web3Service.executeWeb3Transaction).mockResolvedValue(undefined);
+    const wallet = {
+      signMessage: vi
+        .fn()
+        .mockResolvedValueOnce(AUTH_SIGNATURE)
+        .mockResolvedValueOnce(SUBMIT_SIGNATURE),
+    };
+    const intent = createWeb3Intent();
+
+    const { result } = renderHook(() => useWalletService());
+
+    await act(async () => {
+      await result.current.handleWeb3Signature(
+        "intent-1",
+        wallet as unknown as Parameters<
+          typeof result.current.handleWeb3Signature
+        >[1],
+        intent
+      );
+    });
+
+    expect(wallet.signMessage).toHaveBeenNthCalledWith(1, "0x1111");
+    expect(wallet.signMessage).toHaveBeenNthCalledWith(2, "0x2222");
+    expect(web3Service.executeWeb3Transaction).toHaveBeenCalledWith(
+      "intent-1",
+      {
+        authorizationSignature: AUTH_SIGNATURE,
+        submitSignature: SUBMIT_SIGNATURE,
+      }
+    );
+  });
+
+  it("does not execute web3 when the sign request is incomplete", async () => {
+    const wallet = {
+      signMessage: vi.fn(),
+    };
+    const intent = createWeb3Intent({
+      signRequest: {
+        ...createWeb3Intent().signRequest,
+        authorization: {
+          ...createWeb3Intent().signRequest.authorization,
+          payloadHashToSign: "",
+        },
+      },
+    });
+    const { result } = renderHook(() => useWalletService());
+    let thrownError: unknown;
+
+    await act(async () => {
+      try {
+        await result.current.handleWeb3Signature(
+          "intent-1",
+          wallet as unknown as Parameters<
+            typeof result.current.handleWeb3Signature
+          >[1],
+          intent
+        );
+      } catch (error) {
+        thrownError = error;
+      }
+    });
+
+    expect(thrownError).toBeInstanceOf(Error);
+    expect(wallet.signMessage).not.toHaveBeenCalled();
+    expect(web3Service.executeWeb3Transaction).not.toHaveBeenCalled();
+    expect(result.current.error).toBe(
+      "Web3 서명 요청 정보가 올바르지 않습니다. 잠시 후 다시 시도해 주세요."
     );
   });
 });

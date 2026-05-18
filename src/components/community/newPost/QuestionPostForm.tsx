@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CommonModal } from "@components/common";
 import { usePostStore } from "@store";
+import { useTokenBalance } from "@hooks";
 import {
   TiptapEditor,
   QuestionPostTitle,
@@ -24,6 +25,19 @@ const QuestionPostForm = ({
   const setContent = usePostStore((s) => s.setContent);
   const setTags = usePostStore((s) => s.setTags);
   const setReward = usePostStore((s) => s.setReward);
+  const { balance, loading: isBalanceLoading } = useTokenBalance();
+  const balanceNumber = Number(balance);
+  const hasKnownBalance = Number.isFinite(balanceNumber);
+  const hasInsufficientBalance =
+    !isBalanceLoading &&
+    hasKnownBalance &&
+    reward > 0 &&
+    reward > balanceNumber;
+  const rewardHint = isBalanceLoading
+    ? "보유 잔액 확인 중"
+    : hasInsufficientBalance
+      ? `보유 ${balanceNumber.toLocaleString()} MZTK`
+      : "답변 채택 시 지급될 토큰";
 
   const [rewardModalOpen, setRewardModalOpen] = useState(false);
   const [tempReward, setTempReward] = useState(reward);
@@ -63,6 +77,8 @@ const QuestionPostForm = ({
           <QuestionPostRewardToken
             rewardToken={reward}
             onClick={handleOpenRewardModal}
+            hint={rewardHint}
+            tone={hasInsufficientBalance ? "warning" : "default"}
           />
         </div>
       </div>

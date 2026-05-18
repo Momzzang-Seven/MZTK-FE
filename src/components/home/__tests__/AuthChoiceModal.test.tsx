@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { AuthChoiceModal } from "../AuthChoiceModal";
+import { HOME_TEXT } from "@constant/home";
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 
@@ -58,6 +59,38 @@ describe("AuthChoiceModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "운동인증" }));
 
     expect(mockNavigate).toHaveBeenCalledWith("/exercise-auth");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("위치 인증을 선택하면 위치 인증 페이지로 이동하고 모달을 닫는다", () => {
+    const onClose = vi.fn();
+    render(
+      <MemoryRouter>
+        <AuthChoiceModal isOpen onClose={onClose} />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: HOME_TEXT.MODAL.LOCATION })
+    );
+
+    expect(mockNavigate).toHaveBeenCalledWith("/verify");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("기록 인증을 선택하면 기록 업로드 페이지로 이동하고 모달을 닫는다", () => {
+    const onClose = vi.fn();
+    render(
+      <MemoryRouter>
+        <AuthChoiceModal isOpen onClose={onClose} />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: HOME_TEXT.MODAL.RECORD })
+    );
+
+    expect(mockNavigate).toHaveBeenCalledWith("/record-auth");
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

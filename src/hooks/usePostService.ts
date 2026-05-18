@@ -8,6 +8,12 @@ import { postService, web3Service } from "@services";
 import type { FreePost, QuestionPost, PostPayload, AnswerPost } from "@types";
 import type { PostType } from "@store";
 
+export const POST_ERROR_CODE = {
+  ALLOWANCE_REQUIRED: "ALLOWANCE_REQUIRED",
+  BALANCE_PENDING: "BALANCE_PENDING",
+  INSUFFICIENT_BALANCE: "INSUFFICIENT_BALANCE",
+} as const;
+
 export const usePostService = () => {
   const navigate = useNavigate();
   const store = usePostStore();
@@ -76,7 +82,7 @@ export const usePostService = () => {
             const requiredAmount = ethers.parseUnits(reward.toString(), 18);
 
             if (allowance < requiredAmount) {
-              setError("ALLOWANCE_REQUIRED");
+              setError(POST_ERROR_CODE.ALLOWANCE_REQUIRED);
               setIsPostLoading(false);
               return;
             }
@@ -132,7 +138,7 @@ export const usePostService = () => {
 
       // 백엔드에서 명시적으로 WEB3_001 에러를 뱉었을 경우 안내 강화 및 모달 유도
       if (errorCode === "WEB3_001") {
-        setError("ALLOWANCE_REQUIRED");
+        setError(POST_ERROR_CODE.ALLOWANCE_REQUIRED);
       } else {
         setError(message);
       }
