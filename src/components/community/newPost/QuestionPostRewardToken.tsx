@@ -3,15 +3,25 @@ import { Coins, ChevronRight } from "lucide-react";
 interface QuestionPostRewardTokenProps {
   rewardToken: number;
   onClick?: () => void;
+  hint?: string;
+  tone?: "default" | "warning";
 }
 
 const QuestionPostRewardToken = ({
   rewardToken,
   onClick,
+  hint = "답변 채택 시 지급될 토큰",
+  tone = "default",
 }: QuestionPostRewardTokenProps) => {
+  const isWarning = tone === "warning";
+
   return (
     <div
-      className="group relative flex flex-row rounded-[24px] p-5 bg-gradient-to-br from-main to-orange-400 w-full h-24 items-center justify-between text-white cursor-pointer shadow-[0_20px_40px_rgba(250,177,47,0.3)] active:scale-[0.98] transition-all overflow-hidden"
+      className={`group relative flex flex-row rounded-[24px] p-5 w-full h-24 items-center justify-between text-white cursor-pointer shadow-[0_20px_40px_rgba(250,177,47,0.3)] active:scale-[0.98] transition-all overflow-hidden ${
+        isWarning
+          ? "bg-gradient-to-br from-red-500 to-orange-500"
+          : "bg-gradient-to-br from-main to-orange-400"
+      }`}
       onClick={onClick}
     >
       {/* Background decoration */}
@@ -25,9 +35,7 @@ const QuestionPostRewardToken = ({
           <span className="text-[14px] font-black tracking-tight opacity-90 uppercase">
             Reward MZTK
           </span>
-          <span className="text-[12px] font-medium opacity-70">
-            답변 채택 시 지급될 토큰
-          </span>
+          <span className="text-[12px] font-medium opacity-70">{hint}</span>
         </div>
       </div>
 

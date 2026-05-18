@@ -2,7 +2,7 @@ import { useState } from "react";
 import { walletService, web3Service } from "@services";
 import { ethers, getBytes } from "ethers";
 import { MZTK_ABI } from "@abi";
-import type { Web3Execution } from "@types";
+import type { SignRequest, Web3Execution } from "@types";
 import { useUserStore } from "@store";
 import { getNetworkConfig, getWalletRegistrationEip712Domain } from "@utils";
 
@@ -11,6 +11,51 @@ const QNA_ESCROW_ADDRESS = import.meta.env.VITE_QNA_ESCROW_CONTRACT;
 if (!QNA_ESCROW_ADDRESS) {
   console.error("CRITICAL: VITE_QNA_ESCROW_CONTRACT is not defined in .env");
 }
+
+const INVALID_WEB3_SIGN_REQUEST_MESSAGE =
+  "Web3 서명 요청 정보가 올바르지 않습니다. 잠시 후 다시 시도해 주세요.";
+
+const isFilledString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
+
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const validateEip7702SignRequest = (
+  signRequest: Partial<SignRequest> | undefined
+) => {
+  const authorization = signRequest?.authorization;
+  const submit = signRequest?.submit;
+
+  if (
+    !authorization ||
+    !submit ||
+    !isFilledString(authorization.payloadHashToSign) ||
+    !isFilledString(submit.executionDigest)
+  ) {
+    throw new Error(INVALID_WEB3_SIGN_REQUEST_MESSAGE);
+  }
+};
+
+const validateEip1559SignRequest = (
+  signRequest: Partial<SignRequest> | undefined
+) => {
+  const transaction = signRequest?.transaction;
+
+  if (
+    !transaction ||
+    !isFiniteNumber(transaction.chainId) ||
+    !isFilledString(transaction.toAddress) ||
+    !isFilledString(transaction.valueHex) ||
+    !isFilledString(transaction.data) ||
+    !isFiniteNumber(transaction.nonce) ||
+    !isFilledString(transaction.gasLimitHex) ||
+    !isFilledString(transaction.maxPriorityFeePerGasHex) ||
+    !isFilledString(transaction.maxFeePerGasHex)
+  ) {
+    throw new Error(INVALID_WEB3_SIGN_REQUEST_MESSAGE);
+  }
+};
 
 export const useWalletService = () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -113,9 +158,14 @@ export const useWalletService = () => {
     setLoading(true);
 
     try {
+      if (!isFilledString(executionIntentId)) {
+        throw new Error(INVALID_WEB3_SIGN_REQUEST_MESSAGE);
+      }
+
       let signatureData = {};
 
       if (intent.execution.mode === "EIP7702") {
+        validateEip7702SignRequest(intent.signRequest);
         // EIP7702 - 2번 서명
         const authSig = await wallet.signMessage(
           getBytes(intent.signRequest.authorization.payloadHashToSign)
@@ -128,6 +178,7 @@ export const useWalletService = () => {
           submitSignature: submitSig,
         };
       } else if (intent.execution.mode === "EIP1559") {
+        validateEip1559SignRequest(intent.signRequest);
         // EIP1559 - 1번 서명
         const txRequest = {
           chainId: intent.signRequest.transaction.chainId,
@@ -143,6 +194,8 @@ export const useWalletService = () => {
         };
         const signedTx = await wallet.signTransaction(txRequest);
         signatureData = { signedRawTransaction: signedTx };
+      } else {
+        throw new Error(INVALID_WEB3_SIGN_REQUEST_MESSAGE);
       }
 
       return await web3Service.executeWeb3Transaction(
@@ -154,7 +207,8 @@ export const useWalletService = () => {
         response?: { data?: { message?: string } };
       };
       const message =
-        errorResponse.response?.data?.message || "서명에 실패했습니다.";
+        errorResponse.response?.data?.message ||
+        (error instanceof Error ? error.message : "서명에 실패했습니다.");
       setError(message);
       throw error;
     } finally {

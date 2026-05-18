@@ -8,6 +8,9 @@ const ALLOWED_IMAGE_EXTENSIONS = new Set([
   "webp",
 ]);
 
+export const MAX_IMAGE_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+export const MAX_IMAGE_FILE_SIZE_MB = MAX_IMAGE_FILE_SIZE_BYTES / 1024 / 1024;
+
 export const ACCEPTED_IMAGE_INPUT_TYPES = [
   ".jpg",
   ".jpeg",
@@ -44,6 +47,10 @@ export const getInvalidImageFileMessage = (file: File) => {
 
   if (file.type && !file.type.startsWith("image/")) {
     return `${filename}은 이미지 파일로 인식되지 않습니다. 다른 파일을 선택해 주세요.`;
+  }
+
+  if (file.size > MAX_IMAGE_FILE_SIZE_BYTES) {
+    return `${filename}은 ${MAX_IMAGE_FILE_SIZE_MB}MB보다 큽니다. 더 작은 이미지를 선택해 주세요.`;
   }
 
   return null;

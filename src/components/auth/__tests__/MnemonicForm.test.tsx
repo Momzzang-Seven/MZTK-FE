@@ -58,4 +58,45 @@ describe("MnemonicForm", () => {
       screen.getByText("12개 단어를 붙여넣어 주세요.")
     ).toBeInTheDocument();
   });
+
+  it("12개 단어 붙여넣기는 공백을 정리하고 소문자로 저장한다", () => {
+    render(<MnemonicForm {...defaultProps} />);
+
+    fireEvent.paste(screen.getAllByRole("textbox")[0], {
+      clipboardData: {
+        getData: () =>
+          " ALPHA\nBRAVO\tCHARLIE DELTA ECHO FOXTROT GOLF HOTEL INDIA JULIET KILO LIMA ",
+      },
+    });
+
+    expect(defaultProps.onBulkChange).toHaveBeenCalledWith([
+      "alpha",
+      "bravo",
+      "charlie",
+      "delta",
+      "echo",
+      "foxtrot",
+      "golf",
+      "hotel",
+      "india",
+      "juliet",
+      "kilo",
+      "lima",
+    ]);
+  });
+
+  it("단일 단어 붙여넣기는 브라우저 기본 입력 흐름을 막지 않는다", () => {
+    render(<MnemonicForm {...defaultProps} />);
+
+    fireEvent.paste(screen.getAllByRole("textbox")[0], {
+      clipboardData: {
+        getData: () => "alpha",
+      },
+    });
+
+    expect(defaultProps.onBulkChange).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText("12개 단어를 붙여넣어 주세요.")
+    ).not.toBeInTheDocument();
+  });
 });
