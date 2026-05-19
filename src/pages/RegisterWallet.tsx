@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { MnemonicForm } from "@components/auth/MnemonicForm";
@@ -9,6 +9,7 @@ import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useUserStore } from "@store";
 import { useWalletService } from "@hooks";
+import { isWeakPin } from "@utils";
 
 const RegisterWallet = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const RegisterWallet = () => {
   const [modal, setModal] = useState<{ title: string; desc: string } | null>(
     null
   );
+  const finalizingRef = useRef(false);
 
   const validateMnemonic = () => {
     try {
@@ -64,9 +66,10 @@ const RegisterWallet = () => {
   };
 
   const handleFinalize = useCallback(async () => {
-    if (!wallet || loading) return;
+    if (!wallet || loading || finalizingRef.current) return;
 
     try {
+      finalizingRef.current = true;
       const existingWalletAddress = localStorage.getItem("wallet_address");
       if (existingWalletAddress) {
         try {
@@ -98,6 +101,8 @@ const RegisterWallet = () => {
       setPin("");
       setConfirmPin("");
       setStep("PIN_SET");
+    } finally {
+      finalizingRef.current = false;
     }
   }, [
     loading,
@@ -131,7 +136,17 @@ const RegisterWallet = () => {
     };
     void verifyPin();
 
-    if (pin.length === 6 && step === "PIN_SET") setStep("PIN_CONFIRM");
+    if (pin.length === 6 && step === "PIN_SET") {
+      if (isWeakPin(pin)) {
+        setModal({
+          title: "Weak PIN",
+          desc: "Repeated or sequential PINs are not allowed.",
+        });
+        setPin("");
+        return;
+      }
+      setStep("PIN_CONFIRM");
+    }
     if (confirmPin.length === 6 && step === "PIN_CONFIRM") {
       if (pin === confirmPin) void handleFinalize();
       else {

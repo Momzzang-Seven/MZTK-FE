@@ -79,8 +79,9 @@ const CommentInput = ({
                     : "댓글을 입력해주세요"
                 }
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => setContent(e.target.value.slice(0, maxLength))}
                 onKeyDown={handleKeyDown}
+                maxLength={maxLength}
                 className="w-full h-12 bg-transparent pl-4 pr-2 text-[14px] font-bold outline-none text-gray-900 placeholder:text-gray-300"
               />
             </div>
@@ -138,7 +139,7 @@ const CommentInput = ({
           <textarea
             ref={inputRef as React.RefObject<HTMLTextAreaElement>}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => setContent(e.target.value.slice(0, maxLength))}
             onKeyDown={handleKeyDown}
             maxLength={maxLength}
             placeholder={

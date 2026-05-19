@@ -7,6 +7,11 @@ import { buildPostPayload } from "@utils/buildPostPayload";
 import { postService, web3Service } from "@services";
 import type { FreePost, QuestionPost, PostPayload, AnswerPost } from "@types";
 import type { PostType } from "@store";
+import {
+  containsUnsafeMarkup,
+  getPlainTextLength,
+  TEXT_LIMITS,
+} from "@utils/edgeCaseValidation";
 
 export const POST_ERROR_CODE = {
   ALLOWANCE_REQUIRED: "ALLOWANCE_REQUIRED",
@@ -25,6 +30,43 @@ export const usePostService = () => {
 
   const { postType, title, content, reward, parentPostId, initialData, reset } =
     store;
+
+  const validateCurrentPostInput = () => {
+    const contentLength = getPlainTextLength(content);
+    const maxContentLength =
+      postType === "FREE"
+        ? TEXT_LIMITS.freePost
+        : postType === "ANSWER"
+          ? TEXT_LIMITS.answer
+          : TEXT_LIMITS.richContent;
+
+    if (contentLength > maxContentLength) {
+      setError(`Content must be ${maxContentLength} characters or fewer.`);
+      return false;
+    }
+
+    if (containsUnsafeMarkup(content)) {
+      setError("Script-like content is not allowed.");
+      return false;
+    }
+
+    if (store.tags.some((tag) => tag.length > TEXT_LIMITS.tag)) {
+      setError(`Tags must be ${TEXT_LIMITS.tag} characters or fewer.`);
+      return false;
+    }
+
+    if (store.tags.some((tag) => containsUnsafeMarkup(tag))) {
+      setError("Script-like tags are not allowed.");
+      return false;
+    }
+
+    if (postType === "QUESTION" && !Number.isInteger(reward)) {
+      setError("Question reward must be a whole number.");
+      return false;
+    }
+
+    return true;
+  };
 
   const isSubmitActive = (() => {
     if (uploadingCount > 0) return false;
@@ -61,6 +103,7 @@ export const usePostService = () => {
    */
   const createPost = async () => {
     if (!isSubmitActive || isPostLoading) return;
+    if (!validateCurrentPostInput()) return;
 
     setIsPostLoading(true);
     setError(null);
@@ -183,6 +226,7 @@ export const usePostService = () => {
    */
   const updatePost = async (postId: number, parentPostId?: number) => {
     if (!isSubmitActive || isPostLoading) return;
+    if (!validateCurrentPostInput()) return;
     if (!initialData) {
       setError("초기 데이터를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
       return;

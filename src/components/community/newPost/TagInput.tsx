@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Hash, X } from "lucide-react";
+import { containsUnsafeMarkup, TEXT_LIMITS } from "@utils";
 
 interface TagInputProps {
   tags: string[];
@@ -14,6 +15,8 @@ const TagInput = ({ tags, onChange, maxTags = 5 }: TagInputProps) => {
   const addTag = (tag: string) => {
     const trimmed = tag.trim().replace(/^#/, "");
     if (!trimmed) return;
+    if (trimmed.length > TEXT_LIMITS.tag) return;
+    if (containsUnsafeMarkup(trimmed)) return;
     if (tags.includes(trimmed)) return;
     if (tags.length >= maxTags) return;
 
@@ -61,9 +64,12 @@ const TagInput = ({ tags, onChange, maxTags = 5 }: TagInputProps) => {
             <input
               ref={inputRef}
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={(e) =>
+                setInputValue(e.target.value.slice(0, TEXT_LIMITS.tag))
+              }
               onKeyDown={handleKeyDown}
               onBlur={() => addTag(inputValue)}
+              maxLength={TEXT_LIMITS.tag}
               placeholder={
                 tags.length === 0 ? "관련 태그 (최대 5개)" : "태그 추가..."
               }
