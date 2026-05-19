@@ -1,11 +1,12 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
+import { sanitizeRichHtml } from "@utils";
 
 const QnaContent = ({ content }: { content: string }) => {
   const editor = useEditor({
     extensions: [StarterKit, Image],
-    content: content,
+    content: sanitizeRichHtml(content),
     editable: false,
   });
 

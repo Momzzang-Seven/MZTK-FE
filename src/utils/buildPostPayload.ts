@@ -1,5 +1,6 @@
 import type { CreatePostState } from "@store";
 import type { PostPayload, UploadedImage } from "@types";
+import { sanitizeRichHtml, sanitizeTags } from "./edgeCaseValidation";
 
 /**
  * HTML 문자열에서 <img imageId="..."> 속성을 등장 순서대로 수집.
@@ -27,6 +28,8 @@ export const buildPostPayload = (
   initialData?: PostPayload
 ): Partial<PostPayload> => {
   const { postType, title, content, images, reward, tags } = state;
+  const sanitizedContent = sanitizeRichHtml(content);
+  const sanitizedTags = sanitizeTags(tags);
 
   // 현재 데이터 계산
   const currentImageIds =
@@ -38,11 +41,21 @@ export const buildPostPayload = (
   if (!initialData) {
     switch (postType) {
       case "FREE":
-        return { content, imageIds: currentImageIds, tags };
+        return {
+          content: sanitizedContent,
+          imageIds: currentImageIds,
+          tags: sanitizedTags,
+        };
       case "QUESTION":
-        return { title, content, imageIds: currentImageIds, reward, tags };
+        return {
+          title,
+          content: sanitizedContent,
+          imageIds: currentImageIds,
+          reward,
+          tags: sanitizedTags,
+        };
       case "ANSWER":
-        return { content, imageIds: currentImageIds };
+        return { content: sanitizedContent, imageIds: currentImageIds };
     }
   }
 
@@ -50,11 +63,13 @@ export const buildPostPayload = (
   const patch: Partial<PostPayload> = {};
 
   if (title !== initialData.title) patch.title = title;
-  if (content !== initialData.content) patch.content = content;
+  if (sanitizedContent !== initialData.content)
+    patch.content = sanitizedContent;
   if (reward !== initialData.reward) patch.reward = reward;
   if (!isArrayEqual(currentImageIds, initialData.imageIds || []))
     patch.imageIds = currentImageIds;
-  if (!isArrayEqual(tags, initialData.tags || [])) patch.tags = tags;
+  if (!isArrayEqual(sanitizedTags, initialData.tags || []))
+    patch.tags = sanitizedTags;
 
   return patch;
 };

@@ -9,6 +9,7 @@ import {
   type MarketplaceClassTimePayload,
   type MarketplaceDayOfWeek,
 } from "@services";
+import { containsUnsafeMarkup, parsePositiveIntegerInput } from "@utils";
 
 export type RegisterStep = "photo" | "info";
 
@@ -26,11 +27,6 @@ const DAY_OF_WEEK_MAP: Record<string, MarketplaceDayOfWeek> = {
   금: "FRIDAY",
   토: "SATURDAY",
   일: "SUNDAY",
-};
-
-const toPositiveInt = (value: string | number) => {
-  const parsed = Number.parseInt(String(value).replace(/[^\d]/g, ""), 10);
-  return Number.isFinite(parsed) ? parsed : 0;
 };
 
 const toApiCategory = (category: string): MarketplaceClassCategory => {
@@ -237,9 +233,26 @@ export const useRegisterTicket = () => {
       return;
     }
 
-    const capacity = toPositiveInt(formData.capacity);
-    const priceAmount = toPositiveInt(formData.price);
-    const durationMinutes = toPositiveInt(formData.duration);
+    const capacity = parsePositiveIntegerInput(formData.capacity);
+    const priceAmount = parsePositiveIntegerInput(formData.price);
+    const durationMinutes = parsePositiveIntegerInput(formData.duration);
+
+    if (!capacity || !priceAmount || !durationMinutes) {
+      alert("Price, capacity, and duration must be positive whole numbers.");
+      return;
+    }
+
+    const textFields = [
+      formData.title,
+      formData.description,
+      formData.supplies,
+      ...formData.tags,
+      ...formData.features,
+    ];
+    if (textFields.some((value) => containsUnsafeMarkup(value))) {
+      alert("HTML or script-like text is not allowed in class details.");
+      return;
+    }
 
     const classTimes: MarketplaceClassTimePayload[] =
       formData.operatingDays.flatMap((day) => {
@@ -303,10 +316,10 @@ export const useRegisterTicket = () => {
     isCheckingStore ||
     isSubmitting ||
     !formData.title.trim() ||
-    !formData.price ||
-    !formData.capacity ||
+    !parsePositiveIntegerInput(formData.price) ||
+    !parsePositiveIntegerInput(formData.capacity) ||
     !formData.description.trim() ||
-    !formData.duration.trim() ||
+    !parsePositiveIntegerInput(formData.duration) ||
     formData.operatingDays.length === 0;
 
   return {

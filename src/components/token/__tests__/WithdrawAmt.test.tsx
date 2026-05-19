@@ -43,11 +43,21 @@ describe("WithdrawAmt", () => {
     expect(screen.getByText(/잔액: 1,234 MZT/)).toBeInTheDocument();
   });
 
-  it('숫자만 입력 가능하다 (type="number")', () => {
+  it("uses decimal text input so exponent notation is not accepted by the browser", () => {
     render(<WithdrawAmt amt={1000} value="" onChange={mockOnChange} />);
 
     const input = screen.getByPlaceholderText("0") as HTMLInputElement;
-    expect(input.type).toBe("number");
+    expect(input.type).toBe("text");
+    expect(input.inputMode).toBe("decimal");
+  });
+
+  it("does not forward exponent notation", () => {
+    render(<WithdrawAmt amt={1000} value="" onChange={mockOnChange} />);
+
+    const input = screen.getByPlaceholderText("0");
+    fireEvent.change(input, { target: { value: "1e2" } });
+
+    expect(mockOnChange).not.toHaveBeenCalled();
   });
 
   it("value prop이 반영된다", () => {
