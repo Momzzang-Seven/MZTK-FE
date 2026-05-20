@@ -38,6 +38,9 @@ const mockGetStatus = vi.hoisted(() => vi.fn());
 const mockRetryIntent = vi.hoisted(() => vi.fn());
 const mockSetWalletError = vi.hoisted(() => vi.fn());
 const mockEncrypt = vi.hoisted(() => vi.fn());
+const mockPinSequence = vi.hoisted(() => ({
+  values: ["1", "3", "5", "7", "9", "0"],
+}));
 const mockWallet = vi.hoisted(() => ({
   address: "0x2222222222222222222222222222222222222222",
   encrypt: mockEncrypt,
@@ -144,7 +147,7 @@ vi.mock("@components/auth/PinPad", () => ({
       data-title={title}
       type="button"
       onClick={() => {
-        for (const value of ["1", "2", "3", "4", "5", "6"]) {
+        for (const value of mockPinSequence.values) {
           onInput(value);
         }
       }}
@@ -263,6 +266,7 @@ describe("RegisterWallet", () => {
     mockHandleWalletRegistration.mockResolvedValue(buildRegistered());
     mockHandleUnlinkWallet.mockResolvedValue(undefined);
     mockHandleWeb3Signature.mockResolvedValue(undefined);
+    mockPinSequence.values = ["1", "3", "5", "7", "9", "0"];
   });
 
   it("immediately routes to PIN setup when backend reports REGISTERED", async () => {
@@ -292,7 +296,7 @@ describe("RegisterWallet", () => {
     });
 
     await waitFor(() => {
-      expect(mockEncrypt).toHaveBeenCalledWith("123456");
+      expect(mockEncrypt).toHaveBeenCalledWith("135790");
     });
     expect(localStorage.getItem("encrypted_wallet")).toBe(
       "encrypted-wallet-json"
@@ -360,5 +364,68 @@ describe("RegisterWallet", () => {
     expect(
       await screen.findByText("승인 서명이 만료되었어요")
     ).toBeInTheDocument();
+  });
+
+  it("rejects weak repeated PINs before persisting local wallet", async () => {
+    mockPinSequence.values = ["0", "0", "0", "0", "0", "0"];
+
+    render(<RegisterWallet />);
+
+    await completeMnemonicStep();
+    const pinPad = await screen.findByTestId("pin-pad");
+    await act(async () => {
+      fireEvent.click(pinPad);
+    });
+
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Weak PIN");
+    expect(mockHandleWalletRegistration).toHaveBeenCalledTimes(1);
+    expect(mockEncrypt).not.toHaveBeenCalled();
+    expect(localStorage.getItem("encrypted_wallet")).toBeNull();
+    expect(localStorage.getItem("wallet_address")).toBeNull();
+    expect(mockSetWalletAddress).not.toHaveBeenCalled();
+  });
+
+  it("deduplicates rapid PIN confirmation submissions while local wallet is being encrypted", async () => {
+    let finishEncryption!: () => void;
+    mockEncrypt.mockReturnValue(
+      new Promise<string>((resolve) => {
+        finishEncryption = () => resolve("encrypted-wallet-json");
+      })
+    );
+
+    render(<RegisterWallet />);
+
+    await completeMnemonicStep();
+    const firstPinPad = await screen.findByTestId("pin-pad");
+    await act(async () => {
+      fireEvent.click(firstPinPad);
+    });
+
+    const confirmPinPad = await screen.findByTestId("pin-pad");
+    await act(async () => {
+      fireEvent.click(confirmPinPad);
+    });
+
+    await waitFor(() => {
+      expect(mockEncrypt).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      fireEvent.click(confirmPinPad);
+    });
+
+    expect(mockEncrypt).toHaveBeenCalledTimes(1);
+    expect(mockHandleWalletRegistration).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      finishEncryption();
+    });
+
+    await waitFor(() => {
+      expect(mockEncrypt).toHaveBeenCalledTimes(1);
+    });
+    expect(localStorage.getItem("encrypted_wallet")).toBe(
+      "encrypted-wallet-json"
+    );
   });
 });

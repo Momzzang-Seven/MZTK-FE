@@ -13,6 +13,7 @@ import {
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonButton, CommonModal } from "@components/common";
 import { getTrainerStore, upsertTrainerStore } from "@services";
+import { isValidKoreanPhoneNumber, normalizeOptionalHttpUrl } from "@utils";
 
 type Coordinates = {
   latitude: number;
@@ -43,16 +44,17 @@ const toMapPosition = (
 // Helper: Auto-format phone number with hyphens
 const formatPhoneNumber = (value: string) => {
   const nums = value.replace(/[^0-9]/g, "");
+  if (nums.startsWith("02")) {
+    if (nums.length <= 2) return nums;
+    if (nums.length <= 5) return `${nums.slice(0, 2)}-${nums.slice(2)}`;
+    if (nums.length <= 9) {
+      return `${nums.slice(0, 2)}-${nums.slice(2, 5)}-${nums.slice(5, 9)}`;
+    }
+    return `${nums.slice(0, 2)}-${nums.slice(2, 6)}-${nums.slice(6, 10)}`;
+  }
   if (nums.length <= 3) return nums;
   if (nums.length <= 7) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
   return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7, 11)}`;
-};
-
-// Helper: Ensure URL has protocol
-const ensureProtocol = (url: string) => {
-  if (!url.trim()) return null;
-  if (!/^https?:\/\//i.test(url)) return `https://${url.trim()}`;
-  return url.trim();
 };
 
 const StoreMapController = ({ coordinates }: { coordinates: Coordinates }) => {
@@ -220,6 +222,32 @@ const TrainerStoreRegister = () => {
     if (!storeName.trim() || !address.trim() || !coordinates || !phone.trim())
       return;
 
+    if (!isValidKoreanPhoneNumber(phone)) {
+      setErrorModal({
+        title: "Invalid phone number",
+        desc: "Please enter a complete Korean phone number.",
+      });
+      return;
+    }
+
+    let homepageUrl: string | null;
+    let instagramUrl: string | null;
+    let xProfileUrl: string | null;
+    try {
+      homepageUrl = normalizeOptionalHttpUrl(sns.home);
+      instagramUrl = normalizeOptionalHttpUrl(sns.insta);
+      xProfileUrl = normalizeOptionalHttpUrl(sns.x);
+    } catch (error) {
+      setErrorModal({
+        title: "Invalid URL",
+        desc:
+          error instanceof Error
+            ? error.message
+            : "Only safe http and https URLs are allowed.",
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
       await upsertTrainerStore({
@@ -229,9 +257,9 @@ const TrainerStoreRegister = () => {
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         phoneNumber: phone.trim(),
-        homepageUrl: ensureProtocol(sns.home),
-        instagramUrl: ensureProtocol(sns.insta),
-        xProfileUrl: ensureProtocol(sns.x),
+        homepageUrl,
+        instagramUrl,
+        xProfileUrl,
       });
       setIsSuccessModalOpen(true);
     } catch (error) {
@@ -258,6 +286,7 @@ const TrainerStoreRegister = () => {
     address.trim() &&
     detailAddress.trim() &&
     phone.trim() &&
+    isValidKoreanPhoneNumber(phone) &&
     coordinates;
 
   return (

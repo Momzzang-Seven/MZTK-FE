@@ -7,6 +7,7 @@ import {
   getWorkoutVerificationRequestErrorMessage,
   type WorkoutVerificationMode,
 } from "@utils/workoutVerificationMessages";
+import { getInvalidImageFileMessage } from "@utils";
 
 interface UseWorkoutVerificationOptions {
   mode: WorkoutVerificationMode;
@@ -45,6 +46,20 @@ export const useWorkoutVerification = ({
     event.target.value = "";
 
     if (!file) return;
+
+    const invalidFileMessage = getInvalidImageFileMessage(file);
+    if (invalidFileMessage) {
+      setSelectedFile(null);
+      setPreviewUrl((prev) => {
+        if (prev) {
+          URL.revokeObjectURL(prev);
+        }
+        return null;
+      });
+      setErrorMessage(invalidFileMessage);
+      setStep("upload");
+      return;
+    }
 
     const nextPreviewUrl = URL.createObjectURL(file);
 

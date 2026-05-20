@@ -13,11 +13,12 @@ const QuestionPostRewardSelector = ({
 }: QuestionPostRewardSelectorProps) => {
   const { balance } = useTokenBalance();
   const balanceNum = Number(balance);
+  const maxReward = Number.isFinite(balanceNum) ? Math.floor(balanceNum) : 0;
   const [customValue, setCustomValue] = useState(reward.toString());
 
   const setAmount = (value: number) => {
-    if (value < 0) return;
-    const finalValue = value > balanceNum ? balanceNum : value;
+    if (!Number.isInteger(value) || value < 0) return;
+    const finalValue = value > maxReward ? maxReward : value;
     setReward(finalValue);
     setCustomValue(finalValue.toString());
   };
@@ -29,10 +30,11 @@ const QuestionPostRewardSelector = ({
     setCustomValue(value);
 
     if (value === "") return;
+    if (!/^\d+$/.test(value)) return;
 
     const numberValue = Number(value);
-    if (!isNaN(numberValue) && numberValue >= 0) {
-      const finalValue = numberValue > balanceNum ? balanceNum : numberValue;
+    if (Number.isSafeInteger(numberValue) && numberValue >= 0) {
+      const finalValue = numberValue > maxReward ? maxReward : numberValue;
       setReward(finalValue);
     }
   };
@@ -69,7 +71,7 @@ const QuestionPostRewardSelector = ({
       <div className="grid grid-cols-5 gap-2 w-full">
         {amountButtons.map((amount) => {
           const isSelected = reward === amount;
-          const isDisabled = amount > balanceNum;
+          const isDisabled = amount > maxReward;
 
           return (
             <button
@@ -101,11 +103,12 @@ const QuestionPostRewardSelector = ({
             Custom
           </div>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={customValue}
             onChange={handleCustomInput}
             min={0}
-            max={balanceNum}
+            max={maxReward}
             placeholder="0"
             className="w-full bg-gray-50 border-2 border-transparent rounded-[24px] py-5 pl-24 pr-16 text-right font-black text-[20px] text-gray-900 focus:bg-white focus:border-main/20 transition-all outline-none"
           />

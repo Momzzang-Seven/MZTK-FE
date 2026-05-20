@@ -172,26 +172,41 @@ function App() {
                       path="/location-register"
                       element={<LocationRegister />}
                     />
-                    <Route path="/trainer" element={<TrainerDashboard />} />
-                    <Route path="/trainer/create" element={<CreateTicket />} />
                     <Route
-                      path="/trainer/register-ticket"
-                      element={<RegisterTicket />}
-                    />
-                    <Route path="/trainer/edit/:id" element={<EditTicket />} />
-                    <Route path="/trainer/list" element={<TrainerList />} />
-                    <Route
-                      path="/trainer/reservations"
-                      element={<TrainerReservations />}
-                    />
-                    <Route
-                      path="/trainer/reviews"
-                      element={<TrainerReviews />}
-                    />
-                    <Route
-                      path="/trainer/store-register"
-                      element={<TrainerStoreRegister />}
-                    />
+                      element={
+                        <ProtectedRoute
+                          allowedRoles={["TRAINER"]}
+                          redirectTo="/my"
+                        />
+                      }
+                    >
+                      <Route path="/trainer" element={<TrainerDashboard />} />
+                      <Route
+                        path="/trainer/create"
+                        element={<CreateTicket />}
+                      />
+                      <Route
+                        path="/trainer/register-ticket"
+                        element={<RegisterTicket />}
+                      />
+                      <Route
+                        path="/trainer/edit/:id"
+                        element={<EditTicket />}
+                      />
+                      <Route path="/trainer/list" element={<TrainerList />} />
+                      <Route
+                        path="/trainer/reservations"
+                        element={<TrainerReservations />}
+                      />
+                      <Route
+                        path="/trainer/reviews"
+                        element={<TrainerReviews />}
+                      />
+                      <Route
+                        path="/trainer/store-register"
+                        element={<TrainerStoreRegister />}
+                      />
+                    </Route>
                     <Route path="/market" element={<Market />} />
                     <Route
                       path="/market/reservations"

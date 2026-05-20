@@ -9,6 +9,8 @@ import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useUserStore } from "@store";
 import { useWalletService } from "@hooks";
+import { isWeakPin } from "@utils";
+
 import { walletService } from "@services";
 import type {
   RegisterWalletResponse,
@@ -80,6 +82,7 @@ const RegisterWallet = () => {
       flowIdRef.current = -1;
     };
   }, []);
+  const finalizingRef = useRef(false);
 
   const validateMnemonic = () => {
     try {
@@ -113,6 +116,7 @@ const RegisterWallet = () => {
 
     try {
       // 기존 등록 지갑이 있으면 backend에서 unlink 먼저
+      finalizingRef.current = true;
       const existingWalletAddress = localStorage.getItem("wallet_address");
       if (existingWalletAddress) {
         try {
@@ -324,6 +328,8 @@ const RegisterWallet = () => {
       setPin("");
       setConfirmPin("");
       setStep("PIN_SET");
+    } finally {
+      finalizingRef.current = false;
     }
   }, [wallet, pin, setWalletAddress]);
 
@@ -349,7 +355,17 @@ const RegisterWallet = () => {
     };
     void verifyPin();
 
-    if (pin.length === 6 && step === "PIN_SET") setStep("PIN_CONFIRM");
+    if (pin.length === 6 && step === "PIN_SET") {
+      if (isWeakPin(pin)) {
+        setModal({
+          title: "Weak PIN",
+          desc: "Repeated or sequential PINs are not allowed.",
+        });
+        setPin("");
+        return;
+      }
+      setStep("PIN_CONFIRM");
+    }
     if (confirmPin.length === 6 && step === "PIN_CONFIRM") {
       if (pin === confirmPin) void handleFinalizePin();
       else {
