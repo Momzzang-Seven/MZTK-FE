@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getWalletRegistrationEip712Domain } from "../network";
 
 const OPT_TOKEN_ADDRESS = "0x815B53fD2D56044BaC39c1f7a9C7d3E67322f0F5";
+const BASE_TOKEN_ADDRESS = "0xfd6c0dc7fbe6a200d53d00bbaa2a276d02865de8";
 const CUSTOM_VERIFYING_CONTRACT = "0x1111111111111111111111111111111111111111";
 
 describe("network utils", () => {
@@ -20,8 +21,8 @@ describe("network utils", () => {
     expect(getWalletRegistrationEip712Domain()).toEqual({
       name: "MomzzangSeven",
       version: "1",
-      chainId: 11155420,
-      verifyingContract: OPT_TOKEN_ADDRESS,
+      chainId: 84532,
+      verifyingContract: BASE_TOKEN_ADDRESS,
     });
   });
 
@@ -40,7 +41,7 @@ describe("network utils", () => {
       name: "MZTKCustom",
       version: "2",
       chainId: 84532,
-      verifyingContract: CUSTOM_VERIFYING_CONTRACT,
+      verifyingContract: BASE_TOKEN_ADDRESS,
     });
   });
 });

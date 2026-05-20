@@ -135,7 +135,7 @@ const initialState = {
   analysisType: null as "exercise" | "record" | null,
   analysisTargetTime: null as number | null,
   analysisStartedAt: null as number | null,
-  selectedNetwork: "OPT" as NetworkType,
+  selectedNetwork: "BASE" as NetworkType,
 };
 
 let initWorkoutCompletionRequest: Promise<void> | null = null;
