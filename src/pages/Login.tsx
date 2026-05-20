@@ -36,17 +36,21 @@ const Login = () => {
         localStorage.setItem("wallet_address", response.userInfo.walletAddress);
       }
 
-      if (
-        response &&
-        !response.isNewUser &&
-        response.userInfo.walletAddress &&
-        !localStorage.getItem("encrypted_wallet")
-      ) {
-        navigate("/restore-wallet");
-        return;
+      if (response) {
+        const { userInfo, isNewUser } = response;
+        if (isNewUser) {
+          navigate("/register");
+        } else if (
+          userInfo.walletAddress &&
+          !localStorage.getItem("encrypted_wallet")
+        ) {
+          navigate("/restore-wallet");
+        } else if (userInfo.role === "TRAINER") {
+          navigate("/trainer");
+        } else {
+          navigate("/");
+        }
       }
-
-      navigate("/register");
     } catch (error) {
       if (axios.isAxiosError(error)) {
         setLocalError(

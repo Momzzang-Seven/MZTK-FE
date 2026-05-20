@@ -90,7 +90,19 @@ const TrainerList = () => {
     };
   }, []);
 
-  const togglingIdSet = useMemo(() => new Set(togglingIds), [togglingIds]);
+  const togglingIdSet = useMemo(() => {
+    if (togglingIds.length > 50) {
+      return new Set(togglingIds);
+    }
+    return null;
+  }, [togglingIds]);
+
+  const isToggling = (classId: number) => {
+    if (togglingIdSet) {
+      return togglingIdSet.has(classId);
+    }
+    return togglingIds.includes(classId);
+  };
 
   const handleToggle = async (
     classId: number,
@@ -287,10 +299,10 @@ const TrainerList = () => {
                       className="sr-only peer"
                       checked={ticket.active}
                       onChange={(e) => void handleToggle(ticket.classId, e)}
-                      disabled={togglingIdSet.has(ticket.classId)}
+                      disabled={isToggling(ticket.classId)}
                     />
                     <div className="w-14 h-8 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-main shadow-inner"></div>
-                    {togglingIdSet.has(ticket.classId) && (
+                    {isToggling(ticket.classId) && (
                       <div className="absolute inset-0 bg-white/40 rounded-full flex items-center justify-center">
                         <div className="w-4 h-4 border-2 border-main border-t-transparent rounded-full animate-spin" />
                       </div>

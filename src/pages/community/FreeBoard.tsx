@@ -31,11 +31,15 @@ const FreeBoard = () => {
   return (
     <div className="flex flex-col gap-4 pt-2 pb-20 animate-in fade-in duration-700">
       {posts.map((post) => (
-        <FreePostCard
+        <div
           key={post.postId}
-          post={post}
-          onDeletePostSuccess={refetch}
-        />
+          style={{
+            contentVisibility: "auto",
+            containIntrinsicSize: "0 140px",
+          }}
+        >
+          <FreePostCard post={post} onDeletePostSuccess={refetch} />
+        </div>
       ))}
 
       {isLoading && (

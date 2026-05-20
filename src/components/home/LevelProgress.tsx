@@ -1,8 +1,8 @@
 import { useUserStore } from "@store";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 
-export const LevelProgress = () => {
+export const LevelProgress = memo(() => {
   const navigate = useNavigate();
   const level = useUserStore((state) => state.level);
   const xp = useUserStore((state) => state.xp);
@@ -174,6 +174,6 @@ export const LevelProgress = () => {
       )}
     </div>
   );
-};
+});
 
 export default LevelProgress;

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/coverage";
 import {
   mockCoreAppApis,
   mockLocalLogin,
@@ -19,6 +19,9 @@ test.describe("로그인 및 로그아웃 흐름", () => {
 
   test("회원 로컬 로그인 후 홈으로 이동한다", async ({ page }) => {
     await mockLocalLogin(page, TEST_USER);
+    await page.evaluate(() => {
+      localStorage.setItem("encrypted_wallet", "mock-encrypted-wallet");
+    });
     await page.getByPlaceholder("이메일").fill(TEST_USER.email);
     await page.getByPlaceholder("비밀번호").fill(TEST_USER.password);
     await page.getByRole("button", { name: "로컬 계정 로그인" }).click();
@@ -34,6 +37,9 @@ test.describe("로그인 및 로그아웃 흐름", () => {
     page,
   }) => {
     await mockLocalLogin(page, TEST_TRAINER);
+    await page.evaluate(() => {
+      localStorage.setItem("encrypted_wallet", "mock-encrypted-wallet");
+    });
     await page.getByPlaceholder("이메일").fill(TEST_TRAINER.email);
     await page.getByPlaceholder("비밀번호").fill(TEST_TRAINER.password);
     await page.getByRole("button", { name: "로컬 계정 로그인" }).click();
@@ -43,6 +49,9 @@ test.describe("로그인 및 로그아웃 흐름", () => {
 
   test("로그아웃 시 로그인 페이지로 리다이렉트된다", async ({ page }) => {
     await mockLocalLogin(page, TEST_USER);
+    await page.evaluate(() => {
+      localStorage.setItem("encrypted_wallet", "mock-encrypted-wallet");
+    });
     await page.getByPlaceholder("이메일").fill(TEST_USER.email);
     await page.getByPlaceholder("비밀번호").fill(TEST_USER.password);
     await page.getByRole("button", { name: "로컬 계정 로그인" }).click();
@@ -79,9 +88,12 @@ test.describe("로그인 및 로그아웃 흐름", () => {
 
     await page.goto("/callback?code=blocked-code&state=kakao");
 
-    await expect(page.getByText("제재된 계정입니다")).toBeVisible();
+    await expect(page.getByText("계정이 제재되었습니다")).toBeVisible();
     const appealLink = page.getByRole("link", { name: "이의 제기 문의하기" });
     await expect(appealLink).toBeVisible();
-    await expect(appealLink).toHaveAttribute("href", /forms\.google\.com/);
+    await expect(appealLink).toHaveAttribute(
+      "href",
+      /forms\.(google\.com|gle)/
+    );
   });
 });

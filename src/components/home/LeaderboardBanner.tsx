@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { leaderboardService } from "@services";
 import { useUserStore } from "@store";
 
-export const LeaderboardBanner = () => {
+export const LeaderboardBanner = memo(() => {
   const navigate = useNavigate();
   const myUserId = useUserStore((s) => s.user?.userId);
   const [myRank, setMyRank] = useState<number | null>(null);
@@ -118,6 +118,6 @@ export const LeaderboardBanner = () => {
       </button>
     </div>
   );
-};
+});
 
 export default LeaderboardBanner;

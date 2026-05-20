@@ -3,13 +3,32 @@ import { loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import istanbul from "vite-plugin-istanbul";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      process.env.VITE_COVERAGE === "true" &&
+        istanbul({
+          include: "src/*",
+          exclude: [
+            "node_modules",
+            "test/",
+            "src/test/",
+            "e2e/",
+            "**/*.test.*",
+            "**/*.spec.*",
+          ],
+          extension: [".js", ".ts", ".jsx", ".tsx"],
+          requireEnv: false,
+          forceBuildInstrument: true,
+        }),
+    ].filter(Boolean),
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),

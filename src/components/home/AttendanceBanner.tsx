@@ -1,6 +1,7 @@
+import { memo } from "react";
 import { useUserStore } from "@store";
 
-export const AttendanceBanner = () => {
+export const AttendanceBanner = memo(() => {
   const attendanceStreak = useUserStore((state) => state.attendanceStreak);
   const weeklyAttendance = useUserStore((state) => state.weeklyAttendance);
   const hasAttendedToday = useUserStore((state) => state.hasAttendedToday);
@@ -101,6 +102,6 @@ export const AttendanceBanner = () => {
       </div>
     </div>
   );
-};
+});
 
 export default AttendanceBanner;

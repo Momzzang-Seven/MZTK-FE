@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures/coverage";
 import { loginAsTestUser, mockCoreAppApis } from "./fixtures/testUser";
 
 test.describe("레벨업 흐름", () => {
@@ -37,7 +37,9 @@ test.describe("레벨업 흐름", () => {
       timeout: 15000,
     });
     // EXP와 XP 공백 허용해서 매칭
-    await expect(page.getByText(/50\s*\/\s*100\s*(EXP|XP)/i)).toBeVisible({
+    await expect(
+      page.getByText(/성장까지\s*50\s*(EXP|XP)\s*남음/i).first()
+    ).toBeVisible({
       timeout: 10000,
     });
   });

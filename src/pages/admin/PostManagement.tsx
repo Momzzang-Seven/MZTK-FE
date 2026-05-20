@@ -164,15 +164,22 @@ const PostManagement = () => {
       {/* Post List */}
       <div className="space-y-4">
         {filteredPosts.map((post) => (
-          <PostItem
+          <div
             key={post.id}
-            post={post}
-            onOpenDeleteModal={handleOpenDeleteModal}
-            onRestorePost={handleRestorePost}
-            onRestoreComment={handleRestoreComment}
-            onOpenEscrowModal={setEscrowPostId}
-            onOpenSettleModal={handleOpenSettleModal}
-          />
+            style={{
+              contentVisibility: "auto",
+              containIntrinsicSize: "0 180px",
+            }}
+          >
+            <PostItem
+              post={post}
+              onOpenDeleteModal={handleOpenDeleteModal}
+              onRestorePost={handleRestorePost}
+              onRestoreComment={handleRestoreComment}
+              onOpenEscrowModal={setEscrowPostId}
+              onOpenSettleModal={handleOpenSettleModal}
+            />
+          </div>
         ))}
 
         {/* Sentinel for Infinite Scroll */}

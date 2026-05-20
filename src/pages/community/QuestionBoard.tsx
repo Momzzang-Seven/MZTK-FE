@@ -35,7 +35,15 @@ const QuestionBoard = () => {
   return (
     <div className="flex flex-col gap-3 pt-2 pb-20 animate-in fade-in duration-700">
       {posts.map((post) => (
-        <QuestionPostCard key={post.postId} post={post} />
+        <div
+          key={post.postId}
+          style={{
+            contentVisibility: "auto",
+            containIntrinsicSize: "0 130px",
+          }}
+        >
+          <QuestionPostCard post={post} />
+        </div>
       ))}
 
       {isLoading && (

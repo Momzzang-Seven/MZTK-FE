@@ -28,7 +28,13 @@ export const useButtonClickGuard = (cooldownMs = 300) => {
         return;
       }
 
-      if (button.dataset.clickGuard === "off" || button.disabled) {
+      if (
+        button.dataset.clickGuard === "off" ||
+        button.disabled ||
+        button.classList.contains("btn-continuous") ||
+        button.classList.contains("btn-quantity") ||
+        button.classList.contains("btn-zoom")
+      ) {
         return;
       }
 
