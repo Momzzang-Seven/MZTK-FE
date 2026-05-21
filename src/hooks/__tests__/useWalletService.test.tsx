@@ -223,10 +223,12 @@ describe("useWalletService", () => {
   it("sends complete EIP-7702 signatures for QnA web3 execution", async () => {
     vi.mocked(web3Service.executeWeb3Transaction).mockResolvedValue(undefined);
     const wallet = {
-      signMessage: vi
-        .fn()
-        .mockResolvedValueOnce(AUTH_SIGNATURE)
-        .mockResolvedValueOnce(SUBMIT_SIGNATURE),
+      authorize: vi.fn().mockResolvedValue({
+        signature: { serialized: AUTH_SIGNATURE },
+      }),
+      signingKey: {
+        sign: vi.fn().mockReturnValue({ serialized: SUBMIT_SIGNATURE }),
+      },
     };
     const intent = createWeb3Intent();
 
@@ -242,8 +244,12 @@ describe("useWalletService", () => {
       );
     });
 
-    expect(wallet.signMessage).toHaveBeenNthCalledWith(1, "0x1111");
-    expect(wallet.signMessage).toHaveBeenNthCalledWith(2, "0x2222");
+    expect(wallet.authorize).toHaveBeenCalledWith({
+      chainId: 11155420,
+      address: "0x3333333333333333333333333333333333333333",
+      nonce: 1,
+    });
+    expect(wallet.signingKey.sign).toHaveBeenCalledWith("0x2222");
     expect(web3Service.executeWeb3Transaction).toHaveBeenCalledWith(
       "intent-1",
       {

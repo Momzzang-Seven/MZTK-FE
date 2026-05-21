@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { walletService, web3Service } from "@services";
-import { ethers, getBytes } from "ethers";
+import { ethers } from "ethers";
 import { MZTK_ABI } from "@abi";
 import type {
   RegisterWalletResponse,
@@ -161,12 +161,17 @@ export const useWalletService = () => {
       if (intent.execution.mode === "EIP7702") {
         validateEip7702SignRequest(signRequest);
         // EIP7702 - 2번 서명
-        const authSig = await wallet.signMessage(
-          getBytes(signRequest.authorization.payloadHashToSign)
+        const auth = await wallet.authorize({
+          chainId: signRequest.authorization.chainId,
+          address: signRequest.authorization.delegateTarget,
+          nonce: signRequest.authorization.authorityNonce,
+        });
+        const authSig = auth.signature.serialized;
+
+        const submitSigObj = wallet.signingKey.sign(
+          signRequest.submit.executionDigest
         );
-        const submitSig = await wallet.signMessage(
-          getBytes(signRequest.submit.executionDigest)
-        );
+        const submitSig = submitSigObj.serialized;
         signatureData = {
           authorizationSignature: authSig,
           submitSignature: submitSig,
