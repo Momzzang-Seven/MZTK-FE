@@ -152,14 +152,12 @@ const WritePost = () => {
 
       {error && error === POST_ERROR_CODE.ALLOWANCE_REQUIRED ? (
         <CommonModal
-          title="토큰 사용 승인 필요"
-          desc="질문 보상을 예치하려면 지갑의 토큰 사용 권한 승인이 필요합니다. 지금 승인하시겠습니까?"
-          confirmLabel="승인하기"
+          title="지갑 재등록 필요"
+          desc="이 지갑은 새 승인 정책으로 다시 등록해야 합니다. 지금 등록하시겠습니까?"
+          confirmLabel="지갑 등록하러 가기"
           onConfirmClick={() => {
             setError(null);
-            navigate("/verify-approve", {
-              state: { amount: usePostStore.getState().reward },
-            });
+            navigate("/register-wallet");
           }}
           cancelLabel="나중에"
           onCancelClick={() => setError(null)}

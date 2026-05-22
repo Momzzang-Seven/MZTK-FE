@@ -5,7 +5,13 @@ import { usePostStore, useUserStore } from "@store";
 import { useWalletService } from "@hooks/useWalletService";
 import { buildPostPayload } from "@utils/buildPostPayload";
 import { postService, web3Service } from "@services";
-import type { FreePost, QuestionPost, PostPayload, AnswerPost } from "@types";
+import type {
+  FreePost,
+  QuestionPost,
+  PostPayload,
+  AnswerPost,
+  ResourceType,
+} from "@types";
 import type { PostType } from "@store";
 import {
   containsUnsafeMarkup,
@@ -393,7 +399,7 @@ export const usePostService = () => {
    * intent 재생성
    */
   const recoverCreate = async (
-    postType: PostType,
+    postType: ResourceType,
     postId: number,
     parentPostId?: number
   ) => {
@@ -402,7 +408,7 @@ export const usePostService = () => {
     setIsPostLoading(true);
     try {
       let response;
-      if (postType === "FREE" || postType === "QUESTION") {
+      if (postType === "QUESTION") {
         response = await postService.recoverCreatePost(postId);
       } else if (postType === "ANSWER" && parentPostId) {
         response = await postService.recoverCreateAnswer(parentPostId, postId);

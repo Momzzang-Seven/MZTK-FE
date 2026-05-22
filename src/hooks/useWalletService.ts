@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { walletService, web3Service } from "@services";
-import { ethers, getBytes } from "ethers";
+import { ethers } from "ethers";
 import { MZTK_ABI } from "@abi";
-import type { SignRequest, Web3Execution } from "@types";
-import { useUserStore } from "@store";
+import type {
+  RegisterWalletResponse,
+  SignRequest,
+  Web3Execution,
+} from "@types";
+import { useUserStore, type NetworkType } from "@store";
 import { getNetworkConfig, getWalletRegistrationEip712Domain } from "@utils";
 
 const QNA_ESCROW_ADDRESS = import.meta.env.VITE_QNA_ESCROW_CONTRACT;
@@ -22,7 +26,7 @@ const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
 const validateEip7702SignRequest = (
-  signRequest: Partial<SignRequest> | undefined
+  signRequest: Partial<SignRequest> | null | undefined
 ) => {
   const authorization = signRequest?.authorization;
   const submit = signRequest?.submit;
@@ -38,7 +42,7 @@ const validateEip7702SignRequest = (
 };
 
 const validateEip1559SignRequest = (
-  signRequest: Partial<SignRequest> | undefined
+  signRequest: Partial<SignRequest> | null | undefined
 ) => {
   const transaction = signRequest?.transaction;
 
@@ -57,34 +61,44 @@ const validateEip1559SignRequest = (
   }
 };
 
+const extractApiErrorMessage = (error: unknown, fallback: string): string => {
+  const errorResponse = error as {
+    response?: { data?: { message?: string } };
+  };
+  return (
+    errorResponse.response?.data?.message ||
+    (error instanceof Error ? error.message : fallback)
+  );
+};
+
 export const useWalletService = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * MOM-439 EIP-7702 승인 플로우 진입:
+   *  1) challenge 발급
+   *  2) ownership EIP-712 서명
+   *  3) POST /web3/wallets
+   * approve(escrow) 트랜잭션은 BE가 EIP-7702 batch로 처리하므로 FE에서 호출하지 않는다.
+   */
   const handleWalletRegistration = async (
     wallet: ethers.HDNodeWallet,
-    network: "OPT" | "BASE" = useUserStore.getState().selectedNetwork
-  ) => {
+    network?: NetworkType
+  ): Promise<RegisterWalletResponse> => {
     setLoading(true);
 
     try {
-      // 🌐 선택된 네트워크에 따른 설정값 로드
-      const { RPC_URL, TOKEN_ADDRESS: TARGET_TOKEN_ADDRESS } =
-        getNetworkConfig(network);
-      const walletRegistrationDomain = getWalletRegistrationEip712Domain();
-
-      const provider = new ethers.JsonRpcProvider(RPC_URL);
-      const connectedWallet = wallet.connect(provider);
+      const walletRegistrationDomain =
+        getWalletRegistrationEip712Domain(network);
 
       // STEP 1: 챌린지 요청
-      const challengeRes = await walletService.createChallenge({
+      const { nonce, message } = await walletService.createChallenge({
         walletAddress: wallet.address,
         purpose: "WALLET_REGISTRATION",
       });
 
-      const { nonce, message } = challengeRes;
-
-      // STEP 2: EIP-712 서명 수행
+      // STEP 2: EIP-712 ownership 서명
       const signature = await wallet.signTypedData(
         walletRegistrationDomain,
         {
@@ -99,35 +113,15 @@ export const useWalletService = () => {
         }
       );
 
-      // STEP 3: 서명값과 정보를 서버에 보내 최종 등록하기
-      await walletService.registerWallet({
+      // STEP 3: 서명값과 정보를 서버에 보내 등록 시작
+      return await walletService.registerWallet({
         walletAddress: wallet.address,
         signature: signature,
         nonce: nonce,
       });
-
-      // STEP 4: 무제한 토큰 전송 권한 위임 (실패해도 등록 자체는 성공)
-      try {
-        const contract = new ethers.Contract(
-          TARGET_TOKEN_ADDRESS,
-          MZTK_ABI[0],
-          connectedWallet
-        );
-        const allowance = ethers.MaxUint256;
-        const tx = await contract.approve(QNA_ESCROW_ADDRESS, allowance);
-        await tx.wait();
-      } catch (approveErr) {
-        // approve 실패는 등록 실패가 아님 — 경고 수준으로만 로깅
-        console.warn("토큰 approve 트랜잭션 실패 (등록은 완료됨):", approveErr);
-      }
-    } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message || "지갑 등록에 실패했습니다.";
-      setError(message);
-      throw error;
+    } catch (err) {
+      setError(extractApiErrorMessage(err, "지갑 등록에 실패했습니다."));
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -137,14 +131,9 @@ export const useWalletService = () => {
     setLoading(true);
     try {
       await walletService.unlinkWallet(address);
-    } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message || "지갑 해제에 실패했습니다.";
-      setError(message);
-      throw error;
+    } catch (err) {
+      setError(extractApiErrorMessage(err, "지갑 해제에 실패했습니다."));
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -162,34 +151,43 @@ export const useWalletService = () => {
         throw new Error(INVALID_WEB3_SIGN_REQUEST_MESSAGE);
       }
 
+      const signRequest = intent.signRequest;
+      if (!signRequest) {
+        throw new Error(INVALID_WEB3_SIGN_REQUEST_MESSAGE);
+      }
+
       let signatureData = {};
 
       if (intent.execution.mode === "EIP7702") {
-        validateEip7702SignRequest(intent.signRequest);
+        validateEip7702SignRequest(signRequest);
         // EIP7702 - 2번 서명
-        const authSig = await wallet.signMessage(
-          getBytes(intent.signRequest.authorization.payloadHashToSign)
+        const auth = await wallet.authorize({
+          chainId: signRequest.authorization.chainId,
+          address: signRequest.authorization.delegateTarget,
+          nonce: signRequest.authorization.authorityNonce,
+        });
+        const authSig = auth.signature.serialized;
+
+        const submitSigObj = wallet.signingKey.sign(
+          signRequest.submit.executionDigest
         );
-        const submitSig = await wallet.signMessage(
-          getBytes(intent.signRequest.submit.executionDigest)
-        );
+        const submitSig = submitSigObj.serialized;
         signatureData = {
           authorizationSignature: authSig,
           submitSignature: submitSig,
         };
       } else if (intent.execution.mode === "EIP1559") {
-        validateEip1559SignRequest(intent.signRequest);
+        validateEip1559SignRequest(signRequest);
         // EIP1559 - 1번 서명
         const txRequest = {
-          chainId: intent.signRequest.transaction.chainId,
-          to: intent.signRequest.transaction.toAddress,
-          value: intent.signRequest.transaction.valueHex,
-          data: intent.signRequest.transaction.data,
-          nonce: intent.signRequest.transaction.nonce,
-          gasLimit: intent.signRequest.transaction.gasLimitHex,
-          maxPriorityFeePerGas:
-            intent.signRequest.transaction.maxPriorityFeePerGasHex,
-          maxFeePerGas: intent.signRequest.transaction.maxFeePerGasHex,
+          chainId: signRequest.transaction.chainId,
+          to: signRequest.transaction.toAddress,
+          value: signRequest.transaction.valueHex,
+          data: signRequest.transaction.data,
+          nonce: signRequest.transaction.nonce,
+          gasLimit: signRequest.transaction.gasLimitHex,
+          maxPriorityFeePerGas: signRequest.transaction.maxPriorityFeePerGasHex,
+          maxFeePerGas: signRequest.transaction.maxFeePerGasHex,
           type: 2,
         };
         const signedTx = await wallet.signTransaction(txRequest);
@@ -202,15 +200,9 @@ export const useWalletService = () => {
         executionIntentId,
         signatureData
       );
-    } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message ||
-        (error instanceof Error ? error.message : "서명에 실패했습니다.");
-      setError(message);
-      throw error;
+    } catch (err) {
+      setError(extractApiErrorMessage(err, "서명에 실패했습니다."));
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -228,35 +220,6 @@ export const useWalletService = () => {
     return await contract.allowance(ownerAddress, QNA_ESCROW_ADDRESS);
   };
 
-  const approveEscrow = async (
-    wallet: ethers.HDNodeWallet,
-    amount: bigint = ethers.MaxUint256,
-    network: "OPT" | "BASE" = useUserStore.getState().selectedNetwork
-  ) => {
-    if (!QNA_ESCROW_ADDRESS)
-      throw new Error("QnA Escrow 주소가 설정되지 않았습니다.");
-    setLoading(true);
-    try {
-      const { RPC_URL, TOKEN_ADDRESS } = getNetworkConfig(network);
-      const provider = new ethers.JsonRpcProvider(RPC_URL);
-      const connectedWallet = wallet.connect(provider);
-      const contract = new ethers.Contract(
-        TOKEN_ADDRESS,
-        MZTK_ABI[0],
-        connectedWallet
-      );
-      const tx = await contract.approve(QNA_ESCROW_ADDRESS, amount);
-      await tx.wait();
-      return tx.hash;
-    } catch (error) {
-      console.error("Approve failed:", error);
-      setError("토큰 승인(Approve)에 실패했습니다.");
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return {
     loading,
     error,
@@ -265,6 +228,5 @@ export const useWalletService = () => {
     handleUnlinkWallet,
     handleWeb3Signature,
     getAllowance,
-    approveEscrow,
   };
 };
