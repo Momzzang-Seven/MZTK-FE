@@ -15,8 +15,8 @@ describe("network utils", () => {
     vi.stubEnv("VITE_OPT_SEPOLIA_TOKEN_ADDRESS", OPT_TOKEN_ADDRESS);
     vi.stubEnv("VITE_WEB3_EIP712_DOMAIN_NAME", "");
     vi.stubEnv("VITE_WEB3_EIP712_DOMAIN_VERSION", "");
-    vi.stubEnv("VITE_WEB3_EIP712_CHAIN_ID", "");
-    vi.stubEnv("VITE_WEB3_EIP712_VERIFYING_CONTRACT", "");
+    vi.stubEnv("VITE_BASE_SEPOLIA_CHAIN_ID", "84532");
+    vi.stubEnv("VITE_BASE_SEPOLIA_TOKEN_ADDRESS", BASE_TOKEN_ADDRESS);
 
     expect(getWalletRegistrationEip712Domain()).toEqual({
       name: "MomzzangSeven",
@@ -36,6 +36,8 @@ describe("network utils", () => {
       "VITE_WEB3_EIP712_VERIFYING_CONTRACT",
       CUSTOM_VERIFYING_CONTRACT
     );
+    vi.stubEnv("VITE_BASE_SEPOLIA_CHAIN_ID", "84532");
+    vi.stubEnv("VITE_BASE_SEPOLIA_TOKEN_ADDRESS", BASE_TOKEN_ADDRESS);
 
     expect(getWalletRegistrationEip712Domain()).toEqual({
       name: "MZTKCustom",
