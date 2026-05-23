@@ -48,16 +48,18 @@ const CommentItem = ({
                 {formatTimeAgo(comment.createdAt)}
               </span>
             </div>
-            <ActionList
-              size="xs"
-              type="COMMENT"
-              id={comment.commentId}
-              authorId={comment.writer?.userId}
-              commentContent={comment.content}
-              onUpdateReplySuccess={onUpdateReplySuccess}
-              targetId={targetId}
-              isAnswer={isAnswer}
-            />
+            {comment.writer?.userId && (
+              <ActionList
+                size="xs"
+                type="COMMENT"
+                id={comment.commentId}
+                authorId={comment.writer?.userId}
+                commentContent={comment.content}
+                onUpdateReplySuccess={onUpdateReplySuccess}
+                targetId={targetId}
+                isAnswer={isAnswer}
+              />
+            )}
           </div>
 
           {/* 본문 */}

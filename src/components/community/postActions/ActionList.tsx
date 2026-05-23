@@ -185,10 +185,15 @@ const ActionList = ({
         });
       }
     }
-    if (type === "COMMENT") setModalType("EDIT_COMMENT");
+    if (type === "COMMENT") {
+      setContent(commentContent);
+      setModalType("EDIT_COMMENT");
+    }
   };
 
   const handleConfirmEditClick = async () => {
+    if (content === commentContent) return;
+
     if (type === "COMMENT" && id) {
       await updateComment(id, content);
     }
@@ -309,6 +314,7 @@ const ActionList = ({
                   commentContent={content}
                   handleEditClick={handleConfirmEditClick}
                   handleCancelClick={closeModal}
+                  isSubmitDisabled={content === commentContent}
                 />
               );
 
@@ -329,7 +335,9 @@ const ActionList = ({
         <img src="/icon/more.svg" alt="더보기" className={sizeMap[size]} />
       </div>
 
-      {modalType && <CommonModal>{renderModalContent()}</CommonModal>}
+      {modalType && (
+        <CommonModal placement="center">{renderModalContent()}</CommonModal>
+      )}
     </>
   );
 };
