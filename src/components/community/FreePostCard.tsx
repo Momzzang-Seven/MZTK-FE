@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2 } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import type { FreePost } from "@types";
 import { formatTimeAgo } from "@utils";
-import { ActionList } from "@components/community";
+import { ActionList, SharePost } from "@components/community";
 import { usePostService } from "@hooks";
 
 interface Props {
@@ -158,12 +158,9 @@ const FreePostCard = ({ post, onDeletePostSuccess }: Props) => {
           </span>
         </div>
 
-        <button
-          data-testid="share-button"
-          className="ml-auto p-2 rounded-full hover:bg-gray-100 text-gray-300 hover:text-gray-900 transition-all active:scale-90"
-        >
-          <Share2 size={20} strokeWidth={2.5} />
-        </button>
+        <div className="ml-auto text-gray-300 hover:text-gray-900 transition-all active:scale-90">
+          <SharePost type="FREE" postId={post.postId} />
+        </div>
       </div>
     </div>
   );
