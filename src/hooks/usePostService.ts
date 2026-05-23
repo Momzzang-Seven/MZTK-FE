@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 import { usePostStore, useUserStore } from "@store";
 import { useWalletService } from "@hooks/useWalletService";
 import { buildPostPayload } from "@utils/buildPostPayload";
-import { postService, web3Service } from "@services";
+import { imageService, postService, web3Service } from "@services";
 import type {
   FreePost,
   QuestionPost,
@@ -103,6 +103,10 @@ export const usePostService = () => {
 
   const { getAllowance } = useWalletService();
 
+  const confirmPostImages = async (payload: Partial<PostPayload>) => {
+    await imageService.confirmImageUpload(payload.imageIds ?? []);
+  };
+
   /**
    * 게시물 생성
    * 양식 검사 + 제출
@@ -116,6 +120,8 @@ export const usePostService = () => {
     try {
       const payload = buildPostPayload(store);
       let hasWeb3Action = false;
+
+      await confirmPostImages(payload);
 
       if (postType === "FREE") {
         await postService.createFreePost(payload);
@@ -183,6 +189,8 @@ export const usePostService = () => {
         };
         errorCode = axiosError.response?.data?.code;
         message = axiosError.response?.data?.message || message;
+      } else if (err instanceof Error) {
+        message = err.message;
       }
 
       // 백엔드에서 명시적으로 WEB3_001 에러를 뱉었을 경우 안내 강화 및 모달 유도
@@ -244,6 +252,8 @@ export const usePostService = () => {
       const payload = buildPostPayload(store, initialData as PostPayload);
       let hasWeb3Action = false;
 
+      await confirmPostImages(payload);
+
       if (postType === "FREE") {
         await postService.updateFreePost(postId, payload);
       } else if (postType === "QUESTION") {
@@ -284,7 +294,10 @@ export const usePostService = () => {
         response?: { data?: { message?: string } };
       };
       const message =
-        errorResponse.response?.data?.message || "게시물 수정에 실패했습니다.";
+        errorResponse.response?.data?.message ||
+        (error instanceof Error
+          ? error.message
+          : "게시물 수정에 실패했습니다.");
       setError(message);
     } finally {
       setIsPostLoading(false);
