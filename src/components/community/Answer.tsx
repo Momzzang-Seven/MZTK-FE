@@ -54,9 +54,14 @@ const Answer = ({
     loadMore,
     isLast,
     error,
-  } = useCommentService<Comment>(answer.answerId, true, {
-    autoFetch: false,
-  });
+  } = useCommentService<Comment>(
+    answer.answerId,
+    true,
+    {
+      autoFetch: false,
+    },
+    5
+  );
 
   const { likePost, unlikePost } = usePostService();
   const [liked, setLiked] = useState(answer.isLiked);

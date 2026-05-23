@@ -13,7 +13,8 @@ interface UseCommentServiceOptions {
 export const useCommentService = <T extends Comment>(
   targetId: number,
   isAnswer: boolean = false,
-  options: UseCommentServiceOptions = {}
+  options: UseCommentServiceOptions = {},
+  size?: number
 ) => {
   const { autoFetch = true } = options;
   const { user } = useUserStore();
@@ -97,7 +98,7 @@ export const useCommentService = <T extends Comment>(
         const data = await commentService.getComments(
           targetId,
           cursor,
-          PAGE_SIZE,
+          size ?? PAGE_SIZE,
           isAnswer
         );
         const newComments = data.comments as T[];

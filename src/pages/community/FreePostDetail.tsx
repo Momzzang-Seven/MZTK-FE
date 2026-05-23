@@ -73,7 +73,7 @@ const FreePostDetail = () => {
           <div className="flex items-center gap-2 mb-4 px-2">
             <h2 className="text-[17px] font-black text-gray-900">댓글</h2>
             <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md text-[12px] font-bold">
-              {comments.length}
+              {post?.commentCount}
             </span>
           </div>
 
@@ -89,7 +89,7 @@ const FreePostDetail = () => {
               </div>
             ))}
 
-            {isLoading && (
+            {isLoading && comments.length === 0 && (
               <div className="text-center py-6">
                 <LoadingSpinner size="sm" color="text-main" />
               </div>
@@ -103,8 +103,13 @@ const FreePostDetail = () => {
               </div>
             )}
 
-            {!isLast && !isLoading && (
-              <div ref={observerRef} className="h-4 w-full" />
+            {!isLast && (
+              <div
+                ref={observerRef}
+                className="flex min-h-20 w-full items-center justify-center"
+              >
+                {isLoading && <LoadingSpinner size="sm" color="text-main" />}
+              </div>
             )}
           </div>
         </section>
