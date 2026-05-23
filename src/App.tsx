@@ -110,7 +110,7 @@ function App() {
           path="*"
           element={
             <Layout>
-              <div className="flex flex-1 w-full mx-auto h-full bg-white flex flex-col relative overflow-hidden max-w-[450px]">
+              <div className="flex flex-1 w-full mx-auto min-h-dvh bg-white flex-col relative max-w-[450px]">
                 <GlobalSnackbar />
                 <AdminRedirectModal />
                 <Routes>

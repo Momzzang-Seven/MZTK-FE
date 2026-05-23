@@ -4,7 +4,7 @@ const Notifications = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] px-6 pt-12 pb-24">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] px-6 pt-12 pb-24">
       {/* Header */}
       <div
         className="flex items-center gap-4 mb-12 animate-fade-slide-up"

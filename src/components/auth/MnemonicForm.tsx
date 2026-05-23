@@ -133,7 +133,7 @@ export const MnemonicForm = ({
       </div>
 
       {toastMessage && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-[12px] font-bold animate-in fade-in slide-in-from-bottom-2">
+        <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-[12px] font-bold animate-in fade-in slide-in-from-bottom-2">
           {toastMessage}
         </div>
       )}

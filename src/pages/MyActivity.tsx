@@ -90,7 +90,7 @@ const MyActivity = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] font-pretendard relative">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] font-pretendard relative">
       {/* Immersive Floating Header Background */}
       <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-main/5 via-transparent to-transparent pointer-events-none" />
 

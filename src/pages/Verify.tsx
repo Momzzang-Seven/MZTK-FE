@@ -142,7 +142,7 @@ const Verify = () => {
     distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS;
 
   return (
-    <div className="flex flex-col h-screen bg-[#FDFDFD] relative overflow-hidden font-pretendard">
+    <div className="flex flex-col h-dvh bg-[#FDFDFD] relative overflow-hidden font-pretendard">
       {/* ── Loading State ── */}
       {isMapLoading && (
         <LocationLoadingOverlay title={VERIFY_TEXT.LOADING_TITLE} />

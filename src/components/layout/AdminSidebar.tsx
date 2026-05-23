@@ -54,7 +54,7 @@ export const AdminSidebar = () => {
   ];
 
   return (
-    <aside className="w-[280px] min-h-screen bg-[#09090b] border-r border-white/5 flex flex-col z-50 shadow-[20px_0_40px_rgba(0,0,0,0.2)]">
+    <aside className="w-[280px] min-h-dvh bg-[#09090b] border-r border-white/5 flex flex-col z-50 shadow-[20px_0_40px_rgba(0,0,0,0.2)]">
       {/* Brand Header */}
       <div className="p-10">
         <Link to="/admin/dashboard" className="flex items-center gap-3.5 group">

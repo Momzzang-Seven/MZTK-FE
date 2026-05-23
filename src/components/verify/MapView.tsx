@@ -27,7 +27,7 @@ export const MapView = ({ center, mapKey, mapId, onMapLoad }: MapViewProps) => {
   if (!center) return null;
 
   if (!mapKey || isAutomatedBrowser) {
-    return <div className="w-screen h-screen bg-gray-100" />;
+    return <div className="w-screen h-dvh bg-gray-100" />;
   }
 
   return (
@@ -35,7 +35,7 @@ export const MapView = ({ center, mapKey, mapId, onMapLoad }: MapViewProps) => {
       <APIProvider apiKey={mapKey}>
         <Map
           mapId={mapId}
-          style={{ width: "100vw", height: "100vh" }}
+          style={{ width: "100vw", height: "100dvh" }}
           defaultCenter={center}
           defaultZoom={18}
           gestureHandling="greedy"

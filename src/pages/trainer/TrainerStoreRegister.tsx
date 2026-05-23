@@ -290,7 +290,7 @@ const TrainerStoreRegister = () => {
     coordinates;
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-[#F9FAFB]">
+    <div className="relative flex min-h-dvh flex-col bg-[#F9FAFB]">
       <TrainerHeader
         title={hasExistingStore ? "매장 정보 관리" : "신규 매장 등록"}
         desc={
@@ -481,7 +481,7 @@ const TrainerStoreRegister = () => {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] p-5 bg-white/90 backdrop-blur-md border-t border-gray-100 z-50">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] px-5 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] bg-white/90 backdrop-blur-md border-t border-gray-100 z-50">
         <CommonButton
           label={
             isSaving

@@ -53,7 +53,7 @@ const QuestionPostForm = ({
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-80px)] bg-white animate-in fade-in duration-700">
+    <div className="flex flex-col min-h-[calc(100dvh-80px)] bg-white animate-in fade-in duration-700">
       <QuestionPostTitle onChange={setTitle} initialValue={initialTitle} />
 
       <div className="border-b border-gray-50 py-1">
@@ -72,7 +72,7 @@ const QuestionPostForm = ({
       <div className="pb-32" />
 
       {/* Fixed Footer Reward Card */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-white via-white to-transparent pt-10 pb-8 px-6 flex justify-center pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-white via-white to-transparent pt-10 pb-[calc(2rem+env(safe-area-inset-bottom))] px-6 flex justify-center pointer-events-none">
         <div className="w-full max-w-[450px] pointer-events-auto">
           <QuestionPostRewardToken
             rewardToken={reward}

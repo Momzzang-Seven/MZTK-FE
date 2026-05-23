@@ -11,7 +11,7 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div
       onClickCapture={handleButtonClickCapture}
-      className="flex w-full min-h-screen bg-[#FAFAFA]"
+      className="flex w-full min-h-dvh bg-[#FAFAFA]"
     >
       <AdminSidebar />
 

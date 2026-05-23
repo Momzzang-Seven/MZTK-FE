@@ -6,7 +6,7 @@ const MarketPurchaseFail = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col h-full bg-white min-h-screen">
+    <div className="flex flex-col h-full bg-white min-h-dvh">
       <SimpleHeader />
       <div className="flex-1 flex flex-col items-center justify-center px-5 gap-4">
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-2">

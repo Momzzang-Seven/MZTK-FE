@@ -278,7 +278,7 @@ const TrainerReservations = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FA] font-pretendard relative">
+    <div className="flex flex-col min-h-dvh bg-[#F8F9FA] font-pretendard relative">
       {/* Immersive Floating Back Button */}
       <button
         onClick={() => navigate(-1)}

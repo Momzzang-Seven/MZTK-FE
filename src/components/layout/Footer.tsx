@@ -125,9 +125,9 @@ export const Footer = () => {
   const isTrainer = user?.role === "TRAINER";
 
   return (
-    <div className="z-[998] w-full fixed max-w-[450px] bottom-0">
+    <div className="z-[998] fixed bottom-0 left-0 right-0 mx-auto w-full max-w-[450px]">
       {/* Frosted glass bar */}
-      <div className="bg-white/90 backdrop-blur-xl border-t border-gray-100 shadow-[0_-8px_32px_rgba(0,0,0,0.06)] px-4 pt-3 pb-6">
+      <div className="bg-white/90 backdrop-blur-xl border-t border-gray-100 shadow-[0_-8px_32px_rgba(0,0,0,0.06)] px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-around">
           {NAV_ITEMS.map((item) => {
             const effectivePath =
