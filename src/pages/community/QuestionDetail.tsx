@@ -28,18 +28,6 @@ const QuestionDetail = () => {
   const isWeb3Done =
     question?.publicationStatus === "VISIBLE" ||
     question?.publicationStatus === "FAILED";
-
-  useEffect(() => {
-    if (question) {
-      console.log("[QuestionDetail] Current User ID:", userId);
-      console.log(
-        "[QuestionDetail] Question Writer ID:",
-        question.writer.userId
-      );
-      console.log("[QuestionDetail] isMine:", isMine);
-    }
-  }, [userId, question, isMine]);
-
   const isWeb3Executable =
     isMine &&
     !isWeb3Done &&
@@ -58,35 +46,11 @@ const QuestionDetail = () => {
         if (aData) setAnswers(aData as AnswerPost[]);
         return { qData, aData };
       } catch (err) {
-        console.error("Failed to fetch data:", err);
         return { qData: null, aData: [] };
       }
     };
 
     fetchData();
-
-    // 5초마다 상태를 체크하여 자동 갱신
-    const interval = setInterval(async () => {
-      const { qData, aData } = await fetchData();
-
-      // 질문과 모든 답변이 최종 상태(완료 혹은 실패)에 도달했는지 확인
-      const isQuestionDone =
-        qData?.publicationStatus === "VISIBLE" ||
-        qData?.publicationStatus === "FAILED";
-
-      const areAnswersDone = (aData as AnswerPost[])?.every(
-        (a) =>
-          a.web3Execution.resource.status === "COMPLETED" ||
-          a.web3Execution.resource.status === "FAILED"
-      );
-
-      // 모든 작업이 완료되었다면 폴링 중단
-      if (isQuestionDone && areAnswersDone) {
-        clearInterval(interval);
-      }
-    }, 5000);
-
-    // return () => clearInterval(interval);
   }, [getPost, getAnswers, postId]);
 
   if (isPostLoading && !question) {

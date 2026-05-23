@@ -289,7 +289,6 @@ export const usePostService = () => {
         else navigate("/community");
       }
     } catch (error) {
-      console.log(error);
       const errorResponse = error as {
         response?: { data?: { message?: string } };
       };
@@ -430,7 +429,6 @@ export const usePostService = () => {
       }
       return response;
     } catch (error) {
-      console.log(error);
       const errorResponse = error as {
         response?: { data?: { message?: string } };
       };

@@ -1,4 +1,5 @@
 import type { PostType } from "@types";
+import { useUserStore } from "@store";
 
 interface SharePostProps {
   type: PostType;
@@ -6,6 +7,7 @@ interface SharePostProps {
 }
 
 const SharePost = ({ type, postId }: SharePostProps) => {
+  const { showSnackbar } = useUserStore((s) => s);
   const BASE_URL = window.location.origin;
   const COMMUNITY_BASE = `${BASE_URL}/community`;
 
@@ -30,7 +32,8 @@ const SharePost = ({ type, postId }: SharePostProps) => {
         url,
       });
     } catch (error) {
-      console.log("공유 실패:", error);
+      showSnackbar("공유에 실패했습니다. URL이 클립보드에 복사되었습니다.");
+      await navigator.clipboard?.writeText(url);
     }
   };
 
