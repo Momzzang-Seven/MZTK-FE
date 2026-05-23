@@ -47,7 +47,7 @@ const CommentInput = ({
 
   if (!isAnswerPost) {
     return (
-      <div className="z-[998] fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-[450px] px-6 animate-in slide-in-from-bottom-8 duration-700">
+      <div className="z-[998] fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-full max-w-[450px] px-6 animate-in slide-in-from-bottom-8 duration-700">
         <div className="bg-white/90 backdrop-blur-xl border border-white/50 shadow-[0_25px_60px_rgba(0,0,0,0.12)] rounded-[32px] p-2 flex flex-col gap-1 transition-all duration-300">
           {parentNickname && (
             <div className="flex items-center justify-between px-4 pt-2 animate-in fade-in slide-in-from-top-2">

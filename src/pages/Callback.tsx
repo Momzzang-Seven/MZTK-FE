@@ -100,7 +100,7 @@ const Callback = () => {
 
   return (
     <>
-      <div className="relative flex flex-col items-center justify-center h-screen bg-[#FDFDFD] overflow-hidden">
+      <div className="relative flex flex-col items-center justify-center h-dvh bg-[#FDFDFD] overflow-hidden">
         {/* Luxury Background Accents */}
         <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-main/5 rounded-full blur-[80px] animate-pulse" />
         <div className="absolute bottom-[-15%] left-[-10%] w-80 h-80 bg-orange-100/10 rounded-full blur-[100px] animate-pulse" />

@@ -48,7 +48,7 @@ const MyTknHistory = () => {
   }, [CHAIN_ID, ETHERSCAN_URL, TOKEN_ADDRESS, user?.walletAddress]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] pb-20">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-20">
       {/* ── Header ── */}
       <div className="relative pt-12 pb-6 px-6 overflow-hidden">
         <div className="absolute -top-10 -right-10 w-52 h-52 bg-main opacity-[0.07] blur-[60px] rounded-full pointer-events-none" />

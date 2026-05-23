@@ -101,7 +101,7 @@ const My = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] pb-28">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-28">
       {/* ── Header bg ── */}
       <div className="relative pt-12 pb-20 px-6 overflow-hidden">
         <div className="absolute -top-10 -right-10 w-56 h-56 bg-main opacity-[0.07] blur-[60px] rounded-full pointer-events-none" />

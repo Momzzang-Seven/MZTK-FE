@@ -4,7 +4,7 @@ import { EXERCISE_TEXT } from "@constant/exercise";
 
 export const ExerciseAnalyzing = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] items-center justify-center px-6 gap-8 animate-fade-in">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] items-center justify-center px-6 gap-8 animate-fade-in">
       {/* Decorative blob */}
       <div className="absolute top-20 left-1/2 -translate-x-1/2 w-72 h-72 bg-main opacity-[0.06] blur-[80px] rounded-full pointer-events-none" />
 

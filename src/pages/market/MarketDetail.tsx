@@ -181,7 +181,7 @@ const MarketDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center gap-4">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
         <p className="text-[13px] font-black text-gray-300">
           클래스 상세 정보를 가져오는 중...
@@ -192,7 +192,7 @@ const MarketDetail = () => {
 
   if (loadError || !data || !tabData) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center p-10 gap-6">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center p-10 gap-6">
         <div className="w-16 h-16 rounded-[24px] bg-red-50 flex items-center justify-center">
           <svg
             width="28"
@@ -223,7 +223,7 @@ const MarketDetail = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative pb-32">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative pb-32">
       {/* Immersive Image Banner */}
       <div className="relative w-full h-[380px] group">
         <div
@@ -357,7 +357,7 @@ const MarketDetail = () => {
       </div>
 
       {/* Luxury Floating Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-4 pb-8 flex items-center justify-between border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))] flex items-center justify-between border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
             1-Class Pricing

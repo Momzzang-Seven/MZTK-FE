@@ -54,7 +54,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center p-8 bg-[#09090b] min-h-screen relative overflow-hidden">
+    <div className="flex flex-1 flex-col items-center justify-center p-8 bg-[#09090b] min-h-dvh relative overflow-hidden">
       {/* Background Decor */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-main/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />

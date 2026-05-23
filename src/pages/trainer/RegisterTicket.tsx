@@ -32,7 +32,7 @@ const RegisterTicket = () => {
 
   if (isCheckingStore) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FDFDFD] text-center">
+      <div className="flex min-h-dvh items-center justify-center bg-[#FDFDFD] text-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
           <p className="text-[13px] font-black text-gray-400">
@@ -44,7 +44,7 @@ const RegisterTicket = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] font-pretendard">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] font-pretendard">
       <RegisterHeader
         title={step === "photo" ? "사진 등록" : "정보 입력"}
         desc={

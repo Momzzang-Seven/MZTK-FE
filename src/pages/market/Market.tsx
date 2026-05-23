@@ -107,7 +107,7 @@ const Market = () => {
     .sort((a, b) => (a.distance ?? 999999) - (b.distance ?? 999999));
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh">
       <div className="flex-1 overflow-y-auto pb-32">
         {/* Luxury Hero Header */}
         <div className="relative px-6 pt-14 pb-12 overflow-hidden">

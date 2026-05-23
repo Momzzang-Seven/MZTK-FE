@@ -143,7 +143,7 @@ const WritePost = () => {
     !hasInsufficientRewardBalance;
 
   return (
-    <div className="relative min-h-screen pt-20">
+    <div className="relative min-h-dvh pt-20">
       {(isFetching || isLoading) && (
         <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
           <LoadingSpinner size="lg" color="text-white" />

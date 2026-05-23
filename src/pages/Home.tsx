@@ -35,7 +35,7 @@ const Home = () => {
   }, [initAttendance, initLevel, initLocation, initWorkoutCompletion]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] overflow-y-auto pb-28">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] overflow-y-auto pb-28">
       {/* ── Attendance Success Modal ── */}
       {attendanceResult && (
         <CommonModal onCancelClick={clearAttendanceResult}>

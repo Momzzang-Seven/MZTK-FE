@@ -58,8 +58,12 @@ describe("CreatePostButton", () => {
   it("버튼이 고정 위치에 있다", () => {
     const { container } = renderWithRouter();
 
-    const wrapper = container.querySelector(".fixed.bottom-\\[110px\\]");
-    expect(wrapper).toBeInTheDocument();
+    const wrapper = container.firstElementChild;
+    expect(wrapper).toHaveClass("fixed");
+    expect(wrapper).toHaveClass("right-6");
+    expect(wrapper?.className).toContain(
+      "bottom-[calc(6.875rem+env(safe-area-inset-bottom))]"
+    );
   });
 
   it("버튼이 특정 라운드값과 shadow를 가진다", () => {
