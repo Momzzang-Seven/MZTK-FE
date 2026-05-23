@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CommonButton } from "@components/common";
+import { CommonButton, CommonModal } from "@components/common";
 import {
   IntroTab,
   LocationTab,
   ReviewTab,
 } from "@components/market/detail/MarketTabs";
+import { useTokenBalance } from "@hooks";
 import { getMarketplaceClassDetail } from "@services";
 
 const IMAGE_BASE_URL =
@@ -70,6 +71,12 @@ const MarketDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
+  const [modalState, setModalState] = useState<{
+    title: string;
+    desc: string;
+  } | null>(null);
+  const { balance, loading: isBalanceLoading } = useTokenBalance();
+  const balanceNumber = Number(balance);
 
   useEffect(() => {
     const classId = Number(id);
@@ -150,9 +157,31 @@ const MarketDetail = () => {
     setCurrentImgIdx(idx);
   };
 
+  const handleReservationClick = () => {
+    if (!data) return;
+
+    if (isBalanceLoading) {
+      setModalState({
+        title: "잔액 확인 중",
+        desc: "보유 MZTK 잔액을 확인하고 있습니다. 잠시 후 다시 시도해 주세요.",
+      });
+      return;
+    }
+
+    if (Number.isFinite(balanceNumber) && balanceNumber < data.priceAmount) {
+      setModalState({
+        title: "잔액 부족",
+        desc: `예약에는 ${data.priceAmount.toLocaleString()} MZTK가 필요합니다. 현재 보유 잔액은 ${balanceNumber.toLocaleString()} MZTK입니다.`,
+      });
+      return;
+    }
+
+    navigate(`/market/purchase/${data.classId}`);
+  };
+
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center gap-4">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
         <p className="text-[13px] font-black text-gray-300">
           클래스 상세 정보를 가져오는 중...
@@ -163,7 +192,7 @@ const MarketDetail = () => {
 
   if (loadError || !data || !tabData) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center p-10 gap-6">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center p-10 gap-6">
         <div className="w-16 h-16 rounded-[24px] bg-red-50 flex items-center justify-center">
           <svg
             width="28"
@@ -194,7 +223,7 @@ const MarketDetail = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative pb-32">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative pb-32">
       {/* Immersive Image Banner */}
       <div className="relative w-full h-[380px] group">
         <div
@@ -328,7 +357,7 @@ const MarketDetail = () => {
       </div>
 
       {/* Luxury Floating Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-4 pb-8 flex items-center justify-between border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))] flex items-center justify-between border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
             1-Class Pricing
@@ -344,12 +373,21 @@ const MarketDetail = () => {
         </div>
         <div className="w-[180px]">
           <CommonButton
-            label="지금 예약하기"
-            onClick={() => navigate(`/market/purchase/${data.classId}`)}
+            label={isBalanceLoading ? "잔액 확인 중..." : "지금 예약하기"}
+            onClick={handleReservationClick}
             className="h-[60px] rounded-[22px] font-black text-[16px] shadow-xl shadow-main/20 active:scale-95 transition-all"
           />
         </div>
       </div>
+
+      {modalState && (
+        <CommonModal
+          title={modalState.title}
+          desc={modalState.desc}
+          confirmLabel="확인"
+          onConfirmClick={() => setModalState(null)}
+        />
+      )}
     </div>
   );
 };

@@ -91,7 +91,7 @@ const QuestionDetail = () => {
 
   if (isPostLoading && !question) {
     return (
-      <div className="w-full h-full flex min-h-screen justify-center items-center bg-white">
+      <div className="w-full h-full flex min-h-dvh justify-center items-center bg-white">
         <LoadingSpinner size="lg" color="text-main" />
       </div>
     );
@@ -99,7 +99,7 @@ const QuestionDetail = () => {
 
   if (error) {
     return (
-      <div className="w-full h-full flex flex-col min-h-screen justify-center items-center py-10 px-6 text-center">
+      <div className="w-full h-full flex flex-col min-h-dvh justify-center items-center py-10 px-6 text-center">
         <div className="bg-red-50 p-6 rounded-[32px] border border-red-100">
           <p className="text-red-500 font-black mb-2">오류가 발생했습니다</p>
           <p className="text-red-400 text-sm whitespace-pre-line">{error}</p>
@@ -110,14 +110,14 @@ const QuestionDetail = () => {
 
   if (!question) {
     return (
-      <div className="w-full h-full flex flex-col min-h-screen justify-center items-center py-10">
+      <div className="w-full h-full flex flex-col min-h-dvh justify-center items-center py-10">
         <p className="text-gray-400 font-bold">게시물을 찾을 수 없습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-35">
+    <div className="min-h-dvh bg-gray-50/50 pb-35">
       <QuestionHeader
         isMine={isMine}
         type="QUESTION"

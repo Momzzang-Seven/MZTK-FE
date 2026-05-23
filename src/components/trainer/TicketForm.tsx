@@ -175,7 +175,7 @@ const TicketForm = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen font-pretendard">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh font-pretendard">
       <TrainerHeader
         title="클래스 수정"
         desc="수정된 정보는 수강생들에게 즉시 반영됩니다."
@@ -598,7 +598,7 @@ const TicketForm = ({
       </div>
 
       {/* Fixed Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] p-6 bg-white/95 backdrop-blur-xl border-t border-gray-100 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-white/95 backdrop-blur-xl border-t border-gray-100 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <CommonButton
           label={isSubmitting ? "저장 중..." : texts.SUBMIT}
           onClick={handleSubmit}

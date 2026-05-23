@@ -56,12 +56,12 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     <div
       id="app-root"
       onClickCapture={handleButtonClickCapture}
-      className={`bg-white w-full min-h-screen mx-auto flex flex-col max-w-[450px] items-center relative`}
+      className="bg-white w-full min-h-dvh mx-auto flex flex-col max-w-[450px] items-center relative"
     >
       {shouldShowHeader && <Header />}
       <div
-        className={`w-full flex flex-col flex-1 overflow-y-auto
-          ${!shouldHideFooter ? "pb-[82px]" : ""}
+        className={`w-full flex flex-col flex-1
+          ${!shouldHideFooter ? "pb-[calc(5.75rem+env(safe-area-inset-bottom))]" : ""}
           ${shouldShowHeader ? "pt-[72px]" : ""}
           `}
       >

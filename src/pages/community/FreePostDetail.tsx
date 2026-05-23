@@ -52,14 +52,14 @@ const FreePostDetail = () => {
 
   if (isPostLoading && !post) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white">
+      <div className="flex items-center justify-center h-dvh bg-white">
         <LoadingSpinner size="lg" color="text-main" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-28">
+    <div className="min-h-dvh bg-gray-50/50 pb-28">
       <SimpleHeader title="게시글 상세" />
 
       <div className="pt-[88px]">

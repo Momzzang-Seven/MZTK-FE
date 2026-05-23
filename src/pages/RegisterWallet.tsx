@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { MnemonicForm } from "@components/auth/MnemonicForm";
@@ -9,8 +9,43 @@ import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useUserStore } from "@store";
 import { useWalletService } from "@hooks";
+import { isWeakPin } from "@utils";
+import {
+  REGISTER_WALLET_CONFIG,
+  REGISTER_WALLET_MESSAGES,
+  REGISTER_WALLET_STEPS,
+  REGISTER_WALLET_STORAGE_KEYS,
+  type RegisterWalletStep,
+} from "@constant";
+
+import { walletService } from "@services";
+import type {
+  RegisterWalletResponse,
+  WalletRegistrationNextAction,
+  WalletRegistrationStatusResponse,
+} from "@types";
+
+type RegistrationStateLike = {
+  status: RegisterWalletResponse["status"];
+  nextAction: WalletRegistrationNextAction;
+  web3: RegisterWalletResponse["web3"];
+  registrationId: string | null;
+};
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const renderLines = (lines: readonly string[]) => (
+  <>
+    {lines.map((line, index) => (
+      <span key={line}>
+        {index > 0 && <br />}
+        {line}
+      </span>
+    ))}
+  </>
+);
 
 const RegisterWallet = () => {
+  const messages = REGISTER_WALLET_MESSAGES;
   const navigate = useNavigate();
   const setWalletAddress = useUserStore((state) => state.setWalletAddress);
   const {
@@ -19,55 +54,74 @@ const RegisterWallet = () => {
     setError,
     handleWalletRegistration,
     handleUnlinkWallet,
+    handleWeb3Signature,
   } = useWalletService();
 
-  const [step, setStep] = useState<
-    "AUTH_PIN" | "MNEMONIC" | "PIN_SET" | "PIN_CONFIRM" | "SUCCESS"
-  >(() => {
-    return localStorage.getItem("encrypted_wallet") ? "AUTH_PIN" : "MNEMONIC";
+  const [step, setStep] = useState<RegisterWalletStep>(() => {
+    return localStorage.getItem(REGISTER_WALLET_STORAGE_KEYS.encryptedWallet)
+      ? REGISTER_WALLET_STEPS.AUTH_PIN
+      : REGISTER_WALLET_STEPS.MNEMONIC;
   });
 
-  const [mnemonics, setMnemonics] = useState<string[]>(Array(12).fill(""));
+  const [mnemonics, setMnemonics] = useState<string[]>(
+    Array(REGISTER_WALLET_CONFIG.mnemonicWordCount).fill("")
+  );
   const [authPin, setAuthPin] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [wallet, setWallet] = useState<ethers.HDNodeWallet | null>(null);
+  const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [modal, setModal] = useState<{ title: string; desc: string } | null>(
     null
   );
 
+  // 진행 중인 등록 플로우(서명/polling) 취소용. 새 플로우가 시작되면 이전 id는 만료.
+  const flowIdRef = useRef(0);
+  const isFlowAlive = (id: number) => flowIdRef.current === id;
+  const startNewFlow = () => {
+    flowIdRef.current += 1;
+    return flowIdRef.current;
+  };
+
+  useEffect(() => {
+    return () => {
+      flowIdRef.current = -1;
+    };
+  }, []);
+  const finalizingRef = useRef(false);
+
   const validateMnemonic = () => {
     try {
       const phrase = mnemonics.map((m) => m.trim().toLowerCase()).join(" ");
-      // HDNodeWallet을 사용하여 니모닉 정보를 명시적으로 유지
       const recoveredWallet = ethers.HDNodeWallet.fromPhrase(phrase);
 
-      const existingWalletAddress = localStorage.getItem("wallet_address");
+      const existingWalletAddress = localStorage.getItem(
+        REGISTER_WALLET_STORAGE_KEYS.walletAddress
+      );
       if (
         existingWalletAddress &&
         existingWalletAddress === recoveredWallet.address
       ) {
-        setModal({
-          title: "기존 지갑과 동일한 지갑입니다.",
-          desc: "기존 지갑과 다른 지갑을 연결해 주세요.",
-        });
+        setModal(messages.modal.sameWallet);
         return;
       }
       setWallet(recoveredWallet);
-      setStep("PIN_SET");
+      void startRegistration(recoveredWallet);
     } catch {
-      setModal({
-        title: "비밀복구 구문 확인 실패",
-        desc: "입력하신 구문이 올바르지 않습니다. 다시 확인해 주세요.",
-      });
+      setModal(messages.modal.invalidMnemonic);
     }
   };
 
-  const handleFinalize = useCallback(async () => {
-    if (!wallet || loading) return;
+  const startRegistration = async (recoveredWallet: ethers.HDNodeWallet) => {
+    const myFlow = startNewFlow();
+    setStep(REGISTER_WALLET_STEPS.REGISTERING);
 
     try {
-      const existingWalletAddress = localStorage.getItem("wallet_address");
+      // 기존 등록 지갑이 있으면 backend에서 unlink 먼저
+      finalizingRef.current = true;
+      const existingWalletAddress = localStorage.getItem(
+        REGISTER_WALLET_STORAGE_KEYS.walletAddress
+      );
       if (existingWalletAddress) {
         try {
           await handleUnlinkWallet(existingWalletAddress);
@@ -76,82 +130,272 @@ const RegisterWallet = () => {
             axios.isAxiosError(unlinkErr) &&
             unlinkErr.response?.status === 404
           ) {
-            // ignore
+            // 이미 BE에 없는 경우 무시
           } else {
             throw unlinkErr;
           }
         }
-        localStorage.removeItem("encrypted_wallet");
-        localStorage.removeItem("wallet_address");
+        localStorage.removeItem(REGISTER_WALLET_STORAGE_KEYS.encryptedWallet);
+        localStorage.removeItem(REGISTER_WALLET_STORAGE_KEYS.walletAddress);
       }
 
-      await handleWalletRegistration(wallet);
+      const response = await handleWalletRegistration(recoveredWallet);
+      if (!isFlowAlive(myFlow)) return;
+      setRegistrationId(response.registrationId);
 
-      // HDNodeWallet.encrypt는 니모닉 정보가 있으면 함께 암호화하여 저장합니다.
-      const encryptedJson = await wallet.encrypt(pin);
-      localStorage.setItem("encrypted_wallet", encryptedJson);
-      localStorage.setItem("wallet_address", wallet.address);
-      setWalletAddress(wallet.address);
-      setStep("SUCCESS");
+      await handleRegistrationState(
+        {
+          status: response.status,
+          nextAction: response.nextAction,
+          web3: response.web3,
+          registrationId: response.registrationId,
+        },
+        recoveredWallet,
+        myFlow
+      );
+    } catch {
+      if (!isFlowAlive(myFlow)) return;
+      // hook이 setError로 메시지 표시. 사용자에게 재시작 옵션 노출.
+      setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+    }
+  };
+
+  const handleRegistrationState = async (
+    state: RegistrationStateLike,
+    activeWallet: ethers.HDNodeWallet,
+    myFlow: number
+  ) => {
+    if (!isFlowAlive(myFlow)) return;
+
+    switch (state.nextAction) {
+      case "SIGN_APPROVAL": {
+        if (!state.web3 || !state.registrationId) {
+          setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+          return;
+        }
+        try {
+          await handleWeb3Signature(
+            state.web3.executionIntent.id,
+            activeWallet,
+            state.web3
+          );
+        } catch {
+          if (!isFlowAlive(myFlow)) return;
+          setStep(REGISTER_WALLET_STEPS.RETRY_PROMPT);
+          return;
+        }
+        if (!isFlowAlive(myFlow)) return;
+        void pollUntilTerminal(state.registrationId, activeWallet, myFlow);
+        return;
+      }
+      case "WAIT_FOR_APPROVAL_TRANSACTION": {
+        if (!state.registrationId) {
+          setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+          return;
+        }
+        void pollUntilTerminal(state.registrationId, activeWallet, myFlow);
+        return;
+      }
+      case "RETRY_APPROVAL": {
+        setStep(REGISTER_WALLET_STEPS.RETRY_PROMPT);
+        return;
+      }
+      case "DONE": {
+        setStep(REGISTER_WALLET_STEPS.PIN_SET);
+        return;
+      }
+      case "CONTACT_SUPPORT": {
+        setStep(REGISTER_WALLET_STEPS.SUPPORT);
+        return;
+      }
+      case "NONE":
+      default: {
+        setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+        return;
+      }
+    }
+  };
+
+  const pollUntilTerminal = async (
+    regId: string,
+    activeWallet: ethers.HDNodeWallet,
+    myFlow: number
+  ) => {
+    let attempts = 0;
+    while (
+      attempts < REGISTER_WALLET_CONFIG.maxPollAttempts &&
+      isFlowAlive(myFlow)
+    ) {
+      await sleep(REGISTER_WALLET_CONFIG.pollIntervalMs);
+      if (!isFlowAlive(myFlow)) return;
+
+      let status: WalletRegistrationStatusResponse;
+      try {
+        status = await walletService.getWalletRegistrationStatus(regId);
+      } catch (err) {
+        console.warn("registration status poll failed:", err);
+        attempts++;
+        continue;
+      }
+      if (!isFlowAlive(myFlow)) return;
+
+      const isPending =
+        status.status === "APPROVAL_REQUIRED" ||
+        status.status === "APPROVAL_SIGNED" ||
+        status.status === "APPROVAL_PENDING_ONCHAIN";
+
+      if (!isPending || status.nextAction !== "WAIT_FOR_APPROVAL_TRANSACTION") {
+        await handleRegistrationState(
+          {
+            status: status.status,
+            nextAction: status.nextAction,
+            web3: status.web3,
+            registrationId: status.registrationId,
+          },
+          activeWallet,
+          myFlow
+        );
+        return;
+      }
+
+      attempts++;
+    }
+    if (isFlowAlive(myFlow)) {
+      setStep(REGISTER_WALLET_STEPS.PROLONGED_PENDING);
+    }
+  };
+
+  const handleContinuePolling = () => {
+    if (!wallet || !registrationId) {
+      setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+      return;
+    }
+    const myFlow = startNewFlow();
+    setStep(REGISTER_WALLET_STEPS.REGISTERING);
+    void pollUntilTerminal(registrationId, wallet, myFlow);
+  };
+
+  const handleRetryApproval = async () => {
+    if (!wallet || !registrationId) {
+      setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+      return;
+    }
+    const myFlow = startNewFlow();
+    setStep(REGISTER_WALLET_STEPS.REGISTERING);
+    try {
+      const response =
+        await walletService.retryWalletApprovalIntent(registrationId);
+      if (!isFlowAlive(myFlow)) return;
+      await handleRegistrationState(
+        {
+          status: response.status,
+          nextAction: response.nextAction,
+          web3: response.web3,
+          registrationId: response.registrationId,
+        },
+        wallet,
+        myFlow
+      );
     } catch (err) {
-      console.error("Registration finalize error:", err);
+      if (!isFlowAlive(myFlow)) return;
+      const msg =
+        (axios.isAxiosError(err) && err.response?.data?.message) ||
+        messages.modal.retryFailed;
+      setError(msg);
+      setStep(REGISTER_WALLET_STEPS.RETRY_PROMPT);
+    }
+  };
+
+  const handleRestart = () => {
+    startNewFlow();
+    setMnemonics(Array(REGISTER_WALLET_CONFIG.mnemonicWordCount).fill(""));
+    setWallet(null);
+    setRegistrationId(null);
+    setError(null);
+    setStep(REGISTER_WALLET_STEPS.MNEMONIC);
+  };
+
+  const handleFinalizePin = useCallback(async () => {
+    if (!wallet) return;
+    try {
+      const encryptedJson = await wallet.encrypt(pin);
+      localStorage.setItem(
+        REGISTER_WALLET_STORAGE_KEYS.encryptedWallet,
+        encryptedJson
+      );
+      localStorage.setItem(
+        REGISTER_WALLET_STORAGE_KEYS.walletAddress,
+        wallet.address
+      );
+      setWalletAddress(wallet.address);
+      setStep(REGISTER_WALLET_STEPS.SUCCESS);
+    } catch (err) {
+      console.error("PIN encrypt failed:", err);
+      setModal(messages.modal.pinSaveFailed);
       setPin("");
       setConfirmPin("");
-      setStep("PIN_SET");
+      setStep(REGISTER_WALLET_STEPS.PIN_SET);
+    } finally {
+      finalizingRef.current = false;
     }
-  }, [
-    loading,
-    wallet,
-    pin,
-    setWalletAddress,
-    handleUnlinkWallet,
-    handleWalletRegistration,
-  ]);
+  }, [messages.modal.pinSaveFailed, wallet, pin, setWalletAddress]);
 
   useEffect(() => {
     const verifyPin = async () => {
-      if (authPin.length === 6 && step === "AUTH_PIN") {
+      if (
+        authPin.length === REGISTER_WALLET_CONFIG.pinLength &&
+        step === REGISTER_WALLET_STEPS.AUTH_PIN
+      ) {
         try {
-          const encryptedJson = localStorage.getItem("encrypted_wallet");
+          const encryptedJson = localStorage.getItem(
+            REGISTER_WALLET_STORAGE_KEYS.encryptedWallet
+          );
           if (!encryptedJson) {
-            setStep("MNEMONIC");
+            setStep(REGISTER_WALLET_STEPS.MNEMONIC);
             return;
           }
-          // PIN 검증 시에도 Wallet.fromEncryptedJson 사용
           await ethers.Wallet.fromEncryptedJson(encryptedJson, authPin);
-          setStep("MNEMONIC");
+          setStep(REGISTER_WALLET_STEPS.MNEMONIC);
         } catch {
-          setModal({
-            title: "PIN 번호 인증 실패",
-            desc: "잘못된 PIN 번호입니다. 다시 입력해 주세요.",
-          });
+          setModal(messages.modal.authPinFailed);
           setAuthPin("");
         }
       }
     };
     void verifyPin();
 
-    if (pin.length === 6 && step === "PIN_SET") setStep("PIN_CONFIRM");
-    if (confirmPin.length === 6 && step === "PIN_CONFIRM") {
-      if (pin === confirmPin) void handleFinalize();
+    if (
+      pin.length === REGISTER_WALLET_CONFIG.pinLength &&
+      step === REGISTER_WALLET_STEPS.PIN_SET
+    ) {
+      if (isWeakPin(pin)) {
+        setModal(messages.modal.weakPin);
+        setPin("");
+        return;
+      }
+      setStep(REGISTER_WALLET_STEPS.PIN_CONFIRM);
+    }
+    if (
+      confirmPin.length === REGISTER_WALLET_CONFIG.pinLength &&
+      step === REGISTER_WALLET_STEPS.PIN_CONFIRM
+    ) {
+      if (pin === confirmPin) void handleFinalizePin();
       else {
-        setModal({
-          title: "PIN 번호 불일치",
-          desc: "처음 입력한 PIN 번호와 다릅니다. 다시 입력해 주세요.",
-        });
+        setModal(messages.modal.pinMismatch);
         setConfirmPin("");
       }
     }
-  }, [authPin, pin, step, confirmPin, handleFinalize]);
+  }, [authPin, pin, step, confirmPin, handleFinalizePin, messages.modal]);
+
+  const showProgressOverlay =
+    loading || step === REGISTER_WALLET_STEPS.REGISTERING;
 
   return (
     <FullScreenPage className="overflow-hidden bg-white">
-      {/* ── Background Decoration ── */}
       <div className="fixed -top-20 -right-20 w-64 h-64 bg-main opacity-[0.05] blur-[80px] rounded-full pointer-events-none" />
       <div className="fixed -bottom-20 -left-20 w-64 h-64 bg-main opacity-[0.03] blur-[80px] rounded-full pointer-events-none" />
 
-      {/* ── Navigation ── */}
-      {step !== "SUCCESS" && (
+      {step !== REGISTER_WALLET_STEPS.SUCCESS && (
         <div className="absolute top-6 left-6 z-50">
           <button
             onClick={() => navigate(-1)}
@@ -173,39 +417,30 @@ const RegisterWallet = () => {
         </div>
       )}
 
-      {loading && (
+      {showProgressOverlay && (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
           <LoadingSpinner size="lg" color="text-main" />
           <p className="mt-4 text-[14px] font-black text-gray-900 animate-pulse">
-            안전하게 지갑을 등록하고 있습니다...
+            {messages.progress.registering}
           </p>
         </div>
       )}
 
       <div className="h-full pt-16 flex flex-col">
-        {step === "AUTH_PIN" && (
+        {step === REGISTER_WALLET_STEPS.AUTH_PIN && (
           <PinPad
-            title="기존 PIN 번호 인증"
-            desc={
-              <>
-                지갑을 변경하기 위해 <br /> 기존에 설정한 PIN 번호를
-                입력해주세요
-              </>
-            }
+            title={messages.authPin.title}
+            desc={renderLines(messages.authPin.descLines)}
             pin={authPin}
             onInput={(n) => setAuthPin((p) => p + n)}
             onDelete={() => setAuthPin((p) => p.slice(0, -1))}
           />
         )}
 
-        {step === "MNEMONIC" && (
+        {step === REGISTER_WALLET_STEPS.MNEMONIC && (
           <MnemonicForm
             mnemonics={mnemonics}
-            description={
-              <>
-                연결하실 지갑의 비밀복구구문 <br /> 12개 단어를 입력해주세요
-              </>
-            }
+            description={renderLines(messages.mnemonic.descLines)}
             onChange={(idx, val) => {
               const next = [...mnemonics];
               next[idx] = val;
@@ -216,37 +451,69 @@ const RegisterWallet = () => {
           />
         )}
 
-        {step === "PIN_SET" && (
+        {step === REGISTER_WALLET_STEPS.PROLONGED_PENDING && (
+          <WalletSuccessSection
+            title={messages.prolongedPending.title}
+            description={messages.prolongedPending.description}
+            buttonLabel={messages.prolongedPending.buttonLabel}
+            onConfirm={handleContinuePolling}
+          />
+        )}
+
+        {step === REGISTER_WALLET_STEPS.RETRY_PROMPT && (
+          <WalletSuccessSection
+            title={messages.retryPrompt.title}
+            description={messages.retryPrompt.description}
+            buttonLabel={messages.retryPrompt.buttonLabel}
+            onConfirm={() => void handleRetryApproval()}
+          />
+        )}
+
+        {step === REGISTER_WALLET_STEPS.SUPPORT && (
+          <WalletSuccessSection
+            title={messages.support.title}
+            description={messages.support.description}
+            buttonLabel={messages.support.buttonLabel}
+            onConfirm={() => navigate("/")}
+          />
+        )}
+
+        {step === REGISTER_WALLET_STEPS.RESTART_PROMPT && (
+          <WalletSuccessSection
+            title={messages.restartPrompt.title}
+            description={messages.restartPrompt.description}
+            buttonLabel={messages.restartPrompt.buttonLabel}
+            onConfirm={handleRestart}
+          />
+        )}
+
+        {step === REGISTER_WALLET_STEPS.PIN_SET && (
           <PinPad
-            title="새로운 PIN 번호 설정"
-            desc={
-              <>
-                앞으로 지갑 이용 승인 시 사용하실 <br /> 6자리 숫자를
-                입력해주세요
-              </>
-            }
+            title={messages.pinSet.title}
+            desc={renderLines(messages.pinSet.descLines)}
             pin={pin}
             onInput={(n) => setPin((p) => p + n)}
             onDelete={() => setPin((p) => p.slice(0, -1))}
           />
         )}
 
-        {step === "PIN_CONFIRM" && (
+        {step === REGISTER_WALLET_STEPS.PIN_CONFIRM && (
           <PinPad
-            title="PIN 번호 확인"
-            desc={
-              <>
-                방금 입력한 6자리 숫자를 <br /> 한 번 더 입력해주세요
-              </>
-            }
+            title={messages.pinConfirm.title}
+            desc={renderLines(messages.pinConfirm.descLines)}
             pin={confirmPin}
             onInput={(n) => setConfirmPin((p) => p + n)}
             onDelete={() => setConfirmPin((p) => p.slice(0, -1))}
           />
         )}
 
-        {step === "SUCCESS" && (
-          <WalletSuccessSection onConfirm={() => navigate("/my")} />
+        {step === REGISTER_WALLET_STEPS.SUCCESS && (
+          <WalletSuccessSection
+            title={messages.success.title}
+            description={messages.success.description}
+            buttonLabel={messages.success.buttonLabel}
+            onConfirm={() => navigate(-1)}
+          />
         )}
       </div>
 
@@ -254,20 +521,20 @@ const RegisterWallet = () => {
         <CommonModal
           title={modal.title}
           desc={modal.desc}
-          confirmLabel="다시 시도하기"
+          confirmLabel={messages.modal.confirmRetry}
           onConfirmClick={() => {
             setModal(null);
-            if (step === "PIN_CONFIRM") setConfirmPin("");
-            if (step === "AUTH_PIN") setAuthPin("");
+            if (step === REGISTER_WALLET_STEPS.PIN_CONFIRM) setConfirmPin("");
+            if (step === REGISTER_WALLET_STEPS.AUTH_PIN) setAuthPin("");
           }}
         />
       )}
 
       {error && (
         <CommonModal
-          title="등록 실패"
+          title={messages.modal.registrationFailed.title}
           desc={error}
-          confirmLabel="확인"
+          confirmLabel={messages.modal.registrationFailed.confirm}
           onConfirmClick={() => setError(null)}
         />
       )}

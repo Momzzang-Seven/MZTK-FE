@@ -4,7 +4,6 @@ import LocationRegister from "../LocationRegister";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { UI_TEXT } from "@constant/index";
 
-// 모킹
 const mockNavigate = vi.fn();
 const mockRegisterGymLocation = vi.fn().mockResolvedValue(undefined);
 
@@ -23,10 +22,8 @@ vi.mock("@store/userStore", () => ({
   }),
 }));
 
-// Geolocation 모킹
 const mockGetCurrentPosition = vi.fn();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(global.navigator as any).geolocation = {
+(global.navigator as unknown as { geolocation: unknown }).geolocation = {
   getCurrentPosition: mockGetCurrentPosition,
 };
 
@@ -40,7 +37,7 @@ describe("LocationRegister Page", () => {
     vi.useRealTimers();
   });
 
-  it("현재 위치 정보를 가져오려고 시도한다", () => {
+  it("requests the current location on mount", () => {
     render(
       <BrowserRouter>
         <LocationRegister />
@@ -50,7 +47,11 @@ describe("LocationRegister Page", () => {
     expect(mockGetCurrentPosition).toHaveBeenCalled();
   });
 
-  it("등록 버튼 클릭 시 등록 로딩 화면이 표시되고 완료 후 이동한다", async () => {
+  it("registers after a real location has been selected", async () => {
+    mockGetCurrentPosition.mockImplementationOnce((success) => {
+      success({ coords: { latitude: 37.5, longitude: 127.0 } });
+    });
+
     render(
       <BrowserRouter>
         <LocationRegister />
@@ -62,15 +63,37 @@ describe("LocationRegister Page", () => {
     });
     fireEvent.click(registerButton);
 
-    // 로딩 화면의 타이틀 확인
     expect(screen.getByText(UI_TEXT.LOADING_TITLE)).toBeInTheDocument();
 
-    // 2초 대기 (LOCATION_CONSTANTS.ANIMATION_DURATION 가 2000이라고 가정)
     await act(async () => {
       vi.advanceTimersByTime(2000);
     });
 
-    expect(mockRegisterGymLocation).toHaveBeenCalled();
+    expect(mockRegisterGymLocation).toHaveBeenCalledWith({
+      lat: 37.5,
+      lng: 127.0,
+      address: UI_TEXT.PHRASE_REGISTER_LOC,
+    });
     expect(mockNavigate).toHaveBeenCalledWith("/verify");
+  });
+
+  it("blocks the default placeholder after geolocation denial", () => {
+    mockGetCurrentPosition.mockImplementationOnce((_success, error) => {
+      error?.(new Error("denied"));
+    });
+
+    render(
+      <BrowserRouter>
+        <LocationRegister />
+      </BrowserRouter>
+    );
+
+    const registerButton = screen.getByRole("button", {
+      name: UI_TEXT.REGISTER_BTN,
+    });
+
+    expect(registerButton).toBeDisabled();
+    fireEvent.click(registerButton);
+    expect(mockRegisterGymLocation).not.toHaveBeenCalled();
   });
 });

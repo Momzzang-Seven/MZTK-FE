@@ -10,7 +10,7 @@ import { LocationLoadingOverlay } from "@components/location/LocationLoadingOver
 import { useNavigate } from "react-router-dom";
 import { getDistanceFromLatLonInMeters } from "@utils/geo";
 import { LOCATION_CONSTANTS, VERIFY_TEXT } from "@constant/location";
-import { ChevronLeft, MapPin, Navigation, Info, Loader2 } from "lucide-react";
+import { ChevronLeft, MapPin, Info, Loader2 } from "lucide-react";
 import type { VerifyLocationResponse } from "@types";
 
 const getVerificationFailMessage = (result: VerifyLocationResponse) => {
@@ -54,7 +54,11 @@ const Verify = () => {
   const { gymLocation, completeExercise } = useUserStore();
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setErrorModalOpen(true);
+      return;
+    }
+
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setCoor({ lat: pos.coords.latitude, lng: pos.coords.longitude });
@@ -138,7 +142,7 @@ const Verify = () => {
     distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS;
 
   return (
-    <div className="flex flex-col h-screen bg-[#FDFDFD] relative overflow-hidden font-pretendard">
+    <div className="flex flex-col h-dvh bg-[#FDFDFD] relative overflow-hidden font-pretendard">
       {/* ── Loading State ── */}
       {isMapLoading && (
         <LocationLoadingOverlay title={VERIFY_TEXT.LOADING_TITLE} />
@@ -173,22 +177,6 @@ const Verify = () => {
           mapId={MAP_ID}
           onMapLoad={() => setTimeout(() => setIsMapLoading(false), 1000)}
         />
-
-        {/* Distance Indicator floating on map */}
-        {!isMapLoading && (
-          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 animate-in fade-in zoom-in-95 duration-700">
-            <div
-              className={`px-5 py-2 rounded-full backdrop-blur-md shadow-xl border text-[13px] font-black flex items-center gap-2 transition-all duration-500 ${
-                isNear
-                  ? "bg-green-500 border-green-400 text-white"
-                  : "bg-white/80 border-white text-gray-500"
-              }`}
-            >
-              <Navigation size={14} className={isNear ? "animate-pulse" : ""} />
-              {distance !== null ? `${distance}m` : "측정 중..."}
-            </div>
-          </div>
-        )}
 
         <VerifyStatusOverlay
           gymLocation={gymLocation}

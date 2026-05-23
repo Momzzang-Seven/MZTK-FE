@@ -49,7 +49,6 @@ import {
   RegisterTicket,
   MyTknHistory,
   VerifyWallet,
-  VerifyApprove,
 } from "@pages";
 import ExerciseAuth from "./pages/ExerciseAuth";
 import RecordAuth from "./pages/RecordAuth";
@@ -111,7 +110,7 @@ function App() {
           path="*"
           element={
             <Layout>
-              <div className="flex flex-1 w-full mx-auto h-full bg-white flex flex-col relative overflow-hidden max-w-[450px]">
+              <div className="flex flex-1 w-full mx-auto min-h-dvh bg-white flex-col relative max-w-[450px]">
                 <GlobalSnackbar />
                 <AdminRedirectModal />
                 <Routes>
@@ -173,26 +172,41 @@ function App() {
                       path="/location-register"
                       element={<LocationRegister />}
                     />
-                    <Route path="/trainer" element={<TrainerDashboard />} />
-                    <Route path="/trainer/create" element={<CreateTicket />} />
                     <Route
-                      path="/trainer/register-ticket"
-                      element={<RegisterTicket />}
-                    />
-                    <Route path="/trainer/edit/:id" element={<EditTicket />} />
-                    <Route path="/trainer/list" element={<TrainerList />} />
-                    <Route
-                      path="/trainer/reservations"
-                      element={<TrainerReservations />}
-                    />
-                    <Route
-                      path="/trainer/reviews"
-                      element={<TrainerReviews />}
-                    />
-                    <Route
-                      path="/trainer/store-register"
-                      element={<TrainerStoreRegister />}
-                    />
+                      element={
+                        <ProtectedRoute
+                          allowedRoles={["TRAINER"]}
+                          redirectTo="/my"
+                        />
+                      }
+                    >
+                      <Route path="/trainer" element={<TrainerDashboard />} />
+                      <Route
+                        path="/trainer/create"
+                        element={<CreateTicket />}
+                      />
+                      <Route
+                        path="/trainer/register-ticket"
+                        element={<RegisterTicket />}
+                      />
+                      <Route
+                        path="/trainer/edit/:id"
+                        element={<EditTicket />}
+                      />
+                      <Route path="/trainer/list" element={<TrainerList />} />
+                      <Route
+                        path="/trainer/reservations"
+                        element={<TrainerReservations />}
+                      />
+                      <Route
+                        path="/trainer/reviews"
+                        element={<TrainerReviews />}
+                      />
+                      <Route
+                        path="/trainer/store-register"
+                        element={<TrainerStoreRegister />}
+                      />
+                    </Route>
                     <Route path="/market" element={<Market />} />
                     <Route
                       path="/market/reservations"
@@ -215,7 +229,6 @@ function App() {
                       path="/verify-wallet/:type/:id/:parentId?"
                       element={<VerifyWallet />}
                     />
-                    <Route path="/verify-approve" element={<VerifyApprove />} />
                   </Route>
 
                   <Route path="/404" element={<Err404 />} />

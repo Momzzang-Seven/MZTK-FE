@@ -4,7 +4,12 @@ import { SimpleHeader } from "@components/layout";
 import { LoadingSpinner, CommonModal } from "@components/common";
 import { usePostStore } from "@store";
 import type { PostType } from "@store";
-import { usePostService, useLoadPostForEdit } from "@hooks";
+import {
+  POST_ERROR_CODE,
+  useTokenBalance,
+  usePostService,
+  useLoadPostForEdit,
+} from "@hooks";
 import {
   FreePostForm,
   QuestionPostForm,
@@ -26,9 +31,18 @@ const WritePost = () => {
   const storeContent = usePostStore((s) => s.content);
   const storeImages = usePostStore((s) => s.images);
   const storeTitle = usePostStore((s) => s.title);
+  const reward = usePostStore((s) => s.reward);
   const reset = usePostStore((s) => s.reset);
   const setPostType = usePostStore((s) => s.setPostType);
   const setParentPostId = usePostStore((s) => s.setParentPostId);
+  const { balance, loading: isBalanceLoading } = useTokenBalance();
+  const balanceNumber = Number(balance);
+  const hasKnownBalance = Number.isFinite(balanceNumber);
+  const hasInsufficientRewardBalance =
+    postType === "QUESTION" &&
+    !isBalanceLoading &&
+    hasKnownBalance &&
+    reward > balanceNumber;
 
   const { isFetching, loadPost, setPostForEdit } = useLoadPostForEdit();
   const {
@@ -100,34 +114,68 @@ const WritePost = () => {
     ? replaceImageSrc(initialContent, storeImages)
     : "";
 
-  const handleSubmit = isEditMode
+  const submitPost = isEditMode
     ? postType === "QUESTION"
       ? () => updatePost(Number(postId))
       : () => updatePost(Number(postId), Number(parentPostId))
     : createPost;
 
-  const isActive = isSubmitActive && !isLoading;
+  const handleSubmit = () => {
+    if (postType === "QUESTION") {
+      if (isBalanceLoading) {
+        setError(POST_ERROR_CODE.BALANCE_PENDING);
+        return;
+      }
+
+      if (!hasKnownBalance || hasInsufficientRewardBalance) {
+        setError(POST_ERROR_CODE.INSUFFICIENT_BALANCE);
+        return;
+      }
+    }
+
+    void submitPost();
+  };
+
+  const isActive =
+    isSubmitActive &&
+    !isLoading &&
+    !(postType === "QUESTION" && isBalanceLoading) &&
+    !hasInsufficientRewardBalance;
 
   return (
-    <div className="relative min-h-screen pt-20">
+    <div className="relative min-h-dvh pt-20">
       {(isFetching || isLoading) && (
         <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
           <LoadingSpinner size="lg" color="text-white" />
         </div>
       )}
 
-      {error && error === "ALLOWANCE_REQUIRED" ? (
+      {error && error === POST_ERROR_CODE.ALLOWANCE_REQUIRED ? (
         <CommonModal
-          title="토큰 사용 승인 필요"
-          desc="질문 보상을 예치하려면 지갑의 토큰 사용 권한 승인이 필요합니다. 지금 승인하시겠습니까?"
-          confirmLabel="승인하기"
+          title="지갑 재등록 필요"
+          desc="이 지갑은 새 승인 정책으로 다시 등록해야 합니다. 지금 등록하시겠습니까?"
+          confirmLabel="지갑 등록하러 가기"
           onConfirmClick={() => {
             setError(null);
-            navigate("/verify-approve", {
-              state: { amount: usePostStore.getState().reward },
-            });
+            navigate("/register-wallet");
           }}
           cancelLabel="나중에"
+          onCancelClick={() => setError(null)}
+        />
+      ) : error === POST_ERROR_CODE.BALANCE_PENDING ? (
+        <CommonModal
+          title="잔액 확인 중"
+          desc="보유 MZTK 잔액을 확인하고 있습니다. 잠시 후 다시 시도해 주세요."
+          confirmLabel="확인"
+          onConfirmClick={() => setError(null)}
+        />
+      ) : error === POST_ERROR_CODE.INSUFFICIENT_BALANCE ? (
+        <CommonModal
+          title="잔액 부족"
+          desc="설정한 질문 보상이 현재 보유 MZTK보다 큽니다. 보상 금액을 낮춘 뒤 다시 등록해 주세요."
+          confirmLabel="보상 수정하기"
+          onConfirmClick={() => setError(null)}
+          cancelLabel="닫기"
           onCancelClick={() => setError(null)}
         />
       ) : (

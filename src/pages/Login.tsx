@@ -236,7 +236,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white relative overflow-hidden">
+    <div className="flex flex-col min-h-dvh bg-white relative overflow-hidden">
       {/* ── Background Decoration ── */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-5%] left-[-5%] w-[100%] h-[40%] bg-main opacity-[0.03] blur-[100px] rounded-full" />

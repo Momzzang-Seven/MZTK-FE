@@ -8,6 +8,7 @@ export * from "./home";
 export * from "./admin";
 export * from "./token";
 export * from "./register";
+export * from "./registerWallet";
 export * from "./trainer";
 export * from "./market";
 export * from "./inquiry";

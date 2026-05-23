@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import type { Comment, CommentPayload } from "@types";
 import { commentService } from "@services";
 import { useUserStore } from "@store";
+import { containsUnsafeMarkup, TEXT_LIMITS } from "@utils";
 
 const PAGE_SIZE = 10;
 
@@ -18,12 +19,24 @@ export const useCommentService = <T extends Comment>(
 
   const createComment = useCallback(
     async (payload: CommentPayload) => {
+      const content = payload.content.trim();
+      if (!content || content.length > TEXT_LIMITS.comment) {
+        setError(
+          `Comments must be ${TEXT_LIMITS.comment} characters or fewer.`
+        );
+        return;
+      }
+      if (containsUnsafeMarkup(content)) {
+        setError("Script-like comments are not allowed.");
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       try {
         const newComment = await commentService.createComment(
           targetId,
-          payload,
+          { ...payload, content },
           isAnswer
         );
         if (!payload.parentId) {
@@ -114,12 +127,24 @@ export const useCommentService = <T extends Comment>(
 
   const updateComment = useCallback(
     async (commentId: number, content: string) => {
+      const nextContent = content.trim();
+      if (!nextContent || nextContent.length > TEXT_LIMITS.comment) {
+        setError(
+          `Comments must be ${TEXT_LIMITS.comment} characters or fewer.`
+        );
+        return;
+      }
+      if (containsUnsafeMarkup(nextContent)) {
+        setError("Script-like comments are not allowed.");
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       try {
         await commentService.updateComment(
           commentId,
-          content,
+          nextContent,
           targetId,
           isAnswer
         );

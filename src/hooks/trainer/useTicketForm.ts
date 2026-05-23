@@ -11,6 +11,7 @@ import {
   type MarketplaceDayOfWeek,
   type UpdateTrainerClassTimePayload,
 } from "@services";
+import { containsUnsafeMarkup, parsePositiveIntegerInput } from "@utils";
 
 const IMAGE_BASE_URL =
   (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
@@ -69,11 +70,6 @@ const createEmptyOperatingTimes = () =>
     토: [],
     일: [],
   }) as Record<string, string[]>;
-
-const toPositiveInt = (value: string | number) => {
-  const parsed = Number.parseInt(String(value).replace(/[^\d]/g, ""), 10);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
 
 const toApiCategory = (category: string): MarketplaceClassCategory => {
   // category is already an API key (e.g. "PT") — use CATEGORY_MAP for label fallback
@@ -313,9 +309,29 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       return;
     }
 
-    const capacity = toPositiveInt(formData.capacity);
-    const priceAmount = toPositiveInt(formData.price);
-    const durationMinutes = toPositiveInt(formData.duration);
+    const capacity = parsePositiveIntegerInput(formData.capacity);
+    const priceAmount = parsePositiveIntegerInput(formData.price);
+    const durationMinutes = parsePositiveIntegerInput(formData.duration);
+
+    if (!capacity || !priceAmount || !durationMinutes) {
+      window.alert(
+        "Price, capacity, and duration must be positive whole numbers."
+      );
+      return;
+    }
+
+    const textFields = [
+      formData.title,
+      formData.description,
+      formData.supplies,
+      ...formData.tags,
+      ...formData.features,
+    ];
+    if (textFields.some((value) => containsUnsafeMarkup(value))) {
+      window.alert("HTML or script-like text is not allowed in class details.");
+      return;
+    }
+
     const classTimes: UpdateTrainerClassTimePayload[] =
       formData.operatingDays.flatMap((day) =>
         formData.operatingTimes[day].map((time) => ({
@@ -376,10 +392,10 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
     isLoading ||
     isSubmitting ||
     !formData.title ||
-    !formData.price ||
-    !formData.capacity ||
+    !parsePositiveIntegerInput(formData.price) ||
+    !parsePositiveIntegerInput(formData.capacity) ||
     !formData.description ||
-    !formData.duration ||
+    !parsePositiveIntegerInput(formData.duration) ||
     formData.operatingDays.length === 0;
 
   return {

@@ -15,9 +15,10 @@ interface TokenTx {
 
 const MyTknHistory = () => {
   const navigate = useNavigate();
-  const { user, selectedNetwork } = useUserStore();
+  const { user } = useUserStore();
   const [logs, setLogs] = useState<TokenTx[]>([]);
   const [loading, setLoading] = useState(true);
+  const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL, NAME } = getNetworkConfig();
 
   useEffect(() => {
     if (!user?.walletAddress) {
@@ -26,8 +27,6 @@ const MyTknHistory = () => {
     }
 
     setLoading(true);
-    const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL } =
-      getNetworkConfig(selectedNetwork);
     const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
 
     // Etherscan V2 API: 단일 엔드포인트에 chainid 파라미터 추가
@@ -46,10 +45,10 @@ const MyTknHistory = () => {
         console.error("History fetch error:", err);
       })
       .finally(() => setLoading(false));
-  }, [user?.walletAddress, selectedNetwork]);
+  }, [CHAIN_ID, ETHERSCAN_URL, TOKEN_ADDRESS, user?.walletAddress]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] pb-20">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-20">
       {/* ── Header ── */}
       <div className="relative pt-12 pb-6 px-6 overflow-hidden">
         <div className="absolute -top-10 -right-10 w-52 h-52 bg-main opacity-[0.07] blur-[60px] rounded-full pointer-events-none" />
@@ -80,7 +79,7 @@ const MyTknHistory = () => {
             </h1>
           </div>
           <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-100 text-[11px] font-black text-main">
-            {selectedNetwork === "OPT" ? "Optimism" : "Base"}
+            {NAME}
           </div>
         </div>
       </div>

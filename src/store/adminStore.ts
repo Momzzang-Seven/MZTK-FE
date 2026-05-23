@@ -171,10 +171,6 @@ interface AdminState {
   archiveKey: (alias: string) => Promise<void>;
   reseedSystem: () => Promise<void>;
   updateAdminPassword: (data: ChangeAdminPasswordRequest) => Promise<void>;
-
-  // Global Chain State
-  selectedChainId: string;
-  setSelectedChainId: (chainId: string) => void;
 }
 
 // Helper to filter users
@@ -717,8 +713,4 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   updateAdminPassword: async (data: ChangeAdminPasswordRequest) => {
     await changeAdminPassword(data);
   },
-
-  // Global Chain Implementation
-  selectedChainId: import.meta.env.VITE_CHAIN_ID || "11155420",
-  setSelectedChainId: (chainId: string) => set({ selectedChainId: chainId }),
 }));

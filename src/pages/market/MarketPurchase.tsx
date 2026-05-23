@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { CommonButton, CommonModal } from "@components/common";
 import { getKoreanErrorMessage } from "@constant";
 import axios from "axios";
+import { useTokenBalance } from "@hooks";
 import {
   createClassReservation,
   getClassReservationInfo,
@@ -62,6 +63,14 @@ const MarketPurchase = () => {
     title: "",
     desc: "",
   });
+  const { balance, loading: isBalanceLoading } = useTokenBalance();
+  const balanceNumber = Number(balance);
+  const hasKnownBalance = Number.isFinite(balanceNumber);
+  const hasInsufficientBalance =
+    !!reservationInfo &&
+    !isBalanceLoading &&
+    hasKnownBalance &&
+    balanceNumber < reservationInfo.priceAmount;
 
   useEffect(() => {
     const classId = Number(id);
@@ -127,6 +136,25 @@ const MarketPurchase = () => {
       return;
     }
 
+    if (isBalanceLoading) {
+      setModalState({
+        isOpen: true,
+        title: "잔액 확인 중",
+        desc: "보유 MZTK 잔액을 확인하고 있습니다. 잠시 후 다시 시도해 주세요.",
+      });
+      return;
+    }
+
+    if (hasInsufficientBalance) {
+      setModalState({
+        isOpen: true,
+        title: "잔액 부족",
+        desc: `예약에는 ${reservationInfo.priceAmount.toLocaleString()} MZTK가 필요합니다. 현재 보유 잔액은 ${balanceNumber.toLocaleString()} MZTK입니다.`,
+        variant: "warning",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const signatures = getReservationSignatures();
@@ -167,7 +195,7 @@ const MarketPurchase = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center gap-4">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
         <p className="text-[13px] font-black text-gray-300">
           결제 정보를 준비 중입니다...
@@ -179,7 +207,7 @@ const MarketPurchase = () => {
   // 데이터가 없을 때의 기본 빈 상태 (모달이 띄워질 것임)
   if (!data || !reservationInfo) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative">
         <button
           onClick={() => navigate(-1)}
           className="fixed top-6 left-6 z-[100] w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100/50"
@@ -202,7 +230,7 @@ const MarketPurchase = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative">
       {/* Floating Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -245,6 +273,13 @@ const MarketPurchase = () => {
                 </span>
                 <span className="text-[12px] font-black text-main">MZTK</span>
               </div>
+              <span
+                className={`text-[10px] font-black mt-2 ${
+                  hasInsufficientBalance ? "text-red-500" : "text-gray-300"
+                }`}
+              >
+                보유 {balanceNumber.toLocaleString()} MZTK
+              </span>
             </div>
           </div>
         </section>
@@ -367,15 +402,21 @@ const MarketPurchase = () => {
       </div>
 
       {/* Floating Checkout Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-8 flex flex-col gap-4 border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-[calc(2rem+env(safe-area-inset-bottom))] flex flex-col gap-4 border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
         <CommonButton
           label={
             isSubmitting
               ? "처리 중..."
-              : `총 ${reservationInfo.priceAmount.toLocaleString()} MZTK 결제하기`
+              : isBalanceLoading
+                ? "잔액 확인 중..."
+                : hasInsufficientBalance
+                  ? "잔액 부족"
+                  : `총 ${reservationInfo.priceAmount.toLocaleString()} MZTK 결제하기`
           }
           onClick={handlePurchase}
-          disabled={!selectedDate || !selectedTime || isSubmitting}
+          disabled={
+            !selectedDate || !selectedTime || isSubmitting || isBalanceLoading
+          }
           className="h-[60px] rounded-[22px] font-black text-[16px] shadow-xl shadow-main/20 active:scale-95 transition-all"
         />
       </div>

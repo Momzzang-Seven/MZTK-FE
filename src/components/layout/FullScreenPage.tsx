@@ -9,7 +9,7 @@ export const FullScreenPage = ({
   children,
   className,
 }: FullScreenPageProps) => {
-  const baseClassName = "flex flex-col h-screen bg-white px-6";
+  const baseClassName = "flex flex-col min-h-dvh bg-white px-6";
   const mergedClassName = className
     ? `${baseClassName} ${className}`
     : baseClassName;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { MnemonicForm } from "@components/auth/MnemonicForm";
@@ -7,6 +7,7 @@ import { CommonModal, LoadingSpinner } from "@components/common";
 import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useUserStore } from "@store";
+import { isWeakPin } from "@utils";
 
 const RestoreWallet = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const RestoreWallet = () => {
   const [modal, setModal] = useState<{ title: string; desc: string } | null>(
     null
   );
+  const finalizingRef = useRef(false);
 
   useEffect(() => {
     if (!expectedWalletAddress) {
@@ -62,9 +64,10 @@ const RestoreWallet = () => {
   };
 
   const finalize = useCallback(async () => {
-    if (!wallet || loading) return;
+    if (!wallet || loading || finalizingRef.current) return;
 
     try {
+      finalizingRef.current = true;
       setLoading(true);
       const encryptedJson = await wallet.encrypt(pin);
       localStorage.setItem("encrypted_wallet", encryptedJson);
@@ -81,12 +84,23 @@ const RestoreWallet = () => {
       setConfirmPin("");
       setStep("PIN_SET");
     } finally {
+      finalizingRef.current = false;
       setLoading(false);
     }
   }, [wallet, pin, loading, setWalletAddress]);
 
   useEffect(() => {
-    if (pin.length === 6 && step === "PIN_SET") setStep("PIN_CONFIRM");
+    if (pin.length === 6 && step === "PIN_SET") {
+      if (isWeakPin(pin)) {
+        setModal({
+          title: "Weak PIN",
+          desc: "Repeated or sequential PINs are not allowed.",
+        });
+        setPin("");
+        return;
+      }
+      setStep("PIN_CONFIRM");
+    }
     if (confirmPin.length === 6 && step === "PIN_CONFIRM") {
       if (pin === confirmPin) void finalize();
       else {

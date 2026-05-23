@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { ACCEPTED_IMAGE_INPUT_TYPES } from "@utils";
 
 interface PhotoUploaderProps {
   previewUrl: string | null;
@@ -66,7 +67,7 @@ export const PhotoUploader = ({
       >
         <input
           type="file"
-          accept="image/*"
+          accept={ACCEPTED_IMAGE_INPUT_TYPES}
           ref={fileInputRef}
           onChange={onFileChange}
           className="hidden"

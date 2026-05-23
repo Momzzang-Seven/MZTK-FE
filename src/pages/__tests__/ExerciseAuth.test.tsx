@@ -285,4 +285,24 @@ describe("ExerciseAuth Page", () => {
     expect(mockFinishAnalysis).not.toHaveBeenCalled();
     expect(mockShowSnackbar).not.toHaveBeenCalled();
   });
+
+  it("rejects non-image files before presigned upload", async () => {
+    render(
+      <BrowserRouter>
+        <ExerciseAuth />
+      </BrowserRouter>
+    );
+
+    fireEvent.change(screen.getByTestId("photo-input"), {
+      target: {
+        files: [new File(["not image"], "workout.txt", { type: "text/plain" })],
+      },
+    });
+
+    expect(
+      screen.getByRole("button", { name: EXERCISE_TEXT.BTN_REGISTER })
+    ).toBeDisabled();
+    expect(mockIssuePresignedUrls).not.toHaveBeenCalled();
+    expect(screen.getByText(/workout\.txt/)).toBeInTheDocument();
+  });
 });

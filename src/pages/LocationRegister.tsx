@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft, Map as MapIcon, Loader2 } from "lucide-react";
 import { useUserStore } from "@store/userStore";
@@ -19,8 +19,10 @@ const LocationRegister = () => {
     lng: number;
   } | null>(null);
   const [address, setAddress] = useState<string>(UI_TEXT.PHRASE_SELECT_LOC);
+  const [isLocationSelected, setIsLocationSelected] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(true);
+  const hasSeenInitialCameraEventRef = useRef(false);
 
   // Get Current Location
   const handleCurrentLocation = useCallback(() => {
@@ -31,8 +33,10 @@ const LocationRegister = () => {
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           };
+          setCenter(newCenter);
           setPanTarget(newCenter);
           setAddress(UI_TEXT.PHRASE_REGISTER_LOC);
+          setIsLocationSelected(true);
         },
         (err) => {
           console.error("Geolocation error:", err);
@@ -59,9 +63,27 @@ const LocationRegister = () => {
     setCenter(ev.detail.center);
     // User interaction means map is definitely ready
     if (isMapLoading) setIsMapLoading(false);
+
+    if (!hasSeenInitialCameraEventRef.current) {
+      hasSeenInitialCameraEventRef.current = true;
+      return;
+    }
+
+    const isDefaultCenter =
+      Math.abs(ev.detail.center.lat - LOCATION_CONSTANTS.DEFAULT_CENTER.lat) <
+        0.000001 &&
+      Math.abs(ev.detail.center.lng - LOCATION_CONSTANTS.DEFAULT_CENTER.lng) <
+        0.000001;
+
+    if (!isDefaultCenter) {
+      setAddress(UI_TEXT.PHRASE_REGISTER_LOC);
+      setIsLocationSelected(true);
+    }
   };
 
   const handleRegister = async () => {
+    if (!isLocationSelected || address === UI_TEXT.PHRASE_SELECT_LOC) return;
+
     setIsRegistering(true);
     await new Promise((resolve) =>
       setTimeout(resolve, LOCATION_CONSTANTS.ANIMATION_DURATION)
@@ -152,6 +174,9 @@ const LocationRegister = () => {
       <LocationDetailCard
         address={address}
         isRegistering={isRegistering}
+        canRegister={
+          isLocationSelected && address !== UI_TEXT.PHRASE_SELECT_LOC
+        }
         onRegister={handleRegister}
       />
 

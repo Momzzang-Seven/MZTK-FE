@@ -75,8 +75,6 @@ const My = () => {
   const updateRole = useUserStore((state) => state.updateRole);
   const clearUser = useUserStore((state) => state.clearUser);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
-  const selectedNetwork = useUserStore((state) => state.selectedNetwork);
-  const setSelectedNetwork = useUserStore((state) => state.setSelectedNetwork);
   const [isChangingRole, setIsChangingRole] = useState(false);
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
 
@@ -103,7 +101,7 @@ const My = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] pb-28">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-28">
       {/* ── Header bg ── */}
       <div className="relative pt-12 pb-20 px-6 overflow-hidden">
         <div className="absolute -top-10 -right-10 w-56 h-56 bg-main opacity-[0.07] blur-[60px] rounded-full pointer-events-none" />
@@ -283,71 +281,6 @@ const My = () => {
           style={{ animationDelay: "0.2s" }}
         >
           <LevelReward />
-        </div>
-
-        {/* Network Settings */}
-        <div
-          className="bg-white rounded-[28px] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden animate-fade-slide-up"
-          style={{ animationDelay: "0.22s" }}
-        >
-          <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#FAB12F"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-[11px] text-gray-400 font-black uppercase tracking-wider">
-                  Network
-                </p>
-                <p className="text-gray-900 font-black text-[13px]">
-                  네트워크 설정
-                </p>
-              </div>
-            </div>
-            <div className="px-2.5 py-1 rounded-lg bg-gray-50 text-[10px] font-black text-gray-400 uppercase">
-              {selectedNetwork === "OPT" ? "Optimism" : "Base"}
-            </div>
-          </div>
-          <div className="p-4 flex gap-2">
-            {(["OPT", "BASE"] as const).map((net) => {
-              const isActive = selectedNetwork === net;
-              return (
-                <button
-                  key={net}
-                  onClick={() => setSelectedNetwork(net)}
-                  className={`btn-press flex-1 py-3.5 rounded-[18px] font-black text-[14px] transition-all border-none ${
-                    isActive
-                      ? "bg-main text-white shadow-lg shadow-main/25"
-                      : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    {isActive && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    )}
-                    {net === "OPT" ? "Optimism" : "Base"}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          <div className="px-5 pb-4">
-            <p className="text-[11px] text-gray-400 font-bold leading-relaxed">
-              * 선택한 네트워크의 토큰 주소로 서명 및 지갑 등록이 진행됩니다.
-            </p>
-          </div>
         </div>
 
         {/* Community activity */}

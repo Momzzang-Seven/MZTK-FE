@@ -241,7 +241,7 @@ const MarketReservation = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FA] font-pretendard relative">
+    <div className="flex flex-col min-h-dvh bg-[#F8F9FA] font-pretendard relative">
       {/* Sticky Back Button Wrapper */}
       <div className="sticky top-6 z-[100] px-6 h-0 pointer-events-none">
         <button

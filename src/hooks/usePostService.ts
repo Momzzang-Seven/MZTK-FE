@@ -5,8 +5,25 @@ import { usePostStore, useUserStore } from "@store";
 import { useWalletService } from "@hooks/useWalletService";
 import { buildPostPayload } from "@utils/buildPostPayload";
 import { postService, web3Service } from "@services";
-import type { FreePost, QuestionPost, PostPayload, AnswerPost } from "@types";
+import type {
+  FreePost,
+  QuestionPost,
+  PostPayload,
+  AnswerPost,
+  ResourceType,
+} from "@types";
 import type { PostType } from "@store";
+import {
+  containsUnsafeMarkup,
+  getPlainTextLength,
+  TEXT_LIMITS,
+} from "@utils/edgeCaseValidation";
+
+export const POST_ERROR_CODE = {
+  ALLOWANCE_REQUIRED: "ALLOWANCE_REQUIRED",
+  BALANCE_PENDING: "BALANCE_PENDING",
+  INSUFFICIENT_BALANCE: "INSUFFICIENT_BALANCE",
+} as const;
 
 export const usePostService = () => {
   const navigate = useNavigate();
@@ -19,6 +36,43 @@ export const usePostService = () => {
 
   const { postType, title, content, reward, parentPostId, initialData, reset } =
     store;
+
+  const validateCurrentPostInput = () => {
+    const contentLength = getPlainTextLength(content);
+    const maxContentLength =
+      postType === "FREE"
+        ? TEXT_LIMITS.freePost
+        : postType === "ANSWER"
+          ? TEXT_LIMITS.answer
+          : TEXT_LIMITS.richContent;
+
+    if (contentLength > maxContentLength) {
+      setError(`Content must be ${maxContentLength} characters or fewer.`);
+      return false;
+    }
+
+    if (containsUnsafeMarkup(content)) {
+      setError("Script-like content is not allowed.");
+      return false;
+    }
+
+    if (store.tags.some((tag) => tag.length > TEXT_LIMITS.tag)) {
+      setError(`Tags must be ${TEXT_LIMITS.tag} characters or fewer.`);
+      return false;
+    }
+
+    if (store.tags.some((tag) => containsUnsafeMarkup(tag))) {
+      setError("Script-like tags are not allowed.");
+      return false;
+    }
+
+    if (postType === "QUESTION" && !Number.isInteger(reward)) {
+      setError("Question reward must be a whole number.");
+      return false;
+    }
+
+    return true;
+  };
 
   const isSubmitActive = (() => {
     if (uploadingCount > 0) return false;
@@ -55,6 +109,7 @@ export const usePostService = () => {
    */
   const createPost = async () => {
     if (!isSubmitActive || isPostLoading) return;
+    if (!validateCurrentPostInput()) return;
 
     setIsPostLoading(true);
     setError(null);
@@ -76,7 +131,7 @@ export const usePostService = () => {
             const requiredAmount = ethers.parseUnits(reward.toString(), 18);
 
             if (allowance < requiredAmount) {
-              setError("ALLOWANCE_REQUIRED");
+              setError(POST_ERROR_CODE.ALLOWANCE_REQUIRED);
               setIsPostLoading(false);
               return;
             }
@@ -132,7 +187,7 @@ export const usePostService = () => {
 
       // 백엔드에서 명시적으로 WEB3_001 에러를 뱉었을 경우 안내 강화 및 모달 유도
       if (errorCode === "WEB3_001") {
-        setError("ALLOWANCE_REQUIRED");
+        setError(POST_ERROR_CODE.ALLOWANCE_REQUIRED);
       } else {
         setError(message);
       }
@@ -177,6 +232,7 @@ export const usePostService = () => {
    */
   const updatePost = async (postId: number, parentPostId?: number) => {
     if (!isSubmitActive || isPostLoading) return;
+    if (!validateCurrentPostInput()) return;
     if (!initialData) {
       setError("초기 데이터를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
       return;
@@ -343,7 +399,7 @@ export const usePostService = () => {
    * intent 재생성
    */
   const recoverCreate = async (
-    postType: PostType,
+    postType: ResourceType,
     postId: number,
     parentPostId?: number
   ) => {
@@ -352,7 +408,7 @@ export const usePostService = () => {
     setIsPostLoading(true);
     try {
       let response;
-      if (postType === "FREE" || postType === "QUESTION") {
+      if (postType === "QUESTION") {
         response = await postService.recoverCreatePost(postId);
       } else if (postType === "ANSWER" && parentPostId) {
         response = await postService.recoverCreateAnswer(parentPostId, postId);
