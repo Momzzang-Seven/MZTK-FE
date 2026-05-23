@@ -86,7 +86,7 @@ const QuestionDetail = () => {
       }
     }, 5000);
 
-    return () => clearInterval(interval);
+    // return () => clearInterval(interval);
   }, [getPost, getAnswers, postId]);
 
   if (isPostLoading && !question) {

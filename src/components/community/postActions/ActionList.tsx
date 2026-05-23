@@ -160,7 +160,8 @@ const ActionList = ({
   const { deletePost, acceptAnswer } = usePostService();
   const { updateComment, deleteComment } = useCommentService(
     targetId,
-    isAnswer
+    isAnswer,
+    { autoFetch: false }
   );
 
   const userId = useUserStore((s) => s.user?.userId);
