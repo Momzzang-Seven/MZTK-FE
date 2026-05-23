@@ -90,7 +90,6 @@ vi.mock("@services", () => ({
 vi.mock("@store", () => {
   const state = {
     setWalletAddress: mockSetWalletAddress,
-    selectedNetwork: "OPT" as const,
   };
   return {
     useUserStore: vi.fn(<T,>(selector?: (s: typeof state) => T) =>
@@ -275,10 +274,7 @@ describe("RegisterWallet", () => {
     await completeMnemonicStep();
 
     await waitFor(() => {
-      expect(mockHandleWalletRegistration).toHaveBeenCalledWith(
-        mockWallet,
-        "OPT"
-      );
+      expect(mockHandleWalletRegistration).toHaveBeenCalledWith(mockWallet);
     });
 
     // 등록 완료 후 PIN_SET → 첫 번째 PinPad

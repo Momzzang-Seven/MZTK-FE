@@ -7,7 +7,6 @@ import type {
   SignRequest,
   Web3Execution,
 } from "@types";
-import { useUserStore, type NetworkType } from "@store";
 import { getNetworkConfig, getWalletRegistrationEip712Domain } from "@utils";
 
 const QNA_ESCROW_ADDRESS = import.meta.env.VITE_QNA_ESCROW_CONTRACT;
@@ -83,14 +82,12 @@ export const useWalletService = () => {
    * approve(escrow) 트랜잭션은 BE가 EIP-7702 batch로 처리하므로 FE에서 호출하지 않는다.
    */
   const handleWalletRegistration = async (
-    wallet: ethers.HDNodeWallet,
-    network?: NetworkType
+    wallet: ethers.HDNodeWallet
   ): Promise<RegisterWalletResponse> => {
     setLoading(true);
 
     try {
-      const walletRegistrationDomain =
-        getWalletRegistrationEip712Domain(network);
+      const walletRegistrationDomain = getWalletRegistrationEip712Domain();
 
       // STEP 1: 챌린지 요청
       const { nonce, message } = await walletService.createChallenge({
@@ -208,13 +205,10 @@ export const useWalletService = () => {
     }
   };
 
-  const getAllowance = async (
-    ownerAddress: string,
-    network: "OPT" | "BASE" = useUserStore.getState().selectedNetwork
-  ): Promise<bigint> => {
+  const getAllowance = async (ownerAddress: string): Promise<bigint> => {
     if (!QNA_ESCROW_ADDRESS)
       throw new Error("QnA Escrow 주소가 설정되지 않았습니다.");
-    const { RPC_URL, TOKEN_ADDRESS } = getNetworkConfig(network);
+    const { RPC_URL, TOKEN_ADDRESS } = getNetworkConfig();
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     const contract = new ethers.Contract(TOKEN_ADDRESS, MZTK_ABI[0], provider);
     return await contract.allowance(ownerAddress, QNA_ESCROW_ADDRESS);
