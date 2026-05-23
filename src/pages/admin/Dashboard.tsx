@@ -7,20 +7,17 @@ import { getChartData, getChartOptions } from "@utils";
 import ReportStatsSection from "@components/admin/Dashboard/ReportStatsSection";
 import TokenLogsSection from "@components/admin/Dashboard/TokenLogsSection";
 import { Server, Coins, Users, Wallet, RefreshCw } from "lucide-react";
-import { useAdminStore } from "@store";
 import { ADMIN_TEXT } from "@constant/admin";
+import { BASE_NETWORK_NAME } from "@utils";
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { selectedChainId } = useAdminStore();
   const { tokenLogs, ethBalance, mztkBalance, userStats, postStats, loading } =
     useAdminDashboardData();
   const chartData = getChartData(postStats);
   const chartOptions = getChartOptions();
-
-  const isOpt = selectedChainId === "11155420";
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -37,18 +34,10 @@ const AdminDashboard = () => {
 
         {/* Network Status Badge */}
         <div className="flex items-center gap-3">
-          <div
-            className={`px-4 py-2 rounded-2xl border flex items-center gap-2 transition-all duration-300 ${
-              isOpt
-                ? "bg-red-50/50 border-red-100 text-red-600 shadow-[0_4px_12px_rgba(239,68,68,0.08)]"
-                : "bg-blue-50/50 border-blue-100 text-blue-600 shadow-[0_4px_12px_rgba(59,130,246,0.08)]"
-            }`}
-          >
-            <div
-              className={`w-1.5 h-1.5 rounded-full animate-pulse ${isOpt ? "bg-red-500" : "bg-blue-500"}`}
-            />
+          <div className="px-4 py-2 rounded-2xl border flex items-center gap-2 transition-all duration-300 bg-blue-50/50 border-blue-100 text-blue-600 shadow-[0_4px_12px_rgba(59,130,246,0.08)]">
+            <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-blue-500" />
             <span className="text-[11px] font-black tracking-widest uppercase">
-              {isOpt ? "Optimism Sepolia" : "Base Sepolia"}
+              {BASE_NETWORK_NAME}
             </span>
           </div>
           {loading && (
@@ -68,14 +57,14 @@ const AdminDashboard = () => {
         <SummaryCard
           title="ETH Balance"
           value={loading ? ADMIN_TEXT.COMMON.LOADING : `${ethBalance} ETH`}
-          subValue={isOpt ? "Optimism Sepolia" : "Base Sepolia"}
+          subValue={BASE_NETWORK_NAME}
           variant="blue"
           icon={Wallet}
         />
         <SummaryCard
           title="MZTK Balance"
           value={loading ? ADMIN_TEXT.COMMON.LOADING : `${mztkBalance} MZTK`}
-          subValue={isOpt ? "Optimism Sepolia" : "Base Sepolia"}
+          subValue={BASE_NETWORK_NAME}
           variant="amber"
           icon={Coins}
         />

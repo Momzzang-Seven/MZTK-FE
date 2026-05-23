@@ -22,7 +22,6 @@ const Web3Management = () => {
     fetchTreasuryKeys,
     disableKey,
     archiveKey,
-    selectedChainId,
     provisionKey,
   } = useAdminStore();
   const { showSnackbar } = useUserStore();
@@ -50,13 +49,13 @@ const Web3Management = () => {
     import.meta.env.VITE_MONITOR_TARGET_ADDRESS ||
     import.meta.env.VITE_ADMIN_ADDRESS;
   const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
-  const { ETHERSCAN_URL, EXPLORER_TX_URL } = getNetworkConfig();
+  const { CHAIN_ID, ETHERSCAN_URL, EXPLORER_TX_URL, NAME } = getNetworkConfig();
 
   const fetchWalletActivity = useCallback(async () => {
     if (!MONITOR_ADDRESS || isPollingSuspended) return;
     setFetching(true);
     try {
-      const url = `${ETHERSCAN_URL}?chainid=${selectedChainId}&module=account&action=txlist&address=${MONITOR_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+      const url = `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=txlist&address=${MONITOR_ADDRESS}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
 
       const res = await api.get(url);
       const data = res.data;
@@ -84,8 +83,8 @@ const Web3Management = () => {
   }, [
     MONITOR_ADDRESS,
     isPollingSuspended,
+    CHAIN_ID,
     ETHERSCAN_URL,
-    selectedChainId,
     ETHERSCAN_API_KEY,
   ]);
 
@@ -101,12 +100,7 @@ const Web3Management = () => {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [
-    selectedChainId,
-    isPollingSuspended,
-    fetchWalletActivity,
-    fetchTreasuryKeys,
-  ]);
+  }, [isPollingSuspended, fetchWalletActivity, fetchTreasuryKeys]);
 
   const handleConfirm = (id?: number) => {
     const targetId = id || Number(txId);
@@ -195,12 +189,8 @@ const Web3Management = () => {
             {ADMIN_TEXT.WEB3.TITLE}
           </h2>
           <div className="flex items-center gap-4 mt-2">
-            <span
-              className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${selectedChainId === "11155420" ? "bg-red-50 text-red-600 border border-red-100" : "bg-blue-50 text-blue-600 border border-blue-100"}`}
-            >
-              {selectedChainId === "11155420"
-                ? "Optimism Sepolia"
-                : "Base Sepolia"}
+            <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-50 text-blue-600 border border-blue-100">
+              {NAME}
             </span>
             <p className="text-[10px] text-gray-400 font-medium">
               Wallet: {MONITOR_ADDRESS}

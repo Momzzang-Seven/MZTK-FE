@@ -13,8 +13,6 @@ export interface UserInfo {
   walletAddress: string;
 }
 
-export type NetworkType = "OPT" | "BASE";
-
 interface UserState {
   user: UserInfo | null;
   isAuthenticated: boolean;
@@ -54,8 +52,6 @@ interface UserState {
     rewardedXp: number;
     streakDays: number;
   } | null;
-  selectedNetwork: NetworkType;
-
   setUser: (user: UserInfo) => void;
   setAccessToken: (token: string) => void;
   updateRole: (role: string) => Promise<void>;
@@ -112,7 +108,6 @@ interface UserState {
   initLevel: () => Promise<void>;
   initLocation: () => Promise<void>;
   initWorkoutCompletion: () => Promise<void>;
-  setSelectedNetwork: (network: NetworkType) => void;
   reset: () => void;
 }
 
@@ -135,7 +130,6 @@ const initialState = {
   analysisType: null as "exercise" | "record" | null,
   analysisTargetTime: null as number | null,
   analysisStartedAt: null as number | null,
-  selectedNetwork: "BASE" as NetworkType,
 };
 
 let initWorkoutCompletionRequest: Promise<void> | null = null;
@@ -621,9 +615,6 @@ export const useUserStore = create<UserState>()(
 
         return initWorkoutCompletionRequest;
       },
-
-      setSelectedNetwork: (network: NetworkType) =>
-        set({ selectedNetwork: network }),
     }),
     {
       name: "user-storage",
@@ -642,7 +633,6 @@ export const useUserStore = create<UserState>()(
         analysisType: state.analysisType,
         analysisTargetTime: state.analysisTargetTime,
         analysisStartedAt: state.analysisStartedAt,
-        selectedNetwork: state.selectedNetwork,
       }),
     }
   )

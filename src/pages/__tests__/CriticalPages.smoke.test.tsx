@@ -274,8 +274,6 @@ vi.mock("@store", () => ({
   }),
   // AdminDashboard는 @store에서 useAdminStore를 import함
   useAdminStore: () => ({
-    selectedChainId: "84532",
-    setSelectedChainId: vi.fn(),
     fetchUsers: mockFetchUsers,
     filteredUsers: [],
     filteredPosts: [],
@@ -315,8 +313,6 @@ vi.mock("@store/adminStore", () => ({
     postStatusFilter: "ALL",
     setPostStatusFilter: mockSetPostStatusFilter,
     // AdminDashboard에서 사용하는 필드
-    selectedChainId: "84532",
-    setSelectedChainId: vi.fn(),
   }),
 }));
 

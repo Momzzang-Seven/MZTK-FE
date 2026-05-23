@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router-dom";
-import { useAdminStore } from "@store";
 import {
   LayoutDashboard,
   Users,
@@ -11,25 +10,10 @@ import {
   ChevronRight,
   Server,
 } from "lucide-react";
+import { BASE_NETWORK_NAME } from "@utils";
 
 export const AdminSidebar = () => {
   const location = useLocation();
-  const { selectedChainId, setSelectedChainId } = useAdminStore();
-
-  const networks = [
-    {
-      id: "11155420",
-      name: "OPT",
-      fullName: "Optimism Sepolia",
-      color: "bg-red-500",
-    },
-    {
-      id: "84532",
-      name: "BASE",
-      fullName: "Base Sepolia",
-      color: "bg-blue-500",
-    },
-  ];
 
   const menuItems = [
     {
@@ -139,36 +123,13 @@ export const AdminSidebar = () => {
         })}
       </nav>
 
-      {/* Network Switcher & Status */}
+      {/* Network Status */}
       <div className="p-6 mt-auto space-y-3">
-        <div className="bg-zinc-900/50 rounded-[24px] p-1.5 border border-white/5 flex gap-1">
-          {networks.map((net) => (
-            <button
-              key={net.id}
-              onClick={() => setSelectedChainId(net.id)}
-              className={`flex-1 flex flex-col items-center py-2.5 rounded-[18px] transition-all duration-300 ${
-                selectedChainId === net.id
-                  ? "bg-white/10 text-white shadow-lg"
-                  : "text-zinc-600 hover:text-zinc-400"
-              }`}
-            >
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={`w-1.5 h-1.5 rounded-full ${selectedChainId === net.id ? net.color : "bg-zinc-800"}`}
-                />
-                <span className="text-[10px] font-black tracking-widest">
-                  {net.name}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-
         <div className="px-5 py-4 bg-zinc-900/30 rounded-[20px] border border-white/5">
           <div className="flex items-center gap-3">
             <Server size={14} className="text-main opacity-50" />
             <span className="text-[11px] font-bold text-zinc-400">
-              {networks.find((n) => n.id === selectedChainId)?.fullName}
+              {BASE_NETWORK_NAME}
             </span>
           </div>
           <div className="mt-2 flex items-center justify-between">

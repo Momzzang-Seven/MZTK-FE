@@ -48,7 +48,6 @@ const RegisterWallet = () => {
   const messages = REGISTER_WALLET_MESSAGES;
   const navigate = useNavigate();
   const setWalletAddress = useUserStore((state) => state.setWalletAddress);
-  const { selectedNetwork } = useUserStore();
   const {
     loading,
     error,
@@ -140,10 +139,7 @@ const RegisterWallet = () => {
         localStorage.removeItem(REGISTER_WALLET_STORAGE_KEYS.walletAddress);
       }
 
-      const response = await handleWalletRegistration(
-        recoveredWallet,
-        selectedNetwork
-      );
+      const response = await handleWalletRegistration(recoveredWallet);
       if (!isFlowAlive(myFlow)) return;
       setRegistrationId(response.registrationId);
 
