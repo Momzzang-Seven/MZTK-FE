@@ -196,6 +196,7 @@ const TicketForm = ({
           <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 px-1">
             <button
               onClick={triggerFileInput}
+              type="button"
               className="w-28 h-28 rounded-[32px] bg-white border-2 border-dashed border-gray-100 flex flex-col items-center justify-center shrink-0 active:scale-95 transition-all group hover:border-main/30 shadow-sm"
             >
               <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-amber-50 transition-colors">
@@ -207,15 +208,15 @@ const TicketForm = ({
               <span className="text-[11px] font-black text-gray-400">
                 {imagePreviews.length} / 5
               </span>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={onImageChangeWrapper}
-                accept="image/*"
-                multiple
-                className="hidden"
-              />
             </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={onImageChangeWrapper}
+              accept="image/*"
+              multiple
+              className="hidden"
+            />
 
             {imagePreviews.map((preview, idx) => (
               <div

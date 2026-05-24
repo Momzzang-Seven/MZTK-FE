@@ -65,15 +65,6 @@ export const PhotoUploader = ({
           padding: previewUrl ? 0 : undefined,
         }}
       >
-        <input
-          type="file"
-          accept={ACCEPTED_IMAGE_INPUT_TYPES}
-          ref={fileInputRef}
-          onChange={onFileChange}
-          className="hidden"
-          data-testid="photo-input"
-        />
-
         {previewUrl ? (
           /* Preview */
           <div className="relative w-full" style={{ minHeight: "300px" }}>
@@ -152,6 +143,14 @@ export const PhotoUploader = ({
           </div>
         )}
       </button>
+      <input
+        type="file"
+        accept={ACCEPTED_IMAGE_INPUT_TYPES}
+        ref={fileInputRef}
+        onChange={onFileChange}
+        className="hidden"
+        data-testid="photo-input"
+      />
     </div>
   );
 };
