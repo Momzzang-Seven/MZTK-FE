@@ -192,7 +192,9 @@ const buildRegistered = (): RegisterWalletResponse => ({
   web3: null,
 });
 
-const buildSignApproval = (): RegisterWalletResponse => ({
+const buildSignApproval = (
+  executionIntentId = "intent-1"
+): RegisterWalletResponse => ({
   registrationId: "reg-1",
   status: "APPROVAL_REQUIRED",
   walletId: null,
@@ -207,7 +209,7 @@ const buildSignApproval = (): RegisterWalletResponse => ({
     },
     actionType: "WALLET_ESCROW_APPROVE",
     executionIntent: {
-      id: "intent-1",
+      id: executionIntentId,
       status: "AWAITING_SIGNATURE",
       expiresAt: "2026-05-13T10:05:00",
     },
@@ -255,6 +257,28 @@ const buildStatus = (
   signRequestUnavailableReason: null,
   nextAction,
   web3: null,
+});
+
+const buildReceiptTimeoutStatus = (
+  status: Extract<
+    WalletRegistrationStatusResponse["status"],
+    "APPROVAL_RETRYABLE" | "APPROVAL_FAILED"
+  >,
+  nextAction: Extract<
+    WalletRegistrationStatusResponse["nextAction"],
+    "RETRY_APPROVAL" | "NONE"
+  >
+): WalletRegistrationStatusResponse => ({
+  ...buildStatus(status, nextAction),
+  transaction: {
+    transactionId: 42,
+    transactionStatus: "UNCONFIRMED",
+    txHash:
+      "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  },
+  lastErrorCode: "RECEIPT_TIMEOUT",
+  lastErrorReason:
+    "Receipt was not confirmed before the backend polling window timed out.",
 });
 
 describe("RegisterWallet", () => {
@@ -361,6 +385,63 @@ describe("RegisterWallet", () => {
       await screen.findByText("승인 서명이 만료되었어요")
     ).toBeInTheDocument();
   });
+
+  it("stops polling and signs a new approval intent after receipt timeout retry", async () => {
+    mockHandleWalletRegistration.mockResolvedValue(buildSignApproval());
+    mockGetStatus.mockResolvedValueOnce(
+      buildReceiptTimeoutStatus("APPROVAL_RETRYABLE", "RETRY_APPROVAL")
+    );
+    mockRetryIntent.mockResolvedValue({
+      ...buildStatus("APPROVAL_REQUIRED", "SIGN_APPROVAL"),
+      latestExecutionIntentId: "intent-2",
+      web3: buildSignApproval("intent-2").web3,
+    });
+
+    render(<RegisterWallet />);
+
+    await completeMnemonicStep();
+
+    const retrySection = await screen.findByTestId(
+      "wallet-success-section",
+      {},
+      { timeout: 10000 }
+    );
+    const retryButton = retrySection.querySelector("button");
+    expect(retryButton).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.click(retryButton as HTMLButtonElement);
+    });
+
+    await waitFor(() => {
+      expect(mockRetryIntent).toHaveBeenCalledWith("reg-1");
+    });
+    expect(mockHandleWeb3Signature).toHaveBeenLastCalledWith(
+      "intent-2",
+      mockWallet,
+      buildSignApproval("intent-2").web3
+    );
+  }, 15000);
+
+  it("stops polling and asks for restart when receipt timeout is no longer retryable", async () => {
+    mockHandleWalletRegistration.mockResolvedValue(buildSignApproval());
+    mockGetStatus.mockResolvedValueOnce(
+      buildReceiptTimeoutStatus("APPROVAL_FAILED", "NONE")
+    );
+
+    render(<RegisterWallet />);
+
+    await completeMnemonicStep();
+
+    expect(
+      await screen.findByTestId(
+        "wallet-success-section",
+        {},
+        { timeout: 10000 }
+      )
+    ).toBeInTheDocument();
+    expect(mockGetStatus).toHaveBeenCalledTimes(1);
+  }, 15000);
 
   it("rejects weak repeated PINs before persisting local wallet", async () => {
     mockPinSequence.values = ["0", "0", "0", "0", "0", "0"];

@@ -30,9 +30,25 @@ type RegistrationStateLike = {
   nextAction: WalletRegistrationNextAction;
   web3: RegisterWalletResponse["web3"];
   registrationId: string | null;
+  lastErrorCode?: string | null;
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const isReceiptTimeout = (state: RegistrationStateLike) =>
+  state.lastErrorCode === "RECEIPT_TIMEOUT";
+
+const shouldKeepPollingRegistration = (
+  status: WalletRegistrationStatusResponse
+) => {
+  const isOnchainPending =
+    status.status === "APPROVAL_SIGNED" ||
+    status.status === "APPROVAL_PENDING_ONCHAIN";
+
+  return (
+    isOnchainPending && status.nextAction === "WAIT_FOR_APPROVAL_TRANSACTION"
+  );
+};
+
 const renderLines = (lines: readonly string[]) => (
   <>
     {lines.map((line, index) => (
@@ -167,6 +183,42 @@ const RegisterWallet = () => {
   ) => {
     if (!isFlowAlive(myFlow)) return;
 
+    if (state.status === "REGISTERED" && state.nextAction === "DONE") {
+      setStep(REGISTER_WALLET_STEPS.PIN_SET);
+      return;
+    }
+
+    if (
+      state.status === "APPROVAL_RETRYABLE" &&
+      isReceiptTimeout(state) &&
+      state.nextAction === "RETRY_APPROVAL"
+    ) {
+      setStep(REGISTER_WALLET_STEPS.RETRY_PROMPT);
+      return;
+    }
+
+    if (
+      state.status === "APPROVAL_FAILED" &&
+      isReceiptTimeout(state) &&
+      state.nextAction === "NONE"
+    ) {
+      setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+      return;
+    }
+
+    if (
+      state.status === "FINALIZATION_FAILED" ||
+      state.status === "LOCAL_CONFLICT"
+    ) {
+      setStep(REGISTER_WALLET_STEPS.SUPPORT);
+      return;
+    }
+
+    if (state.status === "EXPIRED" || state.status === "CANCELED") {
+      setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+      return;
+    }
+
     switch (state.nextAction) {
       case "SIGN_APPROVAL": {
         if (!state.web3 || !state.registrationId) {
@@ -239,18 +291,14 @@ const RegisterWallet = () => {
       }
       if (!isFlowAlive(myFlow)) return;
 
-      const isPending =
-        status.status === "APPROVAL_REQUIRED" ||
-        status.status === "APPROVAL_SIGNED" ||
-        status.status === "APPROVAL_PENDING_ONCHAIN";
-
-      if (!isPending || status.nextAction !== "WAIT_FOR_APPROVAL_TRANSACTION") {
+      if (!shouldKeepPollingRegistration(status)) {
         await handleRegistrationState(
           {
             status: status.status,
             nextAction: status.nextAction,
             web3: status.web3,
             registrationId: status.registrationId,
+            lastErrorCode: status.lastErrorCode,
           },
           activeWallet,
           myFlow
@@ -292,6 +340,7 @@ const RegisterWallet = () => {
           nextAction: response.nextAction,
           web3: response.web3,
           registrationId: response.registrationId,
+          lastErrorCode: response.lastErrorCode,
         },
         wallet,
         myFlow

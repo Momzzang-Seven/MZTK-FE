@@ -175,16 +175,20 @@ export const useWalletService = () => {
         };
       } else if (intent.execution.mode === "EIP1559") {
         validateEip1559SignRequest(signRequest);
+        const transaction = signRequest.transaction;
+        if (!transaction) {
+          throw new Error(INVALID_WEB3_SIGN_REQUEST_MESSAGE);
+        }
         // EIP1559 - 1번 서명
         const txRequest = {
-          chainId: signRequest.transaction.chainId,
-          to: signRequest.transaction.toAddress,
-          value: signRequest.transaction.valueHex,
-          data: signRequest.transaction.data,
-          nonce: signRequest.transaction.nonce,
-          gasLimit: signRequest.transaction.gasLimitHex,
-          maxPriorityFeePerGas: signRequest.transaction.maxPriorityFeePerGasHex,
-          maxFeePerGas: signRequest.transaction.maxFeePerGasHex,
+          chainId: transaction.chainId,
+          to: transaction.toAddress,
+          value: transaction.valueHex,
+          data: transaction.data,
+          nonce: transaction.nonce,
+          gasLimit: transaction.gasLimitHex,
+          maxPriorityFeePerGas: transaction.maxPriorityFeePerGasHex,
+          maxFeePerGas: transaction.maxFeePerGasHex,
           type: 2,
         };
         const signedTx = await wallet.signTransaction(txRequest);
