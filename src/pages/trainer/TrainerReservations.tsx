@@ -58,6 +58,32 @@ const getStatusBadgeStyles = (status: ReservationSummary["status"]) => {
   }
 };
 
+const isReservationWeb3Blocked = (
+  reservation: Pick<ReservationSummary, "web3Execution">
+) =>
+  reservation.web3Execution?.recoveryStatus === "ONCHAIN_UNCERTAIN" ||
+  reservation.web3Execution?.retryAllowed === false;
+
+const Web3PendingNotice = () => (
+  <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-2xl border border-amber-100">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#D97706"
+      strokeWidth="3"
+      className="shrink-0"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v5M12 16h.01" />
+    </svg>
+    <span className="text-[11px] font-black text-amber-700 leading-relaxed">
+      블록체인 결과 확인이 지연되어 승인, 반려, 정산 작업을 잠시 제한합니다.
+    </span>
+  </div>
+);
+
 const TrainerReservations = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TrainerReservationTab>("pending");
@@ -350,6 +376,7 @@ const TrainerReservations = () => {
                 RESERVATION_STATUS.TIMEOUT_CANCELLED,
               ] as ReservationStatus[]
             ).includes(item.status as ReservationStatus);
+            const isWeb3Blocked = isReservationWeb3Blocked(item);
 
             return (
               <div
@@ -441,7 +468,9 @@ const TrainerReservations = () => {
 
                   {/* Actions */}
                   <div className="flex flex-col gap-3 pt-5 border-t border-gray-50">
-                    {item.status === RESERVATION_STATUS.PENDING ? (
+                    {isWeb3Blocked && <Web3PendingNotice />}
+                    {item.status === RESERVATION_STATUS.PENDING &&
+                    !isWeb3Blocked ? (
                       (() => {
                         const resTime = item.reservationTime;
                         const resDate = item.reservationDate;
@@ -630,6 +659,9 @@ const TrainerReservations = () => {
                 value={getReservationStatusLabel(selectedDetail.status)}
                 highlight
               />
+              {isReservationWeb3Blocked(selectedDetail) && (
+                <Web3PendingNotice />
+              )}
               <div className="pt-4 border-t border-gray-200">
                 <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
                   Transaction Hash
