@@ -1,4 +1,5 @@
 import { api } from "@services/client";
+import type { Web3Execution } from "@types";
 
 export type MarketplaceReservationStatus =
   | "PENDING"
@@ -67,6 +68,7 @@ export interface ReservationSummary {
   userNickname: string;
   priceAmount: number;
   thumbnailFinalObjectKey: string | null;
+  web3Execution?: Web3Execution | null;
 }
 
 export interface ReservationDetail extends ReservationSummary {

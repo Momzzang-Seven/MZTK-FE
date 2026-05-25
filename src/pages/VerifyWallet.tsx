@@ -17,6 +17,18 @@ interface ApiErrorResponse {
   };
 }
 
+const WEB3_RECOVERY_BLOCKED_MODAL = {
+  title: "블록체인 확인 지연",
+  desc: "이미 전송된 트랜잭션의 결과 확인이 지연되고 있습니다. 중복 실행을 막기 위해 잠시 후 다시 확인해 주세요.",
+} as const;
+
+const isWeb3RecoveryBlocked = (intent: Web3Execution) => {
+  return (
+    intent.recoveryStatus === "ONCHAIN_UNCERTAIN" ||
+    intent.retryAllowed === false
+  );
+};
+
 const VerifyWallet = () => {
   const navigate = useNavigate();
   const params = useParams();
@@ -43,7 +55,7 @@ const VerifyWallet = () => {
     null
   );
 
-  const intent = location.state.intent ?? null;
+  const intent = (location.state as { intent?: Web3Execution } | null)?.intent;
 
   const getWeb3Transaction = useCallback(async () => {
     if (!intent) throw new Error("유효하지 않은 접근입니다.");
@@ -66,6 +78,13 @@ const VerifyWallet = () => {
 
   const handleRecoverAndRetry = useCallback(
     async (currentIntent: Web3Execution, wallet: ethers.Wallet) => {
+      if (isWeb3RecoveryBlocked(currentIntent)) {
+        setModal(WEB3_RECOVERY_BLOCKED_MODAL);
+        setAuthPin("");
+        setStep("AUTH_PIN");
+        return;
+      }
+
       try {
         const type = currentIntent.resource.type;
         let recoveryRes;
@@ -101,6 +120,13 @@ const VerifyWallet = () => {
   const handleSignProcess = useCallback(
     async (currentIntent: Web3Execution, wallet: ethers.Wallet) => {
       try {
+        if (isWeb3RecoveryBlocked(currentIntent)) {
+          setModal(WEB3_RECOVERY_BLOCKED_MODAL);
+          setAuthPin("");
+          setStep("AUTH_PIN");
+          return;
+        }
+
         if (currentIntent.executionIntent.status === "EXPIRED") {
           await handleRecoverAndRetry(currentIntent, wallet);
           return;
@@ -167,6 +193,11 @@ const VerifyWallet = () => {
   ]);
 
   const handleSuccessConfirm = () => {
+    if (!intent) {
+      navigate("/community/question");
+      return;
+    }
+
     switch (intent.resource.type) {
       case "QUESTION":
         navigate("/community/question");

@@ -2,6 +2,7 @@ export type ResourceType =
   | "FREE"
   | "QUESTION"
   | "ANSWER"
+  | "MARKETPLACE_RESERVATION"
   | "WALLET_REGISTRATION";
 
 export type ActionType =
@@ -12,6 +13,12 @@ export type ActionType =
   | "QNA_ANSWER_UPDATE"
   | "QNA_ANSWER_DELETE"
   | "QNA_ANSWER_ACCEPT"
+  | "MARKETPLACE_CLASS_PURCHASE"
+  | "MARKETPLACE_RESERVATION_CANCEL"
+  | "MARKETPLACE_RESERVATION_COMPLETE"
+  | "MARKETPLACE_DEADLINE_REFUND"
+  | "MARKETPLACE_TRAINER_REJECT"
+  | "MARKETPLACE_SETTLEMENT"
   | "WALLET_ESCROW_APPROVE";
 
 export type Web3IntentStatus =
@@ -27,6 +34,24 @@ export type Web3IntentStatus =
 export type SignRequestUnavailableReason =
   | "AUTH_EXPIRED"
   | "EIP7702_DEADLINE_TOO_CLOSE";
+
+export type Web3RecoveryStatus = "ONCHAIN_UNCERTAIN";
+
+export type Web3RecoveryReason = "RECEIPT_TIMEOUT";
+
+export type Web3TransactionStatus =
+  | "PENDING"
+  | "UNCONFIRMED"
+  | "SUCCEEDED"
+  | "FAILED";
+
+export type Web3ViewerAction =
+  | "EXECUTE"
+  | "RECOVER"
+  | "CANCEL"
+  | "COMPLETE"
+  | "REFUND"
+  | "SETTLE";
 
 export interface SignRequest {
   // EIP7702: authorization, submit
@@ -52,7 +77,7 @@ export interface SignRequest {
     maxPriorityFeePerGasHex: string;
     maxFeePerGasHex: string;
     expectedNonce: number;
-  };
+  } | null;
 }
 
 export interface Web3Execution {
@@ -76,8 +101,16 @@ export interface Web3Execution {
   signRequestUnavailableReason?: SignRequestUnavailableReason | null; // signRequest가 null인 이유
   existing?: boolean; // 기존 active intent를 재사용한 응답인지
   transaction?: {
-    txHash: string;
-  };
+    id?: number;
+    status?: Web3TransactionStatus;
+    txHash: string | null;
+  } | null;
+  recoveryStatus?: Web3RecoveryStatus | null;
+  recoveryReason?: Web3RecoveryReason | null;
+  retryAllowed?: boolean | null;
+  viewerAction?: Web3ViewerAction | null;
+  viewerCanExecute?: boolean;
+  viewerCanRecover?: boolean;
 }
 
 export interface ExecuteWeb3TransactionRequest {
