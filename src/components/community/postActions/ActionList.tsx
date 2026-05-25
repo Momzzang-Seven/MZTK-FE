@@ -46,8 +46,15 @@ interface PostActionListProps {
 const Web3StatusInfo = ({ execution }: { execution: Web3Execution }) => {
   const { resource, executionIntent, transaction } = execution;
   const { EXPLORER_TX_URL } = getNetworkConfig();
+  const isRecoveryBlocked =
+    execution.recoveryStatus === "ONCHAIN_UNCERTAIN" ||
+    execution.retryAllowed === false;
 
   const getStatusColor = (status: string) => {
+    if (isRecoveryBlocked) {
+      return "text-amber-600 bg-amber-50 border-amber-100";
+    }
+
     switch (status) {
       case "COMPLETED":
         return "text-green-500 bg-green-50 border-green-100";
@@ -84,9 +91,21 @@ const Web3StatusInfo = ({ execution }: { execution: Web3Execution }) => {
             resource.status
           )}`}
         >
-          {resource.status}
+          {isRecoveryBlocked ? "ONCHAIN_UNCERTAIN" : resource.status}
         </div>
       </div>
+
+      {isRecoveryBlocked && (
+        <div className="mb-4 rounded-2xl border border-amber-100 bg-amber-50/70 p-4">
+          <p className="text-[12px] font-black text-amber-700">
+            블록체인 확인이 지연되고 있습니다.
+          </p>
+          <p className="mt-1 text-[11px] font-bold leading-relaxed text-amber-600/80">
+            트랜잭션은 전송되었지만 결과 확인이 끝나지 않았습니다. 중복 실행을
+            막기 위해 서명과 복구 작업을 잠시 제한합니다.
+          </p>
+        </div>
+      )}
 
       <div className="space-y-3.5">
         <div className="flex items-start gap-3">
@@ -125,6 +144,11 @@ const Web3StatusInfo = ({ execution }: { execution: Web3Execution }) => {
               <span className="text-[12px] font-black text-gray-700">
                 {executionIntent.status}
               </span>
+              {transaction?.status && (
+                <span className="text-[10px] font-black text-amber-500">
+                  {transaction.status}
+                </span>
+              )}
               <span className="text-[10px] font-medium text-gray-400">
                 ID: {executionIntent.id.slice(0, 8)}...
               </span>
@@ -166,6 +190,10 @@ const ActionList = ({
 
   const userId = useUserStore((s) => s.user?.userId);
   const isMine = userId !== undefined && Number(authorId) === Number(userId);
+  const isWeb3Blocked =
+    Web3Execution?.recoveryStatus === "ONCHAIN_UNCERTAIN" ||
+    Web3Execution?.retryAllowed === false;
+  const canExecuteWeb3 = (isWeb3Executable ?? false) && !isWeb3Blocked;
 
   const openActionModal = () =>
     isMine ? setModalType("MY") : setModalType("OTHERS");
@@ -175,12 +203,12 @@ const ActionList = ({
   const handleEditClick = () => {
     if (type === "FREE") navigate(`/community/free/edit/${id}/select-image`);
     if (type === "QUESTION") {
-      if (isEditable && !isWeb3Executable) {
+      if (isEditable && !isWeb3Executable && !isWeb3Blocked) {
         navigate(`/community/question/edit/${id}`);
       }
     }
     if (type === "ANSWER" && answerContent) {
-      if (isEditable && !isWeb3Executable) {
+      if (isEditable && !isWeb3Executable && !isWeb3Blocked) {
         navigate(`/community/answer/edit/${id}/${parentPostId}`, {
           state: { content: answerContent, images: answerImages },
         });
@@ -203,6 +231,11 @@ const ActionList = ({
   };
 
   const handleConfirmDeleteClick = async () => {
+    if (isWeb3Blocked) {
+      closeModal();
+      return;
+    }
+
     if (type === "COMMENT" && id) {
       await deleteComment(id);
     } else if (type === "QUESTION" && isEditable && id) {
@@ -218,6 +251,11 @@ const ActionList = ({
   };
 
   const handleConfirmAcceptClick = async () => {
+    if (isWeb3Blocked) {
+      closeModal();
+      return;
+    }
+
     if (type === "ANSWER" && id && parentPostId) {
       await acceptAnswer(parentPostId, id);
     }
@@ -230,6 +268,8 @@ const ActionList = ({
   };
 
   const handleSignClick = () => {
+    if (isWeb3Blocked) return;
+
     if (type === "ANSWER") {
       navigate(
         `/verify-wallet/${Web3Execution?.resource.type?.toLowerCase()}/${Web3Execution?.resource.id}/${parentPostId}`,
@@ -268,8 +308,9 @@ const ActionList = ({
                   handleDeleteClick={handleDeleteClick}
                   handleCancelClick={closeModal}
                   handleSignClick={handleSignClick}
-                  isWeb3Executable={isWeb3Executable ?? false}
+                  isWeb3Executable={canExecuteWeb3}
                   isEditable={isEditable ?? true}
+                  isWeb3Blocked={isWeb3Blocked}
                 />
               );
 
@@ -277,7 +318,7 @@ const ActionList = ({
               return (
                 <OtherPostActions
                   type={type}
-                  isSelectable={isSelectable}
+                  isSelectable={isSelectable && !isWeb3Blocked}
                   handleSelectClick={handleSelectClick}
                   handleReportClick={handleReportClick}
                   handleCancelClick={closeModal}
