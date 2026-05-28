@@ -36,8 +36,10 @@ test.describe("레벨업 흐름", () => {
     await expect(page.getByText(/Lv\.5/i).first()).toBeVisible({
       timeout: 15000,
     });
-    // EXP와 XP 공백 허용해서 매칭
-    await expect(page.getByText(/50\s*\/\s*100\s*(EXP|XP)/i)).toBeVisible({
+    await expect(page.getByText(/50\s*EXP/i)).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByText("50%")).toBeVisible({
       timeout: 10000,
     });
   });
