@@ -20,6 +20,7 @@ export const TEST_TRAINER = {
 
 export const MOCK_WALLET = {
   address: "0xMockWalletAddress123456789",
+  encryptedJson: "mock-e2e-encrypted-wallet-json",
 };
 
 type TestUser = typeof TEST_USER;
@@ -214,6 +215,17 @@ export async function mockCoreAppApis(page: Page) {
 }
 
 export async function mockLocalLogin(page: Page, user: TestUser = TEST_USER) {
+  await page.evaluate(
+    ({ encryptedJson, walletAddress }) => {
+      window.localStorage.setItem("encrypted_wallet", encryptedJson);
+      window.localStorage.setItem("wallet_address", walletAddress);
+    },
+    {
+      encryptedJson: MOCK_WALLET.encryptedJson,
+      walletAddress: MOCK_WALLET.address,
+    }
+  );
+
   await page.route("**/auth/login", async (route) => {
     await route.fulfill({
       status: 200,
@@ -242,15 +254,17 @@ export async function loginAsTestUser(
   options: { gymLocation?: GymLocation } = {}
 ) {
   await page.addInitScript(
-    ({ storageValue, walletAddress }) => {
+    ({ storageValue, walletAddress, encryptedJson }) => {
       window.localStorage.setItem("user-storage", storageValue);
       window.localStorage.setItem("wallet_address", walletAddress);
+      window.localStorage.setItem("encrypted_wallet", encryptedJson);
     },
     {
       storageValue: JSON.stringify(
         buildPersistedUserStorage(user, options.gymLocation)
       ),
       walletAddress: MOCK_WALLET.address,
+      encryptedJson: MOCK_WALLET.encryptedJson,
     }
   );
 
