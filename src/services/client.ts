@@ -22,8 +22,6 @@ if (import.meta.env.DEV) {
   BASE = "";
 }
 
-console.log("Current API BASE URL:", BASE); // Debugging
-
 type RetriableRequestConfig = {
   _retry?: boolean;
   _skipNotFoundRedirect?: boolean;

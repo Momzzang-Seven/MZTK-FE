@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { Comment } from "@types";
 import { commentService } from "@services";
 
@@ -10,13 +10,19 @@ export const useReplyService = <T extends Comment>(parentId: number) => {
   const [isLast, setIsLast] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const activeFetchKeyRef = useRef<string | null>(null);
 
   const getReplies = useCallback(
     async (isRefresh: boolean) => {
+      const cursor = isRefresh ? null : nextCursor;
+      const fetchKey = `${parentId}:${isRefresh ? "refresh" : (cursor ?? "first")}`;
+
+      if (activeFetchKeyRef.current === fetchKey) return true;
+
+      activeFetchKeyRef.current = fetchKey;
       setIsLoading(true);
       setError(null);
       try {
-        const cursor = isRefresh ? null : nextCursor;
         const data = await commentService.getReplies(
           parentId,
           cursor,
@@ -29,6 +35,7 @@ export const useReplyService = <T extends Comment>(parentId: number) => {
         );
         setIsLast(!data.hasNext);
         setNextCursor(data.nextCursor);
+        return true;
       } catch (error) {
         const errorResponse = error as {
           response?: { data?: { message?: string } };
@@ -36,7 +43,11 @@ export const useReplyService = <T extends Comment>(parentId: number) => {
         const message =
           errorResponse.response?.data?.message || "댓글 조회에 실패했습니다.";
         setError(message);
+        return false;
       } finally {
+        if (activeFetchKeyRef.current === fetchKey) {
+          activeFetchKeyRef.current = null;
+        }
         setIsLoading(false);
       }
     },

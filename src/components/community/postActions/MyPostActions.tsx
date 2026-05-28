@@ -1,4 +1,4 @@
-import { Edit3, Trash2, ShieldCheck, X } from "lucide-react";
+import { AlertTriangle, Edit3, Trash2, ShieldCheck, X } from "lucide-react";
 
 interface MyPostActionsProps {
   handleEditClick: () => void;
@@ -7,6 +7,7 @@ interface MyPostActionsProps {
   handleSignClick?: () => void;
   isEditable: boolean;
   isWeb3Executable: boolean;
+  isWeb3Blocked?: boolean;
 }
 
 const MyPostActions = ({
@@ -16,6 +17,7 @@ const MyPostActions = ({
   handleSignClick,
   isEditable,
   isWeb3Executable,
+  isWeb3Blocked = false,
 }: MyPostActionsProps) => {
   return (
     <div className="w-full flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500 py-2">
@@ -29,6 +31,20 @@ const MyPostActions = ({
       </div>
 
       <div className="flex flex-col gap-2.5">
+        {isWeb3Blocked && (
+          <div className="w-full flex items-center gap-4 p-4.5 bg-amber-50/70 text-amber-700 rounded-[24px] border border-amber-100">
+            <div className="p-2.5 bg-white rounded-2xl shadow-sm">
+              <AlertTriangle size={22} strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="text-[15px] font-black">확인 지연 중</span>
+              <span className="text-[11px] font-bold opacity-70 text-left">
+                블록체인 결과 확인이 지연되어 추가 작업을 잠시 막았습니다.
+              </span>
+            </div>
+          </div>
+        )}
+
         {isWeb3Executable && (
           <button
             onClick={handleSignClick}
@@ -46,7 +62,7 @@ const MyPostActions = ({
           </button>
         )}
 
-        {isEditable && !isWeb3Executable && (
+        {isEditable && !isWeb3Executable && !isWeb3Blocked && (
           <>
             <button
               onClick={handleEditClick}
