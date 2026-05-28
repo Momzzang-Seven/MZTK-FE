@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   MessageCircle,
   CheckCircle2,
@@ -35,6 +35,7 @@ const Answer = ({
   isWeb3Executable,
 }: AnswerProps) => {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [hasLoadedComments, setHasLoadedComments] = useState(false);
   const [writingComment, setWritingComment] = useState("");
 
   const [parentCommentId, setParentCommentId] = useState<number | undefined>(
@@ -53,7 +54,14 @@ const Answer = ({
     loadMore,
     isLast,
     error,
-  } = useCommentService<Comment>(answer.answerId, true);
+  } = useCommentService<Comment>(
+    answer.answerId,
+    true,
+    {
+      autoFetch: false,
+    },
+    5
+  );
 
   const { likePost, unlikePost } = usePostService();
   const [liked, setLiked] = useState(answer.isLiked);
@@ -106,17 +114,14 @@ const Answer = ({
       )
     : null;
 
-  useEffect(() => {
-    if (isCommentsOpen && comments.length === 0) {
-      fetchComments(true);
-    }
-  }, [isCommentsOpen, comments.length, fetchComments]);
-
-  const toggleComment = () => {
+  const toggleComment = async () => {
     const nextState = !isCommentsOpen;
     setIsCommentsOpen(nextState);
-    if (nextState && comments.length === 0) {
-      fetchComments(true);
+
+    if (nextState && !hasLoadedComments) {
+      setHasLoadedComments(true);
+      const isLoaded = await fetchComments(true);
+      if (!isLoaded) setHasLoadedComments(false);
     }
   };
 

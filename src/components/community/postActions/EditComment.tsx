@@ -3,6 +3,7 @@ interface EditCommentProps {
   commentContent: string;
   handleEditClick: () => void;
   handleCancelClick: () => void;
+  isSubmitDisabled: boolean;
 }
 
 const EditComment = ({
@@ -10,6 +11,7 @@ const EditComment = ({
   commentContent,
   handleEditClick,
   handleCancelClick,
+  isSubmitDisabled,
 }: EditCommentProps) => {
   const maxLength = 500;
 
@@ -41,7 +43,8 @@ const EditComment = ({
       <div className="flex flex-col gap-3">
         <button
           onClick={handleEditClick}
-          className="w-full py-4.5 bg-main text-white rounded-[20px] text-[15px] font-black shadow-xl shadow-main/20 active:scale-[0.98] transition-all"
+          disabled={isSubmitDisabled}
+          className="w-full py-4.5 bg-main text-white rounded-[20px] text-[15px] font-black shadow-xl shadow-main/20 active:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:active:scale-100"
         >
           수정 완료
         </button>
