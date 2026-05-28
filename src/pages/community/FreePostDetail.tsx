@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { SimpleHeader } from "@components/layout";
 import { CommentItem, CommentInput, FreePostCard } from "@components/community";
@@ -9,6 +9,7 @@ import { useCommentService, useInfiniteScroll, usePostService } from "@hooks";
 const FreePostDetail = () => {
   const { postId } = useParams();
   const postIdNum = Number(postId);
+  const navigate = useNavigate();
 
   const [post, setPost] = useState<FreePost | null>(null);
   const [writingComment, setWritingComment] = useState("");
@@ -60,7 +61,10 @@ const FreePostDetail = () => {
 
   return (
     <div className="min-h-dvh bg-gray-50/50 pb-28">
-      <SimpleHeader title="게시글 상세" />
+      <SimpleHeader
+        title="게시글 상세"
+        onBackClick={() => navigate("/community/free")}
+      />
 
       <div className="pt-[88px]">
         {post && (
