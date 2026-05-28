@@ -71,6 +71,7 @@ export const UserProfile = () => {
 
             {/* Logout */}
             <button
+              aria-label="로그아웃"
               onClick={() => setConfirmOpen(true)}
               className="btn-press w-9 h-9 rounded-xl bg-gray-50 hover:bg-gray-100 border-none flex items-center justify-center transition-colors"
             >

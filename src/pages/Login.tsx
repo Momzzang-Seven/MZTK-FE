@@ -46,7 +46,17 @@ const Login = () => {
         return;
       }
 
-      navigate("/register");
+      if (response?.isNewUser) {
+        navigate("/register");
+        return;
+      }
+
+      if (response?.userInfo.role === "TRAINER") {
+        navigate("/trainer");
+        return;
+      }
+
+      navigate("/");
     } catch (error) {
       if (axios.isAxiosError(error)) {
         setLocalError(
