@@ -72,6 +72,17 @@ export interface TodayWorkoutCompletionResponse {
   } | null;
 }
 
+export interface VerificationDetailResponse {
+  verificationId: string;
+  verificationKind: VerificationKind;
+  verificationStatus: VerificationStatus;
+  rewardStatus: VerificationRewardStatus;
+  exerciseDate: string | null;
+  rejectionReasonCode: RejectionReasonCode | null;
+  rejectionReasonDetail: string | null;
+  failureCode: FailureCode | null;
+}
+
 export const verificationService = {
   async submitWorkoutPhoto(
     request: SubmitWorkoutVerificationRequest
@@ -89,6 +100,13 @@ export const verificationService = {
 
   async getTodayWorkoutCompletion(): Promise<TodayWorkoutCompletionResponse> {
     const response = await api.get("/verification/today-completion");
+    return response.data.data;
+  },
+
+  async getVerificationDetail(
+    verificationId: string
+  ): Promise<VerificationDetailResponse> {
+    const response = await api.get(`/verification/${verificationId}`);
     return response.data.data;
   },
 };

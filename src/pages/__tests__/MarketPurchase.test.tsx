@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   createClassReservation: vi.fn(),
   getClassReservationInfo: vi.fn(),
   getMarketplaceClassDetail: vi.fn(),
-  useTokenBalance: vi.fn(),
+  getImagesByIds: vi.fn(),
 }));
 
 vi.mock("@services", () => ({
@@ -18,10 +18,9 @@ vi.mock("@services", () => ({
     mocks.getClassReservationInfo(...args),
   getMarketplaceClassDetail: (...args: unknown[]) =>
     mocks.getMarketplaceClassDetail(...args),
-}));
-
-vi.mock("@hooks", () => ({
-  useTokenBalance: () => mocks.useTokenBalance(),
+  imageService: {
+    getImagesByIds: (...args: unknown[]) => mocks.getImagesByIds(...args),
+  },
 }));
 
 const renderPage = () =>
@@ -30,6 +29,10 @@ const renderPage = () =>
       <Routes>
         <Route path="/market/purchase/:id" element={<MarketPurchase />} />
         <Route path="/market/reservations" element={<div>예약 내역</div>} />
+        <Route
+          path="/verify-wallet/:resourceType/:resourceId"
+          element={<div>지갑 서명 화면 진입</div>}
+        />
       </Routes>
     </MemoryRouter>
   );
@@ -95,30 +98,15 @@ describe("MarketPurchase", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getMarketplaceClassDetail.mockResolvedValue(detailResponse);
+    mocks.getImagesByIds.mockResolvedValue([]);
     mocks.getClassReservationInfo.mockResolvedValue(reservationInfoResponse);
     mocks.createClassReservation.mockResolvedValue({
       reservationId: 10,
       status: "PENDING",
     });
-    mocks.useTokenBalance.mockReturnValue({ balance: "1000", loading: false });
   });
 
-  it("blocks entry into purchase page from detail when MZTK balance is insufficient", async () => {
-    mocks.useTokenBalance.mockReturnValue({ balance: "120", loading: false });
-
-    renderDetailPage();
-
-    expect(await screen.findByText("아침 PT 클래스")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "지금 예약하기" }));
-
-    expect(await screen.findByText("잔액 부족")).toBeInTheDocument();
-    expect(
-      screen.getByText(/예약에는 300 MZTK가 필요합니다/)
-    ).toBeInTheDocument();
-    expect(screen.queryByText("구매 화면 진입")).not.toBeInTheDocument();
-  });
-
-  it("allows entry into purchase page from detail when MZTK balance is enough", async () => {
+  it("allows entry into purchase page from detail without client-side balance gating", async () => {
     renderDetailPage();
 
     expect(await screen.findByText("아침 PT 클래스")).toBeInTheDocument();
@@ -127,24 +115,7 @@ describe("MarketPurchase", () => {
     expect(await screen.findByText("구매 화면 진입")).toBeInTheDocument();
   });
 
-  it("blocks reservation payment before API request when MZTK balance is insufficient", async () => {
-    mocks.useTokenBalance.mockReturnValue({ balance: "120", loading: false });
-
-    renderPage();
-
-    expect(await screen.findByText("아침 PT 클래스")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /5\.18/ }));
-    fireEvent.click(screen.getByRole("button", { name: /10:00/ }));
-    fireEvent.click(screen.getByRole("button", { name: "잔액 부족" }));
-
-    expect(await screen.findAllByText("잔액 부족")).toHaveLength(2);
-    expect(
-      screen.getByText(/예약에는 300 MZTK가 필요합니다/)
-    ).toBeInTheDocument();
-    expect(mocks.createClassReservation).not.toHaveBeenCalled();
-  });
-
-  it("sends reservation request when selected slot and MZTK balance are valid", async () => {
+  it("sends reservation request when selected slot is valid", async () => {
     renderPage();
 
     expect(await screen.findByText("아침 PT 클래스")).toBeInTheDocument();
@@ -176,5 +147,39 @@ describe("MarketPurchase", () => {
     );
     expect(request).not.toHaveProperty("delegationSignature");
     expect(request).not.toHaveProperty("executionSignature");
+  });
+
+  it("routes to wallet verification when reservation response contains Web3 intent", async () => {
+    mocks.createClassReservation.mockResolvedValueOnce({
+      reservationId: 10,
+      status: "PURCHASE_PREPARING",
+      web3: {
+        resource: {
+          type: "MARKETPLACE_RESERVATION",
+          id: "10",
+          status: "PENDING_EXECUTION",
+        },
+        actionType: "MARKETPLACE_CLASS_PURCHASE",
+        executionIntent: {
+          id: "intent-10",
+          status: "AWAITING_SIGNATURE",
+          expiresAt: "2026-05-18T10:00:00",
+        },
+        execution: {
+          mode: "EIP7702",
+          signCount: 2,
+        },
+        signRequest: null,
+      },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText("아침 PT 클래스")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /5\.18/ }));
+    fireEvent.click(screen.getByRole("button", { name: /10:00/ }));
+    fireEvent.click(screen.getByRole("button", { name: /300 MZTK 결제하기/ }));
+
+    expect(await screen.findByText("지갑 서명 화면 진입")).toBeInTheDocument();
   });
 });

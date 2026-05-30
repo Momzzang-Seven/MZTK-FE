@@ -1,9 +1,9 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
   waitFor,
-  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ADMIN_TEXT } from "@constant/admin";
@@ -15,6 +15,10 @@ const mocks = vi.hoisted(() => ({
   disableKey: vi.fn(),
   archiveKey: vi.fn(),
   provisionKey: vi.fn(),
+  getMarketplaceRefundReview: vi.fn(),
+  getMarketplaceSettlementReview: vi.fn(),
+  executeMarketplaceRefund: vi.fn(),
+  executeMarketplaceSettle: vi.fn(),
   showSnackbar: vi.fn(),
   openConfirm: vi.fn(),
   fetchSponsorNonceSlots: vi.fn(),
@@ -28,6 +32,10 @@ vi.mock("@store", () => ({
     disableKey: mocks.disableKey,
     archiveKey: mocks.archiveKey,
     provisionKey: mocks.provisionKey,
+    getMarketplaceRefundReview: mocks.getMarketplaceRefundReview,
+    getMarketplaceSettlementReview: mocks.getMarketplaceSettlementReview,
+    executeMarketplaceRefund: mocks.executeMarketplaceRefund,
+    executeMarketplaceSettle: mocks.executeMarketplaceSettle,
   }),
   useUserStore: () => ({
     showSnackbar: mocks.showSnackbar,
@@ -125,10 +133,18 @@ describe("Web3Management QA", () => {
       screen.getByRole("button", { name: ADMIN_TEXT.WEB3.TREASURY.BTN_ADD })
     );
 
-    const roleSelect = screen.getByRole("combobox");
-    const optionValues = within(roleSelect)
-      .getAllByRole("option")
-      .map((option) => (option as HTMLOptionElement).value);
+    const roleSelect = screen
+      .getAllByRole("combobox")
+      .find((select) =>
+        Array.from((select as HTMLSelectElement).options).some(
+          (option) => option.value === "REWARD"
+        )
+      );
+    expect(roleSelect).toBeDefined();
+
+    const optionValues = Array.from(
+      (roleSelect as HTMLSelectElement).options
+    ).map((option) => option.value);
 
     expect(optionValues).toEqual([
       "REWARD",
@@ -136,5 +152,128 @@ describe("Web3Management QA", () => {
       "QNA_SIGNER",
       "MARKETPLACE_SIGNER",
     ]);
+  });
+
+  it("loads marketplace reservation refund review and blocks non-processable execution", async () => {
+    mocks.getMarketplaceRefundReview.mockResolvedValueOnce({
+      reservationId: 44,
+      processable: false,
+      blockingReason: "Escrow is already settled.",
+      reservationStatus: "SETTLED",
+      escrowStatus: "SETTLED",
+      adminExecutionPhase: "TERMINAL",
+      baseValidationItems: [
+        {
+          code: "ALREADY_SETTLED",
+          severity: "BLOCKING",
+          message: "Reservation is terminal.",
+          blocking: true,
+        },
+      ],
+      reasonOptions: [
+        {
+          reasonCode: "ADMIN_MANUAL_REFUND",
+          displayCode: "ADMIN_MANUAL_REFUND",
+          processable: false,
+          blockingCode: "ALREADY_SETTLED",
+          requiresConfirmation: true,
+          confirmationType: "MANUAL_REFUND",
+          requiredAuthority: "MARKETPLACE_SIGNER",
+          authoritySatisfied: true,
+          resultPreview: null,
+          validationItems: [],
+        },
+      ],
+      activeExecution: null,
+      lastAttempt: null,
+    });
+
+    render(<Web3Management />);
+
+    fireEvent.change(screen.getByPlaceholderText("Reservation ID"), {
+      target: { value: "44" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Load Review/ }));
+
+    expect(
+      await screen.findByText("Escrow is already settled.")
+    ).toBeInTheDocument();
+    expect(mocks.getMarketplaceRefundReview).toHaveBeenCalledWith(44);
+    expect(
+      screen.getByRole("button", { name: "Execute Refund" })
+    ).toBeDisabled();
+  });
+
+  it("executes processable marketplace settlement with confirmation payload", async () => {
+    mocks.getMarketplaceSettlementReview.mockResolvedValue({
+      reservationId: 45,
+      processable: true,
+      blockingReason: null,
+      reservationStatus: "APPROVED",
+      escrowStatus: "LOCKED",
+      adminExecutionPhase: "READY",
+      baseValidationItems: [],
+      reasonOptions: [
+        {
+          reasonCode: "ADMIN_MANUAL_SETTLE",
+          displayCode: "ADMIN_MANUAL_SETTLE",
+          processable: true,
+          blockingCode: null,
+          requiresConfirmation: true,
+          confirmationType: "EARLY_SETTLE",
+          requiredAuthority: "MARKETPLACE_SIGNER",
+          authoritySatisfied: true,
+          resultPreview: null,
+          validationItems: [],
+        },
+      ],
+      activeExecution: null,
+      lastAttempt: null,
+    });
+    mocks.executeMarketplaceSettle.mockResolvedValueOnce({
+      reservationId: 45,
+      actionType: "MARKETPLACE_ADMIN_SETTLE",
+      reservationStatus: "ADMIN_SETTLE_PENDING",
+      escrowStatus: "ADMIN_SETTLE_PENDING",
+      executionIntent: { status: "AWAITING_SIGNATURE" },
+      existing: false,
+    });
+
+    render(<Web3Management />);
+
+    fireEvent.change(screen.getByPlaceholderText("Reservation ID"), {
+      target: { value: "45" },
+    });
+    fireEvent.change(screen.getByDisplayValue("Refund review"), {
+      target: { value: "settlement" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Load Review/ }));
+
+    expect(
+      await screen.findByText("This reason is executable.")
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Execute Settlement" }));
+
+    expect(mocks.openConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Execute Marketplace settlement",
+        variant: "error",
+      })
+    );
+
+    const confirmArg = mocks.openConfirm.mock.calls[0][0] as {
+      onConfirm: () => Promise<void>;
+    };
+    await act(async () => {
+      await confirmArg.onConfirm();
+    });
+
+    await waitFor(() => {
+      expect(mocks.executeMarketplaceSettle).toHaveBeenCalledWith(45, {
+        reasonCode: "ADMIN_MANUAL_SETTLE",
+        memo: expect.any(String),
+        confirmEarlySettle: true,
+      });
+    });
   });
 });
