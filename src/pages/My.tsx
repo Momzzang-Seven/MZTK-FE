@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CurrentTkn,
   LevelProgress,
@@ -72,6 +72,7 @@ const ACTIVITY_BUTTONS = [
 const My = () => {
   const navigate = useNavigate();
   const user = useUserStore((state) => state.user);
+  const initLevel = useUserStore((state) => state.initLevel);
   const updateRole = useUserStore((state) => state.updateRole);
   const clearUser = useUserStore((state) => state.clearUser);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
@@ -99,6 +100,10 @@ const My = () => {
     clearUser();
     navigate("/login", { replace: true });
   };
+
+  useEffect(() => {
+    initLevel();
+  }, [initLevel]);
 
   return (
     <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-28">

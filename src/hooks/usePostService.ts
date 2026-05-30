@@ -21,6 +21,8 @@ import {
 
 export const POST_ERROR_CODE = {
   ALLOWANCE_REQUIRED: "ALLOWANCE_REQUIRED",
+  // 서비스의 네트워크 이전으로 이전 애스크로에 대해 approve되어 있는 지갑.
+  // 또는 서버에서 지갑 등록이 완료되지 않아 allownace가 0으로 조회되는 경우.
   BALANCE_PENDING: "BALANCE_PENDING",
   INSUFFICIENT_BALANCE: "INSUFFICIENT_BALANCE",
 } as const;
