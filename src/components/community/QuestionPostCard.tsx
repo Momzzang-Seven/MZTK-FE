@@ -136,7 +136,7 @@ const QuestionPostCard = ({ post }: Props) => {
                 />
               </div>
               <span className="text-[13px] font-black text-gray-500">
-                {post.commentCount}
+                {post.answerCount}
               </span>
             </div>
           </div>
