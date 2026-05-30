@@ -67,17 +67,26 @@ vi.mock("@components/common", () => ({
 }));
 
 vi.mock("@components/auth/PinPad", () => ({
-  PinPad: ({ onInput }: { onInput: (value: string) => void }) => (
-    <button
-      type="button"
-      onClick={() => {
-        for (const value of ["1", "2", "3", "4", "5", "6"]) {
-          onInput(value);
-        }
-      }}
-    >
-      enter pin
-    </button>
+  PinPad: ({
+    desc,
+    onInput,
+  }: {
+    desc?: ReactNode;
+    onInput: (value: string) => void;
+  }) => (
+    <>
+      <p>{desc}</p>
+      <button
+        type="button"
+        onClick={() => {
+          for (const value of ["1", "2", "3", "4", "5", "6"]) {
+            onInput(value);
+          }
+        }}
+      >
+        enter pin
+      </button>
+    </>
   ),
 }));
 
@@ -155,5 +164,35 @@ describe("VerifyWallet", () => {
       expect(mockHandleWeb3Signature).not.toHaveBeenCalled();
     });
     expect(mockRecoverCreate).not.toHaveBeenCalled();
+  });
+
+  it("shows the success title based on actionType", async () => {
+    mockLocationState.intent = buildIntent({
+      actionType: "QNA_ANSWER_ACCEPT",
+    });
+
+    render(<VerifyWallet />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "답변 채택 요청이 완료되었어요",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("shows the PIN description based on actionType", () => {
+    mockLocationState.intent = buildIntent({
+      actionType: "QNA_ANSWER_ACCEPT",
+    });
+
+    render(<VerifyWallet />);
+
+    expect(
+      screen.getByText(/답변 채택 및 보상 지급을 위해/)
+    ).toBeInTheDocument();
   });
 });

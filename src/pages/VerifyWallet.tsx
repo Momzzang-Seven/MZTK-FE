@@ -7,6 +7,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import type { Web3Execution } from "@types";
 import { usePostService, useWalletService } from "@hooks";
+import { VERIFY_WALLET_TEXT } from "@constant";
 
 interface ApiErrorResponse {
   response?: {
@@ -16,11 +17,6 @@ interface ApiErrorResponse {
     };
   };
 }
-
-const WEB3_RECOVERY_BLOCKED_MODAL = {
-  title: "블록체인 확인 지연",
-  desc: "이미 전송된 트랜잭션의 결과 확인이 지연되고 있습니다. 중복 실행을 막기 위해 잠시 후 다시 확인해 주세요.",
-} as const;
 
 const isWeb3RecoveryBlocked = (intent: Web3Execution) => {
   return (
@@ -58,7 +54,7 @@ const VerifyWallet = () => {
   const intent = (location.state as { intent?: Web3Execution } | null)?.intent;
 
   const getWeb3Transaction = useCallback(async () => {
-    if (!intent) throw new Error("유효하지 않은 접근입니다.");
+    if (!intent) throw new Error(VERIFY_WALLET_TEXT.invalidAccess);
 
     try {
       if (intent.transaction) {
@@ -79,7 +75,7 @@ const VerifyWallet = () => {
   const handleRecoverAndRetry = useCallback(
     async (currentIntent: Web3Execution, wallet: ethers.Wallet) => {
       if (isWeb3RecoveryBlocked(currentIntent)) {
-        setModal(WEB3_RECOVERY_BLOCKED_MODAL);
+        setModal(VERIFY_WALLET_TEXT.recoveryBlockedModal);
         setAuthPin("");
         setStep("AUTH_PIN");
         return;
@@ -107,7 +103,7 @@ const VerifyWallet = () => {
           );
           setStep("SUCCESS");
         } else {
-          throw new Error("복구된 실행 정보가 유효하지 않습니다.");
+          throw new Error(VERIFY_WALLET_TEXT.invalidRecovery);
         }
       } catch {
         setAuthPin("");
@@ -121,7 +117,7 @@ const VerifyWallet = () => {
     async (currentIntent: Web3Execution, wallet: ethers.Wallet) => {
       try {
         if (isWeb3RecoveryBlocked(currentIntent)) {
-          setModal(WEB3_RECOVERY_BLOCKED_MODAL);
+          setModal(VERIFY_WALLET_TEXT.recoveryBlockedModal);
           setAuthPin("");
           setStep("AUTH_PIN");
           return;
@@ -173,10 +169,7 @@ const VerifyWallet = () => {
             await handleSignProcess(web3Data, decryptedWallet as ethers.Wallet);
           }
         } catch {
-          setModal({
-            title: "인증 실패",
-            desc: "잘못된 PIN 번호입니다. 다시 시도해주세요.",
-          });
+          setModal(VERIFY_WALLET_TEXT.pinFailureModal);
           setAuthPin("");
           setStep("AUTH_PIN");
         }
@@ -244,7 +237,7 @@ const VerifyWallet = () => {
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
           <LoadingSpinner size="lg" color="text-main" />
           <p className="mt-4 text-[14px] font-black text-gray-900 animate-pulse">
-            블록체인 트랜잭션을 안전하게 처리하고 있습니다...
+            {VERIFY_WALLET_TEXT.loading}
           </p>
         </div>
       )}
@@ -252,25 +245,25 @@ const VerifyWallet = () => {
       <div className="h-full pt-16 flex flex-col">
         {step === "NO_WALLET" && (
           <WalletSuccessSection
-            title={"지갑을 찾을 수 없어요"}
-            description={"토큰 보상을 받기 위해 지갑이 필요해요."}
+            title={VERIFY_WALLET_TEXT.noWallet.title}
+            description={VERIFY_WALLET_TEXT.noWallet.description}
             onConfirm={() => navigate(`/register-wallet`)}
-            buttonLabel="지갑 등록하기"
+            buttonLabel={VERIFY_WALLET_TEXT.noWallet.buttonLabel}
           />
         )}
 
         {step === "AUTH_PIN" && (
           <PinPad
-            title="PIN 번호 인증"
+            title={VERIFY_WALLET_TEXT.pin.title}
             desc={
               <>
-                {intent?.resource.type === "QUESTION"
-                  ? "질문 보상 예치 및 게시글 등록을 위해"
-                  : intent?.resource.type === "ANSWER"
-                    ? "답변 등록 및 보상 수령 권한 인증을 위해"
-                    : "트랜잭션 실행 및 블록체인 서명을 위해"}
+                {intent
+                  ? VERIFY_WALLET_TEXT.pin.descriptionByActionType[
+                      intent.actionType
+                    ]
+                  : VERIFY_WALLET_TEXT.pin.defaultDescription}
                 <br />
-                PIN 번호를 입력해주세요
+                {VERIFY_WALLET_TEXT.pin.instruction}
               </>
             }
             pin={authPin}
@@ -282,21 +275,21 @@ const VerifyWallet = () => {
         {step === "SUCCESS" && (
           <WalletSuccessSection
             title={
-              intent?.resource.type === "QUESTION"
-                ? "질문 등록 요청이 완료되었어요"
-                : intent?.resource.type === "ANSWER"
-                  ? "답변 등록 요청이 완료되었어요"
-                  : "트랜잭션 수행 요청이 완료되었어요"
+              intent
+                ? VERIFY_WALLET_TEXT.success.titleByActionType[
+                    intent.actionType
+                  ]
+                : VERIFY_WALLET_TEXT.success.defaultTitle
             }
             description={
               <>
-                블록체인 네트워크에서 처리가 완료되면
+                {VERIFY_WALLET_TEXT.success.description[0]}
                 <br />
-                커뮤니티에서 게시글을 확인하실 수 있습니다.
+                {VERIFY_WALLET_TEXT.success.description[1]}
               </>
             }
             onConfirm={handleSuccessConfirm}
-            buttonLabel="확인"
+            buttonLabel={VERIFY_WALLET_TEXT.success.buttonLabel}
           />
         )}
       </div>
@@ -305,7 +298,7 @@ const VerifyWallet = () => {
         <CommonModal
           title={modal.title}
           desc={modal.desc}
-          confirmLabel="다시 시도하기"
+          confirmLabel={VERIFY_WALLET_TEXT.modal.retryButtonLabel}
           onConfirmClick={() => {
             setModal(null);
             setAuthPin("");
@@ -315,18 +308,18 @@ const VerifyWallet = () => {
 
       {postError && (
         <CommonModal
-          title="요청 실패"
+          title={VERIFY_WALLET_TEXT.modal.postErrorTitle}
           desc={postError}
-          confirmLabel="다시 시도하기"
+          confirmLabel={VERIFY_WALLET_TEXT.modal.retryButtonLabel}
           onConfirmClick={() => setPostError(null)}
         />
       )}
 
       {walletError && (
         <CommonModal
-          title="서명 실패"
+          title={VERIFY_WALLET_TEXT.modal.walletErrorTitle}
           desc={walletError}
-          confirmLabel="다시 시도하기"
+          confirmLabel={VERIFY_WALLET_TEXT.modal.retryButtonLabel}
           onConfirmClick={() => setWalletError(null)}
         />
       )}
