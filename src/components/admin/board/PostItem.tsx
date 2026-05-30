@@ -40,6 +40,9 @@ export const PostItem = ({
   };
 
   const isQuestion = post.category === ADMIN_TEXT.POST.BOARD_TYPE.QUESTION;
+  const visibleDiscussionCount = isQuestion
+    ? (post.answerCount ?? post.commentCount ?? post.comments.length)
+    : (post.commentCount ?? post.comments.length);
 
   return (
     <div
@@ -117,7 +120,7 @@ export const PostItem = ({
               <MessageSquare size={14} className="text-gray-400" />
             </div>
             <span className="text-[13px] font-black text-gray-600 tabular-nums">
-              {post.comments.length}
+              {visibleDiscussionCount}
             </span>
           </div>
           <div className="flex items-center gap-2 text-gray-400">

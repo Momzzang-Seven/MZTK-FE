@@ -105,8 +105,11 @@ const RegisterWallet = () => {
     };
   }, []);
   const finalizingRef = useRef(false);
+  const registrationInFlightRef = useRef(false);
 
   const validateMnemonic = () => {
+    if (registrationInFlightRef.current) return;
+
     try {
       const phrase = mnemonics.map((m) => m.trim().toLowerCase()).join(" ");
       const recoveredWallet = ethers.HDNodeWallet.fromPhrase(phrase);
@@ -121,6 +124,7 @@ const RegisterWallet = () => {
         setModal(messages.modal.sameWallet);
         return;
       }
+      registrationInFlightRef.current = true;
       setWallet(recoveredWallet);
       void startRegistration(recoveredWallet);
     } catch {
@@ -173,6 +177,8 @@ const RegisterWallet = () => {
       if (!isFlowAlive(myFlow)) return;
       // hook이 setError로 메시지 표시. 사용자에게 재시작 옵션 노출.
       setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+    } finally {
+      registrationInFlightRef.current = false;
     }
   };
 

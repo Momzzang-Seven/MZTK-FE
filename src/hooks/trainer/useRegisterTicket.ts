@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { EXERCISE_CATEGORIES } from "@constant";
 import {
   getTrainerStore,
+  imageService,
   registerTrainerClass,
   type MarketplaceClassCategory,
   type MarketplaceClassTimePayload,
@@ -54,6 +55,7 @@ export const useRegisterTicket = () => {
 
   const [step, setStep] = useState<RegisterStep>("photo");
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isCheckingStore, setIsCheckingStore] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -184,6 +186,7 @@ export const useRegisterTicket = () => {
       return;
     }
 
+    setImageFiles((prev) => [...prev, ...files]);
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -191,12 +194,14 @@ export const useRegisterTicket = () => {
       };
       reader.readAsDataURL(file);
     });
+    e.target.value = "";
   };
 
   const removeImage = (indexToRemove: number) => {
     setImagePreviews((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
+    setImageFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
   const triggerFileInput = () => {
@@ -270,6 +275,8 @@ export const useRegisterTicket = () => {
 
     try {
       setIsSubmitting(true);
+      const imageIds =
+        await imageService.uploadMarketplaceClassImages(imageFiles);
 
       await registerTrainerClass({
         title: formData.title.trim(),
@@ -282,6 +289,7 @@ export const useRegisterTicket = () => {
           .map((feature) => feature.trim())
           .filter(Boolean),
         personalItems: formData.supplies.trim() || null,
+        imageIds,
         classTimes,
       });
 

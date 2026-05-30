@@ -13,7 +13,13 @@ import {
   Loader2,
   Inbox,
   User,
+  Copy,
 } from "lucide-react";
+
+interface IssuedCredential {
+  loginId: string;
+  generatedPassword: string;
+}
 
 const AdminAccountManagement = () => {
   const {
@@ -27,22 +33,30 @@ const AdminAccountManagement = () => {
   const { openConfirm } = useConfirmModalStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newAccount, setNewAccount] = useState({ loginId: "", nickname: "" });
+  const [issuedCredential, setIssuedCredential] =
+    useState<IssuedCredential | null>(null);
 
   useEffect(() => {
     fetchAccounts();
   }, [fetchAccounts]);
 
   const handleAddAccount = async () => {
-    if (!newAccount.loginId || !newAccount.nickname) return;
     try {
-      await addAdminAccount(newAccount);
+      const result = await addAdminAccount();
       setShowAddModal(false);
-      setNewAccount({ loginId: "", nickname: "" });
+      setIssuedCredential(result);
       showSnackbar(ADMIN_TEXT.ACCOUNTS.MSG_CREATE_SUCCESS);
     } catch {
       showSnackbar(ADMIN_TEXT.ACCOUNTS.MSG_CREATE_FAILED);
     }
+  };
+
+  const handleCopyCredential = async () => {
+    if (!issuedCredential) return;
+    await navigator.clipboard.writeText(
+      `ID: ${issuedCredential.loginId}\nPassword: ${issuedCredential.generatedPassword}`
+    );
+    showSnackbar("Issued credential copied.");
   };
 
   const handleResetPassword = (userId: number) => {
@@ -52,7 +66,8 @@ const AdminAccountManagement = () => {
       variant: "warning",
       onConfirm: async () => {
         try {
-          await resetPassword(userId);
+          const result = await resetPassword(userId);
+          setIssuedCredential(result);
           showSnackbar(ADMIN_TEXT.ACCOUNTS.MSG_RESET_SUCCESS);
         } catch {
           showSnackbar(ADMIN_TEXT.ACCOUNTS.MSG_RESET_FAILED);
@@ -238,50 +253,15 @@ const AdminAccountManagement = () => {
                 {ADMIN_TEXT.ACCOUNTS.MODAL.TITLE}
               </h3>
               <p className="text-[13px] font-bold text-gray-400 mt-2">
-                새로운 관리자 권한을 부여합니다.
+                Login ID and password are issued by the backend.
               </p>
             </div>
 
-            <div className="space-y-6 mb-10">
-              <div className="group">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
-                  {ADMIN_TEXT.ACCOUNTS.MODAL.LABEL_ID}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center text-gray-400 group-focus-within:text-main transition-colors">
-                    <User size={16} />
-                  </div>
-                  <input
-                    type="text"
-                    className="w-full pl-12 pr-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:border-main focus:bg-white transition-all text-[15px] font-bold placeholder:text-gray-300"
-                    placeholder={ADMIN_TEXT.ACCOUNTS.MODAL.PLACEHOLDER_ID}
-                    value={newAccount.loginId}
-                    onChange={(e) =>
-                      setNewAccount({ ...newAccount, loginId: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="group">
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
-                  {ADMIN_TEXT.ACCOUNTS.MODAL.LABEL_NICKNAME}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center text-gray-400 group-focus-within:text-main transition-colors">
-                    <User size={16} />
-                  </div>
-                  <input
-                    type="text"
-                    className="w-full pl-12 pr-6 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:border-main focus:bg-white transition-all text-[15px] font-bold placeholder:text-gray-300"
-                    placeholder={ADMIN_TEXT.ACCOUNTS.MODAL.PLACEHOLDER_NICKNAME}
-                    value={newAccount.nickname}
-                    onChange={(e) =>
-                      setNewAccount({ ...newAccount, nickname: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
+            <div className="mb-10 rounded-2xl border border-orange-100 bg-orange-50/50 p-5 text-left">
+              <p className="text-[12px] font-bold text-orange-700 leading-relaxed">
+                Generated credentials are shown only once after creation. Share
+                them securely with the new admin.
+              </p>
             </div>
 
             <div className="flex gap-4">
@@ -297,6 +277,71 @@ const AdminAccountManagement = () => {
               >
                 <Plus size={18} strokeWidth={3} />
                 {ADMIN_TEXT.ACCOUNTS.MODAL.BTN_CREATE}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {issuedCredential && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[32px] p-10 w-full max-w-md shadow-[0_40px_100px_rgba(0,0,0,0.3)] relative">
+            <button
+              onClick={() => setIssuedCredential(null)}
+              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all"
+              aria-label="Close issued credential"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex flex-col items-center text-center mb-8">
+              <div className="w-16 h-16 bg-blue-50 rounded-[24px] flex items-center justify-center text-blue-600 mb-6">
+                <Key size={30} />
+              </div>
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+                Issued Admin Credential
+              </h3>
+              <p className="text-[13px] font-bold text-gray-400 mt-2">
+                This password is only visible in this response.
+              </p>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div>
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                  Login ID
+                </label>
+                <input
+                  readOnly
+                  value={issuedCredential.loginId}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                  Generated Password
+                </label>
+                <input
+                  readOnly
+                  value={issuedCredential.generatedPassword}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl font-mono font-bold text-gray-900"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIssuedCredential(null)}
+                className="flex-1 py-4 bg-gray-50 text-gray-500 rounded-[20px] font-black text-[13px] tracking-widest hover:bg-gray-100 transition-all uppercase"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => void handleCopyCredential()}
+                className="flex-1 py-4 bg-main text-white rounded-[20px] font-black text-[13px] tracking-widest shadow-lg shadow-main/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase flex items-center justify-center gap-2"
+              >
+                <Copy size={16} strokeWidth={3} />
+                Copy
               </button>
             </div>
           </div>

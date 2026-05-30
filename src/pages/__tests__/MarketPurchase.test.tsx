@@ -96,7 +96,10 @@ describe("MarketPurchase", () => {
     vi.clearAllMocks();
     mocks.getMarketplaceClassDetail.mockResolvedValue(detailResponse);
     mocks.getClassReservationInfo.mockResolvedValue(reservationInfoResponse);
-    mocks.createClassReservation.mockResolvedValue({});
+    mocks.createClassReservation.mockResolvedValue({
+      reservationId: 10,
+      status: "PENDING",
+    });
     mocks.useTokenBalance.mockReturnValue({ balance: "1000", loading: false });
   });
 
@@ -154,9 +157,24 @@ describe("MarketPurchase", () => {
         101,
         expect.objectContaining({
           slotId: 501,
-          signedAmount: 300,
+          reservationDate: "2026-05-18",
+          reservationTime: "10:00:00",
         })
       );
     });
+    const request = mocks.createClassReservation.mock.calls[0][1] as Record<
+      string,
+      unknown
+    >;
+    expect(request).toEqual(
+      expect.objectContaining({
+        idempotencyKey: expect.stringMatching(
+          /^reservation:101:501:2026-05-18:10:00:00:/
+        ),
+        signedAmount: "300",
+      })
+    );
+    expect(request).not.toHaveProperty("delegationSignature");
+    expect(request).not.toHaveProperty("executionSignature");
   });
 });

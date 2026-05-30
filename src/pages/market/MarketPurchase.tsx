@@ -27,13 +27,17 @@ const getMonthDateLabel = (date: string) => {
 
 const formatTime = (time: string) => time.slice(0, 5);
 
-const DEV_SIGNATURE_STUB = `0x${"0".repeat(130)}`;
-
-const getReservationSignatures = () => {
-  return {
-    delegationSignature: DEV_SIGNATURE_STUB,
-    executionSignature: DEV_SIGNATURE_STUB,
-  };
+const createReservationIdempotencyKey = (
+  classId: number,
+  slotId: number,
+  reservationDate: string,
+  reservationTime: string
+) => {
+  const nonce =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `reservation:${classId}:${slotId}:${reservationDate}:${reservationTime}:${nonce}`;
 };
 
 const MarketPurchase = () => {
@@ -157,16 +161,34 @@ const MarketPurchase = () => {
 
     try {
       setIsSubmitting(true);
-      const signatures = getReservationSignatures();
 
-      await createClassReservation(classId, {
+      const response = await createClassReservation(classId, {
         slotId: selectedTime.slotId,
         reservationDate: selectedDate.date,
         reservationTime: selectedTime.startTime,
         userRequest: requestMsg.trim() || undefined,
-        signedAmount: reservationInfo.priceAmount,
-        ...signatures,
+        idempotencyKey: createReservationIdempotencyKey(
+          classId,
+          selectedTime.slotId,
+          selectedDate.date,
+          selectedTime.startTime
+        ),
+        signedAmount: String(reservationInfo.priceAmount),
       });
+
+      if (response.web3) {
+        navigate(
+          `/verify-wallet/${response.web3.resource.type}/${response.reservationId}`,
+          {
+            state: {
+              intent: response.web3,
+              recoveryScope: "member",
+              returnTo: "/market/reservations",
+            },
+          }
+        );
+        return;
+      }
 
       // Show success modal
       setModalState({

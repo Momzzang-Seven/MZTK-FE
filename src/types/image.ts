@@ -2,6 +2,8 @@ export type ImageReferenceType =
   | "COMMUNITY_FREE"
   | "COMMUNITY_QUESTION"
   | "COMMUNITY_ANSWER"
+  | "MARKET_CLASS"
+  | "MARKET_STORE"
   | "WORKOUT";
 
 export interface UploadedImage {

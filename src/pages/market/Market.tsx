@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MARKET_TEXT } from "@constant";
 import { useTokenBalance } from "@hooks";
@@ -54,30 +54,85 @@ const matchesCategoryTab = (category: string, activeTab: string) => {
   return formatCategory(category).includes(activeTab);
 };
 
+const getCategoryParam = (activeTab: string) => {
+  if (activeTab === MARKET_TEXT.TABS.PT) return "PT";
+  if (activeTab === MARKET_TEXT.TABS.PILATES) return "PILATES";
+  if (activeTab === MARKET_TEXT.TABS.YOGA) return "YOGA";
+  if (activeTab === MARKET_TEXT.TABS.CROSSFIT) return "CROSSFIT";
+  return undefined;
+};
+
+const mergeUniqueClasses = (items: MarketClassItem[]) =>
+  Array.from(new Map(items.map((item) => [item.classId, item])).values());
+
 const Market = () => {
   const gymLocation = useUserStore((state) => state.gymLocation);
   const { balance } = useTokenBalance();
   const [activeTab, setActiveTab] = useState(MARKET_TEXT.TABS.ALL);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [classes, setClasses] = useState<MarketClassItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingNext, setIsFetchingNext] = useState(false);
   const [loadError, setLoadError] = useState("");
   const navigate = useNavigate();
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pageScrollRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const requestSeqRef = useRef(0);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  const buildParams = useCallback(
+    (page: number) => ({
+      lat: gymLocation?.lat,
+      lng: gymLocation?.lng,
+      category: getCategoryParam(activeTab),
+      keyword: debouncedSearchQuery || undefined,
+      page,
+    }),
+    [activeTab, debouncedSearchQuery, gymLocation?.lat, gymLocation?.lng]
+  );
 
   useEffect(() => {
     let isMounted = true;
+    const requestSeq = requestSeqRef.current + 1;
+    requestSeqRef.current = requestSeq;
+
     const loadClasses = async () => {
       try {
         setIsLoading(true);
-        const response = await getMarketClasses({
-          lat: gymLocation?.lat,
-          lng: gymLocation?.lng,
-          page: 0,
-        });
+        const response = await getMarketClasses(buildParams(0));
+        let nextClasses = response.items ?? [];
+        let lastLoadedPage = response.currentPage ?? 0;
+        const nextTotalPages = response.totalPages ?? 0;
+
+        if (debouncedSearchQuery && nextTotalPages > 1) {
+          for (
+            let page = lastLoadedPage + 1;
+            page < nextTotalPages;
+            page += 1
+          ) {
+            const nextResponse = await getMarketClasses(buildParams(page));
+            if (!isMounted || requestSeqRef.current !== requestSeq) return;
+            nextClasses = nextClasses.concat(nextResponse.items ?? []);
+            lastLoadedPage = nextResponse.currentPage ?? page;
+          }
+        }
+
         if (isMounted) {
-          setClasses(response.items ?? []);
+          setClasses(mergeUniqueClasses(nextClasses));
+          setCurrentPage(lastLoadedPage);
+          setTotalPages(nextTotalPages);
           setLoadError("");
         }
       } catch {
@@ -90,25 +145,79 @@ const Market = () => {
     return () => {
       isMounted = false;
     };
-  }, [gymLocation?.lat, gymLocation?.lng]);
+  }, [buildParams, debouncedSearchQuery]);
 
-  const filteredClasses = classes
-    .filter((cls) => {
-      const matchesTab = matchesCategoryTab(cls.category, activeTab);
-      const normalizedQuery = searchQuery.trim().toLowerCase();
-      const tags = cls.tags ?? [];
-      return (
-        matchesTab &&
-        (normalizedQuery.length === 0 ||
-          cls.title.toLowerCase().includes(normalizedQuery) ||
-          tags.some((tag) => tag.toLowerCase().includes(normalizedQuery)))
+  const hasNextPage =
+    !debouncedSearchQuery && totalPages > 0 && currentPage + 1 < totalPages;
+
+  const loadNextPage = useCallback(async () => {
+    if (isLoading || isFetchingNext || !hasNextPage) return;
+
+    try {
+      setIsFetchingNext(true);
+      const response = await getMarketClasses(buildParams(currentPage + 1));
+      setClasses((prev) =>
+        mergeUniqueClasses(prev.concat(response.items ?? []))
       );
-    })
-    .sort((a, b) => (a.distance ?? 999999) - (b.distance ?? 999999));
+      setCurrentPage(response.currentPage ?? currentPage + 1);
+      setTotalPages(response.totalPages ?? totalPages);
+      setLoadError("");
+    } catch {
+      setLoadError("클래스 목록을 더 불러오지 못했습니다.");
+    } finally {
+      setIsFetchingNext(false);
+    }
+  }, [
+    buildParams,
+    currentPage,
+    hasNextPage,
+    isFetchingNext,
+    isLoading,
+    totalPages,
+  ]);
+
+  useEffect(() => {
+    if (!hasNextPage) return;
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          void loadNextPage();
+        }
+      },
+      {
+        root: pageScrollRef.current,
+        rootMargin: "240px 0px",
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasNextPage, loadNextPage]);
+
+  const filteredClasses = useMemo(
+    () =>
+      classes
+        .filter((cls) => {
+          const matchesTab = matchesCategoryTab(cls.category, activeTab);
+          const normalizedQuery = debouncedSearchQuery.toLowerCase();
+          const tags = cls.tags ?? [];
+          return (
+            matchesTab &&
+            (normalizedQuery.length === 0 ||
+              cls.title.toLowerCase().includes(normalizedQuery) ||
+              tags.some((tag) => tag.toLowerCase().includes(normalizedQuery)))
+          );
+        })
+        .sort((a, b) => (a.distance ?? 999999) - (b.distance ?? 999999)),
+    [activeTab, classes, debouncedSearchQuery]
+  );
 
   return (
     <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh">
-      <div className="flex-1 overflow-y-auto pb-32">
+      <div ref={pageScrollRef} className="flex-1 overflow-y-auto pb-32">
         {/* Luxury Hero Header */}
         <div className="relative px-6 pt-14 pb-12 overflow-hidden">
           {/* Decorative background gradients */}
@@ -335,6 +444,20 @@ const Market = () => {
                 <br />
                 카테고리를 변경해 보세요.
               </p>
+            </div>
+          )}
+
+          {(hasNextPage || isFetchingNext) && (
+            <div
+              ref={loadMoreRef}
+              className="min-h-16 flex items-center justify-center pb-4"
+            >
+              {isFetchingNext && (
+                <div className="flex items-center gap-3 text-[12px] font-black text-gray-300">
+                  <div className="w-5 h-5 border-2 border-main/20 border-t-main rounded-full animate-spin" />
+                  클래스 더 불러오는 중...
+                </div>
+              )}
             </div>
           )}
         </div>

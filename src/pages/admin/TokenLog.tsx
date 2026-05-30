@@ -12,6 +12,7 @@ import {
   LayoutList,
 } from "lucide-react";
 import { getNetworkConfig } from "@utils";
+import { fetchTokenTransfers } from "@services";
 
 interface TokenLogItem {
   hash: string;
@@ -23,30 +24,31 @@ interface TokenLogItem {
   tokenDecimal: string;
 }
 
-const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
-
 const TokenLog = () => {
   const navigate = useNavigate();
   const [logs, setLogs] = useState<TokenLogItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("ALL");
 
-  const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL, EXPLORER_TX_URL } =
-    getNetworkConfig();
-  const MONITOR_ADDRESS = import.meta.env.VITE_MONITOR_TARGET_ADDRESS;
+  const { EXPLORER_TX_URL } = getNetworkConfig();
+  const MONITOR_ADDRESS =
+    import.meta.env.VITE_MONITOR_TARGET_ADDRESS ||
+    import.meta.env.VITE_ADMIN_ADDRESS;
 
   useEffect(() => {
-    // address 파라미터 없이는 Etherscan이 결과를 반환하지 않으므로 필수
     if (!MONITOR_ADDRESS) return;
-    fetch(
-      `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&address=${MONITOR_ADDRESS}&page=1&offset=100&sort=desc&apikey=${ETHERSCAN_API_KEY}`
-    )
-      .then((res) => res.json())
+    let cancelled = false;
+
+    fetchTokenTransfers(MONITOR_ADDRESS, 100)
       .then((data) => {
-        if (data.status === "1") setLogs(data.result);
+        if (!cancelled) setLogs(data);
       })
       .catch(console.error);
-  }, [TOKEN_ADDRESS, CHAIN_ID, MONITOR_ADDRESS, ETHERSCAN_URL]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [MONITOR_ADDRESS]);
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
