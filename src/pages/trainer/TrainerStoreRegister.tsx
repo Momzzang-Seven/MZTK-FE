@@ -288,6 +288,7 @@ const TrainerStoreRegister = () => {
     phone.trim() &&
     isValidKoreanPhoneNumber(phone) &&
     coordinates;
+  const isPhoneInvalid = phone.trim() && !isValidKoreanPhoneNumber(phone);
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-[#F9FAFB]">
@@ -341,6 +342,11 @@ const TrainerStoreRegister = () => {
                   maxLength={13}
                   className="w-full h-[56px] rounded-2xl bg-white border border-gray-100 px-5 text-[15px] font-bold text-gray-900 outline-none focus:border-main focus:ring-4 focus:ring-main/5 transition-all shadow-sm"
                 />
+                {isPhoneInvalid ? (
+                  <p className="text-[11px] text-red-400 font-bold ml-1 leading-tight">
+                    Please enter a complete Korean phone number.
+                  </p>
+                ) : null}
               </div>
             </section>
 

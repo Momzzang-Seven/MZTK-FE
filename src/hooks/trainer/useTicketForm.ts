@@ -5,6 +5,7 @@ import { EXERCISE_CATEGORIES } from "@constant";
 import {
   getMarketplaceClassDetail,
   getTrainerStore,
+  imageService,
   registerTrainerClass,
   updateTrainerClass,
   type MarketplaceClassCategory,
@@ -88,6 +89,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingSlotIds, setExistingSlotIds] = useState<
     Record<string, number>
   >({});
@@ -276,6 +278,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       return;
     }
 
+    setImageFiles((prev) => [...prev, ...files]);
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -283,12 +286,18 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       };
       reader.readAsDataURL(file);
     });
+    e.target.value = "";
   };
 
   const removeImage = (indexToRemove: number) => {
     setImagePreviews((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
+    if (mode === "create") {
+      setImageFiles((prev) =>
+        prev.filter((_, index) => index !== indexToRemove)
+      );
+    }
   };
 
   const triggerFileInput = () => {
@@ -344,6 +353,10 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
 
     try {
       setIsSubmitting(true);
+      const imageIds =
+        mode === "create"
+          ? await imageService.uploadMarketplaceClassImages(imageFiles)
+          : undefined;
 
       if (mode === "edit") {
         const classId = Number(id);
@@ -358,6 +371,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
             .map((feature) => feature.trim())
             .filter(Boolean),
           personalItems: formData.supplies.trim() || null,
+          imageIds,
           classTimes,
         });
       } else {
@@ -372,6 +386,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
             .map((feature) => feature.trim())
             .filter(Boolean),
           personalItems: formData.supplies.trim() || null,
+          imageIds,
           classTimes,
         });
       }

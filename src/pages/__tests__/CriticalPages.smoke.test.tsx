@@ -186,6 +186,9 @@ vi.mock("@services", () => ({
   approveTrainerReservation: mockApproveTrainerReservation,
   rejectTrainerReservation: mockRejectTrainerReservation,
   getTrainerClasses: mockGetTrainerClasses,
+  imageService: {
+    uploadMarketplaceClassImages: vi.fn().mockResolvedValue([]),
+  },
 }));
 
 vi.mock("@hooks", () => ({

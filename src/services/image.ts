@@ -126,4 +126,32 @@ export const imageService = {
   async uploadFileToPresignedUrl(url: string, file: File): Promise<void> {
     await imageService.uploadImageToS3(url, file);
   },
+
+  async uploadMarketplaceClassImages(files: File[]): Promise<number[]> {
+    if (files.length === 0) return [];
+
+    const presignedResponse = await imageService.issuePresignedUrls({
+      referenceType: "MARKET_CLASS",
+      images: files.map((file) => file.name),
+    });
+    const uploadTargets = presignedResponse.items ?? [];
+
+    if (uploadTargets.length !== files.length) {
+      throw new Error("클래스 이미지 업로드 URL을 발급받지 못했습니다.");
+    }
+
+    await Promise.all(
+      uploadTargets.map((target, index) => {
+        const file = files[index];
+        if (!file) {
+          throw new Error("클래스 이미지 파일 정보를 찾지 못했습니다.");
+        }
+        return imageService.uploadFileToPresignedUrl(target.presignedUrl, file);
+      })
+    );
+
+    const imageIds = uploadTargets.map((target) => target.imageId);
+    await imageService.confirmImageUpload(imageIds);
+    return imageIds;
+  },
 };

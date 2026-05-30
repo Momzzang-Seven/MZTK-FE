@@ -21,6 +21,7 @@ import type {
   ReservationSummary,
   ReservationTime,
 } from "@services";
+import type { Web3Execution } from "@types";
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat("ko-KR", {
@@ -188,6 +189,25 @@ const MarketReservation = () => {
     });
   };
 
+  const openReservationWeb3 = (
+    intent: Web3Execution,
+    reservationId: number
+  ) => {
+    navigate(`/verify-wallet/${intent.resource.type}/${reservationId}`, {
+      state: {
+        intent,
+        recoveryScope: "member",
+        returnTo: "/market/reservations",
+      },
+    });
+  };
+
+  const isWeb3Signable = (intent?: Web3Execution | null) =>
+    !!intent &&
+    intent.executionIntent.status === "AWAITING_SIGNATURE" &&
+    intent.retryAllowed !== false &&
+    intent.recoveryStatus !== "ONCHAIN_UNCERTAIN";
+
   const handleDetailClick = async (reservationId: number) => {
     try {
       const detail = await getReservationDetail(reservationId);
@@ -209,7 +229,11 @@ const MarketReservation = () => {
         closeModal();
         try {
           setIsMutating(true);
-          await cancelMyReservation(reservationId);
+          const response = await cancelMyReservation(reservationId);
+          if (response.web3) {
+            openReservationWeb3(response.web3, response.reservationId);
+            return;
+          }
           await loadReservations();
           openAlert(
             "취소 완료",
@@ -237,7 +261,11 @@ const MarketReservation = () => {
         closeModal();
         try {
           setIsMutating(true);
-          await completeMyReservation(reservationId);
+          const response = await completeMyReservation(reservationId);
+          if (response.web3) {
+            openReservationWeb3(response.web3, response.reservationId);
+            return;
+          }
           await loadReservations();
           openAlert("처리 완료", "수업 완료가 확인되었습니다.", "success");
         } catch {
@@ -409,6 +437,19 @@ const MarketReservation = () => {
                   {/* Actions */}
                   <div className="flex flex-col gap-3 pt-5 border-t border-gray-50">
                     {isWeb3Blocked && <Web3PendingNotice />}
+                    {isWeb3Signable(item.web3Execution) && (
+                      <button
+                        onClick={() =>
+                          openReservationWeb3(
+                            item.web3Execution as Web3Execution,
+                            item.reservationId
+                          )
+                        }
+                        className="w-full h-12 bg-main text-white rounded-xl text-[13px] font-black transition-all active:scale-95"
+                      >
+                        블록체인 서명 계속하기
+                      </button>
+                    )}
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleDetailClick(item.reservationId)}

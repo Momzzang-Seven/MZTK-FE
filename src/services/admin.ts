@@ -14,7 +14,7 @@ import type {
   AdminCommentQuery,
   AdminCommentDto,
   AdminAccountDto,
-  CreateAdminAccountRequest,
+  CreateAdminAccountResponse,
   ListAdminAccountsResponse,
   QnARefundReviewResponse,
   QnASettlementReviewResponse,
@@ -22,6 +22,10 @@ import type {
   TreasuryKeyDto,
   ProvisionKeyRequest,
   ChangeAdminPasswordRequest,
+  ResetAdminPasswordResponse,
+  MarkTransactionSucceededRequest,
+  MarkTransactionSucceededResponse,
+  SponsorNonceSlotsResponse,
 } from "@types";
 
 interface BaseResponse<T> {
@@ -99,6 +103,17 @@ export const banAdminPost = async (
   return res.data.data;
 };
 
+export const unblockAdminPost = async (
+  postId: number,
+  data: BanRequest
+): Promise<BanResponse> => {
+  const res = await api.post<BaseResponse<BanResponse>>(
+    `/admin/boards/posts/${postId}/unblock`,
+    data
+  );
+  return res.data.data;
+};
+
 export const banAdminComment = async (
   commentId: number,
   data: BanRequest
@@ -117,23 +132,47 @@ export const fetchAdminAccounts = async (): Promise<AdminAccountDto[]> => {
   return res.data.data.admins;
 };
 
-export const createAdminAccount = async (
-  data: CreateAdminAccountRequest
-): Promise<AdminAccountDto> => {
-  const res = await api.post<BaseResponse<AdminAccountDto>>(
-    "/admin/accounts",
+export const createAdminAccount =
+  async (): Promise<CreateAdminAccountResponse> => {
+    const res =
+      await api.post<BaseResponse<CreateAdminAccountResponse>>(
+        "/admin/accounts"
+      );
+    return res.data.data;
+  };
+
+export const resetAdminPassword = async (
+  userId: number
+): Promise<ResetAdminPasswordResponse> => {
+  const res = await api.post<BaseResponse<ResetAdminPasswordResponse>>(
+    `/admin/accounts/${userId}/password/reset`
+  );
+  return res.data.data;
+};
+
+// transaction-controller
+export const markTransactionSucceeded = async (
+  txId: number,
+  data: MarkTransactionSucceededRequest
+): Promise<MarkTransactionSucceededResponse> => {
+  const res = await api.post<BaseResponse<MarkTransactionSucceededResponse>>(
+    `/admin/web3/transactions/${txId}/mark-succeeded`,
     data
   );
   return res.data.data;
 };
 
-export const resetAdminPassword = async (userId: number): Promise<void> => {
-  await api.post(`/admin/accounts/${userId}/password/reset`);
-};
-
-// transaction-controller
-export const markTransactionSucceeded = async (txId: number): Promise<void> => {
-  await api.post(`/admin/web3/transactions/${txId}/mark-succeeded`);
+export const fetchSponsorNonceSlots = async (params: {
+  chainId: number;
+  fromAddress: string;
+  page?: number;
+  size?: number;
+}): Promise<SponsorNonceSlotsResponse> => {
+  const res = await api.get<BaseResponse<SponsorNonceSlotsResponse>>(
+    "/admin/web3/nonce-slots",
+    { params }
+  );
+  return res.data.data;
 };
 
 // qna-admin-escrow-controller
@@ -178,8 +217,12 @@ export const processQnASettle = async (
 // treasury-key-controller
 export const provisionTreasuryKey = async (
   data: ProvisionKeyRequest
-): Promise<void> => {
-  await api.post("/admin/web3/treasury-keys/provision", data);
+): Promise<TreasuryKeyDto> => {
+  const res = await api.post<BaseResponse<TreasuryKeyDto>>(
+    "/admin/web3/treasury-keys/provision",
+    data
+  );
+  return res.data.data;
 };
 
 export const disableTreasuryKey = async (
