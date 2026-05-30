@@ -16,6 +16,10 @@ import {
   fetchQnASettlementReview,
   processQnARefund,
   processQnASettle,
+  fetchMarketplaceRefundReview,
+  fetchMarketplaceSettlementReview,
+  processMarketplaceRefund,
+  processMarketplaceSettle,
   provisionTreasuryKey,
   disableTreasuryKey,
   archiveTreasuryKey,
@@ -38,6 +42,10 @@ import type {
   MarkTransactionSucceededResponse,
   ResetAdminPasswordResponse,
   AdminUserQuery,
+  MarketplaceAdminEscrowReviewResponse,
+  MarketplaceAdminExecutionResponse,
+  MarketplaceAdminRefundRequest,
+  MarketplaceAdminSettlementRequest,
 } from "@types";
 
 export interface AdminUser {
@@ -178,6 +186,20 @@ interface AdminState {
     postId: number,
     answerId: number
   ) => Promise<Web3ActionResponse>;
+  getMarketplaceRefundReview: (
+    reservationId: number
+  ) => Promise<MarketplaceAdminEscrowReviewResponse>;
+  getMarketplaceSettlementReview: (
+    reservationId: number
+  ) => Promise<MarketplaceAdminEscrowReviewResponse>;
+  executeMarketplaceRefund: (
+    reservationId: number,
+    data: MarketplaceAdminRefundRequest
+  ) => Promise<MarketplaceAdminExecutionResponse>;
+  executeMarketplaceSettle: (
+    reservationId: number,
+    data: MarketplaceAdminSettlementRequest
+  ) => Promise<MarketplaceAdminExecutionResponse>;
 
   // Treasury & Recovery
   treasuryKeys: TreasuryKeyDto[];
@@ -688,6 +710,28 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   executeSettle: async (postId: number, answerId: number) => {
     return await processQnASettle(postId, answerId);
+  },
+
+  getMarketplaceRefundReview: async (reservationId: number) => {
+    return await fetchMarketplaceRefundReview(reservationId);
+  },
+
+  getMarketplaceSettlementReview: async (reservationId: number) => {
+    return await fetchMarketplaceSettlementReview(reservationId);
+  },
+
+  executeMarketplaceRefund: async (
+    reservationId: number,
+    data: MarketplaceAdminRefundRequest
+  ) => {
+    return await processMarketplaceRefund(reservationId, data);
+  },
+
+  executeMarketplaceSettle: async (
+    reservationId: number,
+    data: MarketplaceAdminSettlementRequest
+  ) => {
+    return await processMarketplaceSettle(reservationId, data);
   },
 
   // Treasury & Recovery

@@ -202,6 +202,109 @@ export interface Web3ActionResponse {
   txHash?: string;
 }
 
+export type MarketplaceAdminRefundReason =
+  | "TRAINER_TIMEOUT"
+  | "SESSION_START_WINDOW_TIMEOUT"
+  | "ADMIN_MANUAL_REFUND";
+
+export type MarketplaceAdminSettlementReason =
+  | "BUYER_CONFIRMATION_TIMEOUT"
+  | "ADMIN_MANUAL_SETTLE";
+
+export interface MarketplaceAdminRefundRequest {
+  reasonCode: MarketplaceAdminRefundReason;
+  memo: string;
+  confirmManualRefund: boolean;
+}
+
+export interface MarketplaceAdminSettlementRequest {
+  reasonCode: MarketplaceAdminSettlementReason;
+  memo: string;
+  confirmEarlySettle: boolean;
+}
+
+export interface MarketplaceAdminValidationItem {
+  code: string;
+  severity: string;
+  message: string;
+  blocking: boolean;
+}
+
+export interface MarketplaceAdminReasonOption {
+  reasonCode: MarketplaceAdminRefundReason | MarketplaceAdminSettlementReason;
+  processable: boolean;
+  blockingCode: string | null;
+  requiresConfirmation: boolean;
+  confirmationType: string | null;
+  requiredAuthority: string | null;
+  authoritySatisfied: boolean;
+  displayCode: string | null;
+  resultPreview: {
+    targetReservationStatus: string;
+    targetEscrowStatus: string;
+    resolvedBy: string;
+    terminalReasonCode: string;
+  } | null;
+  validationItems: MarketplaceAdminValidationItem[];
+}
+
+export interface MarketplaceAdminEscrowReviewResponse {
+  reservationId: number;
+  processable: boolean;
+  baseBlockingCode: string | null;
+  blockingReason: string | null;
+  reservationStatus: string;
+  escrowStatus: string;
+  reviewedAt: string;
+  chainCheckedAt: string | null;
+  reservationVersion: number | null;
+  adminExecutionPhase: string | null;
+  nextPollAfterMs: number | null;
+  pollingEndpoint: string | null;
+  txHash: string | null;
+  activeExecution: MarketplaceAdminExecutionAttempt | null;
+  lastAttempt: MarketplaceAdminExecutionAttempt | null;
+  baseValidationItems: MarketplaceAdminValidationItem[];
+  reasonOptions: MarketplaceAdminReasonOption[];
+}
+
+export interface MarketplaceAdminExecutionAttempt {
+  actionStateId: number | null;
+  attemptStatus: string | null;
+  failureStage: string | null;
+  executionIntentId: string | null;
+  executionStatus: string | null;
+  adminExecutionPhase: string | null;
+  txHash: string | null;
+  failureReason: string | null;
+  errorCode: string | null;
+  evidenceErrorCode: string | null;
+  retryable: boolean | null;
+  finishedAt: string | null;
+}
+
+export interface MarketplaceAdminExecutionResponse {
+  reservationId: number;
+  actionType: string;
+  orderKey: string;
+  reservationStatus: string;
+  escrowStatus: string;
+  executionIntent: {
+    id: string;
+    status: string;
+    expiresAt: string;
+  } | null;
+  execution: {
+    mode: string;
+    requiresUserSignature: boolean;
+    authorityModel: string;
+  } | null;
+  adminExecutionPhase: string | null;
+  nextPollAfterMs: number | null;
+  pollingEndpoint: string | null;
+  existing: boolean;
+}
+
 // treasury-key-controller
 export interface TreasuryKeyDto {
   walletAlias: string;

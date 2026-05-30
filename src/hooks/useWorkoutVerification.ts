@@ -111,31 +111,48 @@ export const useWorkoutVerification = ({
             });
 
       void verificationRequest
-        .then((result) => {
+        .then(async (result) => {
+          const detail = await verificationService
+            .getVerificationDetail(result.verificationId)
+            .catch(() => null);
+          const latestResult = detail
+            ? {
+                ...result,
+                verificationStatus: detail.verificationStatus,
+                rewardStatus: detail.rewardStatus,
+                exerciseDate: detail.exerciseDate,
+                rejectionReasonCode: detail.rejectionReasonCode,
+                rejectionReasonDetail: detail.rejectionReasonDetail,
+                failureCode: detail.failureCode,
+              }
+            : result;
+
           if (
-            result.verificationStatus === "VERIFIED" &&
-            result.rewardStatus === "SUCCEEDED"
+            latestResult.verificationStatus === "VERIFIED" &&
+            latestResult.rewardStatus === "SUCCEEDED"
           ) {
             applyWorkoutVerificationSuccess({
               mode,
               grantedXp: result.grantedXp,
-              exerciseDate: result.exerciseDate,
+              exerciseDate: latestResult.exerciseDate,
             });
             setSuccessData({
               grantedXp: result.grantedXp || 100,
-              exerciseDate: result.exerciseDate || "",
+              exerciseDate: latestResult.exerciseDate || "",
             });
             return;
           }
 
           if (
-            result.verificationStatus === "REJECTED" ||
-            result.verificationStatus === "FAILED" ||
-            (result.verificationStatus === "VERIFIED" &&
-              result.rewardStatus === "FAILED")
+            latestResult.verificationStatus === "REJECTED" ||
+            latestResult.verificationStatus === "FAILED" ||
+            (latestResult.verificationStatus === "VERIFIED" &&
+              latestResult.rewardStatus === "FAILED")
           ) {
             finishAnalysis();
-            showSnackbar(getWorkoutVerificationErrorMessage(mode, result));
+            showSnackbar(
+              getWorkoutVerificationErrorMessage(mode, latestResult)
+            );
           }
         })
         .catch((error) => {

@@ -325,3 +325,88 @@ pnpm exec playwright test -c playwright.qa-real-be.config.ts --project=chromium 
 - Recovery classification: `blocked-local-env-restart` resolved.
 - The same selected flows remained covered: QA-010 reservation create plus follow-up reservation list read, QA-011 trainer store request with no `/trainer/status`, QA-014 admin users request, QA-015 admin board ban/unblock restore response, and QA-016 admin Web3 treasury keys request.
 - Secret scan after this latest recovery doc update at `2026-05-30 01:24 KST` returned known false positives only and found no credential, token, cookie, private key value, mnemonic value, or raw storageState artifact.
+
+## Planned Smoke Extension - Admin Marketplace Escrow Review
+
+Add this to the next real-BE/DB smoke pass after the FE `/admin/web3` marketplace escrow panel is available:
+
+- QA-017 admin marketplace escrow review reaches `GET /admin/web3/marketplace/reservations/{reservationId}/refund-review`.
+- QA-018 admin marketplace escrow review reaches `GET /admin/web3/marketplace/reservations/{reservationId}/settlement-review`.
+
+Pass criteria:
+
+- use an admin token and an existing marketplace reservation fixture ID.
+- browser sends the two review requests from `/admin/web3`.
+- BE returns `2xx` response envelopes with `reservationId`, `processable`, `baseValidationItems`, `reasonOptions`, `activeExecution`, and `lastAttempt` fields.
+- if the response is not processable, the FE execution button stays disabled.
+- if a processable reason is selected, the FE sends one of the BE enum reason codes unchanged when testing refund or settlement execution in a non-on-chain local fixture.
+
+## Admin Marketplace Escrow Smoke - 2026-05-30 19:02 KST
+
+Current status: `admin_marketplace_escrow_review_smoke_pass`.
+
+Local services verified:
+
+- BE: `http://localhost:8080`
+- FE dev server: `http://localhost:3000`
+- Postgres container: `mztk-postgres`
+
+Fixture setup:
+
+- Used an existing local marketplace reservation fixture: `reservationId=11`.
+- Created a disposable LOCAL_ADMIN account directly in the local DB for the smoke run.
+- Removed the disposable admin account, refresh tokens, and related local user rows after the run.
+- No raw token, cookie, password value, private key, mnemonic, or storageState artifact was written to this document.
+
+API-level result:
+
+- `GET /admin/web3/marketplace/reservations/11/refund-review` returned `2xx`, envelope `SUCCESS`, `reservationId=11`, `processable=false`, `reasonOptions=3`, `baseValidationItems=5`.
+- `GET /admin/web3/marketplace/reservations/11/settlement-review` returned `2xx`, envelope `SUCCESS`, `reservationId=11`, `processable=false`, `reasonOptions=2`, `baseValidationItems=5`.
+- Both review responses were blocked with `blockingReason=INVALID_LOCAL_STATUS`, which is expected for the selected local fixture state.
+
+FE screen result:
+
+- Navigated to `/admin/web3`.
+- Entered reservation ID `11`.
+- Clicking `Load Review` sent the refund review request through the FE dev proxy.
+- Switching to settlement review and clicking `Load Review` sent the settlement review request through the FE dev proxy.
+- Both responses returned HTTP `200` with envelope `SUCCESS`.
+- Because both responses were `processable=false`, the FE kept `Execute Refund` and `Execute Settlement` disabled.
+
+Scope note:
+
+- This proves the FE `/admin/web3` review UI reaches real local BE and DB through the Vite proxy.
+- This does not prove actual refund/settlement execution, signer flow, relayer execution, on-chain state, or explorer indexing because the local reservation fixture was not processable.
+
+## Admin Marketplace Escrow Visual Smoke - 2026-05-30 19:12 KST
+
+Current status: `admin_marketplace_escrow_visual_smoke_pass`.
+
+What was verified:
+
+- Started local Postgres, BE, and FE dev server.
+- Logged in through the real `/admin` UI using a disposable LOCAL_ADMIN account.
+- Navigated to `/admin/web3`.
+- Entered existing local reservation fixture ID `11`.
+- Clicked `Load Review` for refund review and settlement review.
+- Captured the rendered admin screen after each review.
+
+Captured real FE -> Vite proxy -> BE requests:
+
+- `GET /admin/web3/marketplace/reservations/11/refund-review` returned HTTP `200`, envelope `SUCCESS`, `processable=false`, `blockingReason=INVALID_LOCAL_STATUS`, `reasonOptions=3`, `baseValidationItems=5`.
+- `GET /admin/web3/marketplace/reservations/11/settlement-review` returned HTTP `200`, envelope `SUCCESS`, `processable=false`, `blockingReason=INVALID_LOCAL_STATUS`, `reasonOptions=2`, `baseValidationItems=5`.
+
+Visual result:
+
+- The `Marketplace Reservation Escrow` panel rendered inside `/admin/web3`.
+- The reservation ID input retained `11`.
+- Refund mode showed `Execute Refund` disabled.
+- Settlement mode showed `Execute Settlement` disabled.
+- Both modes displayed `INVALID_LOCAL_STATUS` and the blocking validation list.
+- Screenshots were saved locally under `output/qa-visual-smoke/admin-web3-escrow-20260530-visual/`.
+
+Cleanup:
+
+- Removed the disposable LOCAL_ADMIN account and related refresh/user rows after the run.
+- Removed temporary smoke runner and hash utility files.
+- Stopped the FE/BE processes started for the visual smoke.

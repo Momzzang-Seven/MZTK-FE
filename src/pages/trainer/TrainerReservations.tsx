@@ -228,7 +228,9 @@ const TrainerReservations = () => {
 
   const isWeb3Signable = (intent?: Web3Execution | null) =>
     !!intent &&
-    intent.executionIntent.status === "AWAITING_SIGNATURE" &&
+    (intent.executionIntent.status === "AWAITING_SIGNATURE" ||
+      intent.viewerCanExecute === true ||
+      intent.viewerCanRecover === true) &&
     intent.retryAllowed !== false &&
     intent.recoveryStatus !== "ONCHAIN_UNCERTAIN";
 

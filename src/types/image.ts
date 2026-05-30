@@ -21,3 +21,27 @@ export interface PresignedUrlResponse {
   tmpObjectKey: string;
   presignedUrl: string;
 }
+
+export interface GetImagesByIdsRequest {
+  ids: number[];
+  referenceType: ImageReferenceType;
+  referenceId: number;
+}
+
+export type ImageMetadataStatus =
+  | "PENDING"
+  | "COMPLETED"
+  | "FAILED"
+  | "NOT_FOUND";
+
+export interface ImageMetadata {
+  imageId: number;
+  userId: number;
+  referenceType: ImageReferenceType;
+  referenceId: number;
+  status: ImageMetadataStatus;
+  imageUrl: string | null;
+  imgOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}

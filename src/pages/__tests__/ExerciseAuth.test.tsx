@@ -13,6 +13,7 @@ const {
   mockStartAnalysis,
   mockUploadFileToPresignedUrl,
   mockSubmitWorkoutPhoto,
+  mockGetVerificationDetail,
 } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
   mockApplyWorkoutVerificationSuccess: vi.fn(),
@@ -22,6 +23,7 @@ const {
   mockStartAnalysis: vi.fn(),
   mockUploadFileToPresignedUrl: vi.fn(),
   mockSubmitWorkoutPhoto: vi.fn(),
+  mockGetVerificationDetail: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -53,6 +55,7 @@ vi.mock("@services/verification", () => ({
     submitWorkoutPhoto: mockSubmitWorkoutPhoto,
     submitWorkoutRecord: vi.fn(),
     getTodayWorkoutCompletion: vi.fn(),
+    getVerificationDetail: mockGetVerificationDetail,
   },
 }));
 
@@ -60,6 +63,42 @@ describe("ExerciseAuth Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.URL.createObjectURL = vi.fn(() => "mock-url");
+    mockGetVerificationDetail.mockImplementation((verificationId: string) => {
+      if (verificationId === "verification-2") {
+        return Promise.resolve({
+          verificationId,
+          verificationKind: "WORKOUT_PHOTO",
+          verificationStatus: "REJECTED",
+          rewardStatus: "NOT_REQUESTED",
+          exerciseDate: null,
+          rejectionReasonCode: "SCREEN_OR_UI",
+          rejectionReasonDetail: null,
+          failureCode: null,
+        });
+      }
+      if (verificationId === "verification-pending") {
+        return Promise.resolve({
+          verificationId,
+          verificationKind: "WORKOUT_PHOTO",
+          verificationStatus: "VERIFIED",
+          rewardStatus: "PENDING",
+          exerciseDate: null,
+          rejectionReasonCode: null,
+          rejectionReasonDetail: null,
+          failureCode: null,
+        });
+      }
+      return Promise.resolve({
+        verificationId,
+        verificationKind: "WORKOUT_PHOTO",
+        verificationStatus: "VERIFIED",
+        rewardStatus: "SUCCEEDED",
+        exerciseDate: null,
+        rejectionReasonCode: null,
+        rejectionReasonDetail: null,
+        failureCode: null,
+      });
+    });
   });
 
   it("초기에는 업로드 버튼이 비활성화된다", () => {
