@@ -43,7 +43,7 @@ test.describe("prod smoke", () => {
     if (await workoutButton.isEnabled()) {
       await workoutButton.click();
       await expect(
-        page.getByRole("button", { name: "위치 인증" })
+        page.getByRole("button", { name: /위치\s*인증/ })
       ).toBeVisible();
     }
   });
@@ -54,18 +54,20 @@ test.describe("prod smoke", () => {
     await createAuthenticatedSession(page);
     await page.goto("/my");
 
-    page.once("dialog", async (dialog) => {
-      await dialog.accept();
-    });
-    const logoutResponse = waitForApiResponse(page, "/auth/logout");
-
     await page.getByRole("button", { name: "로그아웃" }).click();
+    const confirmLogoutButton = page
+      .getByRole("button", { name: "로그아웃" })
+      .last();
+    await expect(confirmLogoutButton).toBeVisible();
+
+    const logoutResponse = waitForApiResponse(page, "/auth/logout");
+    await confirmLogoutButton.click();
 
     await expectOk(logoutResponse);
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test("trainer 대시보드 상태 API가 실제 응답한다", async ({ page }) => {
+  test("trainer 대시보드 매장 API가 실제 응답한다", async ({ page }) => {
     test.skip(
       !hasTrainerSmokeCredentials(),
       "trainer smoke credentials are not configured."
@@ -73,11 +75,16 @@ test.describe("prod smoke", () => {
 
     await createAuthenticatedSession(page, "trainer");
 
-    const trainerStatusResponse = waitForApiResponse(page, "/trainer/status");
+    const trainerStoreResponse = waitForApiResponse(
+      page,
+      "/marketplace/trainer/store",
+      (status) => status === 200 || status === 404
+    );
 
     await page.goto("/trainer");
 
-    await expectOk(trainerStatusResponse);
+    const response = await trainerStoreResponse;
+    expect([200, 404]).toContain(response.status());
     await expect(page).toHaveURL(/\/trainer$/);
   });
 });

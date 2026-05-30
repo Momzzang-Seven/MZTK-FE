@@ -14,11 +14,17 @@ const UserManagement = () => {
     setStatusFilter,
     roleFilter,
     setRoleFilter,
+    userPage,
+    userTotalPages,
+    setUserPage,
   } = useAdminStore();
 
   useEffect(() => {
-    fetchUsers();
+    void fetchUsers(0);
   }, [fetchUsers]);
+
+  const currentPage = userPage ?? 0;
+  const totalPageCount = Math.max(userTotalPages ?? 1, 1);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -140,6 +146,30 @@ const UserManagement = () => {
 
       {/* Table Section */}
       <UserTable />
+
+      <div className="flex items-center justify-between rounded-[24px] bg-white border border-gray-100 px-5 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.02)]">
+        <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.18em]">
+          Page {currentPage + 1} / {totalPageCount}
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => void setUserPage(currentPage - 1)}
+            disabled={currentPage <= 0}
+            className="px-4 py-2 rounded-xl border border-gray-100 text-[12px] font-black text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            onClick={() => void setUserPage(currentPage + 1)}
+            disabled={currentPage + 1 >= totalPageCount}
+            className="px-4 py-2 rounded-xl border border-gray-100 text-[12px] font-black text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

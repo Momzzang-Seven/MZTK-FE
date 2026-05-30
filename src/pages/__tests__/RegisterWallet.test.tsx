@@ -505,4 +505,33 @@ describe("RegisterWallet", () => {
       "encrypted-wallet-json"
     );
   });
+
+  it("deduplicates rapid mnemonic registration submissions", async () => {
+    let finishRegistration!: () => void;
+    mockHandleWalletRegistration.mockReturnValue(
+      new Promise((resolve) => {
+        finishRegistration = () => resolve(buildRegistered());
+      })
+    );
+
+    render(<RegisterWallet />);
+
+    fireEvent.click(screen.getByRole("button", { name: "paste mnemonic" }));
+    const submitButton = screen.getByRole("button", {
+      name: "submit mnemonic",
+    });
+
+    await act(async () => {
+      fireEvent.click(submitButton);
+      fireEvent.click(submitButton);
+    });
+
+    await waitFor(() => {
+      expect(mockHandleWalletRegistration).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      finishRegistration();
+    });
+  });
 });

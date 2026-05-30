@@ -1,17 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
-import { fetchUserStats, fetchPostStats } from "@services";
+import {
+  fetchUserStats,
+  fetchPostStats,
+  fetchTokenTransfers,
+  fetchWalletBalanceSnapshot,
+} from "@services";
+import type { OnchainTokenTransfer } from "@services";
 import type { UserStatsResponse, PostStatsResponse } from "@types";
-import { getNetworkConfig } from "@utils";
-interface EtherscanTxItem {
-  from: string;
-  to: string;
-  value: string;
-  tokenName?: string;
-  tokenSymbol?: string;
-  timeStamp?: string;
-  hash?: string;
-}
 
 interface TokenLogItem {
   id: string;
@@ -29,31 +25,18 @@ interface AdminDashboardData {
   error: string | null;
 }
 
-const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
 const ADMIN_WALLET_ADDRESS = import.meta.env.VITE_ADMIN_ADDRESS;
 const MONITOR_ADDRESS =
   import.meta.env.VITE_MONITOR_TARGET_ADDRESS || ADMIN_WALLET_ADDRESS;
 
-const formatTokenLog = (tx: EtherscanTxItem): TokenLogItem => ({
-  id: `사용자 #${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`,
+const formatTokenLog = (tx: OnchainTokenTransfer): TokenLogItem => ({
+  id: `User #${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`,
   desc:
     tx.from === "0x0000000000000000000000000000000000000000"
-      ? "MZTK 발행(Mint)"
-      : "MZTK 전송",
+      ? "MZTK mint"
+      : "MZTK transfer",
   amount: `+${Number(ethers.formatUnits(tx.value, 18)).toLocaleString()} MZTK`,
 });
-
-const formatEthBalance = (balance: string): string => {
-  const formatted = ethers.formatEther(balance);
-  return Number(formatted).toLocaleString(undefined, {
-    maximumFractionDigits: 4,
-  });
-};
-
-const formatMztkBalance = (balance: string): string => {
-  const formatted = ethers.formatUnits(balance, 18);
-  return Number(formatted).toLocaleString();
-};
 
 export const useAdminDashboardData = () => {
   const [data, setData] = useState<AdminDashboardData>({
@@ -66,77 +49,58 @@ export const useAdminDashboardData = () => {
     error: null,
   });
 
-  const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL } = getNetworkConfig();
-
   const fetchDashboardData = useCallback(async () => {
     try {
       setData((prev) => ({ ...prev, loading: true, error: null }));
 
-      const [txRes, ethRes, mztkRes, userStats, postStats] = await Promise.all([
-        // tokentx는 address 파라미터 없이는 결과를 반환하지 않음
-        fetch(
-          `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&address=${MONITOR_ADDRESS}&page=1&offset=6&sort=desc&apikey=${ETHERSCAN_API_KEY}`
-        ),
-        fetch(
-          `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=balance&address=${ADMIN_WALLET_ADDRESS}&apikey=${ETHERSCAN_API_KEY}`
-        ),
-        fetch(
-          `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=tokenbalance&contractaddress=${TOKEN_ADDRESS}&address=${ADMIN_WALLET_ADDRESS}&tag=latest&apikey=${ETHERSCAN_API_KEY}`
-        ),
-        fetchUserStats().catch((err) => {
-          console.error("User stats fetch failed:", err);
-          return null;
-        }),
-        fetchPostStats().catch((err) => {
-          console.error("Post stats fetch failed:", err);
-          return null;
-        }),
-      ]);
+      const [tokenTransfers, balances, userStats, postStats] =
+        await Promise.all([
+          MONITOR_ADDRESS
+            ? fetchTokenTransfers(MONITOR_ADDRESS, 6).catch((err) => {
+                console.error("Token transfer fetch failed:", err);
+                return [];
+              })
+            : Promise.resolve([]),
+          ADMIN_WALLET_ADDRESS
+            ? fetchWalletBalanceSnapshot(ADMIN_WALLET_ADDRESS).catch((err) => {
+                console.error("Wallet balance fetch failed:", err);
+                return { ethBalance: "0", tokenBalance: "0" };
+              })
+            : Promise.resolve({ ethBalance: "0", tokenBalance: "0" }),
+          fetchUserStats().catch((err) => {
+            console.error("User stats fetch failed:", err);
+            return null;
+          }),
+          fetchPostStats().catch((err) => {
+            console.error("Post stats fetch failed:", err);
+            return null;
+          }),
+        ]);
 
-      const [txData, ethData, mztkData] = await Promise.all([
-        txRes.json(),
-        ethRes.json(),
-        mztkRes.json(),
-      ]);
-
-      setData((prev) => {
-        let newTokenLogs = prev.tokenLogs;
-        if (txData.status === "1" && Array.isArray(txData.result)) {
-          newTokenLogs = txData.result.map(formatTokenLog);
-        }
-
-        let newEthBalance = prev.ethBalance;
-        if (ethData.status === "1") {
-          newEthBalance = formatEthBalance(ethData.result);
-        }
-
-        let newMztkBalance = prev.mztkBalance;
-        if (mztkData.status === "1") {
-          newMztkBalance = formatMztkBalance(mztkData.result);
-        }
-
-        return {
-          tokenLogs: newTokenLogs,
-          ethBalance: newEthBalance,
-          mztkBalance: newMztkBalance,
-          userStats: userStats || prev.userStats,
-          postStats: postStats || prev.postStats,
-          loading: false,
-          error: null,
-        };
-      });
+      setData((prev) => ({
+        tokenLogs:
+          tokenTransfers.length > 0
+            ? tokenTransfers.map(formatTokenLog)
+            : prev.tokenLogs,
+        ethBalance: balances.ethBalance,
+        mztkBalance: balances.tokenBalance,
+        userStats: userStats || prev.userStats,
+        postStats: postStats || prev.postStats,
+        loading: false,
+        error: null,
+      }));
     } catch (err) {
-      console.error("데이터 호출 중 오류 발생:", err);
+      console.error("Failed to fetch admin dashboard data:", err);
       setData((prev) => ({
         ...prev,
         loading: false,
-        error: "데이터를 불러오는데 실패했습니다.",
+        error: "Failed to load dashboard data.",
       }));
     }
-  }, [TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL]);
+  }, []);
 
   useEffect(() => {
-    fetchDashboardData();
+    void fetchDashboardData();
   }, [fetchDashboardData]);
 
   return {
