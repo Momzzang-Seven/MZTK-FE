@@ -34,20 +34,20 @@ export const AdminHeader = () => {
   };
 
   return (
-    <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-10 w-full sticky top-0 z-40 backdrop-blur-md bg-white/80">
+    <header className="sticky top-0 z-40 flex min-h-20 w-full flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-white/80 px-4 py-4 backdrop-blur-md lg:h-20 lg:flex-nowrap lg:px-10 lg:py-0">
       <div className="flex items-center gap-4">
         <div className="h-8 w-1 bg-main rounded-full" />
         <div className="flex flex-col">
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
             Management Console
           </span>
-          <h2 className="text-xl font-black text-gray-900 tracking-tight">
+          <h2 className="text-lg font-black text-gray-900 tracking-tight lg:text-xl">
             {currentHeader ? currentHeader.label : "대시보드"}
           </h2>
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
         <button
           onClick={handleComingSoon}
           className="relative p-2 text-gray-400 hover:text-gray-900 transition-colors"
@@ -56,9 +56,9 @@ export const AdminHeader = () => {
           <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
         </button>
 
-        <div className="h-8 w-[1px] bg-gray-100" />
+        <div className="hidden h-8 w-[1px] bg-gray-100 sm:block" />
 
-        <div className="flex items-center gap-4 group cursor-pointer">
+        <div className="hidden items-center gap-4 group cursor-pointer sm:flex">
           <div className="flex flex-col items-end">
             <span className="text-sm font-black text-gray-900 leading-none">
               Super Admin

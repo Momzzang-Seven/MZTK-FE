@@ -4,6 +4,10 @@ import { FullScreenPage } from "@components/layout";
 const Onboarding = () => {
   const navigate = useNavigate();
 
+  const handleSkip = () => {
+    navigate("/", { replace: true });
+  };
+
   return (
     <FullScreenPage className="pt-16 pb-12 bg-white overflow-hidden">
       {/* ── Background Decoration ── */}
@@ -132,6 +136,13 @@ const Onboarding = () => {
 
       {/* ── Help Footer ── */}
       <div className="mt-12 text-center relative z-10">
+        <button
+          type="button"
+          onClick={handleSkip}
+          className="btn-press w-full mb-5 py-4 rounded-[22px] bg-gray-900 text-white text-[14px] font-black shadow-lg shadow-gray-200"
+        >
+          나중에 하기
+        </button>
         <p className="text-[12px] text-gray-300 font-bold">
           지갑은 암호화되어 로컬에만 저장됩니다.
           <br />
