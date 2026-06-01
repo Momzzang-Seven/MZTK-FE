@@ -1,4 +1,4 @@
-import { render, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Market from "@pages/market/Market";
@@ -40,7 +40,50 @@ describe("Market API QA", () => {
     mockGetMarketClasses.mockResolvedValue(emptyPage);
   });
 
-  it("sends search keyword to the marketplace classes API", async () => {
+  it("sends marketplace search to BE without unsupported params", async () => {
+    mockGetMarketClasses.mockImplementation(
+      ({ page, search }: { page: number; search?: string }) =>
+        Promise.resolve(
+          search === "pilates"
+            ? {
+                items: [
+                  {
+                    classId: 2,
+                    title: "Evening Pilates",
+                    category: "PILATES",
+                    priceAmount: 200,
+                    durationMinutes: 60,
+                    thumbnailFinalObjectKey: null,
+                    tags: ["balance"],
+                    distance: null,
+                  },
+                ],
+                currentPage: 0,
+                totalPages: 1,
+                totalElements: 1,
+              }
+            : page === 0
+              ? {
+                  items: [
+                    {
+                      classId: 1,
+                      title: "Morning PT",
+                      category: "PT",
+                      priceAmount: 100,
+                      durationMinutes: 50,
+                      thumbnailFinalObjectKey: null,
+                      tags: ["strength"],
+                      distance: null,
+                    },
+                  ],
+                  currentPage: 0,
+                  totalPages: 1,
+                  totalElements: 1,
+                }
+              : emptyPage
+        )
+    );
+
     const { container } = renderMarket();
 
     await waitFor(() => {
@@ -48,6 +91,7 @@ describe("Market API QA", () => {
         expect.objectContaining({ page: 0, lat: 37.5665, lng: 126.978 })
       );
     });
+    mockGetMarketClasses.mockClear();
 
     const input = container.querySelector('input[type="text"]');
     expect(input).toBeInstanceOf(HTMLInputElement);
@@ -59,11 +103,22 @@ describe("Market API QA", () => {
     await waitFor(
       () => {
         expect(mockGetMarketClasses).toHaveBeenCalledWith(
-          expect.objectContaining({ page: 0, keyword: "pilates" })
+          expect.objectContaining({ page: 0, search: "pilates" })
         );
       },
       { timeout: 1500 }
     );
+    expect(await screen.findByText("Evening Pilates")).toBeInTheDocument();
+    expect(screen.queryByText("Morning PT")).not.toBeInTheDocument();
+
+    const params = mockGetMarketClasses.mock.calls.map(
+      ([callParams]) => callParams as Record<string, unknown>
+    );
+    expect(
+      params.every(
+        (callParams) => !("keyword" in callParams) && !("status" in callParams)
+      )
+    ).toBe(true);
   });
 
   it("loads the next marketplace classes page when the sentinel intersects", async () => {

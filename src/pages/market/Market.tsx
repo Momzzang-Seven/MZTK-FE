@@ -4,23 +4,7 @@ import { MARKET_TEXT } from "@constant";
 import { useTokenBalance } from "@hooks";
 import { getMarketClasses, type MarketClassItem } from "@services";
 import { useUserStore } from "@store/userStore";
-
-const IMAGE_BASE_URL =
-  (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
-  "https://mztk-bucket.s3.ap-northeast-2.amazonaws.com/";
-const PLACEHOLDER_IMAGE = "/icon/gallery.svg";
-
-const buildMarketplaceImageUrl = (objectKey: string | null) => {
-  if (!objectKey) return PLACEHOLDER_IMAGE;
-  if (/^https?:\/\//.test(objectKey)) return objectKey;
-  const normalizedBase = IMAGE_BASE_URL.endsWith("/")
-    ? IMAGE_BASE_URL
-    : `${IMAGE_BASE_URL}/`;
-  const normalizedKey = objectKey.startsWith("/")
-    ? objectKey.slice(1)
-    : objectKey;
-  return `${normalizedBase}${normalizedKey}`;
-};
+import { buildImageUrl } from "@utils";
 
 const formatCategory = (category: string) => {
   switch (category) {
@@ -97,7 +81,7 @@ const Market = () => {
       lat: gymLocation?.lat,
       lng: gymLocation?.lng,
       category: getCategoryParam(activeTab),
-      keyword: debouncedSearchQuery || undefined,
+      search: debouncedSearchQuery || undefined,
       page,
     }),
     [activeTab, debouncedSearchQuery, gymLocation?.lat, gymLocation?.lng]
@@ -112,22 +96,9 @@ const Market = () => {
       try {
         setIsLoading(true);
         const response = await getMarketClasses(buildParams(0));
-        let nextClasses = response.items ?? [];
-        let lastLoadedPage = response.currentPage ?? 0;
+        const nextClasses = response.items ?? [];
+        const lastLoadedPage = response.currentPage ?? 0;
         const nextTotalPages = response.totalPages ?? 0;
-
-        if (debouncedSearchQuery && nextTotalPages > 1) {
-          for (
-            let page = lastLoadedPage + 1;
-            page < nextTotalPages;
-            page += 1
-          ) {
-            const nextResponse = await getMarketClasses(buildParams(page));
-            if (!isMounted || requestSeqRef.current !== requestSeq) return;
-            nextClasses = nextClasses.concat(nextResponse.items ?? []);
-            lastLoadedPage = nextResponse.currentPage ?? page;
-          }
-        }
 
         if (isMounted) {
           setClasses(mergeUniqueClasses(nextClasses));
@@ -147,8 +118,7 @@ const Market = () => {
     };
   }, [buildParams, debouncedSearchQuery]);
 
-  const hasNextPage =
-    !debouncedSearchQuery && totalPages > 0 && currentPage + 1 < totalPages;
+  const hasNextPage = totalPages > 0 && currentPage + 1 < totalPages;
 
   const loadNextPage = useCallback(async () => {
     if (isLoading || isFetchingNext || !hasNextPage) return;
@@ -178,6 +148,7 @@ const Market = () => {
 
   useEffect(() => {
     if (!hasNextPage) return;
+    if (typeof IntersectionObserver === "undefined") return;
     const target = loadMoreRef.current;
     if (!target) return;
 
@@ -339,7 +310,7 @@ const Market = () => {
                 {/* Image Area with Overlays */}
                 <div className="h-[200px] relative overflow-hidden bg-gray-100">
                   <img
-                    src={buildMarketplaceImageUrl(cls.thumbnailFinalObjectKey)}
+                    src={buildImageUrl(cls.thumbnailFinalObjectKey)}
                     alt={cls.title}
                     className="w-full h-full object-cover transition-transform duration-700 scale-110 group-hover:scale-120"
                   />

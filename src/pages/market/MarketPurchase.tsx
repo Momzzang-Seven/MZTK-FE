@@ -9,6 +9,7 @@ import {
   getClassReservationInfo,
   getMarketplaceClassDetail,
 } from "@services";
+import { parseAmount } from "@utils";
 import type {
   AvailableReservationDate,
   AvailableReservationTime,
@@ -144,7 +145,9 @@ const MarketPurchase = () => {
           selectedDate.date,
           selectedTime.startTime
         ),
-        signedAmount: String(reservationInfo.priceAmount),
+        signedAmount: parseAmount(
+          String(reservationInfo.priceAmount)
+        ).toString(),
       });
 
       if (response.web3) {

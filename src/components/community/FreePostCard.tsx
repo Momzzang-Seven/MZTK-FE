@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle } from "lucide-react";
 import type { FreePost } from "@types";
-import { formatTimeAgo } from "@utils";
+import { buildImageUrl, formatTimeAgo } from "@utils";
 import { ActionList, SharePost } from "@components/community";
 import { usePostService } from "@hooks";
 
@@ -84,7 +84,7 @@ const FreePostCard = ({ post, onDeletePostSuccess }: Props) => {
                 className="relative shrink-0 w-[85%] snap-center"
               >
                 <img
-                  src={img.imageUrl}
+                  src={buildImageUrl(img.imageUrl)}
                   alt="post"
                   className="w-full aspect-[4/3] object-cover rounded-[28px] shadow-sm"
                 />

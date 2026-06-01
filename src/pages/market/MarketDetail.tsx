@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { CommonButton } from "@components/common";
 import {
   IntroTab,
   LocationTab,
   ReviewTab,
 } from "@components/market/detail/MarketTabs";
-import { getMarketplaceClassDetail, imageService } from "@services";
-
-const IMAGE_BASE_URL =
-  (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
-  "https://mztk-bucket.s3.ap-northeast-2.amazonaws.com/";
-const PLACEHOLDER_IMAGE = "/icon/gallery.svg";
+import { getMarketplaceClassDetail } from "@services";
+import { buildImageUrl, PLACEHOLDER_IMAGE_URL } from "@utils";
 
 const DAY_LABEL_MAP: Record<string, string> = {
   MONDAY: "월",
@@ -24,15 +20,7 @@ const DAY_LABEL_MAP: Record<string, string> = {
 };
 
 const buildMarketplaceImageUrl = (objectKey: string | null | undefined) => {
-  if (!objectKey) return PLACEHOLDER_IMAGE;
-  if (/^https?:\/\//.test(objectKey)) return objectKey;
-  const normalizedBase = IMAGE_BASE_URL.endsWith("/")
-    ? IMAGE_BASE_URL
-    : `${IMAGE_BASE_URL}/`;
-  const normalizedKey = objectKey.startsWith("/")
-    ? objectKey.slice(1)
-    : objectKey;
-  return `${normalizedBase}${normalizedKey}`;
+  return buildImageUrl(objectKey);
 };
 
 const formatCategory = (category: string) => {
@@ -61,6 +49,7 @@ const formatCategory = (category: string) => {
 const MarketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<"intro" | "location" | "review">(
     "intro"
   );
@@ -70,9 +59,6 @@ const MarketDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
-  const [metadataImageUrls, setMetadataImageUrls] = useState<string[] | null>(
-    null
-  );
   useEffect(() => {
     const classId = Number(id);
     if (!Number.isFinite(classId)) {
@@ -88,7 +74,6 @@ const MarketDetail = () => {
         const response = await getMarketplaceClassDetail(classId);
         if (isMounted) {
           setData(response);
-          setMetadataImageUrls(null);
           setLoadError("");
         }
       } catch {
@@ -103,57 +88,14 @@ const MarketDetail = () => {
     };
   }, [id]);
 
-  useEffect(() => {
-    if (!data) {
-      setMetadataImageUrls(null);
-      return;
-    }
-
-    const classId = Number(id);
-    const imageIds = data.images
-      .map((image) => image.imageId)
-      .filter((imageId) => Number.isInteger(imageId) && imageId > 0);
-
-    if (!Number.isFinite(classId) || imageIds.length === 0) {
-      setMetadataImageUrls(null);
-      return;
-    }
-
-    let isMounted = true;
-    void imageService
-      .getImagesByIds({
-        ids: imageIds,
-        referenceType: "MARKET_CLASS",
-        referenceId: classId,
-      })
-      .then((images) => {
-        if (!isMounted) return;
-        const urls = images
-          .filter((image) => image.status === "COMPLETED" && image.imageUrl)
-          .sort((a, b) => a.imgOrder - b.imgOrder)
-          .map((image) => buildMarketplaceImageUrl(image.imageUrl));
-        setMetadataImageUrls(urls.length > 0 ? urls : null);
-      })
-      .catch(() => {
-        if (isMounted) setMetadataImageUrls(null);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [data, id]);
-
   const imageUrls = useMemo(() => {
     if (!data) return [];
-    if (metadataImageUrls?.length)
-      return Array.from(new Set(metadataImageUrls));
-
     const detailImages = [...data.images]
       .sort((a, b) => a.imgOrder - b.imgOrder)
       .map((image) => buildMarketplaceImageUrl(image.finalObjectKey));
     const thumbnail = buildMarketplaceImageUrl(data.thumbnailFinalObjectKey);
     return Array.from(new Set([thumbnail, ...detailImages]));
-  }, [data, metadataImageUrls]);
+  }, [data]);
 
   const tabData = useMemo(() => {
     if (!data) return null;
@@ -201,6 +143,21 @@ const MarketDetail = () => {
     navigate(`/market/purchase/${data.classId}`);
   };
 
+  const handleBackClick = () => {
+    const historyState = window.history.state as { idx?: number } | null;
+    const canGoBack =
+      location.key !== "default" &&
+      typeof historyState?.idx === "number" &&
+      historyState.idx > 0;
+
+    if (canGoBack) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/market", { replace: true });
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center gap-4">
@@ -235,7 +192,7 @@ const MarketDetail = () => {
           {loadError || "클래스를 찾을 수 없습니다."}
         </p>
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBackClick}
           className="px-8 py-3 bg-gray-900 text-white font-black text-[13px] rounded-2xl"
         >
           뒤로 가기
@@ -257,6 +214,12 @@ const MarketDetail = () => {
               key={idx}
               src={img}
               alt={`${data.title}-${idx}`}
+              onError={(event) => {
+                if (event.currentTarget.dataset.fallbackApplied === "true")
+                  return;
+                event.currentTarget.dataset.fallbackApplied = "true";
+                event.currentTarget.src = PLACEHOLDER_IMAGE_URL;
+              }}
               className="w-full h-full object-cover flex-shrink-0 snap-center"
             />
           ))}
@@ -266,7 +229,8 @@ const MarketDetail = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBackClick}
+          aria-label="마켓으로 돌아가기"
           className="absolute top-12 left-5 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-all border border-white/30 z-30"
         >
           <svg
