@@ -2,7 +2,8 @@ import { useUserStore } from "@store/userStore";
 
 export const LevelProgress = () => {
   const { level, xp, maxXp } = useUserStore();
-  const pct = Math.min((xp / maxXp) * 100, 100);
+  const pct = maxXp > 0 ? Math.min((xp / maxXp) * 100, 100) : 0;
+  const remainingXp = Math.max(0, maxXp - xp);
 
   return (
     <div
@@ -69,7 +70,7 @@ export const LevelProgress = () => {
           {Math.floor(pct)}% 달성
         </span>
         <span className="text-[11px] text-gray-400 font-bold">
-          {(maxXp - xp).toLocaleString()} XP 남음
+          {remainingXp.toLocaleString()} XP 남음
         </span>
       </div>
     </div>

@@ -9,17 +9,18 @@ import type {
 } from "@types";
 import { getNetworkConfig, getWalletRegistrationEip712Domain } from "@utils";
 
-const QNA_ESCROW_ADDRESS = import.meta.env.VITE_QNA_ESCROW_CONTRACT;
-
-if (!QNA_ESCROW_ADDRESS) {
-  console.error("CRITICAL: VITE_QNA_ESCROW_CONTRACT is not defined in .env");
-}
-
 const INVALID_WEB3_SIGN_REQUEST_MESSAGE =
   "Web3 서명 요청 정보가 올바르지 않습니다. 잠시 후 다시 시도해 주세요.";
 
 const isFilledString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
+
+const getQnaEscrowAddress = () => {
+  const address = import.meta.env.VITE_QNA_ESCROW_CONTRACT as
+    | string
+    | undefined;
+  return isFilledString(address) ? address.trim() : null;
+};
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -210,12 +211,13 @@ export const useWalletService = () => {
   };
 
   const getAllowance = async (ownerAddress: string): Promise<bigint> => {
-    if (!QNA_ESCROW_ADDRESS)
+    const qnaEscrowAddress = getQnaEscrowAddress();
+    if (!qnaEscrowAddress)
       throw new Error("QnA Escrow 주소가 설정되지 않았습니다.");
     const { RPC_URL, TOKEN_ADDRESS } = getNetworkConfig();
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     const contract = new ethers.Contract(TOKEN_ADDRESS, MZTK_ABI[0], provider);
-    return await contract.allowance(ownerAddress, QNA_ESCROW_ADDRESS);
+    return await contract.allowance(ownerAddress, qnaEscrowAddress);
   };
 
   return {
