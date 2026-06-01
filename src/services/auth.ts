@@ -94,6 +94,11 @@ export const PostStepUp = async (
   return data.data;
 };
 
+// POST: Withdraw current account. Requires a step-up access token.
+export const PostWithdraw = async (): Promise<void> => {
+  await authApi.post("/withdrawal");
+};
+
 // GET: Check Login Status (Get Me)
 export const GetLoginStatus = async (): Promise<ReissueTokenResponse> => {
   const { data } = await authApi.post("/reissue");

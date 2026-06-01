@@ -54,9 +54,9 @@ export const AdminSidebar = () => {
   ];
 
   return (
-    <aside className="w-[280px] min-h-dvh bg-[#09090b] border-r border-white/5 flex flex-col z-50 shadow-[20px_0_40px_rgba(0,0,0,0.2)]">
+    <aside className="z-50 flex w-full shrink-0 flex-col bg-[#09090b] shadow-[0_12px_30px_rgba(0,0,0,0.18)] lg:min-h-dvh lg:w-[280px] lg:border-r lg:border-white/5 lg:shadow-[20px_0_40px_rgba(0,0,0,0.2)]">
       {/* Brand Header */}
-      <div className="p-10">
+      <div className="p-4 lg:p-10">
         <Link to="/admin/dashboard" className="flex items-center gap-3.5 group">
           <div className="w-9 h-9 bg-main rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(250,177,47,0.3)] group-hover:scale-105 transition-transform duration-300">
             <span className="text-black font-black text-xl italic tracking-tighter">
@@ -75,8 +75,8 @@ export const AdminSidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1.5">
-        <div className="px-6 mb-4">
+      <nav className="flex gap-2 overflow-x-auto px-3 pb-4 lg:block lg:flex-1 lg:space-y-1.5 lg:overflow-visible lg:px-4 lg:py-4">
+        <div className="hidden px-6 mb-4 lg:block">
           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
             General Management
           </p>
@@ -90,32 +90,32 @@ export const AdminSidebar = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-300 group ${
+              className={`flex shrink-0 items-center justify-between rounded-2xl px-4 py-3 transition-all duration-300 group lg:px-6 lg:py-4 ${
                 isActive
                   ? "bg-white/5 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
                   : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.02]"
               }`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 lg:gap-4">
                 <Icon
                   size={20}
                   strokeWidth={isActive ? 2.5 : 2}
                   className={`transition-colors duration-300 ${isActive ? "text-main" : "text-zinc-600 group-hover:text-zinc-400"}`}
                 />
                 <span
-                  className={`text-[15px] font-bold tracking-tight ${isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"}`}
+                  className={`whitespace-nowrap text-[13px] font-bold tracking-tight lg:text-[15px] ${isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"}`}
                 >
                   {item.label}
                 </span>
               </div>
 
               {isActive && (
-                <div className="w-1.5 h-1.5 rounded-full bg-main shadow-[0_0_8px_rgba(250,177,47,0.8)] animate-pulse" />
+                <div className="ml-3 h-1.5 w-1.5 rounded-full bg-main shadow-[0_0_8px_rgba(250,177,47,0.8)] animate-pulse lg:ml-0" />
               )}
               {!isActive && (
                 <ChevronRight
                   size={14}
-                  className="text-zinc-800 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"
+                  className="hidden text-zinc-800 opacity-0 transition-all -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 lg:block"
                 />
               )}
             </Link>
@@ -124,7 +124,7 @@ export const AdminSidebar = () => {
       </nav>
 
       {/* Network Status */}
-      <div className="p-6 mt-auto space-y-3">
+      <div className="mt-auto hidden space-y-3 p-6 lg:block">
         <div className="px-5 py-4 bg-zinc-900/30 rounded-[20px] border border-white/5">
           <div className="flex items-center gap-3">
             <Server size={14} className="text-main opacity-50" />

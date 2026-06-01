@@ -26,6 +26,10 @@ import type {
   MarkTransactionSucceededRequest,
   MarkTransactionSucceededResponse,
   SponsorNonceSlotsResponse,
+  MarketplaceAdminEscrowReviewResponse,
+  MarketplaceAdminExecutionResponse,
+  MarketplaceAdminRefundRequest,
+  MarketplaceAdminSettlementRequest,
 } from "@types";
 
 interface BaseResponse<T> {
@@ -210,6 +214,47 @@ export const processQnASettle = async (
 ): Promise<Web3ActionResponse> => {
   const res = await api.post<BaseResponse<Web3ActionResponse>>(
     `/admin/web3/qna/questions/${postId}/answers/${answerId}/settle`
+  );
+  return res.data.data;
+};
+
+// marketplace-admin-escrow-controller
+export const fetchMarketplaceRefundReview = async (
+  reservationId: number
+): Promise<MarketplaceAdminEscrowReviewResponse> => {
+  const res = await api.get<BaseResponse<MarketplaceAdminEscrowReviewResponse>>(
+    `/admin/web3/marketplace/reservations/${reservationId}/refund-review`
+  );
+  return res.data.data;
+};
+
+export const fetchMarketplaceSettlementReview = async (
+  reservationId: number
+): Promise<MarketplaceAdminEscrowReviewResponse> => {
+  const res = await api.get<BaseResponse<MarketplaceAdminEscrowReviewResponse>>(
+    `/admin/web3/marketplace/reservations/${reservationId}/settlement-review`
+  );
+  return res.data.data;
+};
+
+export const processMarketplaceRefund = async (
+  reservationId: number,
+  data: MarketplaceAdminRefundRequest
+): Promise<MarketplaceAdminExecutionResponse> => {
+  const res = await api.post<BaseResponse<MarketplaceAdminExecutionResponse>>(
+    `/admin/web3/marketplace/reservations/${reservationId}/refund`,
+    data
+  );
+  return res.data.data;
+};
+
+export const processMarketplaceSettle = async (
+  reservationId: number,
+  data: MarketplaceAdminSettlementRequest
+): Promise<MarketplaceAdminExecutionResponse> => {
+  const res = await api.post<BaseResponse<MarketplaceAdminExecutionResponse>>(
+    `/admin/web3/marketplace/reservations/${reservationId}/settle`,
+    data
   );
   return res.data.data;
 };

@@ -67,4 +67,16 @@ describe("Onboarding Page", () => {
 
     expect(mockNavigate).toHaveBeenCalledWith("/register-wallet");
   });
+
+  it("나중에 하기 버튼은 홈으로 이동한다", () => {
+    render(
+      <BrowserRouter>
+        <Onboarding />
+      </BrowserRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "나중에 하기" }));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+  });
 });

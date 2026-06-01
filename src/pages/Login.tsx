@@ -32,9 +32,6 @@ const Login = () => {
         email,
         password: localPassword,
       });
-      if (response?.userInfo.walletAddress) {
-        localStorage.setItem("wallet_address", response.userInfo.walletAddress);
-      }
 
       if (
         response &&

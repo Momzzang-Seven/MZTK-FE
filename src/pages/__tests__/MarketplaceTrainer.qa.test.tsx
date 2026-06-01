@@ -29,6 +29,7 @@ vi.mock("@services", () => ({
     mockToggleTrainerClassStatus(...args),
   imageService: {
     uploadMarketplaceClassImages: vi.fn().mockResolvedValue([]),
+    getImagesByIds: vi.fn().mockResolvedValue([]),
   },
 }));
 

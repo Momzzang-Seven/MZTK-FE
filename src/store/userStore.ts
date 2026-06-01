@@ -3,6 +3,10 @@ import { persist } from "zustand/middleware";
 import { verificationService } from "@services/verification";
 import { getWorkoutVerificationLatestErrorMessage } from "@utils/workoutVerificationMessages";
 import { getKstDateString } from "@utils/time";
+import {
+  clearLocalWalletStorage,
+  syncLocalWalletStorage,
+} from "@utils/walletStorage";
 
 export interface UserInfo {
   userId: number;
@@ -146,7 +150,10 @@ export const useUserStore = create<UserState>()(
 
       attendanceResult: null,
 
-      setUser: (user) => set({ user, isAuthenticated: true }),
+      setUser: (user) => {
+        syncLocalWalletStorage(user.walletAddress);
+        set({ user, isAuthenticated: true });
+      },
       setAccessToken: (token) => set({ accessToken: token }),
 
       updateRole: async (role) => {
@@ -158,10 +165,12 @@ export const useUserStore = create<UserState>()(
       },
 
       setGymLocation: (location) => set({ gymLocation: location }),
-      setWalletAddress: (address) =>
+      setWalletAddress: (address) => {
+        syncLocalWalletStorage(address);
         set((state) => ({
           user: state.user ? { ...state.user, walletAddress: address } : null,
-        })),
+        }));
+      },
 
       registerGymLocation: async (location) => {
         try {
@@ -181,8 +190,7 @@ export const useUserStore = create<UserState>()(
       },
 
       clearUser: () => {
-        localStorage.removeItem("wallet_address");
-        localStorage.removeItem("encrypted_wallet");
+        clearLocalWalletStorage();
 
         set({
           user: null,

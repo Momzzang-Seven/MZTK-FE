@@ -1,5 +1,10 @@
 import axios from "axios";
-import type { PresignedUrlRequest, PresignedUrlResponse } from "@types";
+import type {
+  GetImagesByIdsRequest,
+  ImageMetadata,
+  PresignedUrlRequest,
+  PresignedUrlResponse,
+} from "@types";
 import { api } from "./client";
 
 export type IssuePresignedUrlsRequest = PresignedUrlRequest;
@@ -21,6 +26,10 @@ interface ImageStatusItem {
 
 interface ImageStatusResponse {
   images: ImageStatusItem[];
+}
+
+interface ImageMetadataResponse {
+  images: ImageMetadata[];
 }
 
 const IMAGE_STATUS_CHUNK_SIZE = 10;
@@ -121,6 +130,22 @@ export const imageService = {
     return responses.flatMap(
       (response) => (response.data.data as ImageStatusResponse).images
     );
+  },
+
+  async getImagesByIds(
+    request: GetImagesByIdsRequest
+  ): Promise<ImageMetadata[]> {
+    const params = new URLSearchParams();
+    request.ids.forEach((imageId) => {
+      params.append("ids", String(imageId));
+    });
+    params.set("referenceType", request.referenceType);
+    params.set("referenceId", String(request.referenceId));
+
+    const response = await api.get(`/images?${params.toString()}`, {
+      _skipNotFoundRedirect: true,
+    });
+    return (response.data.data as ImageMetadataResponse).images;
   },
 
   async uploadFileToPresignedUrl(url: string, file: File): Promise<void> {

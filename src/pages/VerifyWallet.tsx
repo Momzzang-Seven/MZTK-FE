@@ -7,6 +7,10 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import type { Web3Execution } from "@types";
 import { usePostService, useWalletService } from "@hooks";
+import {
+  recoverMyReservationEscrow,
+  recoverTrainerReservationEscrow,
+} from "@services";
 
 interface ApiErrorResponse {
   response?: {
@@ -27,6 +31,12 @@ const isWeb3RecoveryBlocked = (intent: Web3Execution) => {
     intent.recoveryStatus === "ONCHAIN_UNCERTAIN" ||
     intent.retryAllowed === false
   );
+};
+
+type VerifyWalletLocationState = {
+  intent?: Web3Execution;
+  recoveryScope?: "member" | "trainer";
+  returnTo?: string;
 };
 
 const VerifyWallet = () => {
@@ -55,7 +65,14 @@ const VerifyWallet = () => {
     null
   );
 
-  const intent = (location.state as { intent?: Web3Execution } | null)?.intent;
+  const locationState = location.state as VerifyWalletLocationState | null;
+  const intent = locationState?.intent;
+  const recoveryScope = locationState?.recoveryScope ?? "member";
+  const returnTo =
+    typeof locationState?.returnTo === "string" &&
+    locationState.returnTo.startsWith("/")
+      ? locationState.returnTo
+      : undefined;
 
   const getWeb3Transaction = useCallback(async () => {
     if (!intent) throw new Error("유효하지 않은 접근입니다.");
@@ -89,7 +106,16 @@ const VerifyWallet = () => {
         const type = currentIntent.resource.type;
         let recoveryRes;
 
-        if (type === "ANSWER" && params.parentId) {
+        if (type === "MARKETPLACE_RESERVATION") {
+          const reservationId = Number(params.id ?? currentIntent.resource.id);
+          if (!Number.isFinite(reservationId)) {
+            throw new Error("Invalid marketplace reservation id.");
+          }
+          recoveryRes =
+            recoveryScope === "trainer"
+              ? await recoverTrainerReservationEscrow(reservationId)
+              : await recoverMyReservationEscrow(reservationId);
+        } else if (type === "ANSWER" && params.parentId) {
           recoveryRes = await recoverCreate(
             type,
             Number(params.id),
@@ -114,7 +140,13 @@ const VerifyWallet = () => {
         setStep("AUTH_PIN");
       }
     },
-    [params.id, params.parentId, recoverCreate, handleWeb3Signature]
+    [
+      params.id,
+      params.parentId,
+      recoveryScope,
+      recoverCreate,
+      handleWeb3Signature,
+    ]
   );
 
   const handleSignProcess = useCallback(
@@ -193,6 +225,11 @@ const VerifyWallet = () => {
   ]);
 
   const handleSuccessConfirm = () => {
+    if (returnTo) {
+      navigate(returnTo);
+      return;
+    }
+
     if (!intent) {
       navigate("/community/question");
       return;
@@ -204,6 +241,9 @@ const VerifyWallet = () => {
         break;
       case "ANSWER":
         navigate(-2);
+        break;
+      case "MARKETPLACE_RESERVATION":
+        navigate("/market/reservations");
         break;
       default:
         navigate("/community/question");

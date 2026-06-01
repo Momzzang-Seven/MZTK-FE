@@ -4,7 +4,6 @@ import { ChevronLeft } from "lucide-react";
 import { CommonButton, CommonModal } from "@components/common";
 import { getKoreanErrorMessage } from "@constant";
 import axios from "axios";
-import { useTokenBalance } from "@hooks";
 import {
   createClassReservation,
   getClassReservationInfo,
@@ -67,15 +66,6 @@ const MarketPurchase = () => {
     title: "",
     desc: "",
   });
-  const { balance, loading: isBalanceLoading } = useTokenBalance();
-  const balanceNumber = Number(balance);
-  const hasKnownBalance = Number.isFinite(balanceNumber);
-  const hasInsufficientBalance =
-    !!reservationInfo &&
-    !isBalanceLoading &&
-    hasKnownBalance &&
-    balanceNumber < reservationInfo.priceAmount;
-
   useEffect(() => {
     const classId = Number(id);
     if (!Number.isFinite(classId)) {
@@ -136,25 +126,6 @@ const MarketPurchase = () => {
         isOpen: true,
         title: "예약 오류",
         desc: "날짜와 시간을 모두 선택해 주세요.",
-      });
-      return;
-    }
-
-    if (isBalanceLoading) {
-      setModalState({
-        isOpen: true,
-        title: "잔액 확인 중",
-        desc: "보유 MZTK 잔액을 확인하고 있습니다. 잠시 후 다시 시도해 주세요.",
-      });
-      return;
-    }
-
-    if (hasInsufficientBalance) {
-      setModalState({
-        isOpen: true,
-        title: "잔액 부족",
-        desc: `예약에는 ${reservationInfo.priceAmount.toLocaleString()} MZTK가 필요합니다. 현재 보유 잔액은 ${balanceNumber.toLocaleString()} MZTK입니다.`,
-        variant: "warning",
       });
       return;
     }
@@ -295,13 +266,6 @@ const MarketPurchase = () => {
                 </span>
                 <span className="text-[12px] font-black text-main">MZTK</span>
               </div>
-              <span
-                className={`text-[10px] font-black mt-2 ${
-                  hasInsufficientBalance ? "text-red-500" : "text-gray-300"
-                }`}
-              >
-                보유 {balanceNumber.toLocaleString()} MZTK
-              </span>
             </div>
           </div>
         </section>
@@ -429,16 +393,10 @@ const MarketPurchase = () => {
           label={
             isSubmitting
               ? "처리 중..."
-              : isBalanceLoading
-                ? "잔액 확인 중..."
-                : hasInsufficientBalance
-                  ? "잔액 부족"
-                  : `총 ${reservationInfo.priceAmount.toLocaleString()} MZTK 결제하기`
+              : `총 ${reservationInfo.priceAmount.toLocaleString()} MZTK 결제하기`
           }
           onClick={handlePurchase}
-          disabled={
-            !selectedDate || !selectedTime || isSubmitting || isBalanceLoading
-          }
+          disabled={!selectedDate || !selectedTime || isSubmitting}
           className="h-[60px] rounded-[22px] font-black text-[16px] shadow-xl shadow-main/20 active:scale-95 transition-all"
         />
       </div>

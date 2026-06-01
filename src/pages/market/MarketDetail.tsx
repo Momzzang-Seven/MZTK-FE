@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CommonButton, CommonModal } from "@components/common";
+import { CommonButton } from "@components/common";
 import {
   IntroTab,
   LocationTab,
   ReviewTab,
 } from "@components/market/detail/MarketTabs";
-import { useTokenBalance } from "@hooks";
-import { getMarketplaceClassDetail } from "@services";
+import { getMarketplaceClassDetail, imageService } from "@services";
 
 const IMAGE_BASE_URL =
   (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
@@ -71,13 +70,9 @@ const MarketDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
-  const [modalState, setModalState] = useState<{
-    title: string;
-    desc: string;
-  } | null>(null);
-  const { balance, loading: isBalanceLoading } = useTokenBalance();
-  const balanceNumber = Number(balance);
-
+  const [metadataImageUrls, setMetadataImageUrls] = useState<string[] | null>(
+    null
+  );
   useEffect(() => {
     const classId = Number(id);
     if (!Number.isFinite(classId)) {
@@ -93,6 +88,7 @@ const MarketDetail = () => {
         const response = await getMarketplaceClassDetail(classId);
         if (isMounted) {
           setData(response);
+          setMetadataImageUrls(null);
           setLoadError("");
         }
       } catch {
@@ -107,14 +103,57 @@ const MarketDetail = () => {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (!data) {
+      setMetadataImageUrls(null);
+      return;
+    }
+
+    const classId = Number(id);
+    const imageIds = data.images
+      .map((image) => image.imageId)
+      .filter((imageId) => Number.isInteger(imageId) && imageId > 0);
+
+    if (!Number.isFinite(classId) || imageIds.length === 0) {
+      setMetadataImageUrls(null);
+      return;
+    }
+
+    let isMounted = true;
+    void imageService
+      .getImagesByIds({
+        ids: imageIds,
+        referenceType: "MARKET_CLASS",
+        referenceId: classId,
+      })
+      .then((images) => {
+        if (!isMounted) return;
+        const urls = images
+          .filter((image) => image.status === "COMPLETED" && image.imageUrl)
+          .sort((a, b) => a.imgOrder - b.imgOrder)
+          .map((image) => buildMarketplaceImageUrl(image.imageUrl));
+        setMetadataImageUrls(urls.length > 0 ? urls : null);
+      })
+      .catch(() => {
+        if (isMounted) setMetadataImageUrls(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [data, id]);
+
   const imageUrls = useMemo(() => {
     if (!data) return [];
-    const detailImages = data.images
+    if (metadataImageUrls?.length)
+      return Array.from(new Set(metadataImageUrls));
+
+    const detailImages = [...data.images]
       .sort((a, b) => a.imgOrder - b.imgOrder)
       .map((image) => buildMarketplaceImageUrl(image.finalObjectKey));
     const thumbnail = buildMarketplaceImageUrl(data.thumbnailFinalObjectKey);
     return Array.from(new Set([thumbnail, ...detailImages]));
-  }, [data]);
+  }, [data, metadataImageUrls]);
 
   const tabData = useMemo(() => {
     if (!data) return null;
@@ -159,23 +198,6 @@ const MarketDetail = () => {
 
   const handleReservationClick = () => {
     if (!data) return;
-
-    if (isBalanceLoading) {
-      setModalState({
-        title: "잔액 확인 중",
-        desc: "보유 MZTK 잔액을 확인하고 있습니다. 잠시 후 다시 시도해 주세요.",
-      });
-      return;
-    }
-
-    if (Number.isFinite(balanceNumber) && balanceNumber < data.priceAmount) {
-      setModalState({
-        title: "잔액 부족",
-        desc: `예약에는 ${data.priceAmount.toLocaleString()} MZTK가 필요합니다. 현재 보유 잔액은 ${balanceNumber.toLocaleString()} MZTK입니다.`,
-      });
-      return;
-    }
-
     navigate(`/market/purchase/${data.classId}`);
   };
 
@@ -373,21 +395,12 @@ const MarketDetail = () => {
         </div>
         <div className="w-[180px]">
           <CommonButton
-            label={isBalanceLoading ? "잔액 확인 중..." : "지금 예약하기"}
+            label="지금 예약하기"
             onClick={handleReservationClick}
             className="h-[60px] rounded-[22px] font-black text-[16px] shadow-xl shadow-main/20 active:scale-95 transition-all"
           />
         </div>
       </div>
-
-      {modalState && (
-        <CommonModal
-          title={modalState.title}
-          desc={modalState.desc}
-          confirmLabel="확인"
-          onConfirmClick={() => setModalState(null)}
-        />
-      )}
     </div>
   );
 };

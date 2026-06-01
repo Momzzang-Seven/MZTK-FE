@@ -1,9 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import { Activity, AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  ExternalLink,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+} from "lucide-react";
 import { useAdminStore, useUserStore, useConfirmModalStore } from "@store";
 import { CommonButton } from "@components/common";
 import { ADMIN_TEXT } from "@constant/admin";
 import type {
+  MarketplaceAdminEscrowReviewResponse,
+  MarketplaceAdminExecutionAttempt,
+  MarketplaceAdminExecutionResponse,
+  MarketplaceAdminReasonOption,
+  MarketplaceAdminRefundReason,
+  MarketplaceAdminSettlementReason,
   MarkTransactionSucceededRequest,
   ProvisionKeyRequest,
   SponsorNonceSlotDto,
@@ -29,6 +42,11 @@ const createDefaultManualTx = (): MarkTransactionSucceededRequest => ({
   evidence: "Receipt and business outcome were verified by operator.",
 });
 
+type MarketplaceEscrowAction = "refund" | "settlement";
+
+const DEFAULT_MARKETPLACE_MEMO =
+  "Operator reviewed marketplace escrow state and selected an allowed reason.";
+
 const severityClass = (slot: SponsorNonceSlotDto) => {
   if (slot.severity === "BLOCKING" || slot.blocking) {
     return "bg-red-50 text-red-600 border-red-100";
@@ -46,9 +64,24 @@ const formatDateTime = (value?: string | null) => {
   return date.toLocaleString();
 };
 
+const formatNullable = (value?: string | number | boolean | null) =>
+  value === undefined || value === null || value === "" ? "-" : String(value);
+
+const getReasonLabel = (option: MarketplaceAdminReasonOption) => {
+  const code = option.displayCode || option.reasonCode;
+  if (!option.processable && option.blockingCode) {
+    return `${code} (${option.blockingCode})`;
+  }
+  return code;
+};
+
 const Web3Management = () => {
   const {
     confirmTransaction,
+    getMarketplaceRefundReview,
+    getMarketplaceSettlementReview,
+    executeMarketplaceRefund,
+    executeMarketplaceSettle,
     treasuryKeys,
     fetchTreasuryKeys,
     disableKey,
@@ -75,6 +108,20 @@ const Web3Management = () => {
     expectedAddress: "",
   });
   const [isProvisioning, setIsProvisioning] = useState(false);
+  const [marketplaceReservationId, setMarketplaceReservationId] = useState("");
+  const [marketplaceAction, setMarketplaceAction] =
+    useState<MarketplaceEscrowAction>("refund");
+  const [marketplaceReview, setMarketplaceReview] =
+    useState<MarketplaceAdminEscrowReviewResponse | null>(null);
+  const [marketplaceExecution, setMarketplaceExecution] =
+    useState<MarketplaceAdminExecutionResponse | null>(null);
+  const [selectedReasonCode, setSelectedReasonCode] = useState("");
+  const [marketplaceMemo, setMarketplaceMemo] = useState(
+    DEFAULT_MARKETPLACE_MEMO
+  );
+  const [isMarketplaceReviewLoading, setIsMarketplaceReviewLoading] =
+    useState(false);
+  const [isMarketplaceExecuting, setIsMarketplaceExecuting] = useState(false);
 
   const MONITOR_ADDRESS =
     import.meta.env.VITE_MONITOR_TARGET_ADDRESS ||
@@ -227,6 +274,91 @@ const Web3Management = () => {
     } finally {
       setIsProvisioning(false);
     }
+  };
+
+  const loadMarketplaceReview = async (clearExecution = true) => {
+    const reservationId = Number(marketplaceReservationId);
+    if (!Number.isInteger(reservationId) || reservationId <= 0) {
+      showSnackbar("Enter a valid reservation ID.");
+      return;
+    }
+
+    setIsMarketplaceReviewLoading(true);
+    if (clearExecution) setMarketplaceExecution(null);
+    try {
+      const review =
+        marketplaceAction === "refund"
+          ? await getMarketplaceRefundReview(reservationId)
+          : await getMarketplaceSettlementReview(reservationId);
+      const firstProcessableReason = review.reasonOptions.find(
+        (option) => option.processable
+      );
+      setMarketplaceReview(review);
+      setSelectedReasonCode(
+        firstProcessableReason?.reasonCode ??
+          review.reasonOptions[0]?.reasonCode ??
+          ""
+      );
+    } catch {
+      setMarketplaceReview(null);
+      setSelectedReasonCode("");
+      showSnackbar("Marketplace escrow review failed.");
+    } finally {
+      setIsMarketplaceReviewLoading(false);
+    }
+  };
+
+  const selectedReason = marketplaceReview?.reasonOptions.find(
+    (option) => option.reasonCode === selectedReasonCode
+  );
+  const canExecuteMarketplaceAction =
+    Boolean(marketplaceReview && selectedReason?.processable) &&
+    !isMarketplaceExecuting;
+
+  const executeMarketplaceAction = () => {
+    const reservationId = Number(marketplaceReservationId);
+    if (
+      !Number.isInteger(reservationId) ||
+      reservationId <= 0 ||
+      !selectedReason
+    ) {
+      return;
+    }
+
+    const actionLabel =
+      marketplaceAction === "refund" ? "refund" : "settlement";
+    openConfirm({
+      title: `Execute Marketplace ${actionLabel}`,
+      message: `Reservation #${reservationId} will be processed with reason ${selectedReason.reasonCode}.`,
+      variant: selectedReason.requiresConfirmation ? "error" : "warning",
+      onConfirm: async () => {
+        setIsMarketplaceExecuting(true);
+        try {
+          const memo = marketplaceMemo.trim() || DEFAULT_MARKETPLACE_MEMO;
+          const result =
+            marketplaceAction === "refund"
+              ? await executeMarketplaceRefund(reservationId, {
+                  reasonCode:
+                    selectedReason.reasonCode as MarketplaceAdminRefundReason,
+                  memo,
+                  confirmManualRefund: selectedReason.requiresConfirmation,
+                })
+              : await executeMarketplaceSettle(reservationId, {
+                  reasonCode:
+                    selectedReason.reasonCode as MarketplaceAdminSettlementReason,
+                  memo,
+                  confirmEarlySettle: selectedReason.requiresConfirmation,
+                });
+          setMarketplaceExecution(result);
+          showSnackbar("Marketplace escrow action requested.");
+          await loadMarketplaceReview(false);
+        } catch {
+          showSnackbar("Marketplace escrow action failed.");
+        } finally {
+          setIsMarketplaceExecuting(false);
+        }
+      },
+    });
   };
 
   const manualConfirmDisabled =
@@ -458,6 +590,208 @@ const Web3Management = () => {
       </div>
 
       <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        <div className="flex justify-between items-start gap-4 mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-gray-800">
+              Marketplace Reservation Escrow
+            </h3>
+            <p className="text-sm text-gray-400 mt-1">
+              Review and execute admin refund or settlement for a known
+              reservation ID.
+            </p>
+          </div>
+          <ShieldCheck className="w-6 h-6 text-main shrink-0" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px_180px] gap-3 mb-6">
+          <input
+            type="number"
+            min="1"
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:border-main transition-all"
+            placeholder="Reservation ID"
+            value={marketplaceReservationId}
+            onChange={(event) =>
+              setMarketplaceReservationId(event.target.value)
+            }
+          />
+          <select
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:border-main transition-all"
+            value={marketplaceAction}
+            onChange={(event) => {
+              setMarketplaceAction(
+                event.target.value as MarketplaceEscrowAction
+              );
+              setMarketplaceReview(null);
+              setMarketplaceExecution(null);
+              setSelectedReasonCode("");
+            }}
+          >
+            <option value="refund">Refund review</option>
+            <option value="settlement">Settlement review</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => void loadMarketplaceReview()}
+            disabled={isMarketplaceReviewLoading}
+            className="h-12 px-4 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isMarketplaceReviewLoading ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Search className="w-4 h-4" />
+            )}
+            Load Review
+          </button>
+        </div>
+
+        {marketplaceReview ? (
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <ReviewMetric
+                  label="Processable"
+                  value={marketplaceReview.processable ? "YES" : "NO"}
+                  tone={marketplaceReview.processable ? "success" : "danger"}
+                />
+                <ReviewMetric
+                  label="Reservation"
+                  value={marketplaceReview.reservationStatus}
+                />
+                <ReviewMetric
+                  label="Escrow"
+                  value={marketplaceReview.escrowStatus}
+                />
+                <ReviewMetric
+                  label="Phase"
+                  value={formatNullable(marketplaceReview.adminExecutionPhase)}
+                />
+              </div>
+
+              {marketplaceReview.blockingReason && (
+                <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+                  {marketplaceReview.blockingReason}
+                </div>
+              )}
+
+              <div>
+                <h4 className="text-sm font-bold text-gray-700 mb-3">
+                  Validation
+                </h4>
+                <div className="space-y-2">
+                  {marketplaceReview.baseValidationItems.length > 0 ? (
+                    marketplaceReview.baseValidationItems.map((item) => (
+                      <div
+                        key={`${item.code}-${item.message}`}
+                        className={`rounded-xl border px-4 py-3 text-xs font-bold ${
+                          item.blocking
+                            ? "border-red-100 bg-red-50 text-red-600"
+                            : "border-gray-100 bg-gray-50 text-gray-500"
+                        }`}
+                      >
+                        [{item.severity}] {item.code}: {item.message}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs font-bold text-gray-300">
+                      No base validation issues.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AttemptPanel
+                  title="Active Execution"
+                  attempt={marketplaceReview.activeExecution}
+                />
+                <AttemptPanel
+                  title="Last Attempt"
+                  attempt={marketplaceReview.lastAttempt}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Reason
+                </label>
+                <select
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:border-main transition-all"
+                  value={selectedReasonCode}
+                  onChange={(event) =>
+                    setSelectedReasonCode(event.target.value)
+                  }
+                >
+                  {marketplaceReview.reasonOptions.map((option) => (
+                    <option key={option.reasonCode} value={option.reasonCode}>
+                      {getReasonLabel(option)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedReason && (
+                <div
+                  className={`rounded-2xl border px-4 py-3 text-xs font-bold ${
+                    selectedReason.processable
+                      ? "border-green-100 bg-green-50 text-green-600"
+                      : "border-red-100 bg-red-50 text-red-600"
+                  }`}
+                >
+                  {selectedReason.processable
+                    ? "This reason is executable."
+                    : selectedReason.blockingCode ||
+                      "This reason is currently blocked."}
+                  {selectedReason.requiresConfirmation && (
+                    <span className="block mt-1">
+                      Manual confirmation flag will be sent.
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Operator Memo
+                </label>
+                <textarea
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:border-main transition-all min-h-24 resize-none"
+                  value={marketplaceMemo}
+                  onChange={(event) => setMarketplaceMemo(event.target.value)}
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={executeMarketplaceAction}
+                disabled={!canExecuteMarketplaceAction}
+                className="w-full h-12 rounded-xl bg-main text-white text-sm font-bold disabled:opacity-50"
+              >
+                {isMarketplaceExecuting
+                  ? "Executing..."
+                  : marketplaceAction === "refund"
+                    ? "Execute Refund"
+                    : "Execute Settlement"}
+              </button>
+
+              {marketplaceExecution && (
+                <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs font-bold text-blue-700">
+                  Requested {marketplaceExecution.actionType} for reservation #
+                  {marketplaceExecution.reservationId}. Intent:{" "}
+                  {marketplaceExecution.executionIntent?.status ?? "-"}.
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-sm font-bold text-gray-400">
+            Load a refund or settlement review to inspect executable reasons.
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-lg font-bold text-gray-800">
@@ -630,5 +964,58 @@ const Web3Management = () => {
     </div>
   );
 };
+
+const ReviewMetric = ({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  tone?: "neutral" | "success" | "danger";
+}) => {
+  const toneClass =
+    tone === "success"
+      ? "text-green-600"
+      : tone === "danger"
+        ? "text-red-600"
+        : "text-gray-800";
+
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 overflow-hidden">
+      <span className="block text-[10px] font-black text-gray-300 uppercase tracking-widest">
+        {label}
+      </span>
+      <span className={`block mt-1 text-sm font-black truncate ${toneClass}`}>
+        {value}
+      </span>
+    </div>
+  );
+};
+
+const AttemptPanel = ({
+  title,
+  attempt,
+}: {
+  title: string;
+  attempt: MarketplaceAdminExecutionAttempt | null;
+}) => (
+  <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+    <h5 className="text-xs font-black text-gray-500 mb-2">{title}</h5>
+    {attempt ? (
+      <div className="space-y-1 text-[11px] font-bold text-gray-500">
+        <p>Status: {formatNullable(attempt.attemptStatus)}</p>
+        <p>Intent: {formatNullable(attempt.executionStatus)}</p>
+        <p>Phase: {formatNullable(attempt.adminExecutionPhase)}</p>
+        <p className="break-all">Hash: {formatNullable(attempt.txHash)}</p>
+        {attempt.failureReason && (
+          <p className="text-red-500">Failure: {attempt.failureReason}</p>
+        )}
+      </div>
+    ) : (
+      <p className="text-[11px] font-bold text-gray-300">No attempt.</p>
+    )}
+  </div>
+);
 
 export default Web3Management;

@@ -65,4 +65,36 @@ describe("image service QA", () => {
       _skipNotFoundRedirect: true,
     });
   });
+
+  it("loads image metadata through GET /images query params", async () => {
+    const response = {
+      images: [
+        {
+          imageId: 11,
+          userId: 1,
+          referenceType: "MARKET_CLASS",
+          referenceId: 101,
+          status: "COMPLETED",
+          imageUrl: "https://cdn.example/class.png",
+          imgOrder: 0,
+          createdAt: "2026-05-30T00:00:00Z",
+          updatedAt: "2026-05-30T00:00:00Z",
+        },
+      ],
+    };
+    vi.mocked(api.get).mockResolvedValueOnce(apiResponse(response));
+
+    await expect(
+      imageService.getImagesByIds({
+        ids: [11, 12],
+        referenceType: "MARKET_CLASS",
+        referenceId: 101,
+      })
+    ).resolves.toEqual(response.images);
+
+    expect(api.get).toHaveBeenCalledWith(
+      "/images?ids=11&ids=12&referenceType=MARKET_CLASS&referenceId=101",
+      { _skipNotFoundRedirect: true }
+    );
+  });
 });

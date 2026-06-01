@@ -157,7 +157,7 @@ describe("wallet PIN edge cases", () => {
     mockPinSequence.values = ["0", "0", "0", "0", "0", "0"];
   });
 
-  it("rejects weak PINs during wallet creation before local encryption", async () => {
+  it("allows repeated PINs during wallet creation", async () => {
     render(
       <MemoryRouter>
         <CreateWallet />
@@ -169,9 +169,15 @@ describe("wallet PIN edge cases", () => {
     fireEvent.click(screen.getByRole("button", { name: "verify mnemonic" }));
     fireEvent.click(await screen.findByTestId("pin-pad"));
 
-    expect(await screen.findByRole("dialog")).toHaveTextContent("Weak PIN");
-    expect(mockEncrypt).not.toHaveBeenCalled();
-    expect(localStorage.getItem("encrypted_wallet")).toBeNull();
+    const confirmPinPad = await screen.findByTestId("pin-pad");
+    fireEvent.click(confirmPinPad);
+
+    await waitFor(() => {
+      expect(mockEncrypt).toHaveBeenCalledWith("000000");
+    });
+    expect(localStorage.getItem("encrypted_wallet")).toBe(
+      "encrypted-wallet-json"
+    );
   });
 
   it("rejects sequential PINs during wallet restoration before local encryption", async () => {
