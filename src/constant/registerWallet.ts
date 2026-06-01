@@ -47,7 +47,7 @@ export const REGISTER_WALLET_MESSAGES = {
     },
     weakPin: {
       title: "Weak PIN",
-      desc: "Repeated or sequential PINs are not allowed.",
+      desc: "Sequential PINs are not allowed.",
     },
     pinMismatch: {
       title: "PIN 번호 불일치",

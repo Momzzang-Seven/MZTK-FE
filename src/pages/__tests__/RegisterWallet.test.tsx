@@ -443,7 +443,7 @@ describe("RegisterWallet", () => {
     expect(mockGetStatus).toHaveBeenCalledTimes(1);
   }, 15000);
 
-  it("rejects weak repeated PINs before persisting local wallet", async () => {
+  it("allows repeated PINs before persisting local wallet", async () => {
     mockPinSequence.values = ["0", "0", "0", "0", "0", "0"];
 
     render(<RegisterWallet />);
@@ -454,12 +454,20 @@ describe("RegisterWallet", () => {
       fireEvent.click(pinPad);
     });
 
-    expect(await screen.findByRole("dialog")).toHaveTextContent("Weak PIN");
+    const confirmPinPad = await screen.findByTestId("pin-pad");
+    await act(async () => {
+      fireEvent.click(confirmPinPad);
+    });
+
     expect(mockHandleWalletRegistration).toHaveBeenCalledTimes(1);
-    expect(mockEncrypt).not.toHaveBeenCalled();
-    expect(localStorage.getItem("encrypted_wallet")).toBeNull();
-    expect(localStorage.getItem("wallet_address")).toBeNull();
-    expect(mockSetWalletAddress).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockEncrypt).toHaveBeenCalledWith("000000");
+    });
+    expect(localStorage.getItem("encrypted_wallet")).toBe(
+      "encrypted-wallet-json"
+    );
+    expect(localStorage.getItem("wallet_address")).toBe(WALLET_ADDRESS);
+    expect(mockSetWalletAddress).toHaveBeenCalledWith(WALLET_ADDRESS);
   });
 
   it("deduplicates rapid PIN confirmation submissions while local wallet is being encrypted", async () => {
