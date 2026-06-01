@@ -129,6 +129,17 @@ export const banAdminComment = async (
   return res.data.data;
 };
 
+export const unblockAdminComment = async (
+  commentId: number,
+  data: BanRequest
+): Promise<BanResponse> => {
+  const res = await api.post<BaseResponse<BanResponse>>(
+    `/admin/boards/comments/${commentId}/unblock`,
+    data
+  );
+  return res.data.data;
+};
+
 // admin-account-controller
 export const fetchAdminAccounts = async (): Promise<AdminAccountDto[]> => {
   const res =
