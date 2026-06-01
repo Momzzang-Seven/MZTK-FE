@@ -113,6 +113,29 @@ const installApiRoutes = async (page: Page, captured: CapturedRequest[]) => {
       return;
     }
 
+    if (path === "/marketplace/classes") {
+      await route.fulfill({
+        json: apiEnvelope({
+          items: [
+            {
+              classId: 101,
+              title: "QA PT",
+              category: "PT",
+              priceAmount: 0,
+              durationMinutes: 50,
+              thumbnailFinalObjectKey: null,
+              tags: ["qa"],
+              distance: null,
+            },
+          ],
+          currentPage: 0,
+          totalPages: 1,
+          totalElements: 1,
+        }),
+      });
+      return;
+    }
+
     if (path === "/marketplace/classes/101/reservation-info") {
       await route.fulfill({
         json: apiEnvelope({
@@ -229,6 +252,9 @@ test.describe("QA API browser contract evidence", () => {
 
     await page.goto("/trainer");
     await expect(page.getByText("Trainer Center")).toBeVisible();
+    await expect
+      .poll(() => captured.map((request) => request.path))
+      .toContain("/marketplace/trainer/store");
 
     expect(captured).toEqual(
       expect.arrayContaining([
@@ -277,6 +303,53 @@ test.describe("QA API browser contract evidence", () => {
     );
   });
 
+  test("market list uses supported query params and direct detail back fallback", async ({
+    page,
+  }) => {
+    const captured: CapturedRequest[] = [];
+    await persistUser(page, "MEMBER");
+    await installApiRoutes(page, captured);
+
+    await page.goto("/market");
+    await expect(page.getByText("QA PT")).toBeVisible();
+
+    const firstListRequest = captured.find(
+      (request) => request.path === "/marketplace/classes"
+    );
+    expect(firstListRequest).toBeDefined();
+    expect(new URLSearchParams(firstListRequest?.query).has("keyword")).toBe(
+      false
+    );
+    expect(new URLSearchParams(firstListRequest?.query).has("status")).toBe(
+      false
+    );
+
+    await page.locator('input[type="text"]').fill("qa");
+    await expect
+      .poll(
+        () =>
+          captured.filter((request) => request.path === "/marketplace/classes")
+            .length
+      )
+      .toBeGreaterThanOrEqual(2);
+
+    const listRequests = captured.filter(
+      (request) => request.path === "/marketplace/classes"
+    );
+    expect(
+      listRequests.every((request) => {
+        const params = new URLSearchParams(request.query);
+        return !params.has("keyword") && !params.has("status");
+      })
+    ).toBe(true);
+
+    await page.goto("/market/101");
+    await expect(page.getByText("QA PT")).toBeVisible();
+    await page.getByLabel("마켓으로 돌아가기").click();
+
+    await expect(page).toHaveURL(/\/market$/);
+  });
+
   test("admin pages request BE admin APIs for users and web3 settings", async ({
     page,
   }) => {
@@ -284,28 +357,25 @@ test.describe("QA API browser contract evidence", () => {
     await persistUser(page, "ADMIN");
     await installApiRoutes(page, captured);
 
+    const usersRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return request.method() === "GET" && url.pathname === "/admin/users";
+    });
     await page.goto("/admin/users");
     await expect(page.getByText("User Database")).toBeVisible();
-    expect(captured).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          method: "GET",
-          path: "/admin/users",
-        }),
-      ])
-    );
+    await usersRequest;
 
+    const treasuryRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        request.method() === "GET" &&
+        url.pathname === "/admin/web3/treasury-keys"
+      );
+    });
     await page.goto("/admin/web3");
     await expect(
       page.getByText("Manual Transaction Confirmation")
     ).toBeVisible();
-    expect(captured).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          method: "GET",
-          path: "/admin/web3/treasury-keys",
-        }),
-      ])
-    );
+    await treasuryRequest;
   });
 });

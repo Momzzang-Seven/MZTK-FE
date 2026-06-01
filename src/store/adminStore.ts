@@ -8,6 +8,8 @@ import {
   banAdminPost,
   unblockAdminPost,
   banAdminComment,
+  unblockAdminComment,
+  postService,
   fetchAdminAccounts,
   createAdminAccount,
   resetAdminPassword,
@@ -67,6 +69,20 @@ export interface AdminComment {
   date: string; // YYYY-MM-DD HH:mm
   profileColor: string;
   isBanned: boolean;
+  parentId?: number | null;
+  answerId?: number | null;
+  targetType?: "POST" | "ANSWER";
+}
+
+export interface AdminAnswer {
+  id: number;
+  author: string;
+  content: string;
+  date: string; // YYYY-MM-DD HH:mm
+  profileColor: string;
+  isAccepted: boolean;
+  commentCount: number;
+  likeCount: number;
 }
 
 export interface AdminPost {
@@ -77,6 +93,7 @@ export interface AdminPost {
   title: string;
   content: string;
   comments: AdminComment[];
+  answers?: AdminAnswer[];
   profileColor: string;
   isBanned: boolean;
   publicationStatus?: "PENDING" | "VISIBLE" | "FAILED";
@@ -429,8 +446,41 @@ export const useAdminStore = create<AdminState>((set, get) => ({
                   c.writerId % ADMIN_TEXT.COLORS.AVATARS.length
                 ],
               isBanned: c.isDeleted,
+              parentId: c.parentId,
+              answerId: c.answerId ?? null,
+              targetType: c.targetType ?? "POST",
             }));
           }
+          const answers =
+            p.type === "QUESTION" && (p.answerCount ?? 0) > 0
+              ? await postService
+                  .getAnswers(p.postId)
+                  .then((answerRes) =>
+                    answerRes.map((answer) => ({
+                      id: answer.answerId,
+                      author: answer.nickname,
+                      content: answer.content,
+                      date: new Date(answer.createdAt).toLocaleString("ko-KR", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
+                      profileColor:
+                        ADMIN_TEXT.COLORS.AVATARS[
+                          answer.userId % ADMIN_TEXT.COLORS.AVATARS.length
+                        ],
+                      isAccepted: answer.isAccepted,
+                      commentCount: answer.commentCount,
+                      likeCount: answer.likeCount,
+                    }))
+                  )
+                  .catch((error) => {
+                    console.error("Failed to fetch answers:", error);
+                    return [];
+                  })
+              : [];
           return {
             id: p.postId,
             author: p.writerNickname,
@@ -448,6 +498,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             title: p.title,
             content: p.contentPreview,
             comments: comments,
+            answers,
             profileColor:
               ADMIN_TEXT.COLORS.AVATARS[
                 p.writerId % ADMIN_TEXT.COLORS.AVATARS.length
@@ -570,19 +621,28 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   restoreComment: async (postId: number, commentId: number) => {
-    const { posts } = get();
-    const updatedPosts = posts.map((post) => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          comments: post.comments.map((c) =>
-            c.id === commentId ? { ...c, isBanned: false } : c
-          ),
-        };
-      }
-      return post;
-    });
-    set({ posts: updatedPosts, filteredPosts: updatedPosts });
+    try {
+      await unblockAdminComment(commentId, {
+        reasonCode: "OTHER",
+        reasonDetail: "Admin restored comment",
+      });
+      const { posts } = get();
+      const updatedPosts = posts.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: post.comments.map((c) =>
+              c.id === commentId ? { ...c, isBanned: false } : c
+            ),
+          };
+        }
+        return post;
+      });
+      set({ posts: updatedPosts, filteredPosts: updatedPosts });
+    } catch (error) {
+      console.error("Failed to unblock comment:", error);
+      throw error;
+    }
   },
 
   // Inquiry Actions

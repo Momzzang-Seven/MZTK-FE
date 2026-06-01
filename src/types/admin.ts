@@ -117,6 +117,8 @@ export interface AdminPostDto {
 export interface AdminCommentDto {
   commentId: number;
   postId: number;
+  answerId?: number | null;
+  targetType?: "POST" | "ANSWER";
   writerId: number;
   writerNickname: string;
   content: string;

@@ -42,6 +42,7 @@ const renderDetailPage = () =>
     <MemoryRouter initialEntries={["/market/101"]}>
       <Routes>
         <Route path="/market/:id" element={<MarketDetail />} />
+        <Route path="/market" element={<div>마켓 메인</div>} />
         <Route
           path="/market/purchase/:id"
           element={<div>구매 화면 진입</div>}
@@ -115,6 +116,15 @@ describe("MarketPurchase", () => {
     expect(await screen.findByText("구매 화면 진입")).toBeInTheDocument();
   });
 
+  it("falls back to market main when direct detail entry has no browser history", async () => {
+    renderDetailPage();
+
+    expect(await screen.findByText("아침 PT 클래스")).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("마켓으로 돌아가기"));
+
+    expect(await screen.findByText("마켓 메인")).toBeInTheDocument();
+  });
+
   it("sends reservation request when selected slot is valid", async () => {
     renderPage();
 
@@ -142,7 +152,7 @@ describe("MarketPurchase", () => {
         idempotencyKey: expect.stringMatching(
           /^reservation:101:501:2026-05-18:10:00:00:/
         ),
-        signedAmount: "300",
+        signedAmount: "300000000000000000000",
       })
     );
     expect(request).not.toHaveProperty("delegationSignature");

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AdminPost, AdminComment } from "@store/adminStore";
+import type { AdminPost, AdminComment, AdminAnswer } from "@store/adminStore";
 import { ADMIN_TEXT } from "@constant/admin";
 import {
   Trash2,
@@ -40,6 +40,7 @@ export const PostItem = ({
   };
 
   const isQuestion = post.category === ADMIN_TEXT.POST.BOARD_TYPE.QUESTION;
+  const answers = post.answers ?? [];
   const visibleDiscussionCount = isQuestion
     ? (post.answerCount ?? post.commentCount ?? post.comments.length)
     : (post.commentCount ?? post.comments.length);
@@ -154,6 +155,66 @@ export const PostItem = ({
         </div>
       </div>
 
+      {/* Answers Section */}
+      {isQuestion && answers.length > 0 && (
+        <div className="mt-6 bg-blue-50/40 rounded-[24px] p-6 space-y-4 border border-blue-100/60">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">
+                답변글 ({post.answerCount ?? answers.length})
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {answers.map((answer: AdminAnswer) => (
+              <div
+                key={answer.id}
+                className="flex justify-between items-center p-4 rounded-2xl bg-white border border-blue-100/60 shadow-sm"
+              >
+                <div className="flex gap-4 flex-1">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm"
+                    style={{ backgroundColor: answer.profileColor }}
+                  >
+                    {answer.author[0]}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-black text-[13px] text-gray-900 truncate max-w-[120px]">
+                        {answer.author}
+                      </span>
+                      <span className="text-[9px] font-bold text-gray-400 uppercase italic opacity-60">
+                        {answer.date}
+                      </span>
+                      {answer.isAccepted && (
+                        <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">
+                          채택됨
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[13px] leading-relaxed text-gray-600 font-medium">
+                      {answer.content}
+                    </p>
+                  </div>
+                </div>
+
+                {!answer.isAccepted && (
+                  <button
+                    onClick={() => onOpenSettleModal(post.id, answer.id)}
+                    className="ml-4 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest border border-blue-600 hover:bg-blue-700 transition-all flex items-center gap-1"
+                  >
+                    <CheckCircle2 size={10} />
+                    {ADMIN_TEXT.POST.BTN_SETTLE}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Comments Section */}
       {post.comments.length > 0 && (
         <div className="mt-6 bg-gray-50/50 rounded-[24px] p-6 space-y-4 border border-gray-100/50">
@@ -191,6 +252,13 @@ export const PostItem = ({
                       <span className="font-black text-[13px] text-gray-900 truncate max-w-[120px]">
                         {comment.author}
                       </span>
+                      <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-gray-100 text-gray-500">
+                        {comment.targetType === "ANSWER"
+                          ? "답변 댓글"
+                          : comment.parentId
+                            ? "답글"
+                            : "댓글"}
+                      </span>
                       <span className="text-[9px] font-bold text-gray-400 uppercase italic opacity-60">
                         {comment.date}
                       </span>
@@ -212,15 +280,6 @@ export const PostItem = ({
                 <div className="flex items-center gap-2 ml-4">
                   {!comment.isBanned ? (
                     <>
-                      {isQuestion && (
-                        <button
-                          onClick={() => onOpenSettleModal(post.id, comment.id)}
-                          className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest border border-blue-100 hover:bg-blue-100 transition-all flex items-center gap-1"
-                        >
-                          <CheckCircle2 size={10} />
-                          {ADMIN_TEXT.POST.BTN_SETTLE}
-                        </button>
-                      )}
                       <button
                         onClick={() =>
                           onOpenDeleteModal("COMMENT", post.id, comment.id)

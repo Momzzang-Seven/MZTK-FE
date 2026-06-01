@@ -1,4 +1,5 @@
 export * from "./client";
+export * from "./auth";
 export * from "./image";
 export * from "./trainer";
 export * from "./post";

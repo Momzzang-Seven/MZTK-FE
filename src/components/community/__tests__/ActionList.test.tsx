@@ -44,10 +44,13 @@ vi.mock("@components/community", () => ({
     handleEditClick,
     handleDeleteClick,
     handleCancelClick,
-  }: Record<string, () => void>) => (
+    handleSignClick,
+    isWeb3Executable,
+  }: Record<string, () => void> & { isWeb3Executable?: boolean }) => (
     <div data-testid="my-post-actions">
       <button onClick={handleEditClick}>수정</button>
       <button onClick={handleDeleteClick}>삭제</button>
+      {isWeb3Executable && <button onClick={handleSignClick}>서명</button>}
       <button onClick={handleCancelClick}>취소</button>
     </div>
   ),
@@ -150,6 +153,86 @@ describe("ActionList 컴포넌트", () => {
       expect(
         screen.queryByTestId("other-post-actions")
       ).not.toBeInTheDocument();
+    });
+
+    it("QnA 답변 Web3 intent는 실제 서명 전 VerifyWallet로만 이동한다", () => {
+      setUserInStore(100);
+      const execution = {
+        resource: {
+          type: "ANSWER",
+          id: "30",
+          status: "PENDING_EXECUTION",
+        },
+        actionType: "QNA_ANSWER_CREATE",
+        executionIntent: {
+          id: "intent-30",
+          status: "AWAITING_SIGNATURE",
+          expiresAt: "2026-05-30T10:00:00",
+        },
+        execution: {
+          mode: "EIP7702",
+          signCount: 2,
+        },
+        signRequest: null,
+      };
+
+      setup({
+        type: "ANSWER",
+        id: 30,
+        parentPostId: 7,
+        authorId: 100,
+        isWeb3Executable: true,
+        Web3Execution: execution,
+      });
+      fireEvent.click(screen.getByAltText("더보기"));
+      fireEvent.click(screen.getByText("서명"));
+
+      expect(mockNavigate).toHaveBeenCalledWith("/verify-wallet/answer/30/7", {
+        state: { intent: execution },
+      });
+    });
+
+    it("복구가 막힌 QnA Web3 상태는 서명 버튼 대신 지연 안내를 보여준다", () => {
+      setUserInStore(100);
+
+      setup({
+        type: "ANSWER",
+        id: 30,
+        parentPostId: 7,
+        authorId: 100,
+        isWeb3Executable: true,
+        Web3Execution: {
+          resource: {
+            type: "ANSWER",
+            id: "30",
+            status: "PENDING_EXECUTION",
+          },
+          actionType: "QNA_ANSWER_CREATE",
+          executionIntent: {
+            id: "intent-30",
+            status: "PENDING_ONCHAIN",
+            expiresAt: "2026-05-30T10:00:00",
+          },
+          execution: {
+            mode: "EIP7702",
+            signCount: 2,
+          },
+          signRequest: null,
+          transaction: {
+            id: 1,
+            status: "UNCONFIRMED",
+            txHash: null,
+          },
+          recoveryStatus: "ONCHAIN_UNCERTAIN",
+          retryAllowed: false,
+        },
+      });
+      fireEvent.click(screen.getByAltText("더보기"));
+
+      expect(
+        screen.getByText("블록체인 확인이 지연되고 있습니다.")
+      ).toBeInTheDocument();
+      expect(screen.queryByText("서명")).not.toBeInTheDocument();
     });
   });
 

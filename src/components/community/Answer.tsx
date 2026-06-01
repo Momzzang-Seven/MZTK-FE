@@ -16,7 +16,7 @@ import {
   QnaContent,
 } from "@components/community";
 import { LoadingSpinner } from "@components/common";
-import { formatTimeAgo, replaceImageSrc } from "@utils";
+import { buildImageUrl, formatTimeAgo, replaceImageSrc } from "@utils";
 import { useCommentService, usePostService } from "@hooks";
 
 interface AnswerProps {
@@ -81,7 +81,12 @@ const Answer = ({
   };
 
   const processedContent = answer.content
-    ? replaceImageSrc(answer.content, answer.images)
+    ? replaceImageSrc(
+        answer.content,
+        answer.images.map((image) => ({
+          imageUrl: buildImageUrl(image.imageUrl),
+        }))
+      )
     : "";
 
   const getStatusConfig = (resStatus: string, intentStatus: string) => {
@@ -207,7 +212,7 @@ const Answer = ({
       {answer.images && answer.images.length > 0 && (
         <div className="rounded-2xl overflow-hidden border border-gray-100">
           <img
-            src={answer.images[0].imageUrl}
+            src={buildImageUrl(answer.images[0].imageUrl)}
             alt="answer"
             className="w-full object-cover max-h-[300px]"
           />
