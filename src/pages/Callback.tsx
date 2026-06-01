@@ -43,13 +43,6 @@ const Callback = () => {
           redirectUri,
         });
 
-        if (response?.userInfo.walletAddress) {
-          localStorage.setItem(
-            "wallet_address",
-            response.userInfo.walletAddress
-          );
-        }
-
         if (response) {
           const { userInfo, accessToken, isNewUser } = response;
           setUser(userInfo);

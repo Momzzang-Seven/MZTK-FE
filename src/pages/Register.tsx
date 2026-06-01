@@ -8,6 +8,10 @@ const Register = () => {
     navigate("/onboarding");
   };
 
+  const handleSkip = () => {
+    navigate("/", { replace: true });
+  };
+
   return (
     <FullScreenPage className="pt-16 pb-12 bg-white overflow-hidden">
       {/* ── Background Decoration ── */}
@@ -137,6 +141,13 @@ const Register = () => {
 
       {/* ── Footer Info ── */}
       <div className="mt-12 text-center relative z-10">
+        <button
+          type="button"
+          onClick={handleSkip}
+          className="btn-press w-full mb-5 py-4 rounded-[22px] bg-gray-900 text-white text-[14px] font-black shadow-lg shadow-gray-200"
+        >
+          나중에 하기
+        </button>
         <p className="text-[12px] text-gray-300 font-bold">
           역할은 나중에 설정에서 변경할 수 없습니다.
           <br />

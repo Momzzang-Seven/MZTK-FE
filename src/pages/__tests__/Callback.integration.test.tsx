@@ -41,6 +41,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(PostLogin).mockReset();
+    localStorage.clear();
   });
 
   it("기존 유저가 로그인하면 지갑 복구(/restore-wallet) 페이지로 이동한다", async () => {
@@ -136,6 +137,39 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith("/restore-wallet");
     });
+  });
+
+  it("백엔드 지갑과 다른 로컬 암호화 지갑이 있으면 stale 지갑을 지운다", async () => {
+    localStorage.setItem("wallet_address", "0xold");
+    localStorage.setItem("encrypted_wallet", "old-encrypted-wallet");
+    vi.mocked(PostLogin).mockResolvedValueOnce({
+      userInfo: {
+        userId: 1,
+        nickname: "테스트",
+        email: "test@example.com",
+        profileImage: "",
+        role: "USER",
+        walletAddress: "0xnew",
+      },
+      accessToken: "mock-token",
+      grantType: "Bearer",
+      expiresIn: 3600,
+      isNewUser: false,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/callback?code=test-code&state=kakao"]}>
+        <Routes>
+          <Route path="/callback" element={<Callback />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/restore-wallet");
+    });
+    expect(localStorage.getItem("wallet_address")).toBe("0xnew");
+    expect(localStorage.getItem("encrypted_wallet")).toBeNull();
   });
 
   it("기존 트레이너가 성공적으로 로그인하면 /restore-wallet로 이동한다", async () => {
