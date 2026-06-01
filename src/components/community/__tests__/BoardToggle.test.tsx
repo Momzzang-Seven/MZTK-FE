@@ -33,6 +33,10 @@ describe("BoardToggle", () => {
 
     expect(screen.getByText("자유게시판")).toBeInTheDocument();
     expect(screen.getByText("질문게시판")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "질문게시판" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
   });
 
   it("자유게시판 경로일 때 자유게시판이 활성화된다", () => {

@@ -140,6 +140,19 @@ describe("useWalletService", () => {
     vi.unstubAllEnvs();
   });
 
+  it("does not log a global escrow config error when the hook renders", () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    renderHook(() => useWalletService());
+
+    expect(consoleError).not.toHaveBeenCalledWith(
+      expect.stringContaining("VITE_QNA_ESCROW_CONTRACT")
+    );
+    consoleError.mockRestore();
+  });
+
   it("signs ownership message and returns the registration response without touching escrow approve", async () => {
     const wallet = {
       address: WALLET_ADDRESS,

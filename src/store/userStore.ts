@@ -632,6 +632,7 @@ export const useUserStore = create<UserState>()(
         accessToken: state.accessToken,
         level: state.level,
         xp: state.xp,
+        maxXp: state.maxXp,
         attendanceStreak: state.attendanceStreak,
         lastAttendanceDate: state.lastAttendanceDate,
         lastExerciseDate: state.lastExerciseDate,

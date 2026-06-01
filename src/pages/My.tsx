@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CurrentTkn,
   LevelProgress,
@@ -75,6 +75,7 @@ const My = () => {
   const user = useUserStore((state) => state.user);
   const updateRole = useUserStore((state) => state.updateRole);
   const clearUser = useUserStore((state) => state.clearUser);
+  const initLevel = useUserStore((state) => state.initLevel);
   const accessToken = useUserStore((state) => state.accessToken);
   const setAccessToken = useUserStore((state) => state.setAccessToken);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
@@ -88,6 +89,10 @@ const My = () => {
   const isTrainer = user?.role === "TRAINER";
   const targetRole = isTrainer ? "USER" : "TRAINER";
   const targetRoleLabel = isTrainer ? "일반 회원" : "트레이너";
+
+  useEffect(() => {
+    void initLevel();
+  }, [initLevel]);
 
   const handleRoleSwitch = async () => {
     if (isChangingRole) return;

@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ethers, type Log } from "ethers";
 import { getNetworkConfig } from "@utils";
 
 const ERC20_ABI = [
@@ -8,6 +8,8 @@ const ERC20_ABI = [
 ];
 
 const TRANSFER_TOPIC = ethers.id("Transfer(address,address,uint256)");
+const DEFAULT_TRANSFER_LOOKBACK_BLOCKS = 2_000;
+const DEFAULT_LOG_BLOCK_RANGE = 10;
 
 export interface OnchainTokenTransfer {
   hash: string;
@@ -36,6 +38,87 @@ const createProvider = () => {
     throw new Error("RPC URL is not configured");
   }
   return new ethers.JsonRpcProvider(RPC_URL);
+};
+
+const readPositiveIntegerEnv = (
+  value: string | undefined,
+  fallback: number
+) => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const getTransferLookbackBlocks = () =>
+  readPositiveIntegerEnv(
+    import.meta.env.VITE_TOKEN_TRANSFER_LOOKBACK_BLOCKS as string | undefined,
+    DEFAULT_TRANSFER_LOOKBACK_BLOCKS
+  );
+
+const getLogBlockRange = () =>
+  readPositiveIntegerEnv(
+    import.meta.env.VITE_RPC_LOG_BLOCK_RANGE as string | undefined,
+    DEFAULT_LOG_BLOCK_RANGE
+  );
+
+type JsonRpcProvider = ReturnType<typeof createProvider>;
+
+interface TransferLogFilter {
+  address: string;
+  fromBlock: number;
+  toBlock: number;
+  topics: (string | null)[];
+}
+
+const getLogsWithAdaptiveRange = async (
+  provider: JsonRpcProvider,
+  filter: TransferLogFilter
+): Promise<Log[]> => {
+  try {
+    return await provider.getLogs(filter);
+  } catch (error) {
+    if (filter.fromBlock >= filter.toBlock) {
+      throw error;
+    }
+
+    const midpoint = Math.floor((filter.fromBlock + filter.toBlock) / 2);
+    const [left, right] = await Promise.all([
+      getLogsWithAdaptiveRange(provider, {
+        ...filter,
+        toBlock: midpoint,
+      }),
+      getLogsWithAdaptiveRange(provider, {
+        ...filter,
+        fromBlock: midpoint + 1,
+      }),
+    ]);
+
+    return [...left, ...right];
+  }
+};
+
+const fetchTransferLogsForChunk = async (
+  provider: JsonRpcProvider,
+  tokenAddress: string,
+  walletTopic: string,
+  fromBlock: number,
+  toBlock: number
+) => {
+  const [incoming, outgoing] = await Promise.all([
+    getLogsWithAdaptiveRange(provider, {
+      address: tokenAddress,
+      fromBlock,
+      toBlock,
+      topics: [TRANSFER_TOPIC, null, walletTopic],
+    }),
+    getLogsWithAdaptiveRange(provider, {
+      address: tokenAddress,
+      fromBlock,
+      toBlock,
+      topics: [TRANSFER_TOPIC, walletTopic],
+    }),
+  ]);
+
+  return [...incoming, ...outgoing];
 };
 
 export const fetchWalletBalanceSnapshot = async (
@@ -69,37 +152,36 @@ export const fetchTokenTransfers = async (
   limit = 100
 ): Promise<OnchainTokenTransfer[]> => {
   const { TOKEN_ADDRESS } = getNetworkConfig();
-  if (!walletAddress || !TOKEN_ADDRESS) return [];
+  if (!walletAddress || !TOKEN_ADDRESS || limit <= 0) return [];
 
   const provider = createProvider();
   const normalizedWallet = ethers.getAddress(walletAddress);
   const latestBlock = await provider.getBlockNumber();
-  const fromBlock = Math.max(latestBlock - 50_000, 0);
+  const fromBlock = Math.max(latestBlock - getTransferLookbackBlocks(), 0);
+  const blockRange = getLogBlockRange();
   const walletTopic = topicAddress(normalizedWallet);
+  const transferLogsByKey = new Map<string, Log>();
 
-  const [incoming, outgoing] = await Promise.all([
-    provider.getLogs({
-      address: TOKEN_ADDRESS,
-      fromBlock,
-      toBlock: "latest",
-      topics: [TRANSFER_TOPIC, null, walletTopic],
-    }),
-    provider.getLogs({
-      address: TOKEN_ADDRESS,
-      fromBlock,
-      toBlock: "latest",
-      topics: [TRANSFER_TOPIC, walletTopic],
-    }),
-  ]);
+  for (
+    let chunkToBlock = latestBlock;
+    chunkToBlock >= fromBlock && transferLogsByKey.size < limit;
+    chunkToBlock -= blockRange
+  ) {
+    const chunkFromBlock = Math.max(chunkToBlock - blockRange + 1, fromBlock);
+    const chunkLogs = await fetchTransferLogsForChunk(
+      provider,
+      TOKEN_ADDRESS,
+      walletTopic,
+      chunkFromBlock,
+      chunkToBlock
+    );
 
-  const deduped = Array.from(
-    new Map(
-      [...incoming, ...outgoing].map((log) => [
-        `${log.transactionHash}-${log.index}`,
-        log,
-      ])
-    ).values()
-  )
+    chunkLogs.forEach((log) => {
+      transferLogsByKey.set(`${log.transactionHash}-${log.index}`, log);
+    });
+  }
+
+  const deduped = Array.from(transferLogsByKey.values())
     .sort(
       (a, b) => b.blockNumber - a.blockNumber || (b.index ?? 0) - (a.index ?? 0)
     )
