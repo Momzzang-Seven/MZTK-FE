@@ -15,8 +15,13 @@ import {
 } from "@services/auth";
 
 export const useAuth = () => {
-  const { setUser, setAccessToken, clearUser, isAuthenticated } =
-    useUserStore();
+  const {
+    setUser,
+    setAccessToken,
+    setAuthProvider,
+    clearUser,
+    isAuthenticated,
+  } = useUserStore();
   const { setSanctioned } = useAuthModalStore();
 
   const login = useCallback(
@@ -25,6 +30,9 @@ export const useAuth = () => {
         const data = await PostLogin(request);
         setAccessToken(data.accessToken);
         setUser(data.userInfo);
+        setAuthProvider(
+          request.provider === "LOCAL_ADMIN" ? null : request.provider
+        );
         return data;
       } catch (error) {
         if (isSanctionedAccountError(error, { allowBareForbidden: true })) {
@@ -35,7 +43,7 @@ export const useAuth = () => {
         throw error;
       }
     },
-    [clearUser, setAccessToken, setSanctioned, setUser]
+    [clearUser, setAccessToken, setAuthProvider, setSanctioned, setUser]
   );
 
   const signup = useCallback(async (request: SignupRequest) => {
@@ -64,13 +72,16 @@ export const useAuth = () => {
         const data = await PostReactivate(request);
         setAccessToken(data.accessToken);
         setUser(data.userInfo);
+        setAuthProvider(
+          request.provider === "LOCAL_ADMIN" ? null : request.provider
+        );
         return data;
       } catch (error) {
         console.error("Reactivation failed:", error);
         throw error;
       }
     },
-    [setAccessToken, setUser]
+    [setAccessToken, setAuthProvider, setUser]
   );
 
   const refresh = useCallback(async () => {

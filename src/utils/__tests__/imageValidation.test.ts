@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   ACCEPTED_IMAGE_INPUT_TYPES,
+  ACCEPTED_WORKOUT_PHOTO_INPUT_TYPES,
+  ACCEPTED_WORKOUT_RECORD_INPUT_TYPES,
   MAX_IMAGE_FILE_SIZE_BYTES,
   findInvalidImageFileMessage,
   getInvalidImageFileMessage,
+  getInvalidWorkoutVerificationFileMessage,
 } from "../imageValidation";
 
 describe("imageValidation", () => {
@@ -17,6 +20,22 @@ describe("imageValidation", () => {
     const file = new File(["image"], "photo.HEIC", { type: "" });
 
     expect(getInvalidImageFileMessage(file)).toBeNull();
+  });
+
+  it("운동 사진 인증은 png를 업로드 전에 거부한다", () => {
+    const file = new File(["image"], "photo.png", { type: "image/png" });
+
+    expect(ACCEPTED_WORKOUT_PHOTO_INPUT_TYPES).not.toContain(".png");
+    expect(
+      getInvalidWorkoutVerificationFileMessage(file, "exercise")
+    ).toContain("운동 인증에 사용할 수 없는 이미지 형식");
+  });
+
+  it("운동 기록 인증은 png를 허용한다", () => {
+    const file = new File(["image"], "record.png", { type: "image/png" });
+
+    expect(ACCEPTED_WORKOUT_RECORD_INPUT_TYPES).toContain(".png");
+    expect(getInvalidWorkoutVerificationFileMessage(file, "record")).toBeNull();
   });
 
   it("확장자가 없는 파일은 거부한다", () => {

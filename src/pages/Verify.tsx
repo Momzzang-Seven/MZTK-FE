@@ -9,6 +9,7 @@ import { LocationLoadingOverlay } from "@components/location/LocationLoadingOver
 
 import { useNavigate } from "react-router-dom";
 import { getDistanceFromLatLonInMeters } from "@utils/geo";
+import { getKoreanErrorMessageFromError } from "@constant";
 import { LOCATION_CONSTANTS, VERIFY_TEXT } from "@constant/location";
 import { ChevronLeft, MapPin, Info, Loader2 } from "lucide-react";
 import type { VerifyLocationResponse } from "@types";
@@ -26,13 +27,10 @@ const getVerificationFailMessage = (result: VerifyLocationResponse) => {
 };
 
 const getLocationRequestErrorMessage = (error: unknown) => {
-  const responseMessage = (
-    error as {
-      response?: { data?: { message?: string } };
-    }
-  ).response?.data?.message;
-
-  return responseMessage || "서버 통신 중 오류가 발생했습니다.";
+  return getKoreanErrorMessageFromError(
+    error,
+    "서버 통신 중 오류가 발생했습니다."
+  );
 };
 
 const Verify = () => {

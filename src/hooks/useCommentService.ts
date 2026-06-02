@@ -3,6 +3,7 @@ import type { Comment, CommentPayload } from "@types";
 import { commentService } from "@services";
 import { useUserStore } from "@store";
 import { containsUnsafeMarkup, TEXT_LIMITS } from "@utils";
+import { getKoreanErrorMessageFromError } from "@constant";
 
 const PAGE_SIZE = 10;
 
@@ -29,13 +30,11 @@ export const useCommentService = <T extends Comment>(
     async (payload: CommentPayload) => {
       const content = payload.content.trim();
       if (!content || content.length > TEXT_LIMITS.comment) {
-        setError(
-          `Comments must be ${TEXT_LIMITS.comment} characters or fewer.`
-        );
+        setError(`댓글은 ${TEXT_LIMITS.comment}자 이하로 작성해 주세요.`);
         return;
       }
       if (containsUnsafeMarkup(content)) {
-        setError("Script-like comments are not allowed.");
+        setError("스크립트 형태의 댓글은 작성할 수 없습니다.");
         return;
       }
 
@@ -71,12 +70,9 @@ export const useCommentService = <T extends Comment>(
         }
         return newComment;
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 작성에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 작성에 실패했습니다.")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -117,12 +113,9 @@ export const useCommentService = <T extends Comment>(
         setNextCursor(data.nextCursor);
         return true;
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 조회에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 조회에 실패했습니다.")
+        );
         return false;
       } finally {
         if (activeFetchKeyRef.current === fetchKey) {
@@ -147,13 +140,11 @@ export const useCommentService = <T extends Comment>(
     async (commentId: number, content: string) => {
       const nextContent = content.trim();
       if (!nextContent || nextContent.length > TEXT_LIMITS.comment) {
-        setError(
-          `Comments must be ${TEXT_LIMITS.comment} characters or fewer.`
-        );
+        setError(`댓글은 ${TEXT_LIMITS.comment}자 이하로 작성해 주세요.`);
         return;
       }
       if (containsUnsafeMarkup(nextContent)) {
-        setError("Script-like comments are not allowed.");
+        setError("스크립트 형태의 댓글은 작성할 수 없습니다.");
         return;
       }
 
@@ -167,12 +158,9 @@ export const useCommentService = <T extends Comment>(
           isAnswer
         );
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 수정에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 수정에 실패했습니다.")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -187,12 +175,9 @@ export const useCommentService = <T extends Comment>(
       try {
         await commentService.deleteComment(commentId, targetId, isAnswer);
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 삭제에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 삭제에 실패했습니다.")
+        );
       } finally {
         setIsLoading(false);
       }

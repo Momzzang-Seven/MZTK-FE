@@ -44,13 +44,17 @@ const EMPTY_MESSAGES: Record<MyPostTab, { title: string; desc: string }> = {
   },
 };
 
-const isValidTab = (tab: string | undefined): tab is MyPostTab =>
-  tab === "written" || tab === "liked" || tab === "commented";
+const resolveTab = (tab: string | undefined): MyPostTab | null => {
+  if (tab === "written") return "written";
+  if (tab === "liked" || tab === "likes") return "liked";
+  if (tab === "commented" || tab === "comments") return "commented";
+  return null;
+};
 
 const MyActivity = () => {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
-  const resolvedTab: MyPostTab = isValidTab(tab) ? tab : "written";
+  const resolvedTab: MyPostTab = resolveTab(tab) ?? "written";
 
   const {
     activeTab,
@@ -67,9 +71,14 @@ const MyActivity = () => {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (tab !== resolvedTab) {
+      navigate(`/my/activity/${resolvedTab}`, { replace: true });
+      return;
+    }
+
     switchTab(resolvedTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [tab, resolvedTab, navigate]);
 
   useEffect(() => {
     const el = bottomRef.current;
@@ -86,7 +95,6 @@ const MyActivity = () => {
 
   const handleTabSwitch = (t: MyPostTab) => {
     navigate(`/my/activity/${t}`, { replace: true });
-    switchTab(t);
   };
 
   return (

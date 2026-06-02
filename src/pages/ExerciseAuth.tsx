@@ -12,6 +12,7 @@ const ExerciseAuth = () => {
     previewUrl,
     errorMessage,
     hasSelectedFile,
+    acceptedFileTypes,
     handleFileChange,
     handleUpload,
     successData,
@@ -68,6 +69,7 @@ const ExerciseAuth = () => {
         guideDesc={EXERCISE_TEXT.GUIDE_DESC}
         uploadNoImageText={EXERCISE_TEXT.UPLOAD_NO_IMAGE}
         uploadSizeHintText={EXERCISE_TEXT.UPLOAD_SIZE_HINT}
+        acceptedFileTypes={acceptedFileTypes}
       />
 
       {errorMessage && (
