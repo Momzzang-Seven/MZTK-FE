@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { walletService, web3Service } from "@services";
 import { useWalletService } from "../useWalletService";
 import type { RegisterWalletResponse, Web3Execution } from "@types";
+import { ERROR_MESSAGES } from "@constant";
 
 const ethersMocks = vi.hoisted(() => ({
   jsonRpcProvider: vi.fn(),
@@ -199,9 +200,14 @@ describe("useWalletService", () => {
     expect(ethersMocks.contract).not.toHaveBeenCalled();
   });
 
-  it("propagates a backend error message when registration fails", async () => {
+  it("uses the backend error code translation when registration fails", async () => {
     vi.mocked(walletService.registerWallet).mockRejectedValue({
-      response: { data: { message: "Challenge not found or expired" } },
+      response: {
+        data: {
+          code: "CHALLENGE_001",
+          message: "Challenge not found or expired",
+        },
+      },
     });
     const wallet = {
       address: WALLET_ADDRESS,
@@ -224,7 +230,7 @@ describe("useWalletService", () => {
     });
 
     expect(thrown).toBeDefined();
-    expect(result.current.error).toBe("Challenge not found or expired");
+    expect(result.current.error).toBe(ERROR_MESSAGES.CHALLENGE_001);
   });
 
   it("sends complete EIP-7702 signatures for QnA web3 execution", async () => {
