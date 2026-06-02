@@ -83,17 +83,26 @@ vi.mock("@components/common", () => ({
 }));
 
 vi.mock("@components/auth/PinPad", () => ({
-  PinPad: ({ onInput }: { onInput: (value: string) => void }) => (
-    <button
-      type="button"
-      onClick={() => {
-        for (const value of ["1", "2", "3", "4", "5", "6"]) {
-          onInput(value);
-        }
-      }}
-    >
-      enter pin
-    </button>
+  PinPad: ({
+    desc,
+    onInput,
+  }: {
+    desc?: ReactNode;
+    onInput: (value: string) => void;
+  }) => (
+    <>
+      <p>{desc}</p>
+      <button
+        type="button"
+        onClick={() => {
+          for (const value of ["1", "2", "3", "4", "5", "6"]) {
+            onInput(value);
+          }
+        }}
+      >
+        enter pin
+      </button>
+    </>
   ),
 }));
 
@@ -186,6 +195,9 @@ describe("VerifyWallet", () => {
     mockParams.parentId = undefined;
     mockFromEncryptedJson.mockResolvedValue(mockWallet);
     mockLocationState.intent = buildIntent();
+    mockGetIncompletedPostTransaction.mockImplementation(
+      async () => mockLocationState.intent
+    );
     mockLocationState.recoveryScope = undefined;
     mockLocationState.returnTo = undefined;
     localStorage.setItem("encrypted_wallet", "encrypted-wallet-json");
@@ -212,6 +224,64 @@ describe("VerifyWallet", () => {
     });
     expect(mockRecoverCreate).not.toHaveBeenCalled();
   });
+
+  it("shows the success title based on actionType", async () => {
+    mockLocationState.intent = buildIntent({
+      actionType: "QNA_ANSWER_ACCEPT",
+    });
+
+    render(<VerifyWallet />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "답변 채택 요청이 완료되었어요",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("shows the PIN description based on actionType", () => {
+    mockLocationState.intent = buildIntent({
+      actionType: "QNA_ANSWER_ACCEPT",
+    });
+
+    render(<VerifyWallet />);
+
+    expect(
+      screen.getByText(/답변 채택 및 보상 지급을 위해/)
+    ).toBeInTheDocument();
+  });
+
+  it.each(["AUTH_EXPIRED", "EIP7702_DEADLINE_TOO_CLOSE"] as const)(
+    "asks the user to re-accept when the sign request is unavailable: %s",
+    async (signRequestUnavailableReason) => {
+      const staleIntent = buildIntent({
+        actionType: "QNA_ANSWER_ACCEPT",
+        signRequest: null,
+        signRequestUnavailableReason,
+        transaction: null,
+      });
+      mockLocationState.intent = staleIntent;
+      mockGetIncompletedPostTransaction.mockResolvedValue(staleIntent);
+
+      render(<VerifyWallet />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
+      });
+
+      expect(mockGetIncompletedPostTransaction).toHaveBeenCalledWith(
+        "intent-1"
+      );
+      expect(await screen.findByRole("dialog")).toHaveTextContent(
+        "서명 정보 만료"
+      );
+      expect(mockHandleWeb3Signature).not.toHaveBeenCalled();
+    }
+  );
 
   it("signs marketplace reservation intent through the generic Web3 execution API", async () => {
     const currentIntent = buildMarketplaceIntent();

@@ -84,6 +84,7 @@ const Answer = ({
     ? replaceImageSrc(
         answer.content,
         answer.images.map((image) => ({
+          imageId: image.imageId,
           imageUrl: buildImageUrl(image.imageUrl),
         }))
       )

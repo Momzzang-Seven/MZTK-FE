@@ -26,13 +26,16 @@ const QuestionDetail = () => {
     question?.writer.userId !== undefined &&
     Number(question.writer.userId) === Number(userId);
   const isWeb3Done =
-    question?.publicationStatus === "VISIBLE" ||
-    question?.publicationStatus === "FAILED";
-  const isWeb3Executable =
+    question?.question.web3Execution.resource.status === "COMPLETED";
+
+  const isWeb3Executable = // web3 실행 가능한 상태인지 (질문 등록/수정/삭제 중인지 판단)
     isMine &&
     !isWeb3Done &&
     question?.question.web3Execution.executionIntent.status ===
       "AWAITING_SIGNATURE";
+  const isPublicated = // 게시글이 공개된 상태인지 (답변 채택 가능 여부 판단)
+    question?.publicationStatus === "VISIBLE" &&
+    question?.moderationStatus === "NORMAL";
   const isEditable = isMine && isWeb3Done && question?.commentCount === 0;
 
   useEffect(() => {
@@ -45,7 +48,7 @@ const QuestionDetail = () => {
         if (qData) setQuestion(qData as QuestionPost);
         if (aData) setAnswers(aData as AnswerPost[]);
         return { qData, aData };
-      } catch (err) {
+      } catch {
         return { qData: null, aData: [] };
       }
     };
@@ -134,9 +137,7 @@ const QuestionDetail = () => {
                   <Answer
                     answer={answer}
                     parentId={postId}
-                    isSelectable={Boolean(
-                      isMine && isWeb3Done && !question.question.isSolved
-                    )}
+                    isSelectable={isMine && isPublicated && !answer.isAccepted}
                     isEditable={
                       answer.userId === userId
                         ? !answer.isAccepted &&

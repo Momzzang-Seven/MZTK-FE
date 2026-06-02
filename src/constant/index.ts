@@ -13,3 +13,4 @@ export * from "./trainer";
 export * from "./market";
 export * from "./inquiry";
 export * from "./errorMessage";
+export * from "./verifyWallet";

@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, Coins, Clock, Heart } from "lucide-react";
 import type { QuestionPost } from "@types";
-import { getQuestionStatus, statusStyleMap, formatTimeAgo } from "@utils";
+import { getPostStatus, statusStyleMap, formatTimeAgo } from "@utils";
 
 interface Props {
   post: QuestionPost;
@@ -9,11 +9,12 @@ interface Props {
 
 const QuestionPostCard = ({ post }: Props) => {
   const navigate = useNavigate();
-  const status = getQuestionStatus(
+  const status = getPostStatus(
     post.publicationStatus,
     post.moderationStatus,
     post.question.isSolved,
-    post.commentCount
+    post.commentCount,
+    post.question.web3Execution
   );
   const statusStyle = statusStyleMap[status];
 
@@ -136,7 +137,7 @@ const QuestionPostCard = ({ post }: Props) => {
                 />
               </div>
               <span className="text-[13px] font-black text-gray-500">
-                {post.commentCount}
+                {post.answerCount}
               </span>
             </div>
           </div>
