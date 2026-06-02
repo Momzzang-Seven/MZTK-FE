@@ -25,6 +25,15 @@ const isWeb3RecoveryBlocked = (intent: Web3Execution) => {
   );
 };
 
+const shouldReprepareAnswerAccept = (intent: Web3Execution) => {
+  return (
+    intent.resource.type === "QUESTION" &&
+    intent.signRequest === null &&
+    (intent.signRequestUnavailableReason === "AUTH_EXPIRED" ||
+      intent.signRequestUnavailableReason === "EIP7702_DEADLINE_TOO_CLOSE")
+  );
+};
+
 const VerifyWallet = () => {
   const navigate = useNavigate();
   const params = useParams();
@@ -57,14 +66,13 @@ const VerifyWallet = () => {
     if (!intent) throw new Error(VERIFY_WALLET_TEXT.invalidAccess);
 
     try {
-      if (intent.transaction) {
-        return intent as Web3Execution;
-      } else {
-        const postData = await getIncompletedPostTransaction(
+      if (!intent.signRequest) {
+        const web3Execution = await getIncompletedPostTransaction(
           intent.executionIntent.id
         );
-        return postData as Web3Execution;
+        return web3Execution;
       }
+      return intent;
     } catch {
       setAuthPin("");
       setStep("AUTH_PIN");
@@ -123,7 +131,20 @@ const VerifyWallet = () => {
           return;
         }
 
-        if (currentIntent.executionIntent.status === "EXPIRED") {
+        if (shouldReprepareAnswerAccept(currentIntent)) {
+          setModal(VERIFY_WALLET_TEXT.reacceptAnswerModal);
+          setAuthPin("");
+          setStep("AUTH_PIN");
+          return;
+        }
+
+        if (
+          currentIntent.executionIntent.status === "EXPIRED" ||
+          (currentIntent.signRequest === null &&
+            (currentIntent.signRequestUnavailableReason === "AUTH_EXPIRED" ||
+              currentIntent.signRequestUnavailableReason ===
+                "EIP7702_DEADLINE_TOO_CLOSE"))
+        ) {
           await handleRecoverAndRetry(currentIntent, wallet);
           return;
         }
@@ -144,7 +165,7 @@ const VerifyWallet = () => {
         }
       }
     },
-    [handleWeb3Signature, handleRecoverAndRetry]
+    [getIncompletedPostTransaction, handleWeb3Signature, handleRecoverAndRetry]
   );
 
   useEffect(() => {

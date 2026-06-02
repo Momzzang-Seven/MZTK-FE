@@ -141,6 +141,9 @@ describe("VerifyWallet", () => {
     vi.clearAllMocks();
     mockFromEncryptedJson.mockResolvedValue(mockWallet);
     mockLocationState.intent = buildIntent();
+    mockGetIncompletedPostTransaction.mockImplementation(
+      async () => mockLocationState.intent
+    );
     localStorage.setItem("encrypted_wallet", "encrypted-wallet-json");
   });
 
@@ -195,4 +198,32 @@ describe("VerifyWallet", () => {
       screen.getByText(/답변 채택 및 보상 지급을 위해/)
     ).toBeInTheDocument();
   });
+
+  it.each(["AUTH_EXPIRED", "EIP7702_DEADLINE_TOO_CLOSE"] as const)(
+    "asks the user to re-accept when the sign request is unavailable: %s",
+    async (signRequestUnavailableReason) => {
+      const staleIntent = buildIntent({
+        actionType: "QNA_ANSWER_ACCEPT",
+        signRequest: null,
+        signRequestUnavailableReason,
+        transaction: null,
+      });
+      mockLocationState.intent = staleIntent;
+      mockGetIncompletedPostTransaction.mockResolvedValue(staleIntent);
+
+      render(<VerifyWallet />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
+      });
+
+      expect(mockGetIncompletedPostTransaction).toHaveBeenCalledWith(
+        "intent-1"
+      );
+      expect(await screen.findByRole("dialog")).toHaveTextContent(
+        "서명 정보 만료"
+      );
+      expect(mockHandleWeb3Signature).not.toHaveBeenCalled();
+    }
+  );
 });

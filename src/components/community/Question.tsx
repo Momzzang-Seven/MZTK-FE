@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { QuestionPost } from "@types";
-import { getQuestionStatus, statusStyleMap, replaceImageSrc } from "@utils";
+import { getPostStatus, statusStyleMap, replaceImageSrc } from "@utils";
 import { QnaContent } from "@components/community";
 import { Coins, Heart } from "lucide-react";
 import { usePostService } from "@hooks";
@@ -11,15 +11,17 @@ interface QuestionProps {
 }
 
 const Question = ({ post }: QuestionProps) => {
+  console.log(post);
   const navigate = useNavigate();
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [liked, setLiked] = useState(post.isLiked);
   const { likePost, unlikePost } = usePostService();
-  const status = getQuestionStatus(
+  const status = getPostStatus(
     post.publicationStatus,
     post.moderationStatus,
     post.question.isSolved,
-    post.commentCount
+    post.commentCount,
+    post.question.web3Execution
   );
   const statusStyle = statusStyleMap[status];
   const processedContent = post.content

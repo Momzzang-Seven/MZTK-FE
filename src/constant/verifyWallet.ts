@@ -5,6 +5,10 @@ export const VERIFY_WALLET_TEXT = {
     title: "블록체인 확인 지연",
     desc: "이미 전송된 트랜잭션의 결과 확인이 지연되고 있습니다. 중복 실행을 막기 위해 잠시 후 다시 확인해 주세요.",
   },
+  reacceptAnswerModal: {
+    title: "서명 정보 만료",
+    desc: "서명 정보가 만료됐어요. 답변 목록에서 다시 채택해 주세요.",
+  },
   invalidAccess: "유효하지 않은 접근입니다.",
   invalidRecovery: "복구된 실행 정보가 유효하지 않습니다.",
   pinFailureModal: {
