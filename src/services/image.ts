@@ -55,6 +55,21 @@ const chunkImageIds = (imageIds: number[]) => {
   return chunks;
 };
 
+const getMarketplaceClassUploadFiles = (
+  files: File[],
+  uploadTargets: PresignedUrlResponse[]
+) => {
+  if (uploadTargets.length === files.length) {
+    return files;
+  }
+
+  if (uploadTargets.length === files.length + 1) {
+    return uploadTargets.map((_, index) => files[index === 0 ? 0 : index - 1]);
+  }
+
+  throw new Error("클래스 이미지 업로드 URL을 발급받지 못했습니다.");
+};
+
 export const imageService = {
   async getPresignedUrl(
     request: PresignedUrlRequest
@@ -160,14 +175,11 @@ export const imageService = {
       images: files.map((file) => file.name),
     });
     const uploadTargets = presignedResponse.items ?? [];
-
-    if (uploadTargets.length !== files.length) {
-      throw new Error("클래스 이미지 업로드 URL을 발급받지 못했습니다.");
-    }
+    const uploadFiles = getMarketplaceClassUploadFiles(files, uploadTargets);
 
     await Promise.all(
       uploadTargets.map((target, index) => {
-        const file = files[index];
+        const file = uploadFiles[index];
         if (!file) {
           throw new Error("클래스 이미지 파일 정보를 찾지 못했습니다.");
         }

@@ -40,30 +40,99 @@ describe("image service QA", () => {
     const file = new File(["image"], "class.png", { type: "image/png" });
     vi.mocked(api.post).mockResolvedValueOnce(
       apiResponse({
-        items: [{ imageId: 11, presignedUrl: "https://s3.example/upload" }],
+        items: [
+          { imageId: 11, presignedUrl: "https://s3.example/upload/thumb" },
+          { imageId: 12, presignedUrl: "https://s3.example/upload/detail" },
+        ],
       })
     );
     vi.mocked(api.get).mockResolvedValueOnce(
       apiResponse({
-        images: [{ imageId: 11, status: "COMPLETED" }],
+        images: [
+          { imageId: 11, status: "COMPLETED" },
+          { imageId: 12, status: "COMPLETED" },
+        ],
       })
     );
 
     await expect(
       imageService.uploadMarketplaceClassImages([file])
-    ).resolves.toEqual([11]);
+    ).resolves.toEqual([11, 12]);
 
     expect(api.post).toHaveBeenCalledWith(
       "/images/presigned-urls",
       { referenceType: "MARKET_CLASS", images: ["class.png"] },
       { _skipNotFoundRedirect: true }
     );
-    expect(axios.put).toHaveBeenCalledWith("https://s3.example/upload", file, {
-      headers: { "Content-Type": "image/png" },
-    });
-    expect(api.get).toHaveBeenCalledWith("/images/status?ids=11", {
+    expect(axios.put).toHaveBeenNthCalledWith(
+      1,
+      "https://s3.example/upload/thumb",
+      file,
+      { headers: { "Content-Type": "image/png" } }
+    );
+    expect(axios.put).toHaveBeenNthCalledWith(
+      2,
+      "https://s3.example/upload/detail",
+      file,
+      { headers: { "Content-Type": "image/png" } }
+    );
+    expect(api.get).toHaveBeenCalledWith("/images/status?ids=11&ids=12", {
       _skipNotFoundRedirect: true,
     });
+  });
+
+  it("maps expanded marketplace class upload targets to the original files", async () => {
+    const mainFile = new File(["main"], "main.png", { type: "image/png" });
+    const detailFile = new File(["detail"], "detail.png", {
+      type: "image/png",
+    });
+    vi.mocked(api.post).mockResolvedValueOnce(
+      apiResponse({
+        items: [
+          { imageId: 21, presignedUrl: "https://s3.example/upload/thumb" },
+          { imageId: 22, presignedUrl: "https://s3.example/upload/detail-1" },
+          { imageId: 23, presignedUrl: "https://s3.example/upload/detail-2" },
+        ],
+      })
+    );
+    vi.mocked(api.get).mockResolvedValueOnce(
+      apiResponse({
+        images: [
+          { imageId: 21, status: "COMPLETED" },
+          { imageId: 22, status: "COMPLETED" },
+          { imageId: 23, status: "COMPLETED" },
+        ],
+      })
+    );
+
+    await expect(
+      imageService.uploadMarketplaceClassImages([mainFile, detailFile])
+    ).resolves.toEqual([21, 22, 23]);
+
+    expect(axios.put).toHaveBeenNthCalledWith(
+      1,
+      "https://s3.example/upload/thumb",
+      mainFile,
+      { headers: { "Content-Type": "image/png" } }
+    );
+    expect(axios.put).toHaveBeenNthCalledWith(
+      2,
+      "https://s3.example/upload/detail-1",
+      mainFile,
+      { headers: { "Content-Type": "image/png" } }
+    );
+    expect(axios.put).toHaveBeenNthCalledWith(
+      3,
+      "https://s3.example/upload/detail-2",
+      detailFile,
+      { headers: { "Content-Type": "image/png" } }
+    );
+    expect(api.get).toHaveBeenCalledWith(
+      "/images/status?ids=21&ids=22&ids=23",
+      {
+        _skipNotFoundRedirect: true,
+      }
+    );
   });
 
   it("loads image metadata through GET /images query params", async () => {
