@@ -153,7 +153,7 @@ const WritePost = () => {
       {error && error === POST_ERROR_CODE.ALLOWANCE_REQUIRED ? (
         <CommonModal
           title="지갑 재등록 필요"
-          desc="이 지갑은 새 승인 정책으로 다시 등록해야 합니다. 지금 등록하시겠습니까?"
+          desc="서버에서 지갑 등록이 완료되지 않았거나, 서비스의 네트워크 이전으로 다시 등록해야 해요. 지금 등록하시겠습니까?"
           confirmLabel="지갑 등록하러 가기"
           onConfirmClick={() => {
             setError(null);

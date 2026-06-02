@@ -74,9 +74,9 @@ const ACTIVITY_BUTTONS = [
 const My = () => {
   const navigate = useNavigate();
   const user = useUserStore((state) => state.user);
+  const initLevel = useUserStore((state) => state.initLevel);
   const updateRole = useUserStore((state) => state.updateRole);
   const clearUser = useUserStore((state) => state.clearUser);
-  const initLevel = useUserStore((state) => state.initLevel);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
   const [isChangingRole, setIsChangingRole] = useState(false);
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
@@ -110,6 +110,9 @@ const My = () => {
     navigate("/login", { replace: true });
   };
 
+  useEffect(() => {
+    initLevel();
+  }, [initLevel]);
   const closeWithdrawModal = () => {
     if (isWithdrawing) return;
     setIsWithdrawModalOpen(false);
