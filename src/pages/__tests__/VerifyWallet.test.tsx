@@ -229,69 +229,43 @@ describe("VerifyWallet", () => {
     mockLocationState.intent = buildIntent({
       actionType: "QNA_ANSWER_ACCEPT",
     });
-    it("signs marketplace reservation intent through the generic Web3 execution API", async () => {
-      const currentIntent = buildMarketplaceIntent();
-      const signableIntent = buildMarketplaceIntent({
-        signRequest,
-        viewerCanExecute: true,
-      });
-      mockParams.type = "MARKETPLACE_RESERVATION";
-      mockParams.id = "501";
-      mockLocationState.intent = currentIntent;
-      mockLocationState.recoveryScope = "member";
-      mockLocationState.returnTo = "/market/reservations";
-      mockGetIncompletedPostTransaction.mockResolvedValue(signableIntent);
-      mockHandleWeb3Signature.mockResolvedValue(undefined);
 
-      render(<VerifyWallet />);
+    render(<VerifyWallet />);
 
-      await act(async () => {
-        fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
-      });
-
-      await waitFor(() => {
-        expect(mockGetIncompletedPostTransaction).toHaveBeenCalledWith(
-          "intent-501"
-        );
-        expect(mockHandleWeb3Signature).toHaveBeenCalledWith(
-          "intent-501",
-          mockWallet,
-          signableIntent
-        );
-      });
-
-      fireEvent.click(await screen.findByRole("button", { name: "confirm" }));
-
-      expect(mockNavigate).toHaveBeenCalledWith("/market/reservations");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
     });
 
-    it("recovers expired marketplace reservation intent with the member recovery API", async () => {
-      const expiredIntent = buildMarketplaceIntent({
-        executionIntent: {
-          id: "intent-expired",
-          status: "EXPIRED",
-          expiresAt: "2026-05-23T10:05:00",
-        },
+    expect(
+      await screen.findByRole("heading", {
+        name: "답변 채택 요청이 완료되었어요",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("shows the PIN description based on actionType", () => {
+    mockLocationState.intent = buildIntent({
+      actionType: "QNA_ANSWER_ACCEPT",
+    });
+
+    render(<VerifyWallet />);
+
+    expect(
+      screen.getByText(/답변 채택 및 보상 지급을 위해/)
+    ).toBeInTheDocument();
+  });
+
+  it.each(["AUTH_EXPIRED", "EIP7702_DEADLINE_TOO_CLOSE"] as const)(
+    "asks the user to re-accept when the sign request is unavailable: %s",
+    async (signRequestUnavailableReason) => {
+      const staleIntent = buildIntent({
+        actionType: "QNA_ANSWER_ACCEPT",
+        signRequest: null,
+        signRequestUnavailableReason,
+        transaction: null,
       });
-      const recoveredIntent = buildMarketplaceIntent({
-        executionIntent: {
-          id: "intent-recovered",
-          status: "AWAITING_SIGNATURE",
-          expiresAt: "2026-05-23T10:10:00",
-        },
-        signRequest,
-      });
-      mockParams.type = "MARKETPLACE_RESERVATION";
-      mockParams.id = "501";
-      mockLocationState.intent = expiredIntent;
-      mockLocationState.recoveryScope = "member";
-      mockGetIncompletedPostTransaction.mockResolvedValue(expiredIntent);
-      mockRecoverMyReservationEscrow.mockResolvedValue({
-        reservationId: 501,
-        status: "PURCHASE_PREPARING",
-        web3: recoveredIntent,
-      });
-      mockHandleWeb3Signature.mockResolvedValue(undefined);
+      mockLocationState.intent = staleIntent;
+      mockGetIncompletedPostTransaction.mockResolvedValue(staleIntent);
 
       render(<VerifyWallet />);
 
@@ -299,16 +273,95 @@ describe("VerifyWallet", () => {
         fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
       });
 
-      await waitFor(() => {
-        expect(mockRecoverMyReservationEscrow).toHaveBeenCalledWith(501);
-        expect(mockRecoverTrainerReservationEscrow).not.toHaveBeenCalled();
-        expect(mockRecoverCreate).not.toHaveBeenCalled();
-        expect(mockHandleWeb3Signature).toHaveBeenCalledWith(
-          "intent-recovered",
-          mockWallet,
-          recoveredIntent
-        );
-      });
+      expect(mockGetIncompletedPostTransaction).toHaveBeenCalledWith(
+        "intent-1"
+      );
+      expect(await screen.findByRole("dialog")).toHaveTextContent(
+        "서명 정보 만료"
+      );
+      expect(mockHandleWeb3Signature).not.toHaveBeenCalled();
+    }
+  );
+
+  it("signs marketplace reservation intent through the generic Web3 execution API", async () => {
+    const currentIntent = buildMarketplaceIntent();
+    const signableIntent = buildMarketplaceIntent({
+      signRequest,
+      viewerCanExecute: true,
+    });
+    mockParams.type = "MARKETPLACE_RESERVATION";
+    mockParams.id = "501";
+    mockLocationState.intent = currentIntent;
+    mockLocationState.recoveryScope = "member";
+    mockLocationState.returnTo = "/market/reservations";
+    mockGetIncompletedPostTransaction.mockResolvedValue(signableIntent);
+    mockHandleWeb3Signature.mockResolvedValue(undefined);
+
+    render(<VerifyWallet />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
+    });
+
+    await waitFor(() => {
+      expect(mockGetIncompletedPostTransaction).toHaveBeenCalledWith(
+        "intent-501"
+      );
+      expect(mockHandleWeb3Signature).toHaveBeenCalledWith(
+        "intent-501",
+        mockWallet,
+        signableIntent
+      );
+    });
+
+    fireEvent.click(await screen.findByRole("button", { name: "confirm" }));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/market/reservations");
+  });
+
+  it("recovers expired marketplace reservation intent with the member recovery API", async () => {
+    const expiredIntent = buildMarketplaceIntent({
+      executionIntent: {
+        id: "intent-expired",
+        status: "EXPIRED",
+        expiresAt: "2026-05-23T10:05:00",
+      },
+    });
+    const recoveredIntent = buildMarketplaceIntent({
+      executionIntent: {
+        id: "intent-recovered",
+        status: "AWAITING_SIGNATURE",
+        expiresAt: "2026-05-23T10:10:00",
+      },
+      signRequest,
+    });
+    mockParams.type = "MARKETPLACE_RESERVATION";
+    mockParams.id = "501";
+    mockLocationState.intent = expiredIntent;
+    mockLocationState.recoveryScope = "member";
+    mockGetIncompletedPostTransaction.mockResolvedValue(expiredIntent);
+    mockRecoverMyReservationEscrow.mockResolvedValue({
+      reservationId: 501,
+      status: "PURCHASE_PREPARING",
+      web3: recoveredIntent,
+    });
+    mockHandleWeb3Signature.mockResolvedValue(undefined);
+
+    render(<VerifyWallet />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "enter pin" }));
+    });
+
+    await waitFor(() => {
+      expect(mockRecoverMyReservationEscrow).toHaveBeenCalledWith(501);
+      expect(mockRecoverTrainerReservationEscrow).not.toHaveBeenCalled();
+      expect(mockRecoverCreate).not.toHaveBeenCalled();
+      expect(mockHandleWeb3Signature).toHaveBeenCalledWith(
+        "intent-recovered",
+        mockWallet,
+        recoveredIntent
+      );
     });
   });
 });

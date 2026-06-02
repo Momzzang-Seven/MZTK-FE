@@ -47,16 +47,12 @@ vi.mock("@components/community", () => ({
     handleCancelClick,
     handleSignClick,
     isWeb3Executable,
-    shouldReacceptAnswer,
   }: Record<string, (() => void) | boolean | undefined>) => (
     <div data-testid="my-post-actions">
       <button onClick={handleEditClick as () => void}>수정</button>
       <button onClick={handleDeleteClick as () => void}>삭제</button>
       {isWeb3Executable && (
         <button onClick={handleSignClick as () => void}>서명</button>
-      )}
-      {shouldReacceptAnswer && (
-        <p>서명 정보가 만료됐어요. 다시 채택해 주세요</p>
       )}
       <button onClick={handleCancelClick as () => void}>취소</button>
     </div>
@@ -368,7 +364,7 @@ describe("ActionList 컴포넌트", () => {
   });
 
   describe("답변 채택 서명 플로우", () => {
-    it("서명 정보가 만료되면 다시 채택하라는 안내를 노출한다", () => {
+    it("서명 정보가 만료되어도 VerifyWallet 이동을 위한 서명 버튼을 노출한다", () => {
       setUserInStore(100);
       const web3Execution: Web3Execution = {
         resource: {
@@ -399,10 +395,7 @@ describe("ActionList 컴포넌트", () => {
       });
       fireEvent.click(screen.getByAltText("더보기"));
 
-      expect(
-        screen.getByText("서명 정보가 만료됐어요. 다시 채택해 주세요")
-      ).toBeInTheDocument();
-      expect(screen.queryByText("서명")).not.toBeInTheDocument();
+      expect(screen.getByText("서명")).toBeInTheDocument();
     });
 
     it("서명 정보가 유효하면 서명 버튼을 노출한다", () => {
