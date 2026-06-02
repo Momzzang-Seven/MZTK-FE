@@ -402,6 +402,7 @@ describe("useUserStore.clearUser", () => {
       analysisStartedAt: Date.now(),
       analysisType: "exercise",
       lastWorkoutRewardAppliedDate: "2026-04-28",
+      lastAttendanceRewardedXp: 17,
     });
 
     useUserStore.getState().clearUser();
@@ -411,6 +412,7 @@ describe("useUserStore.clearUser", () => {
     expect(useUserStore.getState().analysisStartedAt).toBeNull();
     expect(useUserStore.getState().analysisType).toBeNull();
     expect(useUserStore.getState().lastWorkoutRewardAppliedDate).toBeNull();
+    expect(useUserStore.getState().lastAttendanceRewardedXp).toBeNull();
   });
 });
 

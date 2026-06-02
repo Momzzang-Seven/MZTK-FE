@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
         "/posts": { target: env.VITE_API_BASE_URL, changeOrigin: true },
         "/questions": { target: env.VITE_API_BASE_URL, changeOrigin: true },
         "/comments": { target: env.VITE_API_BASE_URL, changeOrigin: true },
+        "/actuator": { target: env.VITE_API_BASE_URL, changeOrigin: true },
         "/admin": {
           target: env.VITE_API_BASE_URL,
           changeOrigin: true,

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import axios from "axios";
 import { api } from "@services/client";
 import {
+  fetchSystemHealth,
   fetchMarketplaceRefundReview,
   fetchMarketplaceSettlementReview,
   fetchPostsList,
@@ -13,8 +15,22 @@ const apiResponse = <T>(data: T) => ({ data: { data } });
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.spyOn(axios, "get").mockImplementation(vi.fn());
   vi.spyOn(api, "get").mockImplementation(vi.fn());
   vi.spyOn(api, "post").mockImplementation(vi.fn());
+});
+
+describe("admin system service QA", () => {
+  it("loads actuator health through the BE health endpoint", async () => {
+    const response = { status: "UP" };
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: response });
+
+    await expect(fetchSystemHealth()).resolves.toEqual(response);
+
+    expect(axios.get).toHaveBeenCalledWith("/actuator/health", {
+      withCredentials: true,
+    });
+  });
 });
 
 describe("admin board service QA", () => {

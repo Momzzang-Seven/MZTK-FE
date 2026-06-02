@@ -1,7 +1,7 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { EXERCISE_CATEGORIES } from "@constant";
+import { EXERCISE_CATEGORIES, getKoreanErrorMessageFromError } from "@constant";
 import {
   getMarketplaceClassDetail,
   getTrainerStore,
@@ -394,9 +394,10 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       setIsSuccessModalOpen(true);
     } catch (error) {
       console.error("Failed to submit ticket form", error);
-      const message = axios.isAxiosError(error)
-        ? (error.response?.data?.message ?? error.message)
-        : "클래스 저장에 실패했습니다. 입력값을 다시 확인해 주세요.";
+      const message = getKoreanErrorMessageFromError(
+        error,
+        "클래스 저장에 실패했습니다. 입력값을 다시 확인해 주세요."
+      );
       window.alert(message);
     } finally {
       setIsSubmitting(false);

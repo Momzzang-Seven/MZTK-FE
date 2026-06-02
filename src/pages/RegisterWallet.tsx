@@ -15,6 +15,7 @@ import {
   REGISTER_WALLET_MESSAGES,
   REGISTER_WALLET_STEPS,
   REGISTER_WALLET_STORAGE_KEYS,
+  getKoreanErrorMessageFromError,
   type RegisterWalletStep,
 } from "@constant";
 
@@ -353,9 +354,10 @@ const RegisterWallet = () => {
       );
     } catch (err) {
       if (!isFlowAlive(myFlow)) return;
-      const msg =
-        (axios.isAxiosError(err) && err.response?.data?.message) ||
-        messages.modal.retryFailed;
+      const msg = getKoreanErrorMessageFromError(
+        err,
+        messages.modal.retryFailed
+      );
       setError(msg);
       setStep(REGISTER_WALLET_STEPS.RETRY_PROMPT);
     }

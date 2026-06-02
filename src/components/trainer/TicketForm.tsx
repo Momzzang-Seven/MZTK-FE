@@ -2,6 +2,7 @@ import {
   CREATE_TICKET_TEXT,
   EDIT_TICKET_TEXT,
   EXERCISE_CATEGORIES,
+  getKoreanErrorMessageFromError,
 } from "@constant";
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonButton, CommonModal } from "@components/common";
@@ -143,17 +144,13 @@ const TicketForm = ({
     try {
       await onSubmit();
     } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
       setModalState({
         isOpen: true,
         title: mode === "create" ? "등록 실패" : "수정 실패",
-        desc:
-          err?.response?.data?.message ||
-          err?.message ||
-          "서버 요청 중 오류가 발생했습니다.",
+        desc: getKoreanErrorMessageFromError(
+          error,
+          "서버 요청 중 오류가 발생했습니다."
+        ),
         variant: "error",
       });
     }

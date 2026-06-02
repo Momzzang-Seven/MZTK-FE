@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Callback from "@pages/Callback";
-import { PostLogin } from "@services/auth";
+import { PostLogin, PostStepUp, PostWithdraw } from "@services/auth";
 
 vi.mock("axios", async () => {
   const actual = await vi.importActual("axios");
@@ -25,6 +25,7 @@ vi.mock("@services/auth", () => ({
   PostReissueToken: vi.fn(),
   PostReactivate: vi.fn(),
   PostStepUp: vi.fn(),
+  PostWithdraw: vi.fn(),
 }));
 
 const mockNavigate = vi.fn();
@@ -41,7 +42,36 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(PostLogin).mockReset();
+    vi.mocked(PostStepUp).mockReset();
+    vi.mocked(PostWithdraw).mockReset();
     localStorage.clear();
+  });
+
+  it("소셜 탈퇴 콜백이면 비밀번호 없이 step-up 후 회원탈퇴를 실행한다", async () => {
+    vi.mocked(PostStepUp).mockResolvedValueOnce({
+      accessToken: "step-up-token",
+    });
+    vi.mocked(PostWithdraw).mockResolvedValueOnce();
+
+    render(
+      <MemoryRouter
+        initialEntries={["/callback?code=withdraw-code&state=withdraw:kakao"]}
+      >
+        <Routes>
+          <Route path="/callback" element={<Callback />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(PostStepUp).toHaveBeenCalledWith({
+        authorizationCode: "withdraw-code",
+        redirectUri: expect.stringContaining("/callback"),
+      });
+    });
+    expect(PostLogin).not.toHaveBeenCalled();
+    expect(PostWithdraw).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
   });
 
   it("기존 유저가 로그인하면 지갑 복구(/restore-wallet) 페이지로 이동한다", async () => {

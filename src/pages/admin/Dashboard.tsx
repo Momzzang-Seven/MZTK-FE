@@ -14,10 +14,28 @@ ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { tokenLogs, ethBalance, mztkBalance, userStats, postStats, loading } =
-    useAdminDashboardData();
+  const {
+    tokenLogs,
+    ethBalance,
+    mztkBalance,
+    userStats,
+    postStats,
+    serverHealthStatus,
+    loading,
+  } = useAdminDashboardData();
   const chartData = getChartData(postStats);
   const chartOptions = getChartOptions();
+  const normalizedServerHealth = serverHealthStatus?.toUpperCase() ?? "UNKNOWN";
+  const serverStatusValue = loading
+    ? ADMIN_TEXT.COMMON.LOADING
+    : normalizedServerHealth === "UP"
+      ? "Online"
+      : normalizedServerHealth;
+  const serverStatusSubValue = loading
+    ? "Checking"
+    : normalizedServerHealth === "UP"
+      ? "Health OK"
+      : "Health Check";
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -49,8 +67,8 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <SummaryCard
           title="Server Status"
-          value="Online"
-          subValue="Running"
+          value={serverStatusValue}
+          subValue={serverStatusSubValue}
           variant="amber"
           icon={Server}
         />
