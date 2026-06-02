@@ -46,9 +46,10 @@ describe("edgeCaseValidation", () => {
     ).toBeNull();
   });
 
-  it("rejects weak PINs and script-like tags", () => {
-    expect(isWeakPin("000000")).toBe(true);
+  it("rejects sequential PINs and script-like tags", () => {
+    expect(isWeakPin("000000")).toBe(false);
     expect(isWeakPin("123456")).toBe(true);
+    expect(isWeakPin("654321")).toBe(true);
     expect(isWeakPin("135790")).toBe(false);
     expect(containsUnsafeMarkup("<script>alert(1)</script>")).toBe(true);
     expect(sanitizeTags(["ok", "x".repeat(31), "<script>"])).toEqual(["ok"]);

@@ -1,18 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { CommonButton, CommonModal } from "@components/common";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { CommonButton } from "@components/common";
 import {
   IntroTab,
   LocationTab,
   ReviewTab,
 } from "@components/market/detail/MarketTabs";
-import { useTokenBalance } from "@hooks";
 import { getMarketplaceClassDetail } from "@services";
-
-const IMAGE_BASE_URL =
-  (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
-  "https://mztk-bucket.s3.ap-northeast-2.amazonaws.com/";
-const PLACEHOLDER_IMAGE = "/icon/gallery.svg";
+import { buildImageUrl, PLACEHOLDER_IMAGE_URL } from "@utils";
 
 const DAY_LABEL_MAP: Record<string, string> = {
   MONDAY: "월",
@@ -25,15 +20,7 @@ const DAY_LABEL_MAP: Record<string, string> = {
 };
 
 const buildMarketplaceImageUrl = (objectKey: string | null | undefined) => {
-  if (!objectKey) return PLACEHOLDER_IMAGE;
-  if (/^https?:\/\//.test(objectKey)) return objectKey;
-  const normalizedBase = IMAGE_BASE_URL.endsWith("/")
-    ? IMAGE_BASE_URL
-    : `${IMAGE_BASE_URL}/`;
-  const normalizedKey = objectKey.startsWith("/")
-    ? objectKey.slice(1)
-    : objectKey;
-  return `${normalizedBase}${normalizedKey}`;
+  return buildImageUrl(objectKey);
 };
 
 const formatCategory = (category: string) => {
@@ -62,6 +49,7 @@ const formatCategory = (category: string) => {
 const MarketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<"intro" | "location" | "review">(
     "intro"
   );
@@ -71,13 +59,6 @@ const MarketDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
-  const [modalState, setModalState] = useState<{
-    title: string;
-    desc: string;
-  } | null>(null);
-  const { balance, loading: isBalanceLoading } = useTokenBalance();
-  const balanceNumber = Number(balance);
-
   useEffect(() => {
     const classId = Number(id);
     if (!Number.isFinite(classId)) {
@@ -109,7 +90,7 @@ const MarketDetail = () => {
 
   const imageUrls = useMemo(() => {
     if (!data) return [];
-    const detailImages = data.images
+    const detailImages = [...data.images]
       .sort((a, b) => a.imgOrder - b.imgOrder)
       .map((image) => buildMarketplaceImageUrl(image.finalObjectKey));
     const thumbnail = buildMarketplaceImageUrl(data.thumbnailFinalObjectKey);
@@ -159,24 +140,22 @@ const MarketDetail = () => {
 
   const handleReservationClick = () => {
     if (!data) return;
-
-    if (isBalanceLoading) {
-      setModalState({
-        title: "잔액 확인 중",
-        desc: "보유 MZTK 잔액을 확인하고 있습니다. 잠시 후 다시 시도해 주세요.",
-      });
-      return;
-    }
-
-    if (Number.isFinite(balanceNumber) && balanceNumber < data.priceAmount) {
-      setModalState({
-        title: "잔액 부족",
-        desc: `예약에는 ${data.priceAmount.toLocaleString()} MZTK가 필요합니다. 현재 보유 잔액은 ${balanceNumber.toLocaleString()} MZTK입니다.`,
-      });
-      return;
-    }
-
     navigate(`/market/purchase/${data.classId}`);
+  };
+
+  const handleBackClick = () => {
+    const historyState = window.history.state as { idx?: number } | null;
+    const canGoBack =
+      location.key !== "default" &&
+      typeof historyState?.idx === "number" &&
+      historyState.idx > 0;
+
+    if (canGoBack) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/market", { replace: true });
   };
 
   if (isLoading) {
@@ -213,7 +192,7 @@ const MarketDetail = () => {
           {loadError || "클래스를 찾을 수 없습니다."}
         </p>
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBackClick}
           className="px-8 py-3 bg-gray-900 text-white font-black text-[13px] rounded-2xl"
         >
           뒤로 가기
@@ -235,6 +214,12 @@ const MarketDetail = () => {
               key={idx}
               src={img}
               alt={`${data.title}-${idx}`}
+              onError={(event) => {
+                if (event.currentTarget.dataset.fallbackApplied === "true")
+                  return;
+                event.currentTarget.dataset.fallbackApplied = "true";
+                event.currentTarget.src = PLACEHOLDER_IMAGE_URL;
+              }}
               className="w-full h-full object-cover flex-shrink-0 snap-center"
             />
           ))}
@@ -244,7 +229,8 @@ const MarketDetail = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBackClick}
+          aria-label="마켓으로 돌아가기"
           className="absolute top-12 left-5 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-all border border-white/30 z-30"
         >
           <svg
@@ -373,21 +359,12 @@ const MarketDetail = () => {
         </div>
         <div className="w-[180px]">
           <CommonButton
-            label={isBalanceLoading ? "잔액 확인 중..." : "지금 예약하기"}
+            label="지금 예약하기"
             onClick={handleReservationClick}
             className="h-[60px] rounded-[22px] font-black text-[16px] shadow-xl shadow-main/20 active:scale-95 transition-all"
           />
         </div>
       </div>
-
-      {modalState && (
-        <CommonModal
-          title={modalState.title}
-          desc={modalState.desc}
-          confirmLabel="확인"
-          onConfirmClick={() => setModalState(null)}
-        />
-      )}
     </div>
   );
 };

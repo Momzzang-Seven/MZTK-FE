@@ -104,7 +104,7 @@ const CreateWallet = () => {
       if (isWeakPin(pin)) {
         setModal({
           title: "Weak PIN",
-          desc: "Repeated or sequential PINs are not allowed.",
+          desc: "Sequential PINs are not allowed.",
         });
         setPin("");
         return;

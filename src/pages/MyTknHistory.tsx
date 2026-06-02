@@ -3,14 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store";
 import { ethers } from "ethers";
 import { getNetworkConfig } from "@utils/network";
+import { fetchTokenTransfers } from "@services";
 
 interface TokenTx {
-  id: string;
+  hash: string;
   timeStamp: string;
   to: string;
   from: string;
   value: string;
-  tokenName: string;
 }
 
 const MyTknHistory = () => {
@@ -18,7 +18,7 @@ const MyTknHistory = () => {
   const { user } = useUserStore();
   const [logs, setLogs] = useState<TokenTx[]>([]);
   const [loading, setLoading] = useState(true);
-  const { TOKEN_ADDRESS, CHAIN_ID, ETHERSCAN_URL, NAME } = getNetworkConfig();
+  const { NAME } = getNetworkConfig();
 
   useEffect(() => {
     if (!user?.walletAddress) {
@@ -27,25 +27,24 @@ const MyTknHistory = () => {
     }
 
     setLoading(true);
-    const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
+    let cancelled = false;
 
-    // Etherscan V2 API: 단일 엔드포인트에 chainid 파라미터 추가
-    const fetchUrl = `${ETHERSCAN_URL}?chainid=${CHAIN_ID}&module=account&action=tokentx&contractaddress=${TOKEN_ADDRESS}&address=${user.walletAddress}&page=1&offset=50&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
-
-    fetch(fetchUrl)
-      .then((res) => res.json())
+    fetchTokenTransfers(user.walletAddress, 50)
       .then((data) => {
-        if (data.status === "1") {
-          setLogs(data.result);
-        } else {
-          setLogs([]);
-        }
+        if (!cancelled) setLogs(data);
       })
       .catch((err) => {
         console.error("History fetch error:", err);
+        if (!cancelled) setLogs([]);
       })
-      .finally(() => setLoading(false));
-  }, [CHAIN_ID, ETHERSCAN_URL, TOKEN_ADDRESS, user?.walletAddress]);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.walletAddress]);
 
   return (
     <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-20">

@@ -33,8 +33,12 @@ const isAuthRequest = (url?: string) =>
   Boolean(
     url === "/login" ||
     url === "/reissue" ||
+    url === "/stepup" ||
+    url === "/withdrawal" ||
     url?.includes("/auth/login") ||
-    url?.includes("/auth/reissue")
+    url?.includes("/auth/reissue") ||
+    url?.includes("/auth/stepup") ||
+    url?.includes("/auth/withdrawal")
   );
 
 const isAdminRequest = (url?: string) => url?.startsWith("/admin");

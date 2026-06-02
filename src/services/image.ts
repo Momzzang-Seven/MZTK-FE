@@ -1,5 +1,10 @@
 import axios from "axios";
-import type { PresignedUrlRequest, PresignedUrlResponse } from "@types";
+import type {
+  GetImagesByIdsRequest,
+  ImageMetadata,
+  PresignedUrlRequest,
+  PresignedUrlResponse,
+} from "@types";
 import { api } from "./client";
 
 export type IssuePresignedUrlsRequest = PresignedUrlRequest;
@@ -23,6 +28,10 @@ interface ImageStatusResponse {
   images: ImageStatusItem[];
 }
 
+interface ImageMetadataResponse {
+  images: ImageMetadata[];
+}
+
 const IMAGE_STATUS_CHUNK_SIZE = 10;
 const IMAGE_STATUS_MAX_ATTEMPTS = 10;
 const IMAGE_STATUS_POLL_INTERVAL_MS = 1_000;
@@ -44,6 +53,21 @@ const chunkImageIds = (imageIds: number[]) => {
   }
 
   return chunks;
+};
+
+const getMarketplaceClassUploadFiles = (
+  files: File[],
+  uploadTargets: PresignedUrlResponse[]
+) => {
+  if (uploadTargets.length === files.length) {
+    return files;
+  }
+
+  if (uploadTargets.length === files.length + 1) {
+    return uploadTargets.map((_, index) => files[index === 0 ? 0 : index - 1]);
+  }
+
+  throw new Error("클래스 이미지 업로드 URL을 발급받지 못했습니다.");
 };
 
 export const imageService = {
@@ -123,7 +147,48 @@ export const imageService = {
     );
   },
 
+  async getImagesByIds(
+    request: GetImagesByIdsRequest
+  ): Promise<ImageMetadata[]> {
+    const params = new URLSearchParams();
+    request.ids.forEach((imageId) => {
+      params.append("ids", String(imageId));
+    });
+    params.set("referenceType", request.referenceType);
+    params.set("referenceId", String(request.referenceId));
+
+    const response = await api.get(`/images?${params.toString()}`, {
+      _skipNotFoundRedirect: true,
+    });
+    return (response.data.data as ImageMetadataResponse).images;
+  },
+
   async uploadFileToPresignedUrl(url: string, file: File): Promise<void> {
     await imageService.uploadImageToS3(url, file);
+  },
+
+  async uploadMarketplaceClassImages(files: File[]): Promise<number[]> {
+    if (files.length === 0) return [];
+
+    const presignedResponse = await imageService.issuePresignedUrls({
+      referenceType: "MARKET_CLASS",
+      images: files.map((file) => file.name),
+    });
+    const uploadTargets = presignedResponse.items ?? [];
+    const uploadFiles = getMarketplaceClassUploadFiles(files, uploadTargets);
+
+    await Promise.all(
+      uploadTargets.map((target, index) => {
+        const file = uploadFiles[index];
+        if (!file) {
+          throw new Error("클래스 이미지 파일 정보를 찾지 못했습니다.");
+        }
+        return imageService.uploadFileToPresignedUrl(target.presignedUrl, file);
+      })
+    );
+
+    const imageIds = uploadTargets.map((target) => target.imageId);
+    await imageService.confirmImageUpload(imageIds);
+    return imageIds;
   },
 };

@@ -18,6 +18,7 @@ import type {
   ReservationSummary,
   ReservationTime,
 } from "@services";
+import type { Web3Execution } from "@types";
 
 type TrainerReservationTab = "pending" | "approved" | "completed" | "cancelled";
 
@@ -212,6 +213,27 @@ const TrainerReservations = () => {
     });
   };
 
+  const openReservationWeb3 = (
+    intent: Web3Execution,
+    reservationId: number
+  ) => {
+    navigate(`/verify-wallet/${intent.resource.type}/${reservationId}`, {
+      state: {
+        intent,
+        recoveryScope: "trainer",
+        returnTo: "/trainer/reservations",
+      },
+    });
+  };
+
+  const isWeb3Signable = (intent?: Web3Execution | null) =>
+    !!intent &&
+    (intent.executionIntent.status === "AWAITING_SIGNATURE" ||
+      intent.viewerCanExecute === true ||
+      intent.viewerCanRecover === true) &&
+    intent.retryAllowed !== false &&
+    intent.recoveryStatus !== "ONCHAIN_UNCERTAIN";
+
   const handleDetailClick = async (reservationId: number) => {
     try {
       const detail = await getTrainerReservationDetail(reservationId);
@@ -259,9 +281,15 @@ const TrainerReservations = () => {
     }
     try {
       setIsMutating(true);
-      await rejectTrainerReservation(selectedId, {
+      const response = await rejectTrainerReservation(selectedId, {
         rejectionReason: trimmedReason,
       });
+      if (response.web3) {
+        setRejectModalOpen(false);
+        setSelectedId(null);
+        openReservationWeb3(response.web3, response.reservationId);
+        return;
+      }
       await loadReservations();
       setRejectModalOpen(false);
       setSelectedId(null);
@@ -469,6 +497,19 @@ const TrainerReservations = () => {
                   {/* Actions */}
                   <div className="flex flex-col gap-3 pt-5 border-t border-gray-50">
                     {isWeb3Blocked && <Web3PendingNotice />}
+                    {isWeb3Signable(item.web3Execution) && (
+                      <button
+                        onClick={() =>
+                          openReservationWeb3(
+                            item.web3Execution as Web3Execution,
+                            item.reservationId
+                          )
+                        }
+                        className="w-full h-12 bg-main text-white rounded-xl text-[13px] font-black transition-all active:scale-95"
+                      >
+                        블록체인 서명 계속하기
+                      </button>
+                    )}
                     {item.status === RESERVATION_STATUS.PENDING &&
                     !isWeb3Blocked ? (
                       (() => {

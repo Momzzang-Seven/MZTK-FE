@@ -104,7 +104,6 @@ export const normalizeOptionalHttpUrl = (value: string) => {
 
 export const isWeakPin = (pin: string) => {
   if (!/^\d{6}$/.test(pin)) return true;
-  if (/^(\d)\1{5}$/.test(pin)) return true;
 
   const digits = pin.split("").map(Number);
   const isAscending = digits.every((digit, index) => {

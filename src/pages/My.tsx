@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   CurrentTkn,
   LevelProgress,
@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store";
 import { CommonModal } from "@components/common";
 import { INQUIRY_FORM_URL } from "@constant/inquiry";
+import { PostStepUp, PostWithdraw } from "@services/auth";
 
 const ACTIVITY_BUTTONS = [
   {
@@ -75,13 +76,23 @@ const My = () => {
   const initLevel = useUserStore((state) => state.initLevel);
   const updateRole = useUserStore((state) => state.updateRole);
   const clearUser = useUserStore((state) => state.clearUser);
+  const accessToken = useUserStore((state) => state.accessToken);
+  const setAccessToken = useUserStore((state) => state.setAccessToken);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
   const [isChangingRole, setIsChangingRole] = useState(false);
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [withdrawPassword, setWithdrawPassword] = useState("");
+  const [withdrawError, setWithdrawError] = useState("");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const isTrainer = user?.role === "TRAINER";
   const targetRole = isTrainer ? "USER" : "TRAINER";
   const targetRoleLabel = isTrainer ? "일반 회원" : "트레이너";
+
+  useEffect(() => {
+    void initLevel();
+  }, [initLevel]);
 
   const handleRoleSwitch = async () => {
     if (isChangingRole) return;
@@ -104,6 +115,45 @@ const My = () => {
   useEffect(() => {
     initLevel();
   }, [initLevel]);
+  const closeWithdrawModal = () => {
+    if (isWithdrawing) return;
+    setIsWithdrawModalOpen(false);
+    setWithdrawPassword("");
+    setWithdrawError("");
+  };
+
+  const handleWithdraw = async () => {
+    if (isWithdrawing) return;
+    const password = withdrawPassword.trim();
+    if (!password) {
+      setWithdrawError("비밀번호를 입력해 주세요.");
+      return;
+    }
+
+    const previousAccessToken = accessToken;
+    setIsWithdrawing(true);
+    setWithdrawError("");
+
+    try {
+      const stepUp = await PostStepUp({ password });
+      setAccessToken(stepUp.accessToken);
+      await PostWithdraw();
+      clearUser();
+      showSnackbar("회원탈퇴가 완료되었습니다.", { variant: "success" });
+      navigate("/login", { replace: true });
+    } catch (error) {
+      if (previousAccessToken) {
+        setAccessToken(previousAccessToken);
+      }
+      const message =
+        (error as { response?: { data?: { message?: string } } }).response?.data
+          ?.message ||
+        "회원탈퇴에 실패했습니다. 비밀번호를 확인한 뒤 다시 시도해 주세요.";
+      setWithdrawError(message);
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-28">
@@ -335,6 +385,55 @@ const My = () => {
           ))}
         </div>
 
+        {/* Account withdrawal */}
+        <div
+          className="bg-white rounded-[28px] border border-red-100 shadow-xl shadow-gray-100/50 overflow-hidden animate-fade-slide-up"
+          style={{ animationDelay: "0.3s" }}
+        >
+          <button
+            type="button"
+            onClick={() => setIsWithdrawModalOpen(true)}
+            className="btn-press w-full flex items-center justify-between px-5 py-4 hover:bg-red-50/40 transition-colors border-none bg-transparent"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center text-red-500">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-[11px] text-red-300 font-black uppercase tracking-wider">
+                  Account
+                </p>
+                <p className="text-red-500 font-black text-[13px]">회원탈퇴</p>
+              </div>
+            </div>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#F87171"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+
         {/* Support link */}
         <p className="text-center text-[12px] text-gray-400 font-bold pb-4">
           지급 오류 또는 지연 관련 문의는{" "}
@@ -355,6 +454,57 @@ const My = () => {
           confirmLabel="확인"
           onConfirmClick={handleConfirmLogout}
         />
+      )}
+
+      {isWithdrawModalOpen && (
+        <CommonModal
+          title="회원탈퇴"
+          desc="회원탈퇴를 진행하려면 비밀번호로 본인 확인이 필요합니다."
+          variant="error"
+        >
+          <div className="mt-5 space-y-4">
+            <input
+              type="password"
+              value={withdrawPassword}
+              onChange={(event) => {
+                setWithdrawPassword(event.target.value);
+                setWithdrawError("");
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  void handleWithdraw();
+                }
+              }}
+              placeholder="비밀번호"
+              autoComplete="current-password"
+              disabled={isWithdrawing}
+              className="w-full h-12 rounded-2xl border border-gray-200 px-4 text-[14px] font-bold outline-none focus:border-red-300 disabled:bg-gray-50"
+            />
+            {withdrawError && (
+              <p className="text-[12px] font-bold text-red-500 leading-relaxed">
+                {withdrawError}
+              </p>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={closeWithdrawModal}
+                disabled={isWithdrawing}
+                className="flex-1 py-4 rounded-[22px] bg-gray-50 text-gray-500 text-[14px] font-black disabled:opacity-60"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleWithdraw()}
+                disabled={isWithdrawing}
+                className="flex-1 py-4 rounded-[22px] bg-red-500 text-white text-[14px] font-black shadow-lg shadow-red-100 disabled:opacity-60"
+              >
+                {isWithdrawing ? "처리 중..." : "탈퇴하기"}
+              </button>
+            </div>
+          </div>
+        </CommonModal>
       )}
     </div>
   );

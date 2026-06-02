@@ -9,6 +9,7 @@ vi.mock("react-router-dom", () => ({
 }));
 
 vi.mock("@utils", () => ({
+  buildImageUrl: vi.fn((value: string) => value),
   formatTimeAgo: vi.fn(),
 }));
 

@@ -105,8 +105,11 @@ const RegisterWallet = () => {
     };
   }, []);
   const finalizingRef = useRef(false);
+  const registrationInFlightRef = useRef(false);
 
   const validateMnemonic = () => {
+    if (registrationInFlightRef.current) return;
+
     try {
       const phrase = mnemonics.map((m) => m.trim().toLowerCase()).join(" ");
       const recoveredWallet = ethers.HDNodeWallet.fromPhrase(phrase);
@@ -121,6 +124,7 @@ const RegisterWallet = () => {
         setModal(messages.modal.sameWallet);
         return;
       }
+      registrationInFlightRef.current = true;
       setWallet(recoveredWallet);
       void startRegistration(recoveredWallet);
     } catch {
@@ -173,6 +177,8 @@ const RegisterWallet = () => {
       if (!isFlowAlive(myFlow)) return;
       // hook이 setError로 메시지 표시. 사용자에게 재시작 옵션 노출.
       setStep(REGISTER_WALLET_STEPS.RESTART_PROMPT);
+    } finally {
+      registrationInFlightRef.current = false;
     }
   };
 
@@ -364,6 +370,11 @@ const RegisterWallet = () => {
     setStep(REGISTER_WALLET_STEPS.MNEMONIC);
   };
 
+  const handleSkipWalletSetup = () => {
+    startNewFlow();
+    navigate("/", { replace: true });
+  };
+
   const handleFinalizePin = useCallback(async () => {
     if (!wallet) return;
     try {
@@ -447,7 +458,7 @@ const RegisterWallet = () => {
       {step !== REGISTER_WALLET_STEPS.SUCCESS && (
         <div className="absolute top-6 left-6 z-50">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/onboarding", { replace: true })}
             className="btn-press w-10 h-10 rounded-xl bg-white shadow-md shadow-gray-100 flex items-center justify-center border-none"
           >
             <svg
@@ -462,6 +473,18 @@ const RegisterWallet = () => {
             >
               <path d="m15 18-6-6 6-6" />
             </svg>
+          </button>
+        </div>
+      )}
+
+      {step !== REGISTER_WALLET_STEPS.SUCCESS && !showProgressOverlay && (
+        <div className="absolute top-6 right-6 z-50">
+          <button
+            type="button"
+            onClick={handleSkipWalletSetup}
+            className="btn-press px-4 h-10 rounded-xl bg-gray-900 text-white text-[12px] font-black shadow-md shadow-gray-100 border-none"
+          >
+            나중에 하기
           </button>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const smokePort = Number(process.env.E2E_SMOKE_PORT ?? "4174");
-const localBaseUrl = `http://127.0.0.1:${smokePort}`;
+const localBaseUrl = `http://localhost:${smokePort}`;
 const smokeBaseUrl = process.env.E2E_SMOKE_BASE_URL || localBaseUrl;
 const useRemoteFe = Boolean(process.env.E2E_SMOKE_BASE_URL);
 
@@ -27,7 +27,7 @@ export default defineConfig({
   webServer: useRemoteFe
     ? undefined
     : {
-        command: `pnpm build && pnpm exec vite preview --host 127.0.0.1 --port ${smokePort}`,
+        command: `pnpm build && pnpm exec vite preview --host localhost --port ${smokePort}`,
         env: {
           ...process.env,
           VITE_API_BASE_URL: process.env.E2E_SMOKE_API_BASE_URL ?? "",

@@ -11,13 +11,15 @@ export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div
       onClickCapture={handleButtonClickCapture}
-      className="flex w-full min-h-dvh bg-[#FAFAFA]"
+      className="flex w-full min-h-dvh flex-col overflow-x-hidden bg-[#FAFAFA] lg:flex-row"
     >
       <AdminSidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <AdminHeader />
-        <main className="p-10 flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-10">
+          {children}
+        </main>
         <AuthStatusModal />
         <AdminErrorModal />
         <GlobalConfirmModal />
