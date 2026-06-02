@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import {
   fetchUserStats,
   fetchPostStats,
+  fetchSystemHealth,
   fetchTokenTransfers,
   fetchWalletBalanceSnapshot,
 } from "@services";
@@ -21,6 +22,7 @@ interface AdminDashboardData {
   mztkBalance: string;
   userStats: UserStatsResponse | null;
   postStats: PostStatsResponse | null;
+  serverHealthStatus: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -45,6 +47,7 @@ export const useAdminDashboardData = () => {
     mztkBalance: "0",
     userStats: null,
     postStats: null,
+    serverHealthStatus: null,
     loading: true,
     error: null,
   });
@@ -53,7 +56,7 @@ export const useAdminDashboardData = () => {
     try {
       setData((prev) => ({ ...prev, loading: true, error: null }));
 
-      const [tokenTransfers, balances, userStats, postStats] =
+      const [tokenTransfers, balances, userStats, postStats, systemHealth] =
         await Promise.all([
           MONITOR_ADDRESS
             ? fetchTokenTransfers(MONITOR_ADDRESS, 6).catch((err) => {
@@ -75,6 +78,10 @@ export const useAdminDashboardData = () => {
             console.error("Post stats fetch failed:", err);
             return null;
           }),
+          fetchSystemHealth().catch((err) => {
+            console.error("System health fetch failed:", err);
+            return null;
+          }),
         ]);
 
       setData((prev) => ({
@@ -86,6 +93,7 @@ export const useAdminDashboardData = () => {
         mztkBalance: balances.tokenBalance,
         userStats: userStats || prev.userStats,
         postStats: postStats || prev.postStats,
+        serverHealthStatus: systemHealth?.status ?? "UNKNOWN",
         loading: false,
         error: null,
       }));
@@ -109,6 +117,7 @@ export const useAdminDashboardData = () => {
     mztkBalance: data.mztkBalance,
     userStats: data.userStats,
     postStats: data.postStats,
+    serverHealthStatus: data.serverHealthStatus,
     loading: data.loading,
     error: data.error,
   };

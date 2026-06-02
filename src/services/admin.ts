@@ -1,3 +1,4 @@
+import axios from "axios";
 import { api } from "./client";
 import type {
   UserStatsResponse,
@@ -39,6 +40,26 @@ interface BaseResponse<T> {
   code: string;
   retryable: boolean;
 }
+
+export interface SystemHealthResponse {
+  status: string;
+  components?: Record<string, unknown>;
+}
+
+const getApiBaseUrl = () => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  return !import.meta.env.DEV && baseUrl && baseUrl !== "undefined"
+    ? (baseUrl as string)
+    : "";
+};
+
+export const fetchSystemHealth = async (): Promise<SystemHealthResponse> => {
+  const { data } = await axios.get<SystemHealthResponse>(
+    `${getApiBaseUrl()}/actuator/health`,
+    { withCredentials: true }
+  );
+  return data;
+};
 
 export const fetchUserStats = async (): Promise<UserStatsResponse> => {
   const { data } = await api.get<BaseResponse<UserStatsResponse>>(

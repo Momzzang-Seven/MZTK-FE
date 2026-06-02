@@ -19,6 +19,9 @@ export const AuthActionButtons = ({
   onExerciseClick,
 }: AuthActionButtonsProps) => {
   const hasAttendedToday = useUserStore((state) => state.hasAttendedToday);
+  const lastAttendanceRewardedXp = useUserStore(
+    (state) => state.lastAttendanceRewardedXp
+  );
   const lastExerciseDate = useUserStore((state) => state.lastExerciseDate);
   const analysisStatus = useUserStore((state) => state.analysisStatus);
   const checkAttendance = useUserStore((state) => state.checkAttendance);
@@ -28,6 +31,10 @@ export const AuthActionButtons = ({
   const isExerciseDone = lastExerciseDate === today;
   const isExerciseAnalyzing = analysisStatus === "analyzing";
   const isExerciseLocked = isExerciseDone || isExerciseAnalyzing;
+  const attendanceRewardText =
+    lastAttendanceRewardedXp && lastAttendanceRewardedXp > 0
+      ? `${lastAttendanceRewardedXp} XP를 획득했어요`
+      : "출석 보상을 획득했어요";
 
   return (
     <div className="w-full flex flex-col gap-4 font-pretendard">
@@ -78,7 +85,7 @@ export const AuthActionButtons = ({
                 className={`text-[12px] font-bold tracking-wide ${isAttended ? "text-white/80" : "text-gray-400"}`}
               >
                 {isAttended
-                  ? "10 XP를 획득했어요 ✨"
+                  ? attendanceRewardText
                   : "가볍게 출석하고 시작해볼까요?"}
               </p>
             </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { walletService, web3Service } from "@services";
 import { ethers } from "ethers";
 import { MZTK_ABI } from "@abi";
+import { getKoreanErrorMessageFromError } from "@constant";
 import type {
   RegisterWalletResponse,
   SignRequest,
@@ -61,15 +62,8 @@ const validateEip1559SignRequest = (
   }
 };
 
-const extractApiErrorMessage = (error: unknown, fallback: string): string => {
-  const errorResponse = error as {
-    response?: { data?: { message?: string } };
-  };
-  return (
-    errorResponse.response?.data?.message ||
-    (error instanceof Error ? error.message : fallback)
-  );
-};
+const extractApiErrorMessage = (error: unknown, fallback: string): string =>
+  getKoreanErrorMessageFromError(error, fallback);
 
 export const useWalletService = () => {
   const [loading, setLoading] = useState<boolean>(false);

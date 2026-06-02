@@ -2,15 +2,28 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { CommonModal } from "@components/common/CommonModal";
-import { PostLogin } from "@services/auth";
+import { PostLogin, PostStepUp, PostWithdraw } from "@services/auth";
 import { useAuthModalStore, useUserStore } from "@store";
 import { isSanctionedAccountError } from "@utils";
+import { getKoreanErrorMessageFromError } from "@constant";
+import type { AuthProvider } from "@store/userStore";
+
+const resolveCallbackProvider = (
+  state: string | null
+): Extract<AuthProvider, "KAKAO" | "GOOGLE"> =>
+  state === "google" || state === "withdraw:google" ? "GOOGLE" : "KAKAO";
+
+const isWithdrawalCallback = (state: string | null) =>
+  state === "withdraw:kakao" || state === "withdraw:google";
 
 const Callback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
   const setAccessToken = useUserStore((state) => state.setAccessToken);
+  const setAuthProvider = useUserStore((state) => state.setAuthProvider);
+  const clearUser = useUserStore((state) => state.clearUser);
+  const showSnackbar = useUserStore((state) => state.showSnackbar);
   const setSanctioned = useAuthModalStore((state) => state.setSanctioned);
   const loginAttempted = useRef(false);
 
@@ -32,10 +45,22 @@ const Callback = () => {
 
     const login = async () => {
       try {
-        let provider: "KAKAO" | "GOOGLE" = "KAKAO";
-        if (state === "google") provider = "GOOGLE";
+        const provider = resolveCallbackProvider(state);
 
         const redirectUri = window.location.origin + "/callback";
+
+        if (isWithdrawalCallback(state)) {
+          const stepUp = await PostStepUp({
+            authorizationCode: code,
+            redirectUri,
+          });
+          setAccessToken(stepUp.accessToken);
+          await PostWithdraw();
+          clearUser();
+          showSnackbar("회원탈퇴가 완료되었습니다.", { variant: "success" });
+          navigate("/login", { replace: true });
+          return;
+        }
 
         const response = await PostLogin({
           provider,
@@ -47,6 +72,7 @@ const Callback = () => {
           const { userInfo, accessToken, isNewUser } = response;
           setUser(userInfo);
           setAccessToken(accessToken);
+          setAuthProvider(provider);
 
           if (isNewUser) {
             navigate("/register");
@@ -70,8 +96,10 @@ const Callback = () => {
         if (axios.isAxiosError(err)) {
           if (err.response?.status === 409) {
             setErrorMessage(
-              err.response.data.message ||
+              getKoreanErrorMessageFromError(
+                err,
                 "이미 다른 소셜 계정으로 가입된 이메일입니다."
+              )
             );
             setIsErrorModalOpen(true);
             return;
@@ -81,15 +109,26 @@ const Callback = () => {
         } else {
           console.error("Login failed: Unknown error");
         }
-        navigate("/login");
+        navigate(isWithdrawalCallback(state) ? "/my" : "/login");
       }
     };
 
     login();
-  }, [searchParams, navigate, setUser, setAccessToken, setSanctioned]);
+  }, [
+    searchParams,
+    navigate,
+    setUser,
+    setAccessToken,
+    setAuthProvider,
+    clearUser,
+    showSnackbar,
+    setSanctioned,
+  ]);
 
   const providerName =
-    searchParams.get("state") === "google" ? "구글" : "카카오";
+    resolveCallbackProvider(searchParams.get("state")) === "GOOGLE"
+      ? "구글"
+      : "카카오";
 
   return (
     <>

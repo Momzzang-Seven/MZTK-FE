@@ -1,7 +1,7 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { EXERCISE_CATEGORIES } from "@constant";
+import { EXERCISE_CATEGORIES, getKoreanErrorMessageFromError } from "@constant";
 import {
   getTrainerStore,
   imageService,
@@ -295,11 +295,6 @@ export const useRegisterTicket = () => {
 
       setIsSuccessModalOpen(true);
     } catch (error) {
-      const err = error as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
-
       if (
         axios.isAxiosError(error) &&
         error.response?.status === 404 &&
@@ -311,9 +306,10 @@ export const useRegisterTicket = () => {
       }
 
       alert(
-        err?.response?.data?.message ||
-          err?.message ||
+        getKoreanErrorMessageFromError(
+          error,
           "클래스 등록에 실패했습니다. 입력값을 다시 확인해 주세요."
+        )
       );
     } finally {
       setIsSubmitting(false);

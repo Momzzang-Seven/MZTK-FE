@@ -8,6 +8,21 @@ const ALLOWED_IMAGE_EXTENSIONS = new Set([
   "webp",
 ]);
 
+const WORKOUT_PHOTO_ALLOWED_IMAGE_EXTENSIONS = new Set([
+  "jpg",
+  "jpeg",
+  "heif",
+  "heic",
+]);
+
+const WORKOUT_RECORD_ALLOWED_IMAGE_EXTENSIONS = new Set([
+  "jpg",
+  "jpeg",
+  "png",
+  "heif",
+  "heic",
+]);
+
 export const MAX_IMAGE_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 export const MAX_IMAGE_FILE_SIZE_MB = MAX_IMAGE_FILE_SIZE_BYTES / 1024 / 1024;
 
@@ -27,6 +42,28 @@ export const ACCEPTED_IMAGE_INPUT_TYPES = [
   "image/webp",
 ].join(",");
 
+export const ACCEPTED_WORKOUT_PHOTO_INPUT_TYPES = [
+  ".jpg",
+  ".jpeg",
+  ".heif",
+  ".heic",
+  "image/jpeg",
+  "image/heif",
+  "image/heic",
+].join(",");
+
+export const ACCEPTED_WORKOUT_RECORD_INPUT_TYPES = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".heif",
+  ".heic",
+  "image/jpeg",
+  "image/png",
+  "image/heif",
+  "image/heic",
+].join(",");
+
 const getFileExtension = (filename: string) => {
   const extensionIndex = filename.lastIndexOf(".");
 
@@ -35,6 +72,34 @@ const getFileExtension = (filename: string) => {
   }
 
   return filename.slice(extensionIndex + 1).toLowerCase();
+};
+
+export const getInvalidWorkoutVerificationFileMessage = (
+  file: File,
+  mode: "exercise" | "record"
+) => {
+  const filename = file.name || "선택한 파일";
+  const extension = getFileExtension(filename);
+  const allowedExtensions =
+    mode === "record"
+      ? WORKOUT_RECORD_ALLOWED_IMAGE_EXTENSIONS
+      : WORKOUT_PHOTO_ALLOWED_IMAGE_EXTENSIONS;
+  const allowedLabel =
+    mode === "record" ? "JPG, PNG, HEIF, HEIC" : "JPG, HEIF, HEIC";
+
+  if (!extension || !allowedExtensions.has(extension)) {
+    return `${filename}은 운동 인증에 사용할 수 없는 이미지 형식입니다. ${allowedLabel} 파일만 선택해 주세요.`;
+  }
+
+  if (file.type && !file.type.startsWith("image/")) {
+    return `${filename}은 이미지 파일로 인식되지 않습니다. 다른 파일을 선택해 주세요.`;
+  }
+
+  if (file.size > MAX_IMAGE_FILE_SIZE_BYTES) {
+    return `${filename}은 ${MAX_IMAGE_FILE_SIZE_MB}MB보다 큽니다. 더 작은 이미지를 선택해 주세요.`;
+  }
+
+  return null;
 };
 
 export const getInvalidImageFileMessage = (file: File) => {

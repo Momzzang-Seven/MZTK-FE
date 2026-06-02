@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import type { Comment } from "@types";
 import { commentService } from "@services";
+import { getKoreanErrorMessageFromError } from "@constant";
 
 const PAGE_SIZE = 5;
 
@@ -37,12 +38,9 @@ export const useReplyService = <T extends Comment>(parentId: number) => {
         setNextCursor(data.nextCursor);
         return true;
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 조회에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 조회에 실패했습니다.")
+        );
         return false;
       } finally {
         if (activeFetchKeyRef.current === fetchKey) {

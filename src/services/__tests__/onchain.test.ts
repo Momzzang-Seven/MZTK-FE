@@ -59,6 +59,7 @@ const makeTransferLog = ({
 
 describe("onchain token transfers", () => {
   let fetchTokenTransfers: typeof import("../onchain").fetchTokenTransfers;
+  let OnchainRateLimitError: typeof import("../onchain").OnchainRateLimitError;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -66,7 +67,9 @@ describe("onchain token transfers", () => {
     vi.stubEnv("VITE_BASE_SEPOLIA_RPC", "https://base.example");
     vi.stubEnv("VITE_BASE_SEPOLIA_CHAIN_ID", "84532");
     vi.stubEnv("VITE_BASE_SEPOLIA_TOKEN_ADDRESS", TOKEN_ADDRESS);
-    fetchTokenTransfers = (await import("../onchain")).fetchTokenTransfers;
+    const onchain = await import("../onchain");
+    fetchTokenTransfers = onchain.fetchTokenTransfers;
+    OnchainRateLimitError = onchain.OnchainRateLimitError;
     providerMocks.getBlockNumber.mockResolvedValue(125);
     providerMocks.getBlock.mockImplementation((blockNumber: number) =>
       Promise.resolve({ number: blockNumber, timestamp: blockNumber + 1000 })
@@ -144,5 +147,23 @@ describe("onchain token transfers", () => {
         return range <= 5;
       })
     ).toBe(true);
+  });
+
+  it("does not split log ranges when the RPC returns a rate limit", async () => {
+    vi.stubEnv("VITE_TOKEN_TRANSFER_LOOKBACK_BLOCKS", "12");
+    vi.stubEnv("VITE_RPC_LOG_BLOCK_RANGE", "12");
+    providerMocks.getLogs.mockRejectedValue(
+      Object.assign(new Error("Your app has exceeded its compute units"), {
+        error: {
+          code: 429,
+          message: "compute units per second capacity exceeded",
+        },
+      })
+    );
+
+    await expect(
+      fetchTokenTransfers(WALLET_ADDRESS, 10)
+    ).rejects.toBeInstanceOf(OnchainRateLimitError);
+    expect(providerMocks.getLogs).toHaveBeenCalledTimes(1);
   });
 });

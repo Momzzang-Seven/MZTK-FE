@@ -12,6 +12,7 @@ const RecordAuth = () => {
     previewUrl,
     errorMessage,
     hasSelectedFile,
+    acceptedFileTypes,
     handleFileChange,
     handleUpload,
     successData,
@@ -71,6 +72,7 @@ const RecordAuth = () => {
         guideDesc={RECORD_TEXT.GUIDE_DESC}
         uploadNoImageText={RECORD_TEXT.UPLOAD_NO_IMAGE}
         uploadSizeHintText={RECORD_TEXT.UPLOAD_SIZE_HINT}
+        acceptedFileTypes={acceptedFileTypes}
       />
 
       {errorMessage && (

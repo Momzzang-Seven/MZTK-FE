@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { levelService } from "@services/level";
 import { useUserStore } from "@store";
+import { getKoreanErrorMessageFromError } from "@constant";
 import type {
   MyLevelResponse,
   LevelUpResponse,
@@ -51,12 +52,7 @@ export const useLevel = () => {
       return result;
     } catch (err) {
       console.error("레벨업 실패:", err);
-      const errorResponse = err as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message || "레벨업에 실패했습니다.";
-      setError(message);
+      setError(getKoreanErrorMessageFromError(err, "레벨업에 실패했습니다."));
       return null;
     } finally {
       setLoading(false);

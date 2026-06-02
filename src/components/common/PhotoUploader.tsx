@@ -8,6 +8,7 @@ interface PhotoUploaderProps {
   guideDesc: string;
   uploadNoImageText: string;
   uploadSizeHintText: string;
+  acceptedFileTypes?: string;
   height?: string;
 }
 
@@ -18,6 +19,7 @@ export const PhotoUploader = ({
   guideDesc,
   uploadNoImageText,
   uploadSizeHintText,
+  acceptedFileTypes = ACCEPTED_IMAGE_INPUT_TYPES,
 }: PhotoUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -145,7 +147,7 @@ export const PhotoUploader = ({
       </button>
       <input
         type="file"
-        accept={ACCEPTED_IMAGE_INPUT_TYPES}
+        accept={acceptedFileTypes}
         ref={fileInputRef}
         onChange={onFileChange}
         className="hidden"

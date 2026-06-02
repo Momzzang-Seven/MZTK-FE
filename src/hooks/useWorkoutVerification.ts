@@ -7,7 +7,11 @@ import {
   getWorkoutVerificationRequestErrorMessage,
   type WorkoutVerificationMode,
 } from "@utils/workoutVerificationMessages";
-import { getInvalidImageFileMessage } from "@utils";
+import {
+  ACCEPTED_WORKOUT_PHOTO_INPUT_TYPES,
+  ACCEPTED_WORKOUT_RECORD_INPUT_TYPES,
+  getInvalidWorkoutVerificationFileMessage,
+} from "@utils";
 
 interface UseWorkoutVerificationOptions {
   mode: WorkoutVerificationMode;
@@ -32,6 +36,20 @@ export const useWorkoutVerification = ({
     grantedXp: number;
     exerciseDate: string;
   } | null>(null);
+  const acceptedFileTypes =
+    mode === "record"
+      ? ACCEPTED_WORKOUT_RECORD_INPUT_TYPES
+      : ACCEPTED_WORKOUT_PHOTO_INPUT_TYPES;
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl((prev) => {
+      if (prev) {
+        URL.revokeObjectURL(prev);
+      }
+      return null;
+    });
+  };
 
   useEffect(() => {
     return () => {
@@ -47,15 +65,12 @@ export const useWorkoutVerification = ({
 
     if (!file) return;
 
-    const invalidFileMessage = getInvalidImageFileMessage(file);
+    const invalidFileMessage = getInvalidWorkoutVerificationFileMessage(
+      file,
+      mode
+    );
     if (invalidFileMessage) {
-      setSelectedFile(null);
-      setPreviewUrl((prev) => {
-        if (prev) {
-          URL.revokeObjectURL(prev);
-        }
-        return null;
-      });
+      clearSelectedFile();
       setErrorMessage(invalidFileMessage);
       setStep("upload");
       return;
@@ -82,6 +97,7 @@ export const useWorkoutVerification = ({
 
     setErrorMessage("");
     setStep("analyzing");
+    let analysisStarted = false;
 
     try {
       const presignedResponse = await imageService.issuePresignedUrls({
@@ -100,6 +116,7 @@ export const useWorkoutVerification = ({
       );
 
       startAnalysis(mode);
+      analysisStarted = true;
 
       const verificationRequest =
         mode === "record"
@@ -150,6 +167,7 @@ export const useWorkoutVerification = ({
               latestResult.rewardStatus === "FAILED")
           ) {
             finishAnalysis();
+            setStep("upload");
             showSnackbar(
               getWorkoutVerificationErrorMessage(mode, latestResult)
             );
@@ -157,9 +175,13 @@ export const useWorkoutVerification = ({
         })
         .catch((error) => {
           finishAnalysis();
+          setStep("upload");
           showSnackbar(getWorkoutVerificationRequestErrorMessage(error));
         });
     } catch (error) {
+      if (analysisStarted) {
+        finishAnalysis();
+      }
       setErrorMessage(getWorkoutVerificationRequestErrorMessage(error));
       setStep("upload");
     }
@@ -170,6 +192,7 @@ export const useWorkoutVerification = ({
     previewUrl,
     errorMessage,
     hasSelectedFile: selectedFile !== null,
+    acceptedFileTypes,
     handleFileChange,
     handleUpload,
     successData,
