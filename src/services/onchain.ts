@@ -8,8 +8,8 @@ const ERC20_ABI = [
 ];
 
 const TRANSFER_TOPIC = ethers.id("Transfer(address,address,uint256)");
-const DEFAULT_TRANSFER_LOOKBACK_BLOCKS = 2_000;
-const DEFAULT_LOG_BLOCK_RANGE = 10;
+const DEFAULT_TRANSFER_LOOKBACK_BLOCKS = 500;
+const DEFAULT_LOG_BLOCK_RANGE = 100;
 
 export interface OnchainTokenTransfer {
   hash: string;
@@ -24,6 +24,16 @@ export interface OnchainTokenTransfer {
 export interface WalletBalanceSnapshot {
   ethBalance: string;
   tokenBalance: string;
+}
+
+export class OnchainRateLimitError extends Error {
+  readonly cause?: unknown;
+
+  constructor(cause?: unknown) {
+    super("RPC rate limit exceeded while fetching token transfers");
+    this.name = "OnchainRateLimitError";
+    this.cause = cause;
+  }
 }
 
 const topicAddress = (address: string) =>
@@ -69,6 +79,56 @@ interface TransferLogFilter {
   topics: (string | null)[];
 }
 
+const stringifyRpcError = (error: unknown): string => {
+  if (!error || typeof error !== "object") return String(error);
+
+  const parts = [String(error)];
+  const record = error as Record<string, unknown>;
+
+  ["name", "message", "code", "shortMessage", "reason"].forEach((key) => {
+    const value = record[key];
+    if (value !== undefined) parts.push(String(value));
+  });
+
+  ["error", "payload", "info"].forEach((key) => {
+    const value = record[key];
+    if (value === undefined) return;
+
+    try {
+      parts.push(JSON.stringify(value));
+    } catch {
+      parts.push(String(value));
+    }
+  });
+
+  return parts.join(" ");
+};
+
+const isRpcRateLimitError = (error: unknown) => {
+  const text = stringifyRpcError(error).toLowerCase();
+
+  return (
+    text.includes("429") ||
+    text.includes("rate limit") ||
+    text.includes("too many requests") ||
+    text.includes("compute units per second")
+  );
+};
+
+const isLogRangeTooWideError = (error: unknown) => {
+  const text = stringifyRpcError(error).toLowerCase();
+
+  return (
+    text.includes("block range") ||
+    text.includes("too many results") ||
+    text.includes("query returned more than") ||
+    text.includes("response size")
+  );
+};
+
+export const isTokenTransferRateLimitError = (error: unknown) =>
+  error instanceof OnchainRateLimitError || isRpcRateLimitError(error);
+
 const getLogsWithAdaptiveRange = async (
   provider: JsonRpcProvider,
   filter: TransferLogFilter
@@ -76,21 +136,27 @@ const getLogsWithAdaptiveRange = async (
   try {
     return await provider.getLogs(filter);
   } catch (error) {
-    if (filter.fromBlock >= filter.toBlock) {
+    if (error instanceof OnchainRateLimitError) {
+      throw error;
+    }
+
+    if (isRpcRateLimitError(error)) {
+      throw new OnchainRateLimitError(error);
+    }
+
+    if (filter.fromBlock >= filter.toBlock || !isLogRangeTooWideError(error)) {
       throw error;
     }
 
     const midpoint = Math.floor((filter.fromBlock + filter.toBlock) / 2);
-    const [left, right] = await Promise.all([
-      getLogsWithAdaptiveRange(provider, {
-        ...filter,
-        toBlock: midpoint,
-      }),
-      getLogsWithAdaptiveRange(provider, {
-        ...filter,
-        fromBlock: midpoint + 1,
-      }),
-    ]);
+    const left = await getLogsWithAdaptiveRange(provider, {
+      ...filter,
+      toBlock: midpoint,
+    });
+    const right = await getLogsWithAdaptiveRange(provider, {
+      ...filter,
+      fromBlock: midpoint + 1,
+    });
 
     return [...left, ...right];
   }
@@ -103,20 +169,18 @@ const fetchTransferLogsForChunk = async (
   fromBlock: number,
   toBlock: number
 ) => {
-  const [incoming, outgoing] = await Promise.all([
-    getLogsWithAdaptiveRange(provider, {
-      address: tokenAddress,
-      fromBlock,
-      toBlock,
-      topics: [TRANSFER_TOPIC, null, walletTopic],
-    }),
-    getLogsWithAdaptiveRange(provider, {
-      address: tokenAddress,
-      fromBlock,
-      toBlock,
-      topics: [TRANSFER_TOPIC, walletTopic],
-    }),
-  ]);
+  const incoming = await getLogsWithAdaptiveRange(provider, {
+    address: tokenAddress,
+    fromBlock,
+    toBlock,
+    topics: [TRANSFER_TOPIC, null, walletTopic],
+  });
+  const outgoing = await getLogsWithAdaptiveRange(provider, {
+    address: tokenAddress,
+    fromBlock,
+    toBlock,
+    topics: [TRANSFER_TOPIC, walletTopic],
+  });
 
   return [...incoming, ...outgoing];
 };
@@ -151,61 +215,74 @@ export const fetchTokenTransfers = async (
   walletAddress: string,
   limit = 100
 ): Promise<OnchainTokenTransfer[]> => {
-  const { TOKEN_ADDRESS } = getNetworkConfig();
-  if (!walletAddress || !TOKEN_ADDRESS || limit <= 0) return [];
+  try {
+    const { TOKEN_ADDRESS } = getNetworkConfig();
+    if (!walletAddress || !TOKEN_ADDRESS || limit <= 0) return [];
 
-  const provider = createProvider();
-  const normalizedWallet = ethers.getAddress(walletAddress);
-  const latestBlock = await provider.getBlockNumber();
-  const fromBlock = Math.max(latestBlock - getTransferLookbackBlocks(), 0);
-  const blockRange = getLogBlockRange();
-  const walletTopic = topicAddress(normalizedWallet);
-  const transferLogsByKey = new Map<string, Log>();
+    const provider = createProvider();
+    const normalizedWallet = ethers.getAddress(walletAddress);
+    const latestBlock = await provider.getBlockNumber();
+    const fromBlock = Math.max(latestBlock - getTransferLookbackBlocks(), 0);
+    const blockRange = getLogBlockRange();
+    const walletTopic = topicAddress(normalizedWallet);
+    const transferLogsByKey = new Map<string, Log>();
 
-  for (
-    let chunkToBlock = latestBlock;
-    chunkToBlock >= fromBlock && transferLogsByKey.size < limit;
-    chunkToBlock -= blockRange
-  ) {
-    const chunkFromBlock = Math.max(chunkToBlock - blockRange + 1, fromBlock);
-    const chunkLogs = await fetchTransferLogsForChunk(
-      provider,
-      TOKEN_ADDRESS,
-      walletTopic,
-      chunkFromBlock,
-      chunkToBlock
+    for (
+      let chunkToBlock = latestBlock;
+      chunkToBlock >= fromBlock && transferLogsByKey.size < limit;
+      chunkToBlock -= blockRange
+    ) {
+      const chunkFromBlock = Math.max(chunkToBlock - blockRange + 1, fromBlock);
+      const chunkLogs = await fetchTransferLogsForChunk(
+        provider,
+        TOKEN_ADDRESS,
+        walletTopic,
+        chunkFromBlock,
+        chunkToBlock
+      );
+
+      chunkLogs.forEach((log) => {
+        transferLogsByKey.set(`${log.transactionHash}-${log.index}`, log);
+      });
+    }
+
+    const deduped = Array.from(transferLogsByKey.values())
+      .sort(
+        (a, b) =>
+          b.blockNumber - a.blockNumber || (b.index ?? 0) - (a.index ?? 0)
+      )
+      .slice(0, limit);
+
+    const blockNumbers = Array.from(
+      new Set(deduped.map((log) => log.blockNumber))
+    );
+    const blocks = await Promise.all(
+      blockNumbers.map((blockNumber) => provider.getBlock(blockNumber))
+    );
+    const timestampByBlock = new Map(
+      blocks
+        .filter((block): block is NonNullable<typeof block> => block !== null)
+        .map((block) => [block.number, block.timestamp])
     );
 
-    chunkLogs.forEach((log) => {
-      transferLogsByKey.set(`${log.transactionHash}-${log.index}`, log);
-    });
+    return deduped.map((log) => ({
+      hash: log.transactionHash,
+      from: addressFromTopic(log.topics[1] ?? ethers.ZeroHash),
+      to: addressFromTopic(log.topics[2] ?? ethers.ZeroHash),
+      value: BigInt(log.data).toString(),
+      timeStamp: String(timestampByBlock.get(log.blockNumber) ?? 0),
+      tokenSymbol: "MZTK",
+      tokenDecimal: "18",
+    }));
+  } catch (error) {
+    if (error instanceof OnchainRateLimitError) {
+      throw error;
+    }
+
+    if (isRpcRateLimitError(error)) {
+      throw new OnchainRateLimitError(error);
+    }
+
+    throw error;
   }
-
-  const deduped = Array.from(transferLogsByKey.values())
-    .sort(
-      (a, b) => b.blockNumber - a.blockNumber || (b.index ?? 0) - (a.index ?? 0)
-    )
-    .slice(0, limit);
-
-  const blockNumbers = Array.from(
-    new Set(deduped.map((log) => log.blockNumber))
-  );
-  const blocks = await Promise.all(
-    blockNumbers.map((blockNumber) => provider.getBlock(blockNumber))
-  );
-  const timestampByBlock = new Map(
-    blocks
-      .filter((block): block is NonNullable<typeof block> => block !== null)
-      .map((block) => [block.number, block.timestamp])
-  );
-
-  return deduped.map((log) => ({
-    hash: log.transactionHash,
-    from: addressFromTopic(log.topics[1] ?? ethers.ZeroHash),
-    to: addressFromTopic(log.topics[2] ?? ethers.ZeroHash),
-    value: BigInt(log.data).toString(),
-    timeStamp: String(timestampByBlock.get(log.blockNumber) ?? 0),
-    tokenSymbol: "MZTK",
-    tokenDecimal: "18",
-  }));
 };

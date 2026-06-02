@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store";
 import { ethers } from "ethers";
 import { getNetworkConfig } from "@utils/network";
-import { fetchTokenTransfers } from "@services";
+import { fetchTokenTransfers, isTokenTransferRateLimitError } from "@services";
 
 interface TokenTx {
   hash: string;
@@ -13,29 +13,47 @@ interface TokenTx {
   value: string;
 }
 
+type TokenHistoryError = "rate-limit" | "unknown";
+
 const MyTknHistory = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
   const [logs, setLogs] = useState<TokenTx[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<TokenHistoryError | null>(null);
+  const [reloadNonce, setReloadNonce] = useState(0);
   const { NAME } = getNetworkConfig();
 
   useEffect(() => {
     if (!user?.walletAddress) {
+      setLogs([]);
+      setLoadError(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
+    setLoadError(null);
     let cancelled = false;
 
     fetchTokenTransfers(user.walletAddress, 50)
       .then((data) => {
-        if (!cancelled) setLogs(data);
+        if (!cancelled) {
+          setLogs(data);
+          setLoadError(null);
+        }
       })
       .catch((err) => {
-        console.error("History fetch error:", err);
-        if (!cancelled) setLogs([]);
+        const isRateLimited = isTokenTransferRateLimitError(err);
+
+        if (import.meta.env.DEV && !isRateLimited) {
+          console.error("History fetch error:", err);
+        }
+
+        if (!cancelled) {
+          setLogs([]);
+          setLoadError(isRateLimited ? "rate-limit" : "unknown");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -44,7 +62,7 @@ const MyTknHistory = () => {
     return () => {
       cancelled = true;
     };
-  }, [user?.walletAddress]);
+  }, [user?.walletAddress, reloadNonce]);
 
   return (
     <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-20">
@@ -125,6 +143,43 @@ const MyTknHistory = () => {
               className="btn-press w-full py-4 bg-main text-white rounded-[20px] font-black text-[15px] shadow-xl shadow-main/25 border-none"
             >
               지갑 등록하러 가기
+            </button>
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center py-28 gap-4 text-center">
+            <div className="w-16 h-16 rounded-[22px] bg-orange-50 flex items-center justify-center text-main">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                <path d="M12 8v5" />
+                <path d="M12 17h.01" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[15px] text-gray-900 font-black">
+                거래 내역을 불러오지 못했습니다
+              </p>
+              <p className="text-[13px] text-gray-400 font-bold mt-1 leading-relaxed">
+                {loadError === "rate-limit"
+                  ? "요청이 많아 잠시 후 다시 시도해주세요."
+                  : "네트워크 상태를 확인하고 다시 시도해주세요."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReloadNonce((value) => value + 1)}
+              className="btn-press px-5 py-3 bg-main text-white rounded-[18px] font-black text-[13px] shadow-lg shadow-main/20 border-none"
+            >
+              다시 시도
             </button>
           </div>
         ) : logs.length > 0 ? (

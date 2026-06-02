@@ -103,7 +103,7 @@ describe("community edge validation", () => {
     });
 
     expect(result.current.error).toBe(
-      `Comments must be ${TEXT_LIMITS.comment} characters or fewer.`
+      `댓글은 ${TEXT_LIMITS.comment}자 이하로 작성해 주세요.`
     );
     expect(mockCreateComment).not.toHaveBeenCalled();
   });
@@ -121,7 +121,7 @@ describe("community edge validation", () => {
     });
 
     expect(result.current.error).toBe(
-      `Content must be ${TEXT_LIMITS.freePost} characters or fewer.`
+      `내용은 ${TEXT_LIMITS.freePost}자 이하로 작성해 주세요.`
     );
     expect(mockConfirmImageUpload).not.toHaveBeenCalled();
     expect(mockCreateFreePost).not.toHaveBeenCalled();
@@ -141,7 +141,7 @@ describe("community edge validation", () => {
     });
 
     expect(result.current.error).toBe(
-      `Content must be ${TEXT_LIMITS.answer} characters or fewer.`
+      `내용은 ${TEXT_LIMITS.answer}자 이하로 작성해 주세요.`
     );
     expect(mockConfirmImageUpload).not.toHaveBeenCalled();
     expect(mockCreateAnswer).not.toHaveBeenCalled();
@@ -161,7 +161,7 @@ describe("community edge validation", () => {
     });
 
     expect(result.current.error).toBe(
-      `Tags must be ${TEXT_LIMITS.tag} characters or fewer.`
+      `태그는 ${TEXT_LIMITS.tag}자 이하로 작성해 주세요.`
     );
     expect(mockConfirmImageUpload).not.toHaveBeenCalled();
     expect(mockCreateFreePost).not.toHaveBeenCalled();

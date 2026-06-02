@@ -5,6 +5,7 @@ import { usePostStore, useUserStore } from "@store";
 import { useWalletService } from "@hooks/useWalletService";
 import { buildPostPayload } from "@utils/buildPostPayload";
 import { imageService, postService, web3Service } from "@services";
+import { getKoreanErrorMessageFromError } from "@constant";
 import type {
   FreePost,
   QuestionPost,
@@ -47,22 +48,22 @@ export const usePostService = () => {
           : TEXT_LIMITS.richContent;
 
     if (contentLength > maxContentLength) {
-      setError(`Content must be ${maxContentLength} characters or fewer.`);
+      setError(`내용은 ${maxContentLength}자 이하로 작성해 주세요.`);
       return false;
     }
 
     if (containsUnsafeMarkup(content)) {
-      setError("Script-like content is not allowed.");
+      setError("스크립트 형태의 내용은 작성할 수 없습니다.");
       return false;
     }
 
     if (store.tags.some((tag) => tag.length > TEXT_LIMITS.tag)) {
-      setError(`Tags must be ${TEXT_LIMITS.tag} characters or fewer.`);
+      setError(`태그는 ${TEXT_LIMITS.tag}자 이하로 작성해 주세요.`);
       return false;
     }
 
     if (store.tags.some((tag) => containsUnsafeMarkup(tag))) {
-      setError("Script-like tags are not allowed.");
+      setError("스크립트 형태의 태그는 사용할 수 없습니다.");
       return false;
     }
 
@@ -181,16 +182,16 @@ export const usePostService = () => {
       console.error("Post creation failed:", err);
 
       let errorCode: string | undefined;
-      let message = "게시물 등록에 실패했습니다.";
+      const message = getKoreanErrorMessageFromError(
+        err,
+        "게시물 등록에 실패했습니다."
+      );
 
       if (err && typeof err === "object" && "response" in err) {
         const axiosError = err as {
           response: { data: { code?: string; message?: string } };
         };
         errorCode = axiosError.response?.data?.code;
-        message = axiosError.response?.data?.message || message;
-      } else if (err instanceof Error) {
-        message = err.message;
       }
 
       // 백엔드에서 명시적으로 WEB3_001 에러를 뱉었을 경우 안내 강화 및 모달 유도
@@ -218,13 +219,9 @@ export const usePostService = () => {
         if (response.type) setPostType(response.type);
         return response;
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message ||
-          "게시물 조회에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "게시물 조회에 실패했습니다.")
+        );
         return null;
       } finally {
         setIsPostLoading(false);
@@ -289,15 +286,9 @@ export const usePostService = () => {
         else navigate("/community");
       }
     } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message ||
-        (error instanceof Error
-          ? error.message
-          : "게시물 수정에 실패했습니다.");
-      setError(message);
+      setError(
+        getKoreanErrorMessageFromError(error, "게시물 수정에 실패했습니다.")
+      );
     } finally {
       setIsPostLoading(false);
     }
@@ -348,12 +339,9 @@ export const usePostService = () => {
         else navigate("/community");
       }
     } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message || "게시물 삭제에 실패했습니다.";
-      setError(message);
+      setError(
+        getKoreanErrorMessageFromError(error, "게시물 삭제에 실패했습니다.")
+      );
     } finally {
       setIsPostLoading(false);
     }
@@ -370,12 +358,9 @@ export const usePostService = () => {
         const response = await postService.getAnswers(postId);
         return response;
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "답변 조회에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "답변 조회에 실패했습니다.")
+        );
         return null;
       } finally {
         setIsAnswerLoading(false);
@@ -394,13 +379,9 @@ export const usePostService = () => {
         await web3Service.getWeb3TransactionStatus(executionIntentId);
       return response;
     } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message ||
-        "트랜잭션 조회에 실패했습니다.";
-      setError(message);
+      setError(
+        getKoreanErrorMessageFromError(error, "트랜잭션 조회에 실패했습니다.")
+      );
       throw error;
     } finally {
       setIsPostLoading(false);
@@ -429,13 +410,9 @@ export const usePostService = () => {
       }
       return response;
     } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message ||
-        "게시물 재생성에 실패했습니다.";
-      setError(message);
+      setError(
+        getKoreanErrorMessageFromError(error, "게시물 재생성에 실패했습니다.")
+      );
       throw error;
     } finally {
       setIsPostLoading(false);
@@ -458,12 +435,9 @@ export const usePostService = () => {
         );
       }
     } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message || "답변 채택에 실패했습니다.";
-      setError(message);
+      setError(
+        getKoreanErrorMessageFromError(error, "답변 채택에 실패했습니다.")
+      );
       throw error;
     } finally {
       setIsPostLoading(false);
@@ -483,13 +457,9 @@ export const usePostService = () => {
         : await postService.likePost(postId);
       return response;
     } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message ||
-        "게시물 좋아요에 실패했습니다.";
-      setError(message);
+      setError(
+        getKoreanErrorMessageFromError(error, "게시물 좋아요에 실패했습니다.")
+      );
       throw error;
     } finally {
       setIsPostLoading(false);
@@ -509,13 +479,9 @@ export const usePostService = () => {
         : await postService.unlikePost(postId);
       return response;
     } catch (error) {
-      const errorResponse = error as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message ||
-        "게시물 좋아요에 실패했습니다.";
-      setError(message);
+      setError(
+        getKoreanErrorMessageFromError(error, "게시물 좋아요에 실패했습니다.")
+      );
       throw error;
     } finally {
       setIsPostLoading(false);

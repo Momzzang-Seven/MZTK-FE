@@ -6,10 +6,24 @@ import { useState } from "react";
 import { CommonModal } from "@components/common";
 import { useConfirmModalStore } from "@store";
 
+const getAdminRoleLabel = (role?: string) => {
+  switch (role) {
+    case "ADMIN_SEED":
+      return "Seed Admin";
+    case "ADMIN_GENERATED":
+      return "Generated Admin";
+    case "ADMIN":
+      return "Admin";
+    default:
+      return role || "Admin";
+  }
+};
+
 export const AdminHeader = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { clearUser } = useUserStore();
+  const clearUser = useUserStore((state) => state.clearUser);
+  const user = useUserStore((state) => state.user);
   const { openConfirm } = useConfirmModalStore();
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
 
@@ -61,10 +75,10 @@ export const AdminHeader = () => {
         <div className="hidden items-center gap-4 group cursor-pointer sm:flex">
           <div className="flex flex-col items-end">
             <span className="text-sm font-black text-gray-900 leading-none">
-              Super Admin
+              {user?.nickname || user?.email || "Admin"}
             </span>
             <span className="text-[10px] font-bold text-emerald-500 mt-1">
-              Online
+              {getAdminRoleLabel(user?.role)}
             </span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-white shadow-lg shadow-gray-200 group-hover:scale-105 transition-transform">

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/auth/useAuth";
 import { CommonButton } from "@components/common";
-import axios from "axios";
+import { getKoreanErrorMessageFromError } from "@constant";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -55,14 +55,12 @@ const Login = () => {
 
       navigate("/");
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setLocalError(
-          error.response?.data?.message ??
-            "로그인에 실패했습니다. 입력값을 다시 확인해 주세요."
-        );
-      } else {
-        setLocalError("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-      }
+      setLocalError(
+        getKoreanErrorMessageFromError(
+          error,
+          "로그인에 실패했습니다. 입력값을 다시 확인해 주세요."
+        )
+      );
     } finally {
       setIsLocalSubmitting(false);
     }
