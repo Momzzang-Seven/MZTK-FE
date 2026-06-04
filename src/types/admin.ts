@@ -167,6 +167,38 @@ export interface AdminTransactionDto {
   createdAt: string;
 }
 
+export interface AdminWeb3TransactionQuery {
+  failureReason?: string;
+  status?: string;
+  referenceType?: string;
+  referenceId?: string;
+  txType?: string;
+  page?: number;
+  size?: number;
+}
+
+export interface AdminWeb3TransactionDto {
+  transactionId: number;
+  idempotencyKey: string | null;
+  referenceType: string | null;
+  referenceId: string | null;
+  txType: string | null;
+  fromUserId: number | null;
+  toUserId: number | null;
+  fromAddress: string | null;
+  toAddress: string | null;
+  status: string;
+  txHash: string | null;
+  failureReason: string | null;
+  processingBy: string | null;
+  processingUntil: string | null;
+  signedAt: string | null;
+  broadcastedAt: string | null;
+  confirmedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface MarkTransactionSucceededRequest {
   txHash: string;
   explorerUrl: string;

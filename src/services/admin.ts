@@ -1,5 +1,5 @@
 import axios from "axios";
-import { api } from "./client";
+import { api, resolveApiBaseUrl } from "./client";
 import type {
   UserStatsResponse,
   PostStatsResponse,
@@ -12,6 +12,8 @@ import type {
   BanResponse,
   AdminPostQuery,
   AdminPostDto,
+  AdminWeb3TransactionDto,
+  AdminWeb3TransactionQuery,
   AdminCommentQuery,
   AdminCommentDto,
   AdminAccountDto,
@@ -47,10 +49,7 @@ export interface SystemHealthResponse {
 }
 
 const getApiBaseUrl = () => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL;
-  return !import.meta.env.DEV && baseUrl && baseUrl !== "undefined"
-    ? (baseUrl as string)
-    : "";
+  return resolveApiBaseUrl();
 };
 
 export const fetchSystemHealth = async (): Promise<SystemHealthResponse> => {
@@ -195,6 +194,15 @@ export const markTransactionSucceeded = async (
     `/admin/web3/transactions/${txId}/mark-succeeded`,
     data
   );
+  return res.data.data;
+};
+
+export const fetchWeb3Transactions = async (
+  params: AdminWeb3TransactionQuery = { page: 0, size: 10 }
+): Promise<PageResponse<AdminWeb3TransactionDto>> => {
+  const res = await api.get<
+    BaseResponse<PageResponse<AdminWeb3TransactionDto>>
+  >("/admin/web3/transactions", { params });
   return res.data.data;
 };
 

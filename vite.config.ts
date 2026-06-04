@@ -4,12 +4,37 @@ import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
+const LOCAL_API_BASE_URL_PATTERN =
+  /^https?:\/\/(?:localhost|127(?:\.\d{1,3}){3}|\[::1\])(?::\d+)?(?:\/|$)/i;
+
+const resolveBuildApiBaseUrl = (value: string | undefined) => {
+  const normalized = value && value !== "undefined" ? value.trim() : "";
+  if (!normalized) return "";
+
+  const localSmokeApiBaseUrl = process.env.E2E_SMOKE_API_BASE_URL;
+  const isLocalSmokeBuild =
+    localSmokeApiBaseUrl && normalized === localSmokeApiBaseUrl;
+  if (LOCAL_API_BASE_URL_PATTERN.test(normalized) && !isLocalSmokeBuild) {
+    return "";
+  }
+
+  return normalized.replace(/\/+$/, "");
+};
+
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  const buildApiBaseUrl = resolveBuildApiBaseUrl(env.VITE_API_BASE_URL);
 
   return {
     plugins: [react(), tailwindcss()],
+    define:
+      command === "build"
+        ? {
+            "import.meta.env.VITE_API_BASE_URL":
+              JSON.stringify(buildApiBaseUrl),
+          }
+        : undefined,
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),
