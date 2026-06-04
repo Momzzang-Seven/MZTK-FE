@@ -19,11 +19,12 @@ import type {
   MarketplaceAdminSettlementReason,
   MarkTransactionSucceededRequest,
   ProvisionKeyRequest,
+  AdminWeb3TransactionDto,
   SponsorNonceSlotDto,
   TreasuryRole,
 } from "@types";
 import { getNetworkConfig } from "@utils";
-import { fetchSponsorNonceSlots } from "@services";
+import { fetchSponsorNonceSlots, fetchWeb3Transactions } from "@services";
 
 const TREASURY_ROLE_OPTIONS: Array<{ value: TreasuryRole; label: string }> = [
   { value: "REWARD", label: "REWARD - reward treasury" },
@@ -67,6 +68,13 @@ const formatDateTime = (value?: string | null) => {
 const formatNullable = (value?: string | number | boolean | null) =>
   value === undefined || value === null || value === "" ? "-" : String(value);
 
+const formatHash = (value?: string | null) => {
+  if (!value) return "NO HASH";
+  return value.length > 18
+    ? `${value.slice(0, 10)}...${value.slice(-6)}`
+    : value;
+};
+
 const getReasonLabel = (option: MarketplaceAdminReasonOption) => {
   const code = option.displayCode || option.reasonCode;
   if (!option.processable && option.blockingCode) {
@@ -98,7 +106,11 @@ const Web3Management = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [nonceSlots, setNonceSlots] = useState<SponsorNonceSlotDto[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<
+    AdminWeb3TransactionDto[]
+  >([]);
   const [fetching, setFetching] = useState(false);
+  const [isTransactionsLoading, setIsTransactionsLoading] = useState(false);
   const [isPollingSuspended, setIsPollingSuspended] = useState(false);
 
   const [showProvisionModal, setShowProvisionModal] = useState(false);
@@ -172,6 +184,20 @@ const Web3Management = () => {
     }
   }, [CHAIN_ID, MONITOR_ADDRESS]);
 
+  const fetchRecentTransactions = useCallback(async () => {
+    setIsTransactionsLoading(true);
+    try {
+      const response = await fetchWeb3Transactions({ page: 0, size: 10 });
+      setRecentTransactions(response.content ?? []);
+    } catch (error) {
+      console.error("Failed to fetch recent web3 transactions:", error);
+      setRecentTransactions([]);
+      setIsPollingSuspended(true);
+    } finally {
+      setIsTransactionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     void fetchTreasuryKeys();
   }, [fetchTreasuryKeys]);
@@ -180,12 +206,14 @@ const Web3Management = () => {
     if (isPollingSuspended) return;
 
     void fetchWalletActivity();
+    void fetchRecentTransactions();
     const interval = setInterval(() => {
       void fetchWalletActivity();
+      void fetchRecentTransactions();
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [fetchWalletActivity, isPollingSuspended]);
+  }, [fetchRecentTransactions, fetchWalletActivity, isPollingSuspended]);
 
   const handleConfirm = (id?: number) => {
     const targetId = id ?? Number(txId);
@@ -211,6 +239,7 @@ const Web3Management = () => {
           setTxId("");
           setManualTx(createDefaultManualTx());
           void fetchWalletActivity();
+          void fetchRecentTransactions();
         } catch {
           showSnackbar(ADMIN_TEXT.WEB3.MSG_CONFIRM_FAILED);
         } finally {
@@ -390,13 +419,16 @@ const Web3Management = () => {
           onClick={() => {
             setIsPollingSuspended(false);
             void fetchWalletActivity();
+            void fetchRecentTransactions();
           }}
           className="p-2 rounded-lg transition-all hover:bg-gray-100 disabled:opacity-50"
-          disabled={fetching}
-          aria-label="Refresh nonce slots"
+          disabled={fetching || isTransactionsLoading}
+          aria-label="Refresh wallet activity"
         >
           <RefreshCw
-            className={`w-5 h-5 text-gray-400 ${fetching ? "animate-spin" : ""}`}
+            className={`w-5 h-5 text-gray-400 ${
+              fetching || isTransactionsLoading ? "animate-spin" : ""
+            }`}
           />
         </button>
       </div>
@@ -585,6 +617,93 @@ const Web3Management = () => {
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="mt-8 border-t border-gray-100 pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-800">
+                Recent Web3 Transactions
+              </h3>
+              <span
+                className={`text-[10px] font-black px-3 py-1 rounded-full transition-all ${
+                  isTransactionsLoading
+                    ? "bg-blue-50 text-blue-500"
+                    : "bg-green-50 text-green-600"
+                }`}
+              >
+                {isTransactionsLoading ? "FETCHING" : "BE TX"}
+              </span>
+            </div>
+            <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2 custom-scrollbar">
+              {recentTransactions.length > 0 ? (
+                recentTransactions.map((tx) => (
+                  <div
+                    key={tx.transactionId}
+                    className="grid grid-cols-[1fr_auto] gap-4 items-center p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-800 text-sm">
+                          DB TX #{tx.transactionId}
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded border font-black bg-white text-gray-500 border-gray-200">
+                          {tx.status}
+                        </span>
+                        {tx.txType && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded border font-black bg-blue-50 text-blue-600 border-blue-100">
+                            {tx.txType}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1 truncate">
+                        {formatNullable(tx.referenceType)} |{" "}
+                        {formatNullable(tx.referenceId)} |{" "}
+                        {formatDateTime(tx.updatedAt ?? tx.createdAt)}
+                      </p>
+                      <p className="text-[10px] text-gray-400 mt-1 break-all">
+                        {formatHash(tx.txHash)}
+                      </p>
+                      {tx.failureReason && (
+                        <p className="text-[10px] text-red-500 mt-1 truncate">
+                          {tx.failureReason}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setTxId(String(tx.transactionId))}
+                        className="text-[11px] font-bold text-gray-500 hover:text-main px-3 py-2 rounded-lg transition-all"
+                      >
+                        Use
+                      </button>
+                      {tx.txHash ? (
+                        <a
+                          href={`${EXPLORER_TX_URL}${tx.txHash}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] font-bold text-gray-400 hover:text-main px-3 py-2 rounded-lg transition-all flex items-center gap-1"
+                        >
+                          {ADMIN_TEXT.WEB3.MONITORING.DETAIL}
+                          <ExternalLink size={12} />
+                        </a>
+                      ) : (
+                        <span className="text-[10px] text-gray-300 font-bold">
+                          NO LINK
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-14 text-center flex flex-col items-center gap-3">
+                  <Activity className="text-gray-200" size={36} />
+                  <p className="text-gray-400 font-medium">
+                    No recent backend transactions.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

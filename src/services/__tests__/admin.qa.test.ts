@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import axios from "axios";
-import { api } from "@services/client";
+import { api, resolveApiBaseUrl } from "@services/client";
 import {
   fetchSystemHealth,
   fetchMarketplaceRefundReview,
   fetchMarketplaceSettlementReview,
   fetchPostsList,
+  fetchWeb3Transactions,
   processMarketplaceRefund,
   processMarketplaceSettle,
   unblockAdminPost,
@@ -21,6 +22,20 @@ beforeEach(() => {
 });
 
 describe("admin system service QA", () => {
+  it("does not allow localhost API base URLs in production bundles", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    expect(
+      resolveApiBaseUrl("http://localhost:8080", {
+        DEV: false,
+        PROD: true,
+      })
+    ).toBe("");
+    expect(warnSpy).toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
   it("loads actuator health through the BE health endpoint", async () => {
     const response = { status: "UP" };
     vi.mocked(axios.get).mockResolvedValueOnce({ data: response });
@@ -153,5 +168,38 @@ describe("admin marketplace escrow service QA", () => {
       "/admin/web3/marketplace/reservations/10/settle",
       settlementRequest
     );
+  });
+});
+
+describe("admin web3 transaction service QA", () => {
+  it("loads recent BE web3 transactions through the admin transaction endpoint", async () => {
+    const response = {
+      content: [
+        {
+          transactionId: 42,
+          status: "PENDING",
+          txHash: null,
+          createdAt: "2026-05-29T00:00:00Z",
+          updatedAt: "2026-05-29T00:00:00Z",
+        },
+      ],
+      totalPages: 1,
+      totalElements: 1,
+      size: 10,
+      number: 0,
+      first: true,
+      last: true,
+      numberOfElements: 1,
+      empty: false,
+    };
+    vi.mocked(api.get).mockResolvedValueOnce(apiResponse(response));
+
+    await expect(fetchWeb3Transactions({ page: 0, size: 10 })).resolves.toEqual(
+      response
+    );
+
+    expect(api.get).toHaveBeenCalledWith("/admin/web3/transactions", {
+      params: { page: 0, size: 10 },
+    });
   });
 });

@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   showSnackbar: vi.fn(),
   openConfirm: vi.fn(),
   fetchSponsorNonceSlots: vi.fn(),
+  fetchWeb3Transactions: vi.fn(),
 }));
 
 vi.mock("@store", () => ({
@@ -47,6 +48,7 @@ vi.mock("@store", () => ({
 
 vi.mock("@services", () => ({
   fetchSponsorNonceSlots: mocks.fetchSponsorNonceSlots,
+  fetchWeb3Transactions: mocks.fetchWeb3Transactions,
 }));
 
 vi.mock("@utils", () => ({
@@ -92,6 +94,39 @@ describe("Web3Management QA", () => {
         },
       ],
     });
+    mocks.fetchWeb3Transactions.mockResolvedValue({
+      content: [
+        {
+          transactionId: 42,
+          idempotencyKey: "idem-42",
+          referenceType: "LEVEL_UP_REWARD",
+          referenceId: "reward-42",
+          txType: "EIP1559",
+          fromUserId: null,
+          toUserId: 7,
+          fromAddress: "0xfrom",
+          toAddress: "0xto",
+          status: "PENDING",
+          txHash: "0xabcdefabcdefabcdef",
+          failureReason: null,
+          processingBy: null,
+          processingUntil: null,
+          signedAt: null,
+          broadcastedAt: null,
+          confirmedAt: null,
+          createdAt: "2026-05-29T00:00:00Z",
+          updatedAt: "2026-05-29T00:01:00Z",
+        },
+      ],
+      totalPages: 1,
+      totalElements: 1,
+      size: 10,
+      number: 0,
+      first: true,
+      last: true,
+      numberOfElements: 1,
+      empty: false,
+    });
   });
 
   afterEach(() => {
@@ -109,10 +144,15 @@ describe("Web3Management QA", () => {
         page: 0,
         size: 10,
       });
+      expect(mocks.fetchWeb3Transactions).toHaveBeenCalledWith({
+        page: 0,
+        size: 10,
+      });
     });
 
     expect(await screen.findByText("Nonce #7")).toBeInTheDocument();
     expect(screen.getByText("DB TX #10")).toBeInTheDocument();
+    expect(screen.getByText("DB TX #42")).toBeInTheDocument();
   });
 
   it("separates the backend DB transaction id from the on-chain tx hash", async () => {

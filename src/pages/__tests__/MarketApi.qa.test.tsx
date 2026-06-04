@@ -196,4 +196,34 @@ describe("Market API QA", () => {
 
     vi.unstubAllGlobals();
   });
+
+  it("binds marketplace thumbnail object keys to public image URLs", async () => {
+    mockGetMarketClasses.mockResolvedValue({
+      items: [
+        {
+          classId: 11,
+          title: "Thumbnail PT",
+          category: "PT",
+          priceAmount: 100,
+          durationMinutes: 50,
+          thumbnailFinalObjectKey: "market/classes/thumb.jpg",
+          tags: [],
+          distance: null,
+        },
+      ],
+      currentPage: 0,
+      totalPages: 1,
+      totalElements: 1,
+    });
+
+    renderMarket();
+
+    const image = await screen.findByAltText("Thumbnail PT");
+    expect(image).toHaveAttribute(
+      "src",
+      expect.stringContaining(
+        "https://mztk-bucket.s3.ap-northeast-2.amazonaws.com/market/classes/thumb.jpg"
+      )
+    );
+  });
 });
