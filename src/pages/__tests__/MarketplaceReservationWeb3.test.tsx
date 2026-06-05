@@ -102,7 +102,15 @@ describe("Marketplace reservation Web3 timeout UX", () => {
     expect(
       await screen.findByText(/블록체인 결과 확인이 지연되어/)
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("button")).toHaveLength(4);
+    expect(
+      screen.getByRole("button", { name: "상세 정보" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "예약 취소" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /수업 완료/ })
+    ).not.toBeInTheDocument();
     await waitFor(() => {
       expect(mockCancelMyReservation).not.toHaveBeenCalled();
       expect(mockCompleteMyReservation).not.toHaveBeenCalled();
@@ -121,7 +129,15 @@ describe("Marketplace reservation Web3 timeout UX", () => {
     expect(
       await screen.findByText(/블록체인 결과 확인이 지연되어/)
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("button")).toHaveLength(6);
+    expect(
+      screen.getByRole("button", { name: "상세정보 확인" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "반려하기" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /예약 승인|승인 기간 만료/ })
+    ).not.toBeInTheDocument();
     await waitFor(() => {
       expect(mockApproveTrainerReservation).not.toHaveBeenCalled();
       expect(mockRejectTrainerReservation).not.toHaveBeenCalled();
