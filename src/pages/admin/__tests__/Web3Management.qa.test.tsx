@@ -296,7 +296,7 @@ describe("Web3Management QA", () => {
 
     expect(mocks.openConfirm).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: "Execute Marketplace settlement",
+        title: "마켓플레이스 정산 실행",
         variant: "error",
       })
     );

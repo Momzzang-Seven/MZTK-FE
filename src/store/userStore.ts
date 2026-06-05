@@ -39,6 +39,7 @@ interface UserState {
   level: number;
   xp: number;
   maxXp: number;
+  rewardMztkForNext: number | null;
   attendanceStreak: number;
   lastAttendanceDate: string | null;
   lastAttendanceRewardedXp: number | null;
@@ -88,6 +89,7 @@ interface UserState {
   setLevel: (level: number) => void;
   setXp: (xp: number) => void;
   setMaxXp: (maxXp: number) => void;
+  setRewardMztkForNext: (rewardMztkForNext: number | null) => void;
   checkAttendance: () => Promise<{
     success: boolean;
     message: string;
@@ -132,6 +134,7 @@ const initialState = {
   level: 1,
   xp: 0,
   maxXp: 100,
+  rewardMztkForNext: null,
   attendanceStreak: 0,
   lastAttendanceDate: null,
   lastAttendanceRewardedXp: null,
@@ -211,6 +214,8 @@ export const useUserStore = create<UserState>()(
           authProvider: null,
           level: 1,
           xp: 0,
+          maxXp: 100,
+          rewardMztkForNext: null,
           attendanceStreak: 0,
           lastAttendanceDate: null,
           lastAttendanceRewardedXp: null,
@@ -229,6 +234,7 @@ export const useUserStore = create<UserState>()(
       setLevel: (level) => set({ level }),
       setXp: (xp) => set({ xp }),
       setMaxXp: (maxXp) => set({ maxXp }),
+      setRewardMztkForNext: (rewardMztkForNext) => set({ rewardMztkForNext }),
 
       checkAttendance: async () => {
         const { lastAttendanceDate } = get();
@@ -585,6 +591,7 @@ export const useUserStore = create<UserState>()(
               level: levelData.level,
               xp: levelData.availableXp,
               maxXp: levelData.requiredXpForNext,
+              rewardMztkForNext: levelData.rewardMztkForNext,
             });
           }
 

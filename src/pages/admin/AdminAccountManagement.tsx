@@ -56,12 +56,12 @@ const AdminAccountManagement = () => {
     await navigator.clipboard.writeText(
       `ID: ${issuedCredential.loginId}\nPassword: ${issuedCredential.generatedPassword}`
     );
-    showSnackbar("Issued credential copied.");
+    showSnackbar("발급된 계정 정보가 복사되었습니다.");
   };
 
   const handleResetPassword = (userId: number) => {
     openConfirm({
-      title: "Password Reset",
+      title: "비밀번호 초기화",
       message: ADMIN_TEXT.ACCOUNTS.CONFIRM_RESET,
       variant: "warning",
       onConfirm: async () => {

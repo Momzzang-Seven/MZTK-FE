@@ -103,8 +103,8 @@ const CreateWallet = () => {
     if (pin.length === 6 && step === "PIN_SET") {
       if (isWeakPin(pin)) {
         setModal({
-          title: "Weak PIN",
-          desc: "Sequential PINs are not allowed.",
+          title: "약한 PIN 번호",
+          desc: "123456처럼 순서대로 이어지는 숫자는 PIN 번호로 사용할 수 없습니다.",
         });
         setPin("");
         return;

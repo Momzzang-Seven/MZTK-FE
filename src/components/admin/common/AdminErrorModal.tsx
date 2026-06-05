@@ -45,10 +45,10 @@ export const AdminErrorModal = () => {
             </div>
             <div>
               <h3 className="text-xl font-black text-gray-900 tracking-tight">
-                API Request Failed
+                API 요청 실패
               </h3>
               <p className="text-red-500 text-[11px] font-black uppercase tracking-widest mt-0.5">
-                Admin Error Diagnostic
+                관리자 오류 진단
               </p>
             </div>
           </div>

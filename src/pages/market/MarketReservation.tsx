@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
 import { CommonModal } from "@components/common";
 import {
   getReservationStatusLabel,
@@ -298,17 +297,7 @@ const MarketReservation = () => {
 
   return (
     <div className="flex flex-col min-h-dvh bg-[#F8F9FA] font-pretendard relative">
-      {/* Sticky Back Button Wrapper */}
-      <div className="sticky top-6 z-[100] px-6 h-0 pointer-events-none">
-        <button
-          onClick={() => navigate("/my")}
-          className="w-12 h-12 bg-white/80 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-white/50 active:scale-95 transition-all pointer-events-auto"
-        >
-          <ChevronLeft size={26} className="text-gray-900" />
-        </button>
-      </div>
-
-      <div className="px-6 pt-24 pb-4">
+      <div className="px-6 pt-12 pb-4">
         <h1 className="text-[28px] font-black text-gray-900 tracking-tight leading-tight">
           예약 및 이용 내역
         </h1>

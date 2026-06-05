@@ -323,9 +323,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
     const durationMinutes = parsePositiveIntegerInput(formData.duration);
 
     if (!capacity || !priceAmount || !durationMinutes) {
-      window.alert(
-        "Price, capacity, and duration must be positive whole numbers."
-      );
+      window.alert("가격, 정원, 수업 시간은 1 이상의 정수로 입력해 주세요.");
       return;
     }
 
@@ -337,7 +335,9 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       ...formData.features,
     ];
     if (textFields.some((value) => containsUnsafeMarkup(value))) {
-      window.alert("HTML or script-like text is not allowed in class details.");
+      window.alert(
+        "클래스 상세 정보에는 HTML 또는 스크립트 형식의 내용을 입력할 수 없습니다."
+      );
       return;
     }
 

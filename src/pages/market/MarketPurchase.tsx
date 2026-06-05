@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { CommonButton, CommonModal } from "@components/common";
 import { getKoreanErrorMessage } from "@constant";
 import axios from "axios";
+import { useUserStore } from "@store";
 import {
   createClassReservation,
   getClassReservationInfo,
@@ -40,9 +41,16 @@ const createReservationIdempotencyKey = (
   return `reservation:${classId}:${slotId}:${reservationDate}:${reservationTime}:${nonce}`;
 };
 
+const extractMissingWalletUserId = (message?: string | null) => {
+  const match = message?.match(/userId=(\d+)/);
+  if (!match) return null;
+  return Number(match[1]);
+};
+
 const MarketPurchase = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const currentUserId = useUserStore((state) => state.user?.userId ?? null);
   const [data, setData] = useState<Awaited<
     ReturnType<typeof getMarketplaceClassDetail>
   > | null>(null);
@@ -61,6 +69,7 @@ const MarketPurchase = () => {
     title: string;
     desc: string;
     variant?: "success" | "error" | "warning" | "info";
+    confirmLabel?: string;
     onConfirm?: () => void;
   }>({
     isOpen: false,
@@ -176,6 +185,30 @@ const MarketPurchase = () => {
       const axiosError = axios.isAxiosError(error) ? error : null;
       const code = axiosError?.response?.data?.code;
       const message = axiosError?.response?.data?.message;
+      const missingWalletUserId = extractMissingWalletUserId(message);
+      if (
+        code === "WALLET_003" &&
+        (!missingWalletUserId || missingWalletUserId === currentUserId)
+      ) {
+        setModalState({
+          isOpen: true,
+          title: "지갑 등록이 필요해요",
+          desc: "지갑 등록 후 예약할 수 있어요.",
+          variant: "warning",
+          confirmLabel: "지갑 등록하기",
+          onConfirm: () => navigate("/register-wallet"),
+        });
+        return;
+      }
+      if (code === "WALLET_003") {
+        setModalState({
+          isOpen: true,
+          title: "트레이너 결제 설정이 필요해요",
+          desc: "트레이너의 결제 지갑 설정이 완료되지 않아 예약할 수 없어요. 다른 클래스를 선택하거나 잠시 후 다시 시도해 주세요.",
+          variant: "warning",
+        });
+        return;
+      }
       setModalState({
         isOpen: true,
         title: "결제 실패",
@@ -408,7 +441,7 @@ const MarketPurchase = () => {
         <CommonModal
           title={modalState.title}
           desc={modalState.desc}
-          confirmLabel="확인"
+          confirmLabel={modalState.confirmLabel ?? "확인"}
           variant={modalState.variant}
           onConfirmClick={() => {
             if (modalState.onConfirm) modalState.onConfirm();

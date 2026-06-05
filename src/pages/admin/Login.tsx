@@ -16,11 +16,11 @@ const Login = () => {
   const handleLogin = async () => {
     if (!id || !password) {
       openConfirm({
-        title: "Input Required",
+        title: "입력 필요",
         message: "아이디와 비밀번호를 모두 입력해주세요.",
         variant: "info",
         onConfirm: () => {},
-        confirmLabel: "OK",
+        confirmLabel: "확인",
         cancelLabel: "",
       });
       return;
@@ -41,11 +41,11 @@ const Login = () => {
     } catch (error) {
       console.error("Admin Login Failed:", error);
       openConfirm({
-        title: "Authentication Failed",
+        title: "인증 실패",
         message: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.",
         variant: "error",
         onConfirm: () => {},
-        confirmLabel: "RETRY",
+        confirmLabel: "다시 시도",
         cancelLabel: "",
       });
     } finally {

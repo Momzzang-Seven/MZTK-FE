@@ -64,7 +64,7 @@ export const loginWithMetamask = async () => {
     return response;
   } catch (err: unknown) {
     if (axios.isAxiosError(err) && err.response?.status === 401) {
-      throw new Error("Unauthorized: Check wallet or signature.");
+      throw new Error("지갑 또는 서명 정보를 확인해 주세요.");
     }
     throw err;
   }
