@@ -46,10 +46,10 @@ export const useVoucher = (voucherAddress: string) => {
         parseAmount(amount)
       );
       await tx.wait();
-      alert("Voucher issued!");
+      alert("바우처가 발급되었습니다.");
     } catch (err: unknown) {
-      if (err instanceof Error) alert("Issue failed: " + err.message);
-      else alert("Issue failed: Unknown error");
+      console.error("바우처 발급 실패:", err);
+      alert("바우처 발급에 실패했습니다.");
     }
   };
 
@@ -61,10 +61,10 @@ export const useVoucher = (voucherAddress: string) => {
         voucherCodeToBytes32(code)
       );
       await tx.wait();
-      alert("Voucher redeemed!");
+      alert("바우처가 사용되었습니다.");
     } catch (err: unknown) {
-      if (err instanceof Error) alert("Redeem failed: " + err.message);
-      else alert("Redeem failed: Unknown error");
+      console.error("바우처 사용 실패:", err);
+      alert("바우처 사용에 실패했습니다.");
     }
   };
 

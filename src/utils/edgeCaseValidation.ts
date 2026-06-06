@@ -76,19 +76,19 @@ export const normalizeOptionalHttpUrl = (value: string) => {
   if (!raw) return null;
 
   if (/[<>\s]/.test(raw)) {
-    throw new Error("URL contains invalid characters.");
+    throw new Error("URL에 사용할 수 없는 문자가 포함되어 있습니다.");
   }
 
   const explicitProtocol = raw.match(/^([a-z][a-z\d+\-.]*):/i)?.[1];
   if (explicitProtocol && !/^https?$/i.test(explicitProtocol)) {
-    throw new Error("Only http and https URLs are allowed.");
+    throw new Error("http 또는 https 주소만 입력할 수 있습니다.");
   }
 
   const candidate = explicitProtocol ? raw : `https://${raw}`;
   const parsed = new URL(candidate);
 
   if (!["http:", "https:"].includes(parsed.protocol)) {
-    throw new Error("Only http and https URLs are allowed.");
+    throw new Error("http 또는 https 주소만 입력할 수 있습니다.");
   }
 
   if (
@@ -96,7 +96,7 @@ export const normalizeOptionalHttpUrl = (value: string) => {
       parsed.href.replace(/^https?:\/\//i, "")
     )
   ) {
-    throw new Error("Nested or unsafe URL protocols are not allowed.");
+    throw new Error("안전하지 않은 URL 형식은 입력할 수 없습니다.");
   }
 
   return parsed.toString();

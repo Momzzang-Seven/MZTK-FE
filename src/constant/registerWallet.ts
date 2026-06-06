@@ -46,8 +46,8 @@ export const REGISTER_WALLET_MESSAGES = {
       desc: "잘못된 PIN 번호입니다. 다시 입력해 주세요.",
     },
     weakPin: {
-      title: "Weak PIN",
-      desc: "Sequential PINs are not allowed.",
+      title: "약한 PIN 번호",
+      desc: "123456처럼 순서대로 이어지는 숫자는 PIN 번호로 사용할 수 없습니다.",
     },
     pinMismatch: {
       title: "PIN 번호 불일치",

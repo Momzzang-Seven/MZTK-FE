@@ -197,7 +197,9 @@ describe("wallet PIN edge cases", () => {
     });
     fireEvent.click(screen.getByTestId("pin-pad"));
 
-    expect(await screen.findByRole("dialog")).toHaveTextContent("Weak PIN");
+    expect(await screen.findByRole("dialog")).toHaveTextContent(
+      "약한 PIN 번호"
+    );
     expect(mockEncrypt).not.toHaveBeenCalled();
     expect(localStorage.getItem("encrypted_wallet")).toBeNull();
   });

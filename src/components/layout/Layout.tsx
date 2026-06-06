@@ -35,7 +35,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     "/trainer/create",
     "/trainer/edit",
     "/market/",
-    "/market/reservations",
     "/market/purchase",
     "/market/review",
     "/verify",
@@ -46,11 +45,22 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     "/leaderboard",
     "/notifications",
   ];
+  const showFooterPages = ["/market/reservations"];
   const showHeaderPages: string[] = [];
   const shouldShowHeader = showHeaderPages.includes(location.pathname);
-  const shouldHideFooter = hideFooterPages.some((path) =>
-    location.pathname.toLowerCase().startsWith(path.toLowerCase())
-  );
+  const normalizedPathname = location.pathname.toLowerCase();
+  const shouldShowFooter = showFooterPages.some((path) => {
+    const normalizedPath = path.toLowerCase();
+    return (
+      normalizedPathname === normalizedPath ||
+      normalizedPathname.startsWith(`${normalizedPath}/`)
+    );
+  });
+  const shouldHideFooter =
+    !shouldShowFooter &&
+    hideFooterPages.some((path) =>
+      normalizedPathname.startsWith(path.toLowerCase())
+    );
 
   return (
     <div

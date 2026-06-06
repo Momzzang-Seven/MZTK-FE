@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import MarketDetail from "@pages/market/MarketDetail";
 import MarketPurchase from "@pages/market/MarketPurchase";
+import { useUserStore } from "@store";
 
 const mocks = vi.hoisted(() => ({
   createClassReservation: vi.fn(),
@@ -29,6 +30,7 @@ const renderPage = () =>
       <Routes>
         <Route path="/market/purchase/:id" element={<MarketPurchase />} />
         <Route path="/market/reservations" element={<div>예약 내역</div>} />
+        <Route path="/register-wallet" element={<div>지갑 등록 화면</div>} />
         <Route
           path="/verify-wallet/:resourceType/:resourceId"
           element={<div>지갑 서명 화면 진입</div>}
@@ -98,6 +100,17 @@ const reservationInfoResponse = {
 describe("MarketPurchase", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useUserStore.setState({
+      user: {
+        userId: 7,
+        email: "buyer@example.com",
+        nickname: "구매자",
+        profileImage: "",
+        role: "USER",
+        walletAddress: "",
+      },
+      isAuthenticated: true,
+    });
     mocks.getMarketplaceClassDetail.mockResolvedValue(detailResponse);
     mocks.getImagesByIds.mockResolvedValue([]);
     mocks.getClassReservationInfo.mockResolvedValue(reservationInfoResponse);
@@ -191,5 +204,72 @@ describe("MarketPurchase", () => {
     fireEvent.click(screen.getByRole("button", { name: /300 MZTK 결제하기/ }));
 
     expect(await screen.findByText("지갑 서명 화면 진입")).toBeInTheDocument();
+  });
+
+  it("routes buyer to wallet registration when purchase fails because their active wallet is missing", async () => {
+    mocks.createClassReservation.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        data: {
+          code: "WALLET_003",
+          message: "No ACTIVE wallet connected. userId=7",
+        },
+      },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText("아침 PT 클래스")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /5\.18/ }));
+    fireEvent.click(screen.getByRole("button", { name: /10:00/ }));
+    fireEvent.click(screen.getByRole("button", { name: /300 MZTK 결제하기/ }));
+
+    expect(await screen.findByText("지갑 등록이 필요해요")).toBeInTheDocument();
+    expect(
+      screen.getByText("지갑 등록 후 예약할 수 있어요.")
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "지갑 등록하기" }));
+
+    expect(await screen.findByText("지갑 등록 화면")).toBeInTheDocument();
+  });
+
+  it("explains trainer payment setup when purchase fails because another user's active wallet is missing", async () => {
+    useUserStore.setState({
+      user: {
+        userId: 99,
+        email: "buyer@example.com",
+        nickname: "구매자",
+        profileImage: "",
+        role: "USER",
+        walletAddress: "0xbuyer",
+      },
+      isAuthenticated: true,
+    });
+    mocks.createClassReservation.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        data: {
+          code: "WALLET_003",
+          message: "No ACTIVE wallet connected. userId=7",
+        },
+      },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText("아침 PT 클래스")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /5\.18/ }));
+    fireEvent.click(screen.getByRole("button", { name: /10:00/ }));
+    fireEvent.click(screen.getByRole("button", { name: /300 MZTK 결제하기/ }));
+
+    expect(
+      await screen.findByText("트레이너 결제 설정이 필요해요")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "트레이너의 결제 지갑 설정이 완료되지 않아 예약할 수 없어요. 다른 클래스를 선택하거나 잠시 후 다시 시도해 주세요."
+      )
+    ).toBeInTheDocument();
   });
 });

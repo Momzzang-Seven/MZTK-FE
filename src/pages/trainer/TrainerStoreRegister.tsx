@@ -224,8 +224,8 @@ const TrainerStoreRegister = () => {
 
     if (!isValidKoreanPhoneNumber(phone)) {
       setErrorModal({
-        title: "Invalid phone number",
-        desc: "Please enter a complete Korean phone number.",
+        title: "전화번호 형식 오류",
+        desc: "올바른 국내 전화번호를 끝까지 입력해 주세요.",
       });
       return;
     }
@@ -239,11 +239,11 @@ const TrainerStoreRegister = () => {
       xProfileUrl = normalizeOptionalHttpUrl(sns.x);
     } catch (error) {
       setErrorModal({
-        title: "Invalid URL",
+        title: "URL 형식 오류",
         desc:
           error instanceof Error
             ? error.message
-            : "Only safe http and https URLs are allowed.",
+            : "안전한 http 또는 https 주소만 입력할 수 있습니다.",
       });
       return;
     }
@@ -344,7 +344,7 @@ const TrainerStoreRegister = () => {
                 />
                 {isPhoneInvalid ? (
                   <p className="text-[11px] text-red-400 font-bold ml-1 leading-tight">
-                    Please enter a complete Korean phone number.
+                    올바른 국내 전화번호를 끝까지 입력해 주세요.
                   </p>
                 ) : null}
               </div>

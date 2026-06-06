@@ -112,7 +112,7 @@ const VerifyWallet = () => {
         if (type === "MARKETPLACE_RESERVATION") {
           const reservationId = Number(params.id ?? currentIntent.resource.id);
           if (!Number.isFinite(reservationId)) {
-            throw new Error("Invalid marketplace reservation id.");
+            throw new Error("마켓플레이스 예약 ID가 올바르지 않습니다.");
           }
           recoveryRes =
             recoveryScope === "trainer"
