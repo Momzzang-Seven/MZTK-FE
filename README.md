@@ -1,65 +1,80 @@
-## 🛠️ Tech Stack
+# 몸짱토큰 프론트엔드
 
-| Category        | Technology                   |
-| --------------- | ---------------------------- |
-| Framework       | React 19.2                   |
-| Bundler         | Vite 7.2                     |
-| Language        | TypeScript 5.9               |
-| Styling         | TailwindCSS 4.1 (Pretendard) |
-| State           | Zustand 5.0                  |
-| Package Manager | pnpm                         |
+몸짱토큰은 운동 인증, 커뮤니티 활동, 트레이너 클래스 예약을 XP와 ERC-20 토큰 보상으로 연결하는 모바일 퍼스트 Web3 피트니스 플랫폼입니다.
 
-## 📂 Folder & File Naming
+## 🔥 프로젝트 개요
 
-| Type                  | Convention | Example                         |
-| --------------------- | ---------- | ------------------------------- |
-| Folder                | lowercase  | `home`, `layout`                |
-| React Component File  | PascalCase | `Header.tsx`, `UserCard.tsx`    |
-| Utility / Helper File | camelCase  | `formatDate.ts`, `fetchData.ts` |
-| Interface / Type File | PascalCase | `Home.ts`, `My.ts`              |
+- 운동 사진, 위치, 운동 기록 인증으로 실제 운동 여부를 확인합니다.
+- 운동 인증, 게시글, 댓글 활동을 XP로 환산하여 레벨업 보상을 제공합니다.
+- 레벨업 시 등록된 Web3 지갑으로 ERC-20 토큰을 지급합니다.
+- 보상 토큰은 Q&A 보상 예치, 트레이너 클래스 예약 등 서비스 내에서 재사용됩니다.
 
-> **Tip:** Each folder should contain an `index.ts` to re-export components or modules.
+## 📌 주요 기능
 
-## 🎨 Styling Rules
+- 운동 인증: AI 사진 인증, 위치 체크인, 운동 기록 제출
+- XP / 레벨 시스템: 출석, 운동 인증, 커뮤니티 활동 기반 XP
+- 토큰 보상: 레벨업 보상 토큰 + Web3 지갑 연동
+- 커뮤니티: 자유게시판, Q&A, 답변 채택 보상
+- 마켓플레이스: 트레이너 클래스 등록, 예약, 승인, 취소, 정산
+- 관리자: 운영 관리 화면 및 사용자/예약 관리
 
-- TailwindCSS is the main styling tool.
-- Use semantic class combinations and avoid excessive inline styles.
-- Define theme variables (colors, fonts) in index.css under :root.
-- Keep component-specific custom styles in dedicated CSS files only if necessary.
+## 📁 폴더 구조
 
-Example:
-
-```js
-<div className="flex flex-col items-center p-6 bg-main rounded-2xl shadow-md">
-  <h1 className="text-2xl font-bold text-main">Welcome</h1>
-</div>
+```
+src/
+├── abi/           # 스마트 컨트랙트 ABI
+├── assets/        # 이미지, Lottie, JSON 등 정적 자산
+├── components/    # 재사용 가능한 UI 컴포넌트
+├── constant/      # 상수 정의
+├── hooks/         # 커스텀 훅
+├── mocks/         # 테스트/개발용 mock 데이터
+├── pages/         # 라우트 페이지 컴포넌트
+├── services/      # API 클라이언트 및 서비스
+├── store/         # Zustand 상태 저장소
+├── test/          # Vitest 설정 및 테스트 유틸
+├── types/         # 타입 정의
+└── utils/         # 유틸리티 함수
 ```
 
-## 🧹 Code Quality Guidelines
+## 🧭 개발 규칙
 
-- Keep functions pure whenever possible.
-- Limit component files to <150 lines — split large logic into smaller hooks/components.
-- Avoid deeply nested JSX.
-- Comment only why, not what.
+- 함수형 컴포넌트 + Hooks 패턴 사용
+- 컴포넌트는 150줄 이하로 유지
+- `as any`, `@ts-ignore` 금지
+- 상대 경로 `../../../` 사용 금지, alias 사용 권장
+- `index.ts`를 통한 barrel export 유지
+- 주석은 `why` 중심 작성, `what` 설명 지양
 
-Example:
+## 🛠️ 기본 기술 스택
 
-```js
-// ❌ Bad: explains what
-// Increase count by one when clicked
-setCount(count + 1);
+- React
+- TypeScript
+- Vite
+- TailwindCSS
+- Zustand
+- pnpm
 
-// ✅ Good: explains why
-// Needed to trigger re-render for latest user input
-setCount((prev) => prev + 1);
-```
+## 🧾 설정 규칙
 
-## 🚀 Getting Started
+- `vite.config.ts`와 `tsconfig.app.json`에서 경로 alias 동기화
+- 환경 변수는 `VITE_` 접두사 사용
+- `constant` 폴더명은 단수형 유지
+
+## 🚀 실행 방법
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Start the development server
 pnpm dev
 ```
+
+## 🧪 테스트
+
+```bash
+pnpm test
+```
+
+## 📌 참고
+
+- 프로젝트는 모바일 중심 UI를 목표로 설계되었습니다.
+- Web3 지갑 연동과 블록체인 트랜잭션 흐름은 사용자 경험을 끊지 않도록 구성되어 있습니다.
+- `src/App.tsx`에서 라우트가 중앙 정의되므로 페이지 추가 시 함께 수정하세요.
