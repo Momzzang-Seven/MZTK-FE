@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
 import { CommonModal } from "@components/common";
 import {
   getReservationStatusLabel,
@@ -21,6 +20,7 @@ import type {
   ReservationSummary,
   ReservationTime,
 } from "@services";
+import type { Web3Execution } from "@types";
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat("ko-KR", {
@@ -58,6 +58,32 @@ const getStatusBadgeStyles = (status: ReservationSummary["status"]) => {
       return "bg-gray-50 text-gray-400 border-gray-100";
   }
 };
+
+const isReservationWeb3Blocked = (
+  reservation: Pick<ReservationSummary, "web3Execution">
+) =>
+  reservation.web3Execution?.recoveryStatus === "ONCHAIN_UNCERTAIN" ||
+  reservation.web3Execution?.retryAllowed === false;
+
+const Web3PendingNotice = () => (
+  <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-2xl border border-amber-100">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#D97706"
+      strokeWidth="3"
+      className="shrink-0"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v5M12 16h.01" />
+    </svg>
+    <span className="text-[11px] font-black text-amber-700 leading-relaxed">
+      블록체인 결과 확인이 지연되어 취소, 완료, 환불 작업을 잠시 제한합니다.
+    </span>
+  </div>
+);
 
 type ReservationTab = "active" | "history";
 
@@ -162,6 +188,27 @@ const MarketReservation = () => {
     });
   };
 
+  const openReservationWeb3 = (
+    intent: Web3Execution,
+    reservationId: number
+  ) => {
+    navigate(`/verify-wallet/${intent.resource.type}/${reservationId}`, {
+      state: {
+        intent,
+        recoveryScope: "member",
+        returnTo: "/market/reservations",
+      },
+    });
+  };
+
+  const isWeb3Signable = (intent?: Web3Execution | null) =>
+    !!intent &&
+    (intent.executionIntent.status === "AWAITING_SIGNATURE" ||
+      intent.viewerCanExecute === true ||
+      intent.viewerCanRecover === true) &&
+    intent.retryAllowed !== false &&
+    intent.recoveryStatus !== "ONCHAIN_UNCERTAIN";
+
   const handleDetailClick = async (reservationId: number) => {
     try {
       const detail = await getReservationDetail(reservationId);
@@ -183,7 +230,11 @@ const MarketReservation = () => {
         closeModal();
         try {
           setIsMutating(true);
-          await cancelMyReservation(reservationId);
+          const response = await cancelMyReservation(reservationId);
+          if (response.web3) {
+            openReservationWeb3(response.web3, response.reservationId);
+            return;
+          }
           await loadReservations();
           openAlert(
             "취소 완료",
@@ -211,7 +262,11 @@ const MarketReservation = () => {
         closeModal();
         try {
           setIsMutating(true);
-          await completeMyReservation(reservationId);
+          const response = await completeMyReservation(reservationId);
+          if (response.web3) {
+            openReservationWeb3(response.web3, response.reservationId);
+            return;
+          }
           await loadReservations();
           openAlert("처리 완료", "수업 완료가 확인되었습니다.", "success");
         } catch {
@@ -241,18 +296,8 @@ const MarketReservation = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FA] font-pretendard relative">
-      {/* Sticky Back Button Wrapper */}
-      <div className="sticky top-6 z-[100] px-6 h-0 pointer-events-none">
-        <button
-          onClick={() => navigate("/my")}
-          className="w-12 h-12 bg-white/80 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-white/50 active:scale-95 transition-all pointer-events-auto"
-        >
-          <ChevronLeft size={26} className="text-gray-900" />
-        </button>
-      </div>
-
-      <div className="px-6 pt-24 pb-4">
+    <div className="flex flex-col min-h-dvh bg-[#F8F9FA] font-pretendard relative">
+      <div className="px-6 pt-12 pb-4">
         <h1 className="text-[28px] font-black text-gray-900 tracking-tight leading-tight">
           예약 및 이용 내역
         </h1>
@@ -290,6 +335,7 @@ const MarketReservation = () => {
                 RESERVATION_STATUS.TIMEOUT_CANCELLED,
               ] as ReservationStatus[]
             ).includes(item.status as ReservationStatus);
+            const isWeb3Blocked = isReservationWeb3Blocked(item);
 
             return (
               <div
@@ -381,6 +427,20 @@ const MarketReservation = () => {
 
                   {/* Actions */}
                   <div className="flex flex-col gap-3 pt-5 border-t border-gray-50">
+                    {isWeb3Blocked && <Web3PendingNotice />}
+                    {isWeb3Signable(item.web3Execution) && (
+                      <button
+                        onClick={() =>
+                          openReservationWeb3(
+                            item.web3Execution as Web3Execution,
+                            item.reservationId
+                          )
+                        }
+                        className="w-full h-12 bg-main text-white rounded-xl text-[13px] font-black transition-all active:scale-95"
+                      >
+                        블록체인 서명 계속하기
+                      </button>
+                    )}
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleDetailClick(item.reservationId)}
@@ -388,17 +448,21 @@ const MarketReservation = () => {
                       >
                         상세 정보
                       </button>
-                      {isReservationCancellable(item.status) && (
-                        <button
-                          onClick={() => handleCancelClick(item.reservationId)}
-                          disabled={isMutating}
-                          className="flex-1 h-12 bg-gray-50 hover:bg-gray-100 text-red-500 rounded-xl text-[13px] font-black transition-all"
-                        >
-                          예약 취소
-                        </button>
-                      )}
+                      {isReservationCancellable(item.status) &&
+                        !isWeb3Blocked && (
+                          <button
+                            onClick={() =>
+                              handleCancelClick(item.reservationId)
+                            }
+                            disabled={isMutating}
+                            className="flex-1 h-12 bg-gray-50 hover:bg-gray-100 text-red-500 rounded-xl text-[13px] font-black transition-all"
+                          >
+                            예약 취소
+                          </button>
+                        )}
                     </div>
                     {isReservationCompletable(item.status) &&
+                      !isWeb3Blocked &&
                       (() => {
                         const resTime = item.reservationTime;
                         const resDate = item.reservationDate;
@@ -550,6 +614,9 @@ const MarketReservation = () => {
                 value={getReservationStatusLabel(selectedDetail.status)}
                 highlight
               />
+              {isReservationWeb3Blocked(selectedDetail) && (
+                <Web3PendingNotice />
+              )}
               <div className="pt-4 border-t border-gray-200">
                 <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
                   Transaction Hash

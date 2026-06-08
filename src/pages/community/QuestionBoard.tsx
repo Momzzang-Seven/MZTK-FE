@@ -33,7 +33,7 @@ const QuestionBoard = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 pt-2 pb-20 animate-in fade-in duration-700">
+    <div className="flex flex-col gap-3 pt-2 pb-20 animate-in fade-in duration-700">
       {posts.map((post) => (
         <QuestionPostCard key={post.postId} post={post} />
       ))}

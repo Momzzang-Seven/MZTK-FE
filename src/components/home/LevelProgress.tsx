@@ -16,7 +16,8 @@ export const LevelProgress = () => {
     setAnimatedXp(xp);
   }, [xp]);
 
-  const percentage = Math.min((animatedXp / maxXp) * 100, 100);
+  const percentage = maxXp > 0 ? Math.min((animatedXp / maxXp) * 100, 100) : 0;
+  const remainingXp = Math.max(0, maxXp - xp);
   const isLevelUpAvailable = xp >= maxXp;
 
   const handleLevelUp = async () => {
@@ -98,8 +99,8 @@ export const LevelProgress = () => {
               className="transition-all duration-1000 ease-out"
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-main text-[32px] font-black leading-none tracking-tighter">
+          <div className="absolute inset-0 flex items-center justify-center px-3">
+            <span className="max-w-full text-center text-main text-[32px] font-black font-gmarket leading-none tracking-normal whitespace-nowrap">
               LV.{level}
             </span>
           </div>
@@ -117,7 +118,7 @@ export const LevelProgress = () => {
             <h3 className="text-gray-900 text-xl font-black leading-tight mb-4">
               성장까지 <br />
               <span className="text-main">
-                {Math.max(0, maxXp - xp).toLocaleString()} EXP
+                {remainingXp.toLocaleString()} EXP
               </span>{" "}
               남음
             </h3>

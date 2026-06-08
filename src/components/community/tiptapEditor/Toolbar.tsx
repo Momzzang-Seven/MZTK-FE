@@ -4,6 +4,8 @@ import { toolbarConfig } from "./ToolbarConfig";
 import ToolbarButton from "./ToolbarButton";
 import ToolbarGroup from "./ToolbarGroup";
 import ToolbarLine from "./ToolbarLine";
+import { useUserStore } from "@store";
+import { ACCEPTED_IMAGE_INPUT_TYPES, getInvalidImageFileMessage } from "@utils";
 
 interface TiptapToolbarProps {
   editor: Editor;
@@ -14,10 +16,20 @@ const groupOrder = ["heading", "text", "list", "media"] as const;
 
 const Toolbar = ({ editor, onImageSelect }: TiptapToolbarProps) => {
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const showSnackbar = useUserStore((s) => s.showSnackbar);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) onImageSelect(file);
+    if (file) {
+      const invalidMessage = getInvalidImageFileMessage(file);
+
+      if (invalidMessage) {
+        showSnackbar(invalidMessage, { variant: "error" });
+      } else {
+        onImageSelect(file);
+      }
+    }
+
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -52,7 +64,7 @@ const Toolbar = ({ editor, onImageSelect }: TiptapToolbarProps) => {
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept={ACCEPTED_IMAGE_INPUT_TYPES}
         className="hidden"
         onChange={handleFileChange}
       />

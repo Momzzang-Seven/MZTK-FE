@@ -16,11 +16,11 @@ const Login = () => {
   const handleLogin = async () => {
     if (!id || !password) {
       openConfirm({
-        title: "Input Required",
+        title: "입력 필요",
         message: "아이디와 비밀번호를 모두 입력해주세요.",
         variant: "info",
         onConfirm: () => {},
-        confirmLabel: "OK",
+        confirmLabel: "확인",
         cancelLabel: "",
       });
       return;
@@ -41,11 +41,11 @@ const Login = () => {
     } catch (error) {
       console.error("Admin Login Failed:", error);
       openConfirm({
-        title: "Authentication Failed",
+        title: "인증 실패",
         message: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.",
         variant: "error",
         onConfirm: () => {},
-        confirmLabel: "RETRY",
+        confirmLabel: "다시 시도",
         cancelLabel: "",
       });
     } finally {
@@ -54,7 +54,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center p-8 bg-[#09090b] min-h-screen relative overflow-hidden">
+    <div className="flex flex-1 flex-col items-center justify-center p-8 bg-[#09090b] min-h-dvh relative overflow-hidden">
       {/* Background Decor */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-main/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />

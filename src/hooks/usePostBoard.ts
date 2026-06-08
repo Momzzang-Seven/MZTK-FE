@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import type { PostType, FreePost, QuestionPost } from "@types";
 import { postService } from "@services";
+import { getKoreanErrorMessageFromError } from "@constant";
 
 const PAGE_SIZE = 5;
 
@@ -34,13 +35,9 @@ export const usePostBoard = <T extends FreePost | QuestionPost>(
         setHasMore(data.hasNext);
         setNextCursor(data.nextCursor);
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message ||
-          "게시물 조회에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "게시물 조회에 실패했습니다.")
+        );
       } finally {
         setIsLoading(false);
       }

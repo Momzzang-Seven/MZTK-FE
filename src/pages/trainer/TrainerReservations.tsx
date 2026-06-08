@@ -18,6 +18,7 @@ import type {
   ReservationSummary,
   ReservationTime,
 } from "@services";
+import type { Web3Execution } from "@types";
 
 type TrainerReservationTab = "pending" | "approved" | "completed" | "cancelled";
 
@@ -57,6 +58,32 @@ const getStatusBadgeStyles = (status: ReservationSummary["status"]) => {
       return "bg-gray-50 text-gray-400 border-gray-100";
   }
 };
+
+const isReservationWeb3Blocked = (
+  reservation: Pick<ReservationSummary, "web3Execution">
+) =>
+  reservation.web3Execution?.recoveryStatus === "ONCHAIN_UNCERTAIN" ||
+  reservation.web3Execution?.retryAllowed === false;
+
+const Web3PendingNotice = () => (
+  <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-2xl border border-amber-100">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#D97706"
+      strokeWidth="3"
+      className="shrink-0"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v5M12 16h.01" />
+    </svg>
+    <span className="text-[11px] font-black text-amber-700 leading-relaxed">
+      블록체인 결과 확인이 지연되어 승인, 반려, 정산 작업을 잠시 제한합니다.
+    </span>
+  </div>
+);
 
 const TrainerReservations = () => {
   const navigate = useNavigate();
@@ -186,6 +213,27 @@ const TrainerReservations = () => {
     });
   };
 
+  const openReservationWeb3 = (
+    intent: Web3Execution,
+    reservationId: number
+  ) => {
+    navigate(`/verify-wallet/${intent.resource.type}/${reservationId}`, {
+      state: {
+        intent,
+        recoveryScope: "trainer",
+        returnTo: "/trainer/reservations",
+      },
+    });
+  };
+
+  const isWeb3Signable = (intent?: Web3Execution | null) =>
+    !!intent &&
+    (intent.executionIntent.status === "AWAITING_SIGNATURE" ||
+      intent.viewerCanExecute === true ||
+      intent.viewerCanRecover === true) &&
+    intent.retryAllowed !== false &&
+    intent.recoveryStatus !== "ONCHAIN_UNCERTAIN";
+
   const handleDetailClick = async (reservationId: number) => {
     try {
       const detail = await getTrainerReservationDetail(reservationId);
@@ -233,9 +281,15 @@ const TrainerReservations = () => {
     }
     try {
       setIsMutating(true);
-      await rejectTrainerReservation(selectedId, {
+      const response = await rejectTrainerReservation(selectedId, {
         rejectionReason: trimmedReason,
       });
+      if (response.web3) {
+        setRejectModalOpen(false);
+        setSelectedId(null);
+        openReservationWeb3(response.web3, response.reservationId);
+        return;
+      }
       await loadReservations();
       setRejectModalOpen(false);
       setSelectedId(null);
@@ -278,7 +332,7 @@ const TrainerReservations = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FA] font-pretendard relative">
+    <div className="flex flex-col min-h-dvh bg-[#F8F9FA] font-pretendard relative">
       {/* Immersive Floating Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -350,6 +404,7 @@ const TrainerReservations = () => {
                 RESERVATION_STATUS.TIMEOUT_CANCELLED,
               ] as ReservationStatus[]
             ).includes(item.status as ReservationStatus);
+            const isWeb3Blocked = isReservationWeb3Blocked(item);
 
             return (
               <div
@@ -441,7 +496,22 @@ const TrainerReservations = () => {
 
                   {/* Actions */}
                   <div className="flex flex-col gap-3 pt-5 border-t border-gray-50">
-                    {item.status === RESERVATION_STATUS.PENDING ? (
+                    {isWeb3Blocked && <Web3PendingNotice />}
+                    {isWeb3Signable(item.web3Execution) && (
+                      <button
+                        onClick={() =>
+                          openReservationWeb3(
+                            item.web3Execution as Web3Execution,
+                            item.reservationId
+                          )
+                        }
+                        className="w-full h-12 bg-main text-white rounded-xl text-[13px] font-black transition-all active:scale-95"
+                      >
+                        블록체인 서명 계속하기
+                      </button>
+                    )}
+                    {item.status === RESERVATION_STATUS.PENDING &&
+                    !isWeb3Blocked ? (
                       (() => {
                         const resTime = item.reservationTime;
                         const resDate = item.reservationDate;
@@ -630,6 +700,9 @@ const TrainerReservations = () => {
                 value={getReservationStatusLabel(selectedDetail.status)}
                 highlight
               />
+              {isReservationWeb3Blocked(selectedDetail) && (
+                <Web3PendingNotice />
+              )}
               <div className="pt-4 border-t border-gray-200">
                 <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
                   Transaction Hash

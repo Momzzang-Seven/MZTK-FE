@@ -402,6 +402,7 @@ describe("useUserStore.clearUser", () => {
       analysisStartedAt: Date.now(),
       analysisType: "exercise",
       lastWorkoutRewardAppliedDate: "2026-04-28",
+      lastAttendanceRewardedXp: 17,
     });
 
     useUserStore.getState().clearUser();
@@ -411,5 +412,55 @@ describe("useUserStore.clearUser", () => {
     expect(useUserStore.getState().analysisStartedAt).toBeNull();
     expect(useUserStore.getState().analysisType).toBeNull();
     expect(useUserStore.getState().lastWorkoutRewardAppliedDate).toBeNull();
+    expect(useUserStore.getState().lastAttendanceRewardedXp).toBeNull();
+  });
+});
+
+describe("useUserStore wallet storage sync", () => {
+  const user = {
+    userId: 1,
+    email: "member@example.com",
+    nickname: "member",
+    profileImage: "",
+    role: "USER",
+    walletAddress: "",
+  };
+
+  it("clears stale local wallet values when backend reports no linked wallet", () => {
+    localStorage.setItem("wallet_address", "0xstale");
+    localStorage.setItem("encrypted_wallet", "stale-encrypted-wallet");
+
+    useUserStore.getState().setUser(user);
+
+    expect(localStorage.getItem("wallet_address")).toBeNull();
+    expect(localStorage.getItem("encrypted_wallet")).toBeNull();
+  });
+
+  it("drops encrypted wallet when backend wallet differs from local storage", () => {
+    localStorage.setItem("wallet_address", "0xold");
+    localStorage.setItem("encrypted_wallet", "old-encrypted-wallet");
+
+    useUserStore.getState().setUser({
+      ...user,
+      walletAddress: "0xNew",
+    });
+
+    expect(localStorage.getItem("wallet_address")).toBe("0xNew");
+    expect(localStorage.getItem("encrypted_wallet")).toBeNull();
+  });
+
+  it("keeps encrypted wallet when it matches the backend linked wallet", () => {
+    localStorage.setItem("wallet_address", "0xabc");
+    localStorage.setItem("encrypted_wallet", "matching-encrypted-wallet");
+
+    useUserStore.getState().setUser({
+      ...user,
+      walletAddress: "0xAbC",
+    });
+
+    expect(localStorage.getItem("wallet_address")).toBe("0xAbC");
+    expect(localStorage.getItem("encrypted_wallet")).toBe(
+      "matching-encrypted-wallet"
+    );
   });
 });

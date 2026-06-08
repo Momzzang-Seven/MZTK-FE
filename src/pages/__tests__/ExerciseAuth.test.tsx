@@ -13,6 +13,7 @@ const {
   mockStartAnalysis,
   mockUploadFileToPresignedUrl,
   mockSubmitWorkoutPhoto,
+  mockGetVerificationDetail,
 } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
   mockApplyWorkoutVerificationSuccess: vi.fn(),
@@ -22,6 +23,7 @@ const {
   mockStartAnalysis: vi.fn(),
   mockUploadFileToPresignedUrl: vi.fn(),
   mockSubmitWorkoutPhoto: vi.fn(),
+  mockGetVerificationDetail: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -53,6 +55,7 @@ vi.mock("@services/verification", () => ({
     submitWorkoutPhoto: mockSubmitWorkoutPhoto,
     submitWorkoutRecord: vi.fn(),
     getTodayWorkoutCompletion: vi.fn(),
+    getVerificationDetail: mockGetVerificationDetail,
   },
 }));
 
@@ -60,6 +63,42 @@ describe("ExerciseAuth Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.URL.createObjectURL = vi.fn(() => "mock-url");
+    mockGetVerificationDetail.mockImplementation((verificationId: string) => {
+      if (verificationId === "verification-2") {
+        return Promise.resolve({
+          verificationId,
+          verificationKind: "WORKOUT_PHOTO",
+          verificationStatus: "REJECTED",
+          rewardStatus: "NOT_REQUESTED",
+          exerciseDate: null,
+          rejectionReasonCode: "SCREEN_OR_UI",
+          rejectionReasonDetail: null,
+          failureCode: null,
+        });
+      }
+      if (verificationId === "verification-pending") {
+        return Promise.resolve({
+          verificationId,
+          verificationKind: "WORKOUT_PHOTO",
+          verificationStatus: "VERIFIED",
+          rewardStatus: "PENDING",
+          exerciseDate: null,
+          rejectionReasonCode: null,
+          rejectionReasonDetail: null,
+          failureCode: null,
+        });
+      }
+      return Promise.resolve({
+        verificationId,
+        verificationKind: "WORKOUT_PHOTO",
+        verificationStatus: "VERIFIED",
+        rewardStatus: "SUCCEEDED",
+        exerciseDate: null,
+        rejectionReasonCode: null,
+        rejectionReasonDetail: null,
+        failureCode: null,
+      });
+    });
   });
 
   it("초기에는 업로드 버튼이 비활성화된다", () => {
@@ -106,7 +145,7 @@ describe("ExerciseAuth Page", () => {
       </BrowserRouter>
     );
 
-    const file = new File(["test"], "exercise.png", { type: "image/png" });
+    const file = new File(["test"], "exercise.jpg", { type: "image/jpeg" });
     fireEvent.change(screen.getByTestId("photo-input"), {
       target: { files: [file] },
     });
@@ -117,7 +156,7 @@ describe("ExerciseAuth Page", () => {
     await waitFor(() => {
       expect(mockIssuePresignedUrls).toHaveBeenCalledWith({
         referenceType: "WORKOUT",
-        images: ["exercise.png"],
+        images: ["exercise.jpg"],
       });
       expect(mockUploadFileToPresignedUrl).toHaveBeenCalledWith(
         "https://upload.example.com/test",
@@ -174,7 +213,7 @@ describe("ExerciseAuth Page", () => {
 
     fireEvent.change(screen.getByTestId("photo-input"), {
       target: {
-        files: [new File(["test"], "exercise.png", { type: "image/png" })],
+        files: [new File(["test"], "exercise.jpg", { type: "image/jpeg" })],
       },
     });
     fireEvent.click(
@@ -219,7 +258,7 @@ describe("ExerciseAuth Page", () => {
 
     fireEvent.change(screen.getByTestId("photo-input"), {
       target: {
-        files: [new File(["test"], "exercise.png", { type: "image/png" })],
+        files: [new File(["test"], "exercise.jpg", { type: "image/jpeg" })],
       },
     });
     fireEvent.click(
@@ -232,6 +271,9 @@ describe("ExerciseAuth Page", () => {
         "인증에 사용할 수 없는 이미지 형식입니다. 다른 파일로 다시 시도해 주세요."
       );
     });
+    expect(
+      screen.getByRole("button", { name: EXERCISE_TEXT.BTN_REGISTER })
+    ).toBeInTheDocument();
   });
 
   it("보상 반영이 진행 중이면 실패 스낵바를 띄우지 않는다", async () => {
@@ -267,7 +309,7 @@ describe("ExerciseAuth Page", () => {
 
     fireEvent.change(screen.getByTestId("photo-input"), {
       target: {
-        files: [new File(["test"], "exercise.png", { type: "image/png" })],
+        files: [new File(["test"], "exercise.jpg", { type: "image/jpeg" })],
       },
     });
     fireEvent.click(
@@ -284,5 +326,46 @@ describe("ExerciseAuth Page", () => {
     expect(mockApplyWorkoutVerificationSuccess).not.toHaveBeenCalled();
     expect(mockFinishAnalysis).not.toHaveBeenCalled();
     expect(mockShowSnackbar).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-image files before presigned upload", async () => {
+    render(
+      <BrowserRouter>
+        <ExerciseAuth />
+      </BrowserRouter>
+    );
+
+    fireEvent.change(screen.getByTestId("photo-input"), {
+      target: {
+        files: [new File(["not image"], "workout.txt", { type: "text/plain" })],
+      },
+    });
+
+    expect(
+      screen.getByRole("button", { name: EXERCISE_TEXT.BTN_REGISTER })
+    ).toBeDisabled();
+    expect(mockIssuePresignedUrls).not.toHaveBeenCalled();
+    expect(screen.getByText(/workout\.txt/)).toBeInTheDocument();
+  });
+
+  it("rejects png workout photos before presigned upload", async () => {
+    render(
+      <BrowserRouter>
+        <ExerciseAuth />
+      </BrowserRouter>
+    );
+
+    fireEvent.change(screen.getByTestId("photo-input"), {
+      target: {
+        files: [new File(["test"], "exercise.png", { type: "image/png" })],
+      },
+    });
+
+    expect(
+      screen.getByRole("button", { name: EXERCISE_TEXT.BTN_REGISTER })
+    ).toBeDisabled();
+    expect(mockIssuePresignedUrls).not.toHaveBeenCalled();
+    expect(screen.getByText(/exercise\.png/)).toBeInTheDocument();
+    expect(screen.getByText(/JPG, HEIF, HEIC/)).toBeInTheDocument();
   });
 });

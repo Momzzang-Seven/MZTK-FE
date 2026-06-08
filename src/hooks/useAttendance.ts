@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { attendanceService } from "@services/attendance";
+import { getKoreanErrorMessageFromError } from "@constant";
 import type {
   AttendanceStatus,
   WeeklyAttendance,
@@ -47,12 +48,9 @@ export const useAttendance = () => {
       return result;
     } catch (err) {
       console.error("출석 체크 실패:", err);
-      const errorResponse = err as {
-        response?: { data?: { message?: string } };
-      };
-      const message =
-        errorResponse.response?.data?.message || "출석 체크에 실패했습니다.";
-      setError(message);
+      setError(
+        getKoreanErrorMessageFromError(err, "출석 체크에 실패했습니다.")
+      );
       return null;
     }
   };

@@ -2,22 +2,32 @@ import type {
   Web3IntentStatus,
   PublicationStatus,
   ModerationStatus,
+  Web3Execution,
 } from "@types";
 
 /**
  * 게시글 공개/차단 상태 및 Web3 상태를 기준으로 질문의 상태를 파싱합니다.
  */
-export const getQuestionStatus = (
+export const getPostStatus = (
   publicationStatus: PublicationStatus,
   moderationStatus: ModerationStatus,
   isSolved: boolean,
-  commentCount: number
+  commentCount: number,
+  web3Execution: Web3Execution
 ) => {
   if (moderationStatus === "BLOCKED") return "blocked";
-  if (publicationStatus === "PENDING") return "pending";
+  if (publicationStatus === "PENDING") {
+    if (web3Execution?.resource.status === "PENDING_EXECUTION")
+      return "need_signature";
+    return "pending";
+  }
   if (publicationStatus === "FAILED") return "failed";
   if (publicationStatus === "VISIBLE") {
-    if (isSolved) return "completed";
+    if (isSolved) {
+      if (web3Execution?.executionIntent.status === "AWAITING_SIGNATURE")
+        return "need_signature";
+      return "completed";
+    }
     if (commentCount === 0) return "waiting";
     return "answering";
   }
@@ -26,6 +36,7 @@ export const getQuestionStatus = (
 
 export const statusStyleMap: Record<string, { label: string; bg: string }> = {
   pending: { label: "처리 중", bg: "bg-[#9CA3AF]" },
+  need_signature: { label: "서명 필요", bg: "bg-[#F59E0B]" },
   failed: { label: "실패", bg: "bg-[#EF4444]" },
   blocked: { label: "차단됨", bg: "bg-[#1F2937]" },
   waiting: { label: "답변대기", bg: "bg-[#F59E0B]" },
@@ -56,16 +67,29 @@ export const getIntentStatusMessage = (status: Web3IntentStatus) => {
 
 export const replaceImageSrc = (
   content: string,
-  images: { imageUrl: string }[]
+  images: { imageId: number; imageUrl: string }[]
 ) => {
-  let index = 0;
-  return content.replace(/<img[^>]+src="([^">]+)"/g, (match) => {
-    if (index < images.length) {
-      const newSrc = images[index].imageUrl;
-      index++;
-      // 기존 src를 새로운 URL로 교체
-      return match.replace(/src="([^">]+)"/, `src="${newSrc}"`);
+  const imageUrlById = new Map(
+    images.map(({ imageId, imageUrl }) => [String(imageId), imageUrl])
+  );
+
+  return content.replace(/<img\b[^>]*>/gi, (imgTag) => {
+    const imageIdMatch = imgTag.match(/\bimageId=(["'])(.*?)\1/i);
+    if (!imageIdMatch) return imgTag;
+
+    const imageUrl = imageUrlById.get(imageIdMatch[2]);
+    if (!imageUrl) return imgTag;
+
+    const escapedImageUrl = imageUrl
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;");
+
+    if (/\bsrc=(["']).*?\1/i.test(imgTag)) {
+      return imgTag.replace(/\bsrc=(["']).*?\1/i, `src="${escapedImageUrl}"`);
     }
-    return match;
+
+    return imgTag.replace(/\/?>$/, (closing) => {
+      return ` src="${escapedImageUrl}"${closing}`;
+    });
   });
 };

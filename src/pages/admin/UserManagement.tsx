@@ -14,16 +14,22 @@ const UserManagement = () => {
     setStatusFilter,
     roleFilter,
     setRoleFilter,
+    userPage,
+    userTotalPages,
+    setUserPage,
   } = useAdminStore();
 
   useEffect(() => {
-    fetchUsers();
+    void fetchUsers(0);
   }, [fetchUsers]);
 
+  const currentPage = userPage ?? 0;
+  const totalPageCount = Math.max(userTotalPages ?? 1, 1);
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 lg:space-y-8">
       {/* Header Stats */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
             User Database
@@ -33,8 +39,8 @@ const UserManagement = () => {
           </h3>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+        <div className="flex w-full items-center gap-4 sm:w-auto">
+          <div className="flex w-full items-center gap-4 rounded-2xl border border-gray-100 bg-white px-5 py-3 shadow-sm sm:w-auto sm:px-6">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
                 {ADMIN_TEXT.USER.TITLE_TOTAL}
@@ -140,6 +146,30 @@ const UserManagement = () => {
 
       {/* Table Section */}
       <UserTable />
+
+      <div className="flex flex-col gap-3 rounded-[24px] border border-gray-100 bg-white px-5 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.02)] sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.18em]">
+          Page {currentPage + 1} / {totalPageCount}
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => void setUserPage(currentPage - 1)}
+            disabled={currentPage <= 0}
+            className="px-4 py-2 rounded-xl border border-gray-100 text-[12px] font-black text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            onClick={() => void setUserPage(currentPage + 1)}
+            disabled={currentPage + 1 >= totalPageCount}
+            className="px-4 py-2 rounded-xl border border-gray-100 text-[12px] font-black text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

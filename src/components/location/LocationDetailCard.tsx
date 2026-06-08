@@ -5,12 +5,14 @@ import { CommonButton } from "@components/common";
 interface LocationDetailCardProps {
   address: string;
   isRegistering: boolean;
+  canRegister: boolean;
   onRegister: () => void;
 }
 
 export const LocationDetailCard = ({
   address,
   isRegistering,
+  canRegister,
   onRegister,
 }: LocationDetailCardProps) => {
   return (
@@ -44,11 +46,15 @@ export const LocationDetailCard = ({
       <CommonButton
         label={isRegistering ? UI_TEXT.REGISTERING_BTN : UI_TEXT.REGISTER_BTN}
         onClick={onRegister}
-        disabled={isRegistering}
+        disabled={isRegistering || !canRegister}
         bgColor={
-          isRegistering ? "bg-gray-100" : "bg-main shadow-xl shadow-main/20"
+          isRegistering || !canRegister
+            ? "bg-gray-100"
+            : "bg-main shadow-xl shadow-main/20"
         }
-        textColor={isRegistering ? "text-gray-300" : "text-white"}
+        textColor={
+          isRegistering || !canRegister ? "text-gray-300" : "text-white"
+        }
         className="font-black text-[16px] py-4.5 rounded-2xl transition-all active:scale-[0.98] w-full border-none"
       />
     </div>

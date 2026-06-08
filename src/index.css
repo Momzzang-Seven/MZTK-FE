@@ -19,11 +19,16 @@
   --font-family: var(--font-sans);
 }
 
+html,
+#root {
+  min-height: 100dvh;
+}
+
 body {
   margin: 0;
   width: 100vw;
   background-color: #f9fafb;
-  min-height: 100vh;
+  min-height: 100dvh;
   font-family: var(--font-family);
 }
 

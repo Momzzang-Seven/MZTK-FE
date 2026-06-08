@@ -36,3 +36,6 @@ dist-ssr
 *.txt
 vitest_results.json
 lint_results.json
+
+# Local-only documentation and QA notes
+/docs/

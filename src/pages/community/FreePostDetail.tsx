@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { SimpleHeader } from "@components/layout";
 import { CommentItem, CommentInput, FreePostCard } from "@components/community";
@@ -9,6 +9,7 @@ import { useCommentService, useInfiniteScroll, usePostService } from "@hooks";
 const FreePostDetail = () => {
   const { postId } = useParams();
   const postIdNum = Number(postId);
+  const navigate = useNavigate();
 
   const [post, setPost] = useState<FreePost | null>(null);
   const [writingComment, setWritingComment] = useState("");
@@ -52,15 +53,18 @@ const FreePostDetail = () => {
 
   if (isPostLoading && !post) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white">
+      <div className="flex items-center justify-center h-dvh bg-white">
         <LoadingSpinner size="lg" color="text-main" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-24">
-      <SimpleHeader title="게시글 상세" />
+    <div className="min-h-dvh bg-gray-50/50 pb-28">
+      <SimpleHeader
+        title="게시글 상세"
+        onBackClick={() => navigate("/community/free")}
+      />
 
       <div className="pt-[88px]">
         {post && (
@@ -73,7 +77,7 @@ const FreePostDetail = () => {
           <div className="flex items-center gap-2 mb-4 px-2">
             <h2 className="text-[17px] font-black text-gray-900">댓글</h2>
             <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md text-[12px] font-bold">
-              {comments.length}
+              {post?.commentCount}
             </span>
           </div>
 
@@ -89,7 +93,7 @@ const FreePostDetail = () => {
               </div>
             ))}
 
-            {isLoading && (
+            {isLoading && comments.length === 0 && (
               <div className="text-center py-6">
                 <LoadingSpinner size="sm" color="text-main" />
               </div>
@@ -103,8 +107,13 @@ const FreePostDetail = () => {
               </div>
             )}
 
-            {!isLast && !isLoading && (
-              <div ref={observerRef} className="h-4 w-full" />
+            {!isLast && (
+              <div
+                ref={observerRef}
+                className="flex min-h-20 w-full items-center justify-center"
+              >
+                {isLoading && <LoadingSpinner size="sm" color="text-main" />}
+              </div>
             )}
           </div>
         </section>

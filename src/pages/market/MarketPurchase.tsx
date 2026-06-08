@@ -4,11 +4,13 @@ import { ChevronLeft } from "lucide-react";
 import { CommonButton, CommonModal } from "@components/common";
 import { getKoreanErrorMessage } from "@constant";
 import axios from "axios";
+import { useUserStore } from "@store";
 import {
   createClassReservation,
   getClassReservationInfo,
   getMarketplaceClassDetail,
 } from "@services";
+import { parseAmount } from "@utils";
 import type {
   AvailableReservationDate,
   AvailableReservationTime,
@@ -26,18 +28,29 @@ const getMonthDateLabel = (date: string) => {
 
 const formatTime = (time: string) => time.slice(0, 5);
 
-const DEV_SIGNATURE_STUB = `0x${"0".repeat(130)}`;
+const createReservationIdempotencyKey = (
+  classId: number,
+  slotId: number,
+  reservationDate: string,
+  reservationTime: string
+) => {
+  const nonce =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `reservation:${classId}:${slotId}:${reservationDate}:${reservationTime}:${nonce}`;
+};
 
-const getReservationSignatures = () => {
-  return {
-    delegationSignature: DEV_SIGNATURE_STUB,
-    executionSignature: DEV_SIGNATURE_STUB,
-  };
+const extractMissingWalletUserId = (message?: string | null) => {
+  const match = message?.match(/userId=(\d+)/);
+  if (!match) return null;
+  return Number(match[1]);
 };
 
 const MarketPurchase = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const currentUserId = useUserStore((state) => state.user?.userId ?? null);
   const [data, setData] = useState<Awaited<
     ReturnType<typeof getMarketplaceClassDetail>
   > | null>(null);
@@ -56,13 +69,13 @@ const MarketPurchase = () => {
     title: string;
     desc: string;
     variant?: "success" | "error" | "warning" | "info";
+    confirmLabel?: string;
     onConfirm?: () => void;
   }>({
     isOpen: false,
     title: "",
     desc: "",
   });
-
   useEffect(() => {
     const classId = Number(id);
     if (!Number.isFinite(classId)) {
@@ -129,16 +142,36 @@ const MarketPurchase = () => {
 
     try {
       setIsSubmitting(true);
-      const signatures = getReservationSignatures();
 
-      await createClassReservation(classId, {
+      const response = await createClassReservation(classId, {
         slotId: selectedTime.slotId,
         reservationDate: selectedDate.date,
         reservationTime: selectedTime.startTime,
         userRequest: requestMsg.trim() || undefined,
-        signedAmount: reservationInfo.priceAmount,
-        ...signatures,
+        idempotencyKey: createReservationIdempotencyKey(
+          classId,
+          selectedTime.slotId,
+          selectedDate.date,
+          selectedTime.startTime
+        ),
+        signedAmount: parseAmount(
+          String(reservationInfo.priceAmount)
+        ).toString(),
       });
+
+      if (response.web3) {
+        navigate(
+          `/verify-wallet/${response.web3.resource.type}/${response.reservationId}`,
+          {
+            state: {
+              intent: response.web3,
+              recoveryScope: "member",
+              returnTo: "/market/reservations",
+            },
+          }
+        );
+        return;
+      }
 
       // Show success modal
       setModalState({
@@ -152,6 +185,30 @@ const MarketPurchase = () => {
       const axiosError = axios.isAxiosError(error) ? error : null;
       const code = axiosError?.response?.data?.code;
       const message = axiosError?.response?.data?.message;
+      const missingWalletUserId = extractMissingWalletUserId(message);
+      if (
+        code === "WALLET_003" &&
+        (!missingWalletUserId || missingWalletUserId === currentUserId)
+      ) {
+        setModalState({
+          isOpen: true,
+          title: "지갑 등록이 필요해요",
+          desc: "지갑 등록 후 예약할 수 있어요.",
+          variant: "warning",
+          confirmLabel: "지갑 등록하기",
+          onConfirm: () => navigate("/register-wallet"),
+        });
+        return;
+      }
+      if (code === "WALLET_003") {
+        setModalState({
+          isOpen: true,
+          title: "트레이너 결제 설정이 필요해요",
+          desc: "트레이너의 결제 지갑 설정이 완료되지 않아 예약할 수 없어요. 다른 클래스를 선택하거나 잠시 후 다시 시도해 주세요.",
+          variant: "warning",
+        });
+        return;
+      }
       setModalState({
         isOpen: true,
         title: "결제 실패",
@@ -167,7 +224,7 @@ const MarketPurchase = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center gap-4">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
         <p className="text-[13px] font-black text-gray-300">
           결제 정보를 준비 중입니다...
@@ -179,7 +236,7 @@ const MarketPurchase = () => {
   // 데이터가 없을 때의 기본 빈 상태 (모달이 띄워질 것임)
   if (!data || !reservationInfo) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative">
         <button
           onClick={() => navigate(-1)}
           className="fixed top-6 left-6 z-[100] w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100/50"
@@ -202,7 +259,7 @@ const MarketPurchase = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative">
       {/* Floating Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -367,7 +424,7 @@ const MarketPurchase = () => {
       </div>
 
       {/* Floating Checkout Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-8 flex flex-col gap-4 border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-[calc(2rem+env(safe-area-inset-bottom))] flex flex-col gap-4 border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
         <CommonButton
           label={
             isSubmitting
@@ -384,7 +441,7 @@ const MarketPurchase = () => {
         <CommonModal
           title={modalState.title}
           desc={modalState.desc}
-          confirmLabel="확인"
+          confirmLabel={modalState.confirmLabel ?? "확인"}
           variant={modalState.variant}
           onConfirmClick={() => {
             if (modalState.onConfirm) modalState.onConfirm();

@@ -93,8 +93,11 @@ const mockUserStoreState = {
   levelUp: mockLevelUp,
   attendanceStreak: 3,
   hasAttendedToday: false,
+  lastAttendanceRewardedXp: null,
   weeklyAttendance: { attendedCount: 3 },
   checkAttendance: vi.fn().mockResolvedValue(undefined),
+  attendanceResult: null,
+  clearAttendanceResult: vi.fn(),
   lastExerciseDate: null,
   analysisStatus: "idle",
   applyWorkoutVerificationSuccess: vi.fn(),
@@ -186,6 +189,10 @@ vi.mock("@services", () => ({
   approveTrainerReservation: mockApproveTrainerReservation,
   rejectTrainerReservation: mockRejectTrainerReservation,
   getTrainerClasses: mockGetTrainerClasses,
+  imageService: {
+    uploadMarketplaceClassImages: vi.fn().mockResolvedValue([]),
+    getImagesByIds: vi.fn().mockResolvedValue([]),
+  },
 }));
 
 vi.mock("@hooks", () => ({
@@ -212,6 +219,7 @@ vi.mock("@hooks", () => ({
       boardTypeSplit: {},
       targetTypeStats: {},
     },
+    serverHealthStatus: "UP",
     loading: false,
     error: null,
   }),
@@ -274,8 +282,6 @@ vi.mock("@store", () => ({
   }),
   // AdminDashboard는 @store에서 useAdminStore를 import함
   useAdminStore: () => ({
-    selectedChainId: "84532",
-    setSelectedChainId: vi.fn(),
     fetchUsers: mockFetchUsers,
     filteredUsers: [],
     filteredPosts: [],
@@ -315,8 +321,6 @@ vi.mock("@store/adminStore", () => ({
     postStatusFilter: "ALL",
     setPostStatusFilter: mockSetPostStatusFilter,
     // AdminDashboard에서 사용하는 필드
-    selectedChainId: "84532",
-    setSelectedChainId: vi.fn(),
   }),
 }));
 

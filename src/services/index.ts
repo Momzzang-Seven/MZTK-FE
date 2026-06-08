@@ -1,4 +1,5 @@
 export * from "./client";
+export * from "./auth";
 export * from "./image";
 export * from "./trainer";
 export * from "./post";
@@ -11,3 +12,4 @@ export * from "./leaderboard";
 export * from "./reservation";
 export * from "./admin";
 export * from "./user";
+export * from "./onchain";

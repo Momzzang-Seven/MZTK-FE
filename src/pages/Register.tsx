@@ -4,9 +4,12 @@ import { FullScreenPage } from "@components/layout";
 const Register = () => {
   const navigate = useNavigate();
 
-  const handleRoleSelect = (role: string) => {
-    console.log(`Selected Role: ${role}`);
+  const handleRoleSelect = () => {
     navigate("/onboarding");
+  };
+
+  const handleSkip = () => {
+    navigate("/", { replace: true });
   };
 
   return (
@@ -50,7 +53,7 @@ const Register = () => {
       <div className="relative z-10 flex flex-col gap-5 flex-1 justify-center">
         {/* User Role Card */}
         <button
-          onClick={() => handleRoleSelect("USER")}
+          onClick={handleRoleSelect}
           className="btn-press group relative w-full p-6 bg-white border border-gray-100 rounded-[28px] shadow-xl shadow-gray-100/50 flex items-center gap-6 text-left transition-all hover:border-main/30"
         >
           <div className="w-16 h-16 shrink-0 rounded-[20px] bg-amber-50 flex items-center justify-center transition-transform group-hover:scale-105">
@@ -93,7 +96,7 @@ const Register = () => {
 
         {/* Trainer Role Card */}
         <button
-          onClick={() => handleRoleSelect("TRAINER")}
+          onClick={handleRoleSelect}
           className="btn-press group relative w-full p-6 bg-white border border-gray-100 rounded-[28px] shadow-xl shadow-gray-100/50 flex items-center gap-6 text-left transition-all hover:border-main/30"
         >
           <div className="w-16 h-16 shrink-0 rounded-[20px] bg-gray-900 flex items-center justify-center transition-transform group-hover:scale-105">
@@ -138,6 +141,13 @@ const Register = () => {
 
       {/* ── Footer Info ── */}
       <div className="mt-12 text-center relative z-10">
+        <button
+          type="button"
+          onClick={handleSkip}
+          className="btn-press w-full mb-5 py-4 rounded-[22px] bg-gray-900 text-white text-[14px] font-black shadow-lg shadow-gray-200"
+        >
+          나중에 하기
+        </button>
         <p className="text-[12px] text-gray-300 font-bold">
           역할은 나중에 설정에서 변경할 수 없습니다.
           <br />

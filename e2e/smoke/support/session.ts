@@ -43,26 +43,55 @@ const getOptionalCredentials = (
   return { email, password };
 };
 
-const getCredentials = (role: SmokeRole): SmokeCredentials => {
+const createLocalMemberCredentials = async (
+  page: Page,
+  apiBaseUrl: string,
+  role: "USER" | "TRAINER" = "USER"
+): Promise<SmokeCredentials> => {
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const credentials = {
+    email: `local-fullstack-${role.toLowerCase()}-${suffix}@mztk.local`,
+    password: "LocalFullstack123!",
+  };
+
+  const response = await page.request.post(`${apiBaseUrl}/auth/signup`, {
+    data: {
+      ...credentials,
+      nickname: `local${suffix.slice(-8)}`,
+      role,
+    },
+  });
+
+  expect(response.ok()).toBeTruthy();
+
+  return credentials;
+};
+
+const getCredentials = async (
+  page: Page,
+  apiBaseUrl: string,
+  role: SmokeRole
+): Promise<SmokeCredentials> => {
   if (role === "trainer") {
     const trainerCredentials = getOptionalCredentials(
       "E2E_SMOKE_TRAINER_EMAIL",
       "E2E_SMOKE_TRAINER_PASSWORD"
     );
 
-    if (!trainerCredentials) {
-      throw new Error(
-        "Trainer smoke credentials are missing. Set E2E_SMOKE_TRAINER_EMAIL and E2E_SMOKE_TRAINER_PASSWORD."
-      );
-    }
-
-    return trainerCredentials;
+    return (
+      trainerCredentials ??
+      createLocalMemberCredentials(page, apiBaseUrl, "TRAINER")
+    );
   }
 
-  return {
-    email: getRequiredEnv("E2E_SMOKE_EMAIL"),
-    password: getRequiredEnv("E2E_SMOKE_PASSWORD"),
-  };
+  const configuredCredentials = getOptionalCredentials(
+    "E2E_SMOKE_EMAIL",
+    "E2E_SMOKE_PASSWORD"
+  );
+
+  return (
+    configuredCredentials ?? createLocalMemberCredentials(page, apiBaseUrl)
+  );
 };
 
 const buildPersistedUserStorage = (loginData: LoginResponseData) => ({
@@ -87,6 +116,10 @@ export const hasTrainerSmokeCredentials = () =>
   Boolean(
     process.env.E2E_SMOKE_TRAINER_EMAIL &&
     process.env.E2E_SMOKE_TRAINER_PASSWORD
+  ) ||
+  Boolean(
+    process.env.E2E_SMOKE_API_BASE_URL &&
+    process.env.E2E_SMOKE_API_BASE_URL.startsWith("http://localhost")
   );
 
 export const createAuthenticatedSession = async (
@@ -94,7 +127,7 @@ export const createAuthenticatedSession = async (
   role: SmokeRole = "member"
 ) => {
   const apiBaseUrl = getRequiredEnv("E2E_SMOKE_API_BASE_URL");
-  const credentials = getCredentials(role);
+  const credentials = await getCredentials(page, apiBaseUrl, role);
 
   const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
     data: {
@@ -115,6 +148,10 @@ export const createAuthenticatedSession = async (
 
       if (walletAddress) {
         window.localStorage.setItem("wallet_address", walletAddress);
+        window.localStorage.setItem(
+          "encrypted_wallet",
+          "local-fullstack-encrypted-wallet-json"
+        );
       }
 
       if (role === "trainer") {

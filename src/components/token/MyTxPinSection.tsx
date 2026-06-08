@@ -21,7 +21,7 @@ export const MyTxPinSection = ({
   }, [inputPin, onComplete]);
 
   return (
-    <div className="flex flex-col h-screen bg-white px-6 overflow-hidden">
+    <div className="flex flex-col h-dvh bg-white px-6 overflow-hidden">
       <PinPad
         title="PIN 번호를 입력해주세요"
         pin={inputPin}

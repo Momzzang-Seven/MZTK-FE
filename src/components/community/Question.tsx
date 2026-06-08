@@ -1,32 +1,77 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { QuestionPost } from "@types";
-import { getQuestionStatus, statusStyleMap, replaceImageSrc } from "@utils";
+import { getPostStatus, statusStyleMap, replaceImageSrc } from "@utils";
 import { QnaContent } from "@components/community";
-import { Coins } from "lucide-react";
+import { Coins, Heart } from "lucide-react";
+import { usePostService } from "@hooks";
 
 interface QuestionProps {
   post: QuestionPost;
 }
 
 const Question = ({ post }: QuestionProps) => {
+  console.log(post);
   const navigate = useNavigate();
-  const status = getQuestionStatus(
+  const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [liked, setLiked] = useState(post.isLiked);
+  const { likePost, unlikePost } = usePostService();
+  const status = getPostStatus(
     post.publicationStatus,
     post.moderationStatus,
     post.question.isSolved,
-    post.commentCount
+    post.commentCount,
+    post.question.web3Execution
   );
   const statusStyle = statusStyleMap[status];
   const processedContent = post.content
     ? replaceImageSrc(post.content, post.images)
     : "";
 
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextLiked = !liked;
+    if (liked) {
+      unlikePost(post.postId);
+    } else {
+      likePost(post.postId);
+    }
+
+    setLiked(nextLiked);
+    setLikeCount((prev) => (nextLiked ? prev + 1 : prev - 1));
+  };
+
   return (
-    <section className="px-5 py-6 flex flex-col gap-5 bg-white shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b border-gray-50">
-      {/* Title */}
-      <h1 className="text-[22px] font-black leading-tight text-gray-900 tracking-tight">
-        {post.title}
-      </h1>
+    <section className="px-5 py-2 flex flex-col gap-3 bg-white shadow-[0_4px_30px_rgba(0,0,0,0.02)] border-b border-gray-50">
+      <div className="px-2 flex items-center justify-between">
+        {/* Title */}
+        <h1 className="text-[22px] font-black leading-tight text-gray-900 tracking-tight">
+          {post.title}
+        </h1>
+        {/* Like Button */}
+        <button
+          onClick={handleLikeClick}
+          data-testid="like-button"
+          className="flex flex-row rounded-full items-center gap-2 transition-all active:scale-90 group/btn"
+        >
+          <div className="p-2 rounded-full transition-colors group-hover/btn:bg-gray-100">
+            <Heart
+              size={22}
+              className={`transition-all ${
+                liked ? "fill-red-500 text-red-500 scale-110" : "text-gray-400"
+              }`}
+              strokeWidth={2}
+            />
+            <span
+              className={`text-[14px] font-black ${
+                liked ? "text-red-500" : "text-gray-500"
+              }`}
+            >
+              {likeCount}
+            </span>
+          </div>
+        </button>
+      </div>
 
       {/* Badges */}
       <div className="flex items-center gap-3">

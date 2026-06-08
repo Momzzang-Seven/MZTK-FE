@@ -1,14 +1,16 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { EXERCISE_CATEGORIES } from "@constant";
+import { EXERCISE_CATEGORIES, getKoreanErrorMessageFromError } from "@constant";
 import {
   getTrainerStore,
+  imageService,
   registerTrainerClass,
   type MarketplaceClassCategory,
   type MarketplaceClassTimePayload,
   type MarketplaceDayOfWeek,
 } from "@services";
+import { containsUnsafeMarkup, parsePositiveIntegerInput } from "@utils";
 
 export type RegisterStep = "photo" | "info";
 
@@ -26,11 +28,6 @@ const DAY_OF_WEEK_MAP: Record<string, MarketplaceDayOfWeek> = {
   금: "FRIDAY",
   토: "SATURDAY",
   일: "SUNDAY",
-};
-
-const toPositiveInt = (value: string | number) => {
-  const parsed = Number.parseInt(String(value).replace(/[^\d]/g, ""), 10);
-  return Number.isFinite(parsed) ? parsed : 0;
 };
 
 const toApiCategory = (category: string): MarketplaceClassCategory => {
@@ -58,6 +55,7 @@ export const useRegisterTicket = () => {
 
   const [step, setStep] = useState<RegisterStep>("photo");
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isCheckingStore, setIsCheckingStore] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -188,6 +186,7 @@ export const useRegisterTicket = () => {
       return;
     }
 
+    setImageFiles((prev) => [...prev, ...files]);
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -195,12 +194,14 @@ export const useRegisterTicket = () => {
       };
       reader.readAsDataURL(file);
     });
+    e.target.value = "";
   };
 
   const removeImage = (indexToRemove: number) => {
     setImagePreviews((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
+    setImageFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
   const triggerFileInput = () => {
@@ -237,9 +238,28 @@ export const useRegisterTicket = () => {
       return;
     }
 
-    const capacity = toPositiveInt(formData.capacity);
-    const priceAmount = toPositiveInt(formData.price);
-    const durationMinutes = toPositiveInt(formData.duration);
+    const capacity = parsePositiveIntegerInput(formData.capacity);
+    const priceAmount = parsePositiveIntegerInput(formData.price);
+    const durationMinutes = parsePositiveIntegerInput(formData.duration);
+
+    if (!capacity || !priceAmount || !durationMinutes) {
+      alert("가격, 정원, 수업 시간은 1 이상의 정수로 입력해 주세요.");
+      return;
+    }
+
+    const textFields = [
+      formData.title,
+      formData.description,
+      formData.supplies,
+      ...formData.tags,
+      ...formData.features,
+    ];
+    if (textFields.some((value) => containsUnsafeMarkup(value))) {
+      alert(
+        "클래스 상세 정보에는 HTML 또는 스크립트 형식의 내용을 입력할 수 없습니다."
+      );
+      return;
+    }
 
     const classTimes: MarketplaceClassTimePayload[] =
       formData.operatingDays.flatMap((day) => {
@@ -257,6 +277,8 @@ export const useRegisterTicket = () => {
 
     try {
       setIsSubmitting(true);
+      const imageIds =
+        await imageService.uploadMarketplaceClassImages(imageFiles);
 
       await registerTrainerClass({
         title: formData.title.trim(),
@@ -269,16 +291,12 @@ export const useRegisterTicket = () => {
           .map((feature) => feature.trim())
           .filter(Boolean),
         personalItems: formData.supplies.trim() || null,
+        imageIds,
         classTimes,
       });
 
       setIsSuccessModalOpen(true);
     } catch (error) {
-      const err = error as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
-
       if (
         axios.isAxiosError(error) &&
         error.response?.status === 404 &&
@@ -290,9 +308,10 @@ export const useRegisterTicket = () => {
       }
 
       alert(
-        err?.response?.data?.message ||
-          err?.message ||
+        getKoreanErrorMessageFromError(
+          error,
           "클래스 등록에 실패했습니다. 입력값을 다시 확인해 주세요."
+        )
       );
     } finally {
       setIsSubmitting(false);
@@ -303,10 +322,10 @@ export const useRegisterTicket = () => {
     isCheckingStore ||
     isSubmitting ||
     !formData.title.trim() ||
-    !formData.price ||
-    !formData.capacity ||
+    !parsePositiveIntegerInput(formData.price) ||
+    !parsePositiveIntegerInput(formData.capacity) ||
     !formData.description.trim() ||
-    !formData.duration.trim() ||
+    !parsePositiveIntegerInput(formData.duration) ||
     formData.operatingDays.length === 0;
 
   return {

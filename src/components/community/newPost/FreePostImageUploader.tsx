@@ -1,7 +1,11 @@
 import { useRef, useCallback } from "react";
-import { usePostStore } from "@store";
+import { usePostStore, useUserStore } from "@store";
 import { useImageUpload } from "@hooks";
 import { Image as ImageIcon, X, Plus } from "lucide-react";
+import {
+  ACCEPTED_IMAGE_INPUT_TYPES,
+  findInvalidImageFileMessage,
+} from "@utils";
 
 interface MultiImageUploaderProps {
   maxImages?: number;
@@ -13,6 +17,7 @@ const FreePostImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
   const removeImage = usePostStore((s) => s.removeImage);
   const incrementUploading = usePostStore((s) => s.incrementUploading);
   const decrementUploading = usePostStore((s) => s.decrementUploading);
+  const showSnackbar = useUserStore((s) => s.showSnackbar);
 
   const { uploadImages } = useImageUpload("COMMUNITY_FREE", {
     onUploaded: addImage,
@@ -27,14 +32,29 @@ const FreePostImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
       const files = e.target.files;
       if (!files) return;
 
-      const remaining = maxImages - images.length;
-      const selected = Array.from(files).slice(0, remaining);
+      const selectedFiles = Array.from(files);
+      const invalidMessage = findInvalidImageFileMessage(selectedFiles);
+      if (invalidMessage) {
+        showSnackbar(invalidMessage, { variant: "error" });
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
 
-      await uploadImages(selected);
+      const remaining = maxImages - images.length;
+
+      if (selectedFiles.length > remaining) {
+        showSnackbar(`이미지는 최대 ${maxImages}장까지 등록할 수 있어요.`, {
+          variant: "error",
+        });
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
+
+      await uploadImages(selectedFiles);
 
       if (inputRef.current) inputRef.current.value = "";
     },
-    [images.length, maxImages, uploadImages]
+    [images.length, maxImages, showSnackbar, uploadImages]
   );
 
   return (
@@ -92,7 +112,7 @@ const FreePostImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={ACCEPTED_IMAGE_INPUT_TYPES}
         multiple
         className="hidden"
         onChange={handleSelectImages}

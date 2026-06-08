@@ -27,6 +27,10 @@ vi.mock("@services", () => ({
   getTrainerClasses: (...args: unknown[]) => mockGetTrainerClasses(...args),
   toggleTrainerClassStatus: (...args: unknown[]) =>
     mockToggleTrainerClassStatus(...args),
+  imageService: {
+    uploadMarketplaceClassImages: vi.fn().mockResolvedValue([]),
+    getImagesByIds: vi.fn().mockResolvedValue([]),
+  },
 }));
 
 // Mocking Hooks
@@ -125,13 +129,17 @@ describe("예약 외 마켓플레이스/트레이너 QA", () => {
 
     // 카테고리 필터링 (필라테스 탭 클릭)
     fireEvent.click(screen.getByRole("button", { name: "필라테스" }));
-    expect(screen.queryByText("아침 PT 클래스")).not.toBeInTheDocument();
-    expect(screen.getByText("저녁 필라테스")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("아침 PT 클래스")).not.toBeInTheDocument();
+      expect(screen.getByText("저녁 필라테스")).toBeInTheDocument();
+    });
 
     const searchInput = screen.getByPlaceholderText("어떤 운동을 찾으시나요?");
     fireEvent.change(searchInput, { target: { value: "없는 클래스" } });
 
-    expect(screen.getByText("검색 결과가 없습니다")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("검색 결과가 없습니다")).toBeInTheDocument();
+    });
   });
 
   it("마켓 상세에서 위치/후기 탭 상태를 렌더링한다", async () => {
@@ -268,11 +276,10 @@ describe("예약 외 마켓플레이스/트레이너 QA", () => {
   it("클래스 등록 화면은 매장 확인 후 사진 선택 단계로 진입한다", async () => {
     renderWithRouter(<RegisterTicket />, "/trainer/register-ticket");
 
-    await waitFor(() => {
-      expect(mockGetTrainerStore).toHaveBeenCalled();
-    });
+    expect(
+      await screen.findByText("대표 사진을 선택하세요")
+    ).toBeInTheDocument();
 
-    expect(screen.getByText("대표 사진을 선택하세요")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다음으로" })).toBeDisabled();
   });
 

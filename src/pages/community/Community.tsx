@@ -3,8 +3,10 @@ import { CommunityHeader, CreatePostButton } from "@components/community";
 
 const Community = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-[#F9FAFB]">
+    <div className="flex flex-col min-h-dvh bg-[#F9FAFB]">
       <CommunityHeader />
+
+      <div className="h-[160px] w-full max-w-[450px]" />
 
       <main className="flex-1">
         <Outlet />

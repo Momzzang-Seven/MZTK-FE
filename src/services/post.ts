@@ -149,6 +149,26 @@ export const postService = {
   },
 
   /**
+   * 답변 좋아요
+   */
+  async likeAnswer(postId: number, answerId: number): Promise<void> {
+    const response = await api.post(
+      `/questions/${postId}/answers/${answerId}/likes`
+    );
+    return response.data;
+  },
+
+  /**
+   * 답변 좋아요 취소
+   */
+  async unlikeAnswer(postId: number, answerId: number): Promise<void> {
+    const response = await api.delete(
+      `/questions/${postId}/answers/${answerId}/likes`
+    );
+    return response.data;
+  },
+
+  /**
    * 자유, 질문 생성 복구
    */
   async recoverCreatePost(postId: number): Promise<CreateQnAPostResponse> {

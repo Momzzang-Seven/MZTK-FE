@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Callback from "@pages/Callback";
-import { PostLogin } from "@services/auth";
+import { PostLogin, PostStepUp, PostWithdraw } from "@services/auth";
 
 vi.mock("axios", async () => {
   const actual = await vi.importActual("axios");
@@ -25,6 +25,7 @@ vi.mock("@services/auth", () => ({
   PostReissueToken: vi.fn(),
   PostReactivate: vi.fn(),
   PostStepUp: vi.fn(),
+  PostWithdraw: vi.fn(),
 }));
 
 const mockNavigate = vi.fn();
@@ -41,9 +42,39 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(PostLogin).mockReset();
+    vi.mocked(PostStepUp).mockReset();
+    vi.mocked(PostWithdraw).mockReset();
+    localStorage.clear();
   });
 
-  it("기존 유저가 로그인하면 메인(/) 페이지로 이동한다", async () => {
+  it("소셜 탈퇴 콜백이면 비밀번호 없이 step-up 후 회원탈퇴를 실행한다", async () => {
+    vi.mocked(PostStepUp).mockResolvedValueOnce({
+      accessToken: "step-up-token",
+    });
+    vi.mocked(PostWithdraw).mockResolvedValueOnce();
+
+    render(
+      <MemoryRouter
+        initialEntries={["/callback?code=withdraw-code&state=withdraw:kakao"]}
+      >
+        <Routes>
+          <Route path="/callback" element={<Callback />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(PostStepUp).toHaveBeenCalledWith({
+        authorizationCode: "withdraw-code",
+        redirectUri: expect.stringContaining("/callback"),
+      });
+    });
+    expect(PostLogin).not.toHaveBeenCalled();
+    expect(PostWithdraw).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
+  });
+
+  it("기존 유저가 로그인하면 지갑 복구(/restore-wallet) 페이지로 이동한다", async () => {
     vi.mocked(PostLogin).mockResolvedValueOnce({
       userInfo: {
         userId: 1,
@@ -76,7 +107,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     });
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      expect(mockNavigate).toHaveBeenCalledWith("/restore-wallet");
     });
   });
 
@@ -109,7 +140,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     });
   });
 
-  it("기존 일반 유저가 성공적으로 로그인하면 /register로 이동한다", async () => {
+  it("기존 일반 유저가 성공적으로 로그인하면 지갑 복구(/restore-wallet)으로 이동한다", async () => {
     vi.mocked(PostLogin).mockResolvedValueOnce({
       userInfo: {
         userId: 1,
@@ -134,11 +165,44 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      expect(mockNavigate).toHaveBeenCalledWith("/restore-wallet");
     });
   });
 
-  it("기존 트레이너가 성공적으로 로그인하면 /trainer로 이동한다", async () => {
+  it("백엔드 지갑과 다른 로컬 암호화 지갑이 있으면 stale 지갑을 지운다", async () => {
+    localStorage.setItem("wallet_address", "0xold");
+    localStorage.setItem("encrypted_wallet", "old-encrypted-wallet");
+    vi.mocked(PostLogin).mockResolvedValueOnce({
+      userInfo: {
+        userId: 1,
+        nickname: "테스트",
+        email: "test@example.com",
+        profileImage: "",
+        role: "USER",
+        walletAddress: "0xnew",
+      },
+      accessToken: "mock-token",
+      grantType: "Bearer",
+      expiresIn: 3600,
+      isNewUser: false,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/callback?code=test-code&state=kakao"]}>
+        <Routes>
+          <Route path="/callback" element={<Callback />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/restore-wallet");
+    });
+    expect(localStorage.getItem("wallet_address")).toBe("0xnew");
+    expect(localStorage.getItem("encrypted_wallet")).toBeNull();
+  });
+
+  it("기존 트레이너가 성공적으로 로그인하면 /restore-wallet로 이동한다", async () => {
     vi.mocked(PostLogin).mockResolvedValueOnce({
       userInfo: {
         userId: 2,
@@ -163,7 +227,7 @@ describe("[통합] Callback - 로그인 처리 흐름", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/trainer");
+      expect(mockNavigate).toHaveBeenCalledWith("/restore-wallet");
     });
   });
 

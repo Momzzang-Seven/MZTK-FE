@@ -175,7 +175,7 @@ const TrainerDashboard = () => {
   }, [isRestricted]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] pb-32">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-32">
       {/* ── Dashboard Content (Header Removed) ── */}
       <div className="flex-1 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Welcome Header */}

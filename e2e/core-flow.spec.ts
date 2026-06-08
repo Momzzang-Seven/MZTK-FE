@@ -7,7 +7,7 @@ import {
 
 const openLocationAuthFromHome = async (page: Page) => {
   await page.getByRole("button", { name: "운동 인증" }).click();
-  await page.getByRole("button", { name: "위치 인증" }).click();
+  await page.getByRole("button", { name: /위치\s*인증/ }).click();
 };
 
 test.describe("핵심 비즈니스 흐름 (로그인 → 운동 인증 → 보상 수령)", () => {

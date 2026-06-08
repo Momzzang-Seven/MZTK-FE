@@ -1,0 +1,20 @@
+{
+  "name": "MZTK",
+  "short_name": "MZTK",
+  "description": "운동 인증과 커뮤니티 활동 기반 토큰 보상 플랫폼",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fdfdfd",
+  "theme_color": "#fab12f",
+  "categories": ["fitness", "health", "social"],
+  "icons": [
+    {
+      "src": "/icon/weight.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

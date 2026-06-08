@@ -1,16 +1,18 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { EXERCISE_CATEGORIES } from "@constant";
+import { EXERCISE_CATEGORIES, getKoreanErrorMessageFromError } from "@constant";
 import {
   getMarketplaceClassDetail,
   getTrainerStore,
+  imageService,
   registerTrainerClass,
   updateTrainerClass,
   type MarketplaceClassCategory,
   type MarketplaceDayOfWeek,
   type UpdateTrainerClassTimePayload,
 } from "@services";
+import { containsUnsafeMarkup, parsePositiveIntegerInput } from "@utils";
 
 const IMAGE_BASE_URL =
   (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
@@ -70,11 +72,6 @@ const createEmptyOperatingTimes = () =>
     일: [],
   }) as Record<string, string[]>;
 
-const toPositiveInt = (value: string | number) => {
-  const parsed = Number.parseInt(String(value).replace(/[^\d]/g, ""), 10);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
 const toApiCategory = (category: string): MarketplaceClassCategory => {
   // category is already an API key (e.g. "PT") — use CATEGORY_MAP for label fallback
   if (category in CATEGORY_MAP) return CATEGORY_MAP[category];
@@ -92,6 +89,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingSlotIds, setExistingSlotIds] = useState<
     Record<string, number>
   >({});
@@ -280,6 +278,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       return;
     }
 
+    setImageFiles((prev) => [...prev, ...files]);
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -287,12 +286,18 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       };
       reader.readAsDataURL(file);
     });
+    e.target.value = "";
   };
 
   const removeImage = (indexToRemove: number) => {
     setImagePreviews((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
     );
+    if (mode === "create") {
+      setImageFiles((prev) =>
+        prev.filter((_, index) => index !== indexToRemove)
+      );
+    }
   };
 
   const triggerFileInput = () => {
@@ -313,9 +318,29 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       return;
     }
 
-    const capacity = toPositiveInt(formData.capacity);
-    const priceAmount = toPositiveInt(formData.price);
-    const durationMinutes = toPositiveInt(formData.duration);
+    const capacity = parsePositiveIntegerInput(formData.capacity);
+    const priceAmount = parsePositiveIntegerInput(formData.price);
+    const durationMinutes = parsePositiveIntegerInput(formData.duration);
+
+    if (!capacity || !priceAmount || !durationMinutes) {
+      window.alert("가격, 정원, 수업 시간은 1 이상의 정수로 입력해 주세요.");
+      return;
+    }
+
+    const textFields = [
+      formData.title,
+      formData.description,
+      formData.supplies,
+      ...formData.tags,
+      ...formData.features,
+    ];
+    if (textFields.some((value) => containsUnsafeMarkup(value))) {
+      window.alert(
+        "클래스 상세 정보에는 HTML 또는 스크립트 형식의 내용을 입력할 수 없습니다."
+      );
+      return;
+    }
+
     const classTimes: UpdateTrainerClassTimePayload[] =
       formData.operatingDays.flatMap((day) =>
         formData.operatingTimes[day].map((time) => ({
@@ -328,6 +353,10 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
 
     try {
       setIsSubmitting(true);
+      const imageIds =
+        mode === "create"
+          ? await imageService.uploadMarketplaceClassImages(imageFiles)
+          : undefined;
 
       if (mode === "edit") {
         const classId = Number(id);
@@ -342,6 +371,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
             .map((feature) => feature.trim())
             .filter(Boolean),
           personalItems: formData.supplies.trim() || null,
+          imageIds,
           classTimes,
         });
       } else {
@@ -356,6 +386,7 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
             .map((feature) => feature.trim())
             .filter(Boolean),
           personalItems: formData.supplies.trim() || null,
+          imageIds,
           classTimes,
         });
       }
@@ -363,9 +394,10 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
       setIsSuccessModalOpen(true);
     } catch (error) {
       console.error("Failed to submit ticket form", error);
-      const message = axios.isAxiosError(error)
-        ? (error.response?.data?.message ?? error.message)
-        : "클래스 저장에 실패했습니다. 입력값을 다시 확인해 주세요.";
+      const message = getKoreanErrorMessageFromError(
+        error,
+        "클래스 저장에 실패했습니다. 입력값을 다시 확인해 주세요."
+      );
       window.alert(message);
     } finally {
       setIsSubmitting(false);
@@ -376,10 +408,10 @@ export const useTicketForm = (mode: "create" | "edit" = "create") => {
     isLoading ||
     isSubmitting ||
     !formData.title ||
-    !formData.price ||
-    !formData.capacity ||
+    !parsePositiveIntegerInput(formData.price) ||
+    !parsePositiveIntegerInput(formData.capacity) ||
     !formData.description ||
-    !formData.duration ||
+    !parsePositiveIntegerInput(formData.duration) ||
     formData.operatingDays.length === 0;
 
   return {

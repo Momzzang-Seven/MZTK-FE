@@ -6,7 +6,10 @@ import {
   fetchPostsList,
   fetchCommentsList,
   banAdminPost,
+  unblockAdminPost,
   banAdminComment,
+  unblockAdminComment,
+  postService,
   fetchAdminAccounts,
   createAdminAccount,
   resetAdminPassword,
@@ -15,6 +18,10 @@ import {
   fetchQnASettlementReview,
   processQnARefund,
   processQnASettle,
+  fetchMarketplaceRefundReview,
+  fetchMarketplaceSettlementReview,
+  processMarketplaceRefund,
+  processMarketplaceSettle,
   provisionTreasuryKey,
   disableTreasuryKey,
   archiveTreasuryKey,
@@ -24,7 +31,7 @@ import {
 } from "@services";
 import type {
   AdminAccountDto,
-  CreateAdminAccountRequest,
+  CreateAdminAccountResponse,
   QnARefundReviewResponse,
   QnASettlementReviewResponse,
   Web3ActionResponse,
@@ -33,6 +40,14 @@ import type {
   BanRequest,
   AdminPostQuery,
   ChangeAdminPasswordRequest,
+  MarkTransactionSucceededRequest,
+  MarkTransactionSucceededResponse,
+  ResetAdminPasswordResponse,
+  AdminUserQuery,
+  MarketplaceAdminEscrowReviewResponse,
+  MarketplaceAdminExecutionResponse,
+  MarketplaceAdminRefundRequest,
+  MarketplaceAdminSettlementRequest,
 } from "@types";
 
 export interface AdminUser {
@@ -40,7 +55,7 @@ export interface AdminUser {
   nickname: string;
   email: string;
   joinDate: string; // YYYY.MM.DD
-  status: "ACTIVE" | "BLOCKED" | "DELETED";
+  status: "ACTIVE" | "BLOCKED" | "DELETED" | "UNVERIFIED";
   postCount: number;
   commentCount: number;
   profileColor: string; // Hex color for avatar background
@@ -54,6 +69,20 @@ export interface AdminComment {
   date: string; // YYYY-MM-DD HH:mm
   profileColor: string;
   isBanned: boolean;
+  parentId?: number | null;
+  answerId?: number | null;
+  targetType?: "POST" | "ANSWER";
+}
+
+export interface AdminAnswer {
+  id: number;
+  author: string;
+  content: string;
+  date: string; // YYYY-MM-DD HH:mm
+  profileColor: string;
+  isAccepted: boolean;
+  commentCount: number;
+  likeCount: number;
 }
 
 export interface AdminPost {
@@ -64,10 +93,15 @@ export interface AdminPost {
   title: string;
   content: string;
   comments: AdminComment[];
+  answers?: AdminAnswer[];
   profileColor: string;
   isBanned: boolean;
+  publicationStatus?: "PENDING" | "VISIBLE" | "FAILED";
+  moderationStatus?: "NORMAL" | "BLOCKED";
+  publiclyVisible?: boolean;
   likeCount: number;
   commentCount: number;
+  answerCount?: number;
 }
 
 export interface AdminInquiry {
@@ -94,6 +128,9 @@ interface AdminState {
   // User Management Stats
   totalUsers: number;
   blockedUsers: number;
+  userPage: number;
+  userTotalPages: number;
+  userPageSize: number;
 
   // Post Management State
   posts: AdminPost[];
@@ -113,7 +150,8 @@ interface AdminState {
   isFetchingPosts: boolean;
 
   // User Management Actions
-  fetchUsers: () => Promise<void>;
+  fetchUsers: (page?: number) => Promise<void>;
+  setUserPage: (page: number) => Promise<void>;
   setStatusFilter: (status: "ALL" | "ACTIVE" | "BLOCKED") => void;
   setRoleFilter: (role: "ALL" | "MEMBER" | "TRAINER") => void;
   searchUsers: (query: string) => void;
@@ -147,11 +185,14 @@ interface AdminState {
   // Admin Account State & Actions
   adminAccounts: AdminAccountDto[];
   fetchAccounts: () => Promise<void>;
-  addAdminAccount: (data: CreateAdminAccountRequest) => Promise<void>;
-  resetPassword: (userId: number) => Promise<void>;
+  addAdminAccount: () => Promise<CreateAdminAccountResponse>;
+  resetPassword: (userId: number) => Promise<ResetAdminPasswordResponse>;
 
   // Web3/Escrow Actions
-  confirmTransaction: (txId: number) => Promise<void>;
+  confirmTransaction: (
+    txId: number,
+    data: MarkTransactionSucceededRequest
+  ) => Promise<MarkTransactionSucceededResponse>;
   getRefundReview: (postId: number) => Promise<QnARefundReviewResponse>;
   getSettlementReview: (
     postId: number,
@@ -162,6 +203,20 @@ interface AdminState {
     postId: number,
     answerId: number
   ) => Promise<Web3ActionResponse>;
+  getMarketplaceRefundReview: (
+    reservationId: number
+  ) => Promise<MarketplaceAdminEscrowReviewResponse>;
+  getMarketplaceSettlementReview: (
+    reservationId: number
+  ) => Promise<MarketplaceAdminEscrowReviewResponse>;
+  executeMarketplaceRefund: (
+    reservationId: number,
+    data: MarketplaceAdminRefundRequest
+  ) => Promise<MarketplaceAdminExecutionResponse>;
+  executeMarketplaceSettle: (
+    reservationId: number,
+    data: MarketplaceAdminSettlementRequest
+  ) => Promise<MarketplaceAdminExecutionResponse>;
 
   // Treasury & Recovery
   treasuryKeys: TreasuryKeyDto[];
@@ -171,36 +226,7 @@ interface AdminState {
   archiveKey: (alias: string) => Promise<void>;
   reseedSystem: () => Promise<void>;
   updateAdminPassword: (data: ChangeAdminPasswordRequest) => Promise<void>;
-
-  // Global Chain State
-  selectedChainId: string;
-  setSelectedChainId: (chainId: string) => void;
 }
-
-// Helper to filter users
-const getFilteredUsers = (
-  users: AdminUser[],
-  status: string,
-  role: string,
-  query: string
-) => {
-  let filtered = users;
-  if (status !== "ALL") {
-    filtered = filtered.filter((user) => user.status === status);
-  }
-  if (role !== "ALL") {
-    filtered = filtered.filter((user) => user.role === role);
-  }
-  const trimmedQuery = query.trim().toLowerCase();
-  if (trimmedQuery) {
-    filtered = filtered.filter(
-      (user) =>
-        user.nickname.toLowerCase().includes(trimmedQuery) ||
-        user.email.toLowerCase().includes(trimmedQuery)
-    );
-  }
-  return filtered;
-};
 
 // Helper to filter inquiries
 const getFilteredInquiries = (
@@ -236,6 +262,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   isLoading: false,
   totalUsers: 0,
   blockedUsers: 0,
+  userPage: 0,
+  userTotalPages: 1,
+  userPageSize: 20,
 
   // Admin Account State
   adminAccounts: [],
@@ -256,10 +285,28 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   inquiryFilter: "ALL",
 
   // User Actions
-  fetchUsers: async () => {
+  fetchUsers: async (page = get().userPage) => {
     set({ isLoading: true });
     try {
-      const response = await fetchUsersList({ size: 100 });
+      const { searchQuery, statusFilter, roleFilter, userPageSize } = get();
+      const params: AdminUserQuery = {
+        page,
+        size: userPageSize,
+        sort: "joinedAt",
+      };
+
+      const trimmedSearch = searchQuery.trim();
+      if (trimmedSearch) {
+        params.search = trimmedSearch;
+      }
+      if (statusFilter !== "ALL") {
+        params.status = statusFilter;
+      }
+      if (roleFilter !== "ALL") {
+        params.role = roleFilter === "MEMBER" ? "USER" : "TRAINER";
+      }
+
+      const response = await fetchUsersList(params);
       const users: AdminUser[] = response.content.map((u) => ({
         id: u.userId,
         nickname: u.nickname,
@@ -279,21 +326,20 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           ADMIN_TEXT.COLORS.AVATARS[
             u.userId % ADMIN_TEXT.COLORS.AVATARS.length
           ],
-        role: u.role === "USER" ? "MEMBER" : "TRAINER",
+        role: u.role === "TRAINER" ? "TRAINER" : "MEMBER",
       }));
-
-      const { searchQuery, statusFilter, roleFilter } = get();
 
       set({
         users,
-        filteredUsers: getFilteredUsers(
-          users,
-          statusFilter,
-          roleFilter,
-          searchQuery
-        ),
+        filteredUsers: users,
         totalUsers: response.totalElements,
-        blockedUsers: users.filter((u) => u.status === "BLOCKED").length,
+        blockedUsers:
+          statusFilter === "BLOCKED"
+            ? response.totalElements
+            : users.filter((u) => u.status === "BLOCKED").length,
+        userPage: response.number,
+        userTotalPages: response.totalPages,
+        userPageSize: response.size,
         isLoading: false,
       });
     } catch (error) {
@@ -302,28 +348,28 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }
   },
 
+  setUserPage: async (page: number) => {
+    const { userTotalPages } = get();
+    const nextPage = Math.max(
+      0,
+      Math.min(page, Math.max(userTotalPages - 1, 0))
+    );
+    await get().fetchUsers(nextPage);
+  },
+
   setStatusFilter: (status: "ALL" | "ACTIVE" | "BLOCKED") => {
-    set({ statusFilter: status });
-    const { users, searchQuery, roleFilter } = get();
-    set({
-      filteredUsers: getFilteredUsers(users, status, roleFilter, searchQuery),
-    });
+    set({ statusFilter: status, userPage: 0 });
+    void get().fetchUsers(0);
   },
 
   setRoleFilter: (role: "ALL" | "MEMBER" | "TRAINER") => {
-    set({ roleFilter: role });
-    const { users, searchQuery, statusFilter } = get();
-    set({
-      filteredUsers: getFilteredUsers(users, statusFilter, role, searchQuery),
-    });
+    set({ roleFilter: role, userPage: 0 });
+    void get().fetchUsers(0);
   },
 
   searchUsers: (query: string) => {
-    set({ searchQuery: query });
-    const { users, statusFilter, roleFilter } = get();
-    set({
-      filteredUsers: getFilteredUsers(users, statusFilter, roleFilter, query),
-    });
+    set({ searchQuery: query, userPage: 0 });
+    void get().fetchUsers(0);
   },
 
   banUser: async (userId: number) => {
@@ -332,21 +378,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         status: "BLOCKED",
         reason: ADMIN_TEXT.POST.MSG_BAN_REASON,
       });
-      const { users, searchQuery, statusFilter, roleFilter } = get();
-      const updatedUsers = users.map((user) =>
-        user.id === userId ? { ...user, status: "BLOCKED" as const } : user
-      );
-
-      set({
-        users: updatedUsers,
-        filteredUsers: getFilteredUsers(
-          updatedUsers,
-          statusFilter,
-          roleFilter,
-          searchQuery
-        ),
-        blockedUsers: updatedUsers.filter((u) => u.status === "BLOCKED").length,
-      });
+      await get().fetchUsers(get().userPage);
     } catch (error) {
       console.error("Failed to ban user:", error);
       throw error;
@@ -359,21 +391,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         status: "ACTIVE",
         reason: ADMIN_TEXT.POST.MSG_UNBAN_REASON,
       });
-      const { users, searchQuery, statusFilter, roleFilter } = get();
-      const updatedUsers = users.map((user) =>
-        user.id === userId ? { ...user, status: "ACTIVE" as const } : user
-      );
-
-      set({
-        users: updatedUsers,
-        filteredUsers: getFilteredUsers(
-          updatedUsers,
-          statusFilter,
-          roleFilter,
-          searchQuery
-        ),
-        blockedUsers: updatedUsers.filter((u) => u.status === "BLOCKED").length,
-      });
+      await get().fetchUsers(get().userPage);
     } catch (error) {
       console.error("Failed to unban user:", error);
       throw error;
@@ -397,8 +415,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     try {
       const nextPage = reset ? 0 : page - 1;
       const params: AdminPostQuery = { size: 10, page: nextPage };
-      if (postStatusFilter !== "ALL") {
-        params.status = postStatusFilter === "ACTIVE" ? "OPEN" : "BANNED";
+      if (postStatusFilter === "ACTIVE") {
+        params.publicationStatus = "VISIBLE";
+        params.moderationStatus = "NORMAL";
+      } else if (postStatusFilter === "BANNED") {
+        params.moderationStatus = "BLOCKED";
       }
       if (searchPostQuery) params.search = searchPostQuery;
 
@@ -425,8 +446,41 @@ export const useAdminStore = create<AdminState>((set, get) => ({
                   c.writerId % ADMIN_TEXT.COLORS.AVATARS.length
                 ],
               isBanned: c.isDeleted,
+              parentId: c.parentId,
+              answerId: c.answerId ?? null,
+              targetType: c.targetType ?? "POST",
             }));
           }
+          const answers =
+            p.type === "QUESTION" && (p.answerCount ?? 0) > 0
+              ? await postService
+                  .getAnswers(p.postId)
+                  .then((answerRes) =>
+                    answerRes.map((answer) => ({
+                      id: answer.answerId,
+                      author: answer.nickname,
+                      content: answer.content,
+                      date: new Date(answer.createdAt).toLocaleString("ko-KR", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
+                      profileColor:
+                        ADMIN_TEXT.COLORS.AVATARS[
+                          answer.userId % ADMIN_TEXT.COLORS.AVATARS.length
+                        ],
+                      isAccepted: answer.isAccepted,
+                      commentCount: answer.commentCount,
+                      likeCount: answer.likeCount,
+                    }))
+                  )
+                  .catch((error) => {
+                    console.error("Failed to fetch answers:", error);
+                    return [];
+                  })
+              : [];
           return {
             id: p.postId,
             author: p.writerNickname,
@@ -444,13 +498,20 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             title: p.title,
             content: p.contentPreview,
             comments: comments,
+            answers,
             profileColor:
               ADMIN_TEXT.COLORS.AVATARS[
                 p.writerId % ADMIN_TEXT.COLORS.AVATARS.length
               ],
-            isBanned: p.status === "BANNED",
+            isBanned: p.moderationStatus === "BLOCKED",
+            publicationStatus: p.publicationStatus,
+            moderationStatus: p.moderationStatus,
+            publiclyVisible:
+              p.publicationStatus === "VISIBLE" &&
+              p.moderationStatus === "NORMAL",
             likeCount: 0,
             commentCount: p.commentCount,
+            answerCount: p.answerCount,
           };
         })
       );
@@ -505,11 +566,28 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   unbanPost: async (postId: number) => {
-    const { posts } = get();
-    const updatedPosts = posts.map((post) =>
-      post.id === postId ? { ...post, isBanned: false } : post
-    );
-    set({ posts: updatedPosts, filteredPosts: updatedPosts });
+    try {
+      const result = await unblockAdminPost(postId, {
+        reasonCode: "OTHER",
+        reasonDetail: "Admin restored post",
+      });
+      const { posts } = get();
+      const updatedPosts = posts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              isBanned: result.moderationStatus === "BLOCKED",
+              publicationStatus: result.publicationStatus,
+              moderationStatus: result.moderationStatus,
+              publiclyVisible: result.publiclyVisible,
+            }
+          : post
+      );
+      set({ posts: updatedPosts, filteredPosts: updatedPosts });
+    } catch (error) {
+      console.error("Failed to unblock post:", error);
+      throw error;
+    }
   },
 
   deleteComment: async (
@@ -543,19 +621,28 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   restoreComment: async (postId: number, commentId: number) => {
-    const { posts } = get();
-    const updatedPosts = posts.map((post) => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          comments: post.comments.map((c) =>
-            c.id === commentId ? { ...c, isBanned: false } : c
-          ),
-        };
-      }
-      return post;
-    });
-    set({ posts: updatedPosts, filteredPosts: updatedPosts });
+    try {
+      await unblockAdminComment(commentId, {
+        reasonCode: "OTHER",
+        reasonDetail: "Admin restored comment",
+      });
+      const { posts } = get();
+      const updatedPosts = posts.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: post.comments.map((c) =>
+              c.id === commentId ? { ...c, isBanned: false } : c
+            ),
+          };
+        }
+        return post;
+      });
+      set({ posts: updatedPosts, filteredPosts: updatedPosts });
+    } catch (error) {
+      console.error("Failed to unblock comment:", error);
+      throw error;
+    }
   },
 
   // Inquiry Actions
@@ -636,10 +723,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }
   },
 
-  addAdminAccount: async (data: CreateAdminAccountRequest) => {
+  addAdminAccount: async () => {
     try {
-      await createAdminAccount(data);
+      const created = await createAdminAccount();
       await get().fetchAccounts();
+      return created;
     } catch (error) {
       console.error("Failed to create admin account:", error);
       throw error;
@@ -648,7 +736,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   resetPassword: async (userId: number) => {
     try {
-      await resetAdminPassword(userId);
+      return await resetAdminPassword(userId);
     } catch (error) {
       console.error("Failed to reset password:", error);
       throw error;
@@ -656,9 +744,12 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   // Web3/Escrow Actions
-  confirmTransaction: async (txId: number) => {
+  confirmTransaction: async (
+    txId: number,
+    data: MarkTransactionSucceededRequest
+  ) => {
     try {
-      await markTransactionSucceeded(txId);
+      return await markTransactionSucceeded(txId, data);
     } catch (error) {
       console.error("Failed to confirm transaction:", error);
       throw error;
@@ -679,6 +770,28 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   executeSettle: async (postId: number, answerId: number) => {
     return await processQnASettle(postId, answerId);
+  },
+
+  getMarketplaceRefundReview: async (reservationId: number) => {
+    return await fetchMarketplaceRefundReview(reservationId);
+  },
+
+  getMarketplaceSettlementReview: async (reservationId: number) => {
+    return await fetchMarketplaceSettlementReview(reservationId);
+  },
+
+  executeMarketplaceRefund: async (
+    reservationId: number,
+    data: MarketplaceAdminRefundRequest
+  ) => {
+    return await processMarketplaceRefund(reservationId, data);
+  },
+
+  executeMarketplaceSettle: async (
+    reservationId: number,
+    data: MarketplaceAdminSettlementRequest
+  ) => {
+    return await processMarketplaceSettle(reservationId, data);
   },
 
   // Treasury & Recovery
@@ -717,8 +830,4 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   updateAdminPassword: async (data: ChangeAdminPasswordRequest) => {
     await changeAdminPassword(data);
   },
-
-  // Global Chain Implementation
-  selectedChainId: import.meta.env.VITE_CHAIN_ID || "11155420",
-  setSelectedChainId: (chainId: string) => set({ selectedChainId: chainId }),
 }));

@@ -9,8 +9,29 @@ import { LocationLoadingOverlay } from "@components/location/LocationLoadingOver
 
 import { useNavigate } from "react-router-dom";
 import { getDistanceFromLatLonInMeters } from "@utils/geo";
+import { getKoreanErrorMessageFromError } from "@constant";
 import { LOCATION_CONSTANTS, VERIFY_TEXT } from "@constant/location";
-import { ChevronLeft, MapPin, Navigation, Info, Loader2 } from "lucide-react";
+import { ChevronLeft, MapPin, Info, Loader2 } from "lucide-react";
+import type { VerifyLocationResponse } from "@types";
+
+const getVerificationFailMessage = (result: VerifyLocationResponse) => {
+  if (!result.isVerified) {
+    const distanceText = Number.isFinite(result.distance)
+      ? ` 현재 거리: ${Math.round(result.distance)}m.`
+      : "";
+
+    return `${VERIFY_TEXT.MODAL_DISTANCE_FAIL_DESC}${distanceText}`;
+  }
+
+  return result.xpGrantMessage || VERIFY_TEXT.MODAL_XP_FAIL_DESC;
+};
+
+const getLocationRequestErrorMessage = (error: unknown) => {
+  return getKoreanErrorMessageFromError(
+    error,
+    "서버 통신 중 오류가 발생했습니다."
+  );
+};
 
 const Verify = () => {
   const MAP_KEY = import.meta.env.VITE_GOOGLE_MAP_API;
@@ -25,12 +46,17 @@ const Verify = () => {
   const [distance, setDistance] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(true);
+  const [successXp, setSuccessXp] = useState(100);
 
   const { coor, setCoor } = useLocationStore();
   const { gymLocation, completeExercise } = useUserStore();
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setErrorModalOpen(true);
+      return;
+    }
+
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setCoor({ lat: pos.coords.latitude, lng: pos.coords.longitude });
@@ -63,7 +89,17 @@ const Verify = () => {
   }, [coor, gymLocation]);
 
   const handleVerify = async () => {
-    if (!gymLocation?.locationId || !coor) return;
+    if (!gymLocation?.locationId) {
+      setRegisterModalOpen(true);
+      return;
+    }
+
+    if (!coor) {
+      setFailMsg(VERIFY_TEXT.WARNING_WAIT_CURRENT_LOCATION);
+      setFailModalOpen(true);
+      return;
+    }
+
     if (
       distance !== null &&
       distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS
@@ -76,17 +112,20 @@ const Verify = () => {
           currentLatitude: coor.lat,
           currentLongitude: coor.lng,
         });
-        if (result.isVerified) {
-          completeExercise(result.grantedXp || 100);
+
+        if (result.isVerified && result.xpGranted !== false) {
+          const grantedXp = result.grantedXp || 100;
+          completeExercise(grantedXp);
+          setSuccessXp(grantedXp);
           setSuccessModalOpen(true);
           setTimeout(() => navigate("/"), 2500);
         } else {
-          setFailMsg(result.xpGrantMessage || VERIFY_TEXT.MODAL_FAIL_TITLE);
+          setFailMsg(getVerificationFailMessage(result));
           setFailModalOpen(true);
         }
       } catch (e: unknown) {
         console.error("위치 인증 실패:", e);
-        setFailMsg("서버 통신 중 오류가 발생했습니다.");
+        setFailMsg(getLocationRequestErrorMessage(e));
         setFailModalOpen(true);
       } finally {
         setIsVerifying(false);
@@ -101,7 +140,7 @@ const Verify = () => {
     distance !== null && distance <= LOCATION_CONSTANTS.VERIFICATION_RADIUS;
 
   return (
-    <div className="flex flex-col h-screen bg-[#FDFDFD] relative overflow-hidden font-pretendard">
+    <div className="flex flex-col h-dvh bg-[#FDFDFD] relative overflow-hidden font-pretendard">
       {/* ── Loading State ── */}
       {isMapLoading && (
         <LocationLoadingOverlay title={VERIFY_TEXT.LOADING_TITLE} />
@@ -136,22 +175,6 @@ const Verify = () => {
           mapId={MAP_ID}
           onMapLoad={() => setTimeout(() => setIsMapLoading(false), 1000)}
         />
-
-        {/* Distance Indicator floating on map */}
-        {!isMapLoading && (
-          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 animate-in fade-in zoom-in-95 duration-700">
-            <div
-              className={`px-5 py-2 rounded-full backdrop-blur-md shadow-xl border text-[13px] font-black flex items-center gap-2 transition-all duration-500 ${
-                isNear
-                  ? "bg-green-500 border-green-400 text-white"
-                  : "bg-white/80 border-white text-gray-500"
-              }`}
-            >
-              <Navigation size={14} className={isNear ? "animate-pulse" : ""} />
-              {distance !== null ? `${distance}m` : "측정 중..."}
-            </div>
-          </div>
-        )}
 
         <VerifyStatusOverlay
           gymLocation={gymLocation}
@@ -246,7 +269,7 @@ const Verify = () => {
             <AuthSuccessOverlay
               title={VERIFY_TEXT.SUCCESS_TITLE}
               subTitle="지정한 장소에서 운동 인증을 성공했습니다"
-              rewardXp={100}
+              rewardXp={successXp}
               onClose={() => navigate("/")}
             />
           )}

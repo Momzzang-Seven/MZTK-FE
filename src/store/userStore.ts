@@ -1,8 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { verificationService } from "@services/verification";
+import {
+  getKoreanErrorMessage,
+  getKoreanErrorMessageFromError,
+} from "@constant";
 import { getWorkoutVerificationLatestErrorMessage } from "@utils/workoutVerificationMessages";
 import { getKstDateString } from "@utils/time";
+import {
+  clearLocalWalletStorage,
+  syncLocalWalletStorage,
+} from "@utils/walletStorage";
 
 export interface UserInfo {
   userId: number;
@@ -13,12 +21,13 @@ export interface UserInfo {
   walletAddress: string;
 }
 
-export type NetworkType = "OPT" | "BASE";
+export type AuthProvider = "LOCAL" | "KAKAO" | "GOOGLE";
 
 interface UserState {
   user: UserInfo | null;
   isAuthenticated: boolean;
   accessToken: string | null;
+  authProvider: AuthProvider | null;
 
   gymLocation: {
     locationId?: number;
@@ -30,8 +39,10 @@ interface UserState {
   level: number;
   xp: number;
   maxXp: number;
+  rewardMztkForNext: number | null;
   attendanceStreak: number;
   lastAttendanceDate: string | null;
+  lastAttendanceRewardedXp: number | null;
   lastExerciseDate: string | null;
   lastWorkoutRewardAppliedDate: string | null;
 
@@ -54,10 +65,9 @@ interface UserState {
     rewardedXp: number;
     streakDays: number;
   } | null;
-  selectedNetwork: NetworkType;
-
   setUser: (user: UserInfo) => void;
   setAccessToken: (token: string) => void;
+  setAuthProvider: (provider: AuthProvider | null) => void;
   updateRole: (role: string) => Promise<void>;
   setGymLocation: (
     location: {
@@ -79,6 +89,7 @@ interface UserState {
   setLevel: (level: number) => void;
   setXp: (xp: number) => void;
   setMaxXp: (maxXp: number) => void;
+  setRewardMztkForNext: (rewardMztkForNext: number | null) => void;
   checkAttendance: () => Promise<{
     success: boolean;
     message: string;
@@ -112,7 +123,6 @@ interface UserState {
   initLevel: () => Promise<void>;
   initLocation: () => Promise<void>;
   initWorkoutCompletion: () => Promise<void>;
-  setSelectedNetwork: (network: NetworkType) => void;
   reset: () => void;
 }
 
@@ -120,11 +130,14 @@ const initialState = {
   user: null,
   isAuthenticated: false,
   accessToken: null,
+  authProvider: null,
   level: 1,
   xp: 0,
   maxXp: 100,
+  rewardMztkForNext: null,
   attendanceStreak: 0,
   lastAttendanceDate: null,
+  lastAttendanceRewardedXp: null,
   lastExerciseDate: null,
   lastWorkoutRewardAppliedDate: null,
   gymLocation: null,
@@ -135,7 +148,6 @@ const initialState = {
   analysisType: null as "exercise" | "record" | null,
   analysisTargetTime: null as number | null,
   analysisStartedAt: null as number | null,
-  selectedNetwork: "OPT" as NetworkType,
 };
 
 let initWorkoutCompletionRequest: Promise<void> | null = null;
@@ -152,8 +164,12 @@ export const useUserStore = create<UserState>()(
 
       attendanceResult: null,
 
-      setUser: (user) => set({ user, isAuthenticated: true }),
+      setUser: (user) => {
+        syncLocalWalletStorage(user.walletAddress);
+        set({ user, isAuthenticated: true });
+      },
       setAccessToken: (token) => set({ accessToken: token }),
+      setAuthProvider: (provider) => set({ authProvider: provider }),
 
       updateRole: async (role) => {
         const { updateMyRole } = await import("@services/user");
@@ -164,10 +180,12 @@ export const useUserStore = create<UserState>()(
       },
 
       setGymLocation: (location) => set({ gymLocation: location }),
-      setWalletAddress: (address) =>
+      setWalletAddress: (address) => {
+        syncLocalWalletStorage(address);
         set((state) => ({
           user: state.user ? { ...state.user, walletAddress: address } : null,
-        })),
+        }));
+      },
 
       registerGymLocation: async (location) => {
         try {
@@ -187,17 +205,20 @@ export const useUserStore = create<UserState>()(
       },
 
       clearUser: () => {
-        localStorage.removeItem("wallet_address");
-        localStorage.removeItem("encrypted_wallet");
+        clearLocalWalletStorage();
 
         set({
           user: null,
           isAuthenticated: false,
           accessToken: null,
+          authProvider: null,
           level: 1,
           xp: 0,
+          maxXp: 100,
+          rewardMztkForNext: null,
           attendanceStreak: 0,
           lastAttendanceDate: null,
+          lastAttendanceRewardedXp: null,
           lastExerciseDate: null,
           lastWorkoutRewardAppliedDate: null,
           analysisStatus: "idle",
@@ -213,6 +234,7 @@ export const useUserStore = create<UserState>()(
       setLevel: (level) => set({ level }),
       setXp: (xp) => set({ xp }),
       setMaxXp: (maxXp) => set({ maxXp }),
+      setRewardMztkForNext: (rewardMztkForNext) => set({ rewardMztkForNext }),
 
       checkAttendance: async () => {
         const { lastAttendanceDate } = get();
@@ -238,6 +260,7 @@ export const useUserStore = create<UserState>()(
 
             set((state) => ({
               lastAttendanceDate: today,
+              lastAttendanceRewardedXp: result.grantedXp + result.bonusXp,
               attendanceStreak: result.streakDays,
               hasAttendedToday: true,
               weeklyAttendance: state.weeklyAttendance
@@ -267,17 +290,21 @@ export const useUserStore = create<UserState>()(
             };
           }
 
-          return { success: false, message: result.message, rewardedXp: 0 };
-        } catch (error: unknown) {
-          const err = error as {
-            response?: { data?: { message?: string } };
-            message?: string;
-          };
-          console.error("출석 API 호출 실패:", err);
-          set({ snackbar: { isOpen: true, message: "서버 통신 실패" } });
           return {
             success: false,
-            message: "서버 통신 실패",
+            message: getKoreanErrorMessage(null, result.message),
+            rewardedXp: 0,
+          };
+        } catch (error: unknown) {
+          const message = getKoreanErrorMessageFromError(
+            error,
+            "서버 통신에 실패했어요."
+          );
+          console.error("출석 API 호출 실패:", error);
+          set({ snackbar: { isOpen: true, message } });
+          return {
+            success: false,
+            message,
             rewardedXp: 0,
           };
         }
@@ -513,10 +540,12 @@ export const useUserStore = create<UserState>()(
           };
         } catch (error: unknown) {
           console.error("레벨업 API 호출 실패:", error);
-          const err = error as { response?: { data?: { message?: string } } };
           return {
             success: false,
-            message: err.response?.data?.message || "서버 통신에 실패했어요.",
+            message: getKoreanErrorMessageFromError(
+              error,
+              "서버 통신에 실패했어요."
+            ),
           };
         }
       },
@@ -528,14 +557,21 @@ export const useUserStore = create<UserState>()(
             attendanceService.getStatus(),
             attendanceService.getWeekly(),
           ]);
+          const today = getKstDateString();
 
           set((state) => ({
             attendanceStreak: statusRes.streakCount,
             hasAttendedToday: statusRes.hasAttendedToday,
             weeklyAttendance: { attendedCount: weeklyRes.attendedCount },
+            lastAttendanceRewardedXp:
+              statusRes.hasAttendedToday && state.lastAttendanceDate === today
+                ? state.lastAttendanceRewardedXp
+                : null,
             lastAttendanceDate: statusRes.hasAttendedToday
-              ? getKstDateString()
-              : state.lastAttendanceDate,
+              ? today
+              : state.lastAttendanceDate === today
+                ? null
+                : state.lastAttendanceDate,
           }));
         } catch (error) {
           console.error("출석 초기화 통신 실패:", error);
@@ -555,6 +591,7 @@ export const useUserStore = create<UserState>()(
               level: levelData.level,
               xp: levelData.availableXp,
               maxXp: levelData.requiredXpForNext,
+              rewardMztkForNext: levelData.rewardMztkForNext,
             });
           }
 
@@ -621,9 +658,6 @@ export const useUserStore = create<UserState>()(
 
         return initWorkoutCompletionRequest;
       },
-
-      setSelectedNetwork: (network: NetworkType) =>
-        set({ selectedNetwork: network }),
     }),
     {
       name: "user-storage",
@@ -631,10 +665,13 @@ export const useUserStore = create<UserState>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
         accessToken: state.accessToken,
+        authProvider: state.authProvider,
         level: state.level,
         xp: state.xp,
+        maxXp: state.maxXp,
         attendanceStreak: state.attendanceStreak,
         lastAttendanceDate: state.lastAttendanceDate,
+        lastAttendanceRewardedXp: state.lastAttendanceRewardedXp,
         lastExerciseDate: state.lastExerciseDate,
         lastWorkoutRewardAppliedDate: state.lastWorkoutRewardAppliedDate,
         gymLocation: state.gymLocation,
@@ -642,7 +679,6 @@ export const useUserStore = create<UserState>()(
         analysisType: state.analysisType,
         analysisTargetTime: state.analysisTargetTime,
         analysisStartedAt: state.analysisStartedAt,
-        selectedNetwork: state.selectedNetwork,
       }),
     }
   )

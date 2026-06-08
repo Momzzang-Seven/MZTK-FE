@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { CommonButton } from "@components/common";
 import {
   IntroTab,
@@ -7,11 +7,7 @@ import {
   ReviewTab,
 } from "@components/market/detail/MarketTabs";
 import { getMarketplaceClassDetail } from "@services";
-
-const IMAGE_BASE_URL =
-  (import.meta.env.VITE_IMAGE_BASE_URL as string | undefined) ||
-  "https://mztk-bucket.s3.ap-northeast-2.amazonaws.com/";
-const PLACEHOLDER_IMAGE = "/icon/gallery.svg";
+import { buildImageUrl, PLACEHOLDER_IMAGE_URL } from "@utils";
 
 const DAY_LABEL_MAP: Record<string, string> = {
   MONDAY: "월",
@@ -24,15 +20,7 @@ const DAY_LABEL_MAP: Record<string, string> = {
 };
 
 const buildMarketplaceImageUrl = (objectKey: string | null | undefined) => {
-  if (!objectKey) return PLACEHOLDER_IMAGE;
-  if (/^https?:\/\//.test(objectKey)) return objectKey;
-  const normalizedBase = IMAGE_BASE_URL.endsWith("/")
-    ? IMAGE_BASE_URL
-    : `${IMAGE_BASE_URL}/`;
-  const normalizedKey = objectKey.startsWith("/")
-    ? objectKey.slice(1)
-    : objectKey;
-  return `${normalizedBase}${normalizedKey}`;
+  return buildImageUrl(objectKey);
 };
 
 const formatCategory = (category: string) => {
@@ -61,6 +49,7 @@ const formatCategory = (category: string) => {
 const MarketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<"intro" | "location" | "review">(
     "intro"
   );
@@ -70,7 +59,6 @@ const MarketDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
-
   useEffect(() => {
     const classId = Number(id);
     if (!Number.isFinite(classId)) {
@@ -102,7 +90,7 @@ const MarketDetail = () => {
 
   const imageUrls = useMemo(() => {
     if (!data) return [];
-    const detailImages = data.images
+    const detailImages = [...data.images]
       .sort((a, b) => a.imgOrder - b.imgOrder)
       .map((image) => buildMarketplaceImageUrl(image.finalObjectKey));
     const thumbnail = buildMarketplaceImageUrl(data.thumbnailFinalObjectKey);
@@ -150,9 +138,29 @@ const MarketDetail = () => {
     setCurrentImgIdx(idx);
   };
 
+  const handleReservationClick = () => {
+    if (!data) return;
+    navigate(`/market/purchase/${data.classId}`);
+  };
+
+  const handleBackClick = () => {
+    const historyState = window.history.state as { idx?: number } | null;
+    const canGoBack =
+      location.key !== "default" &&
+      typeof historyState?.idx === "number" &&
+      historyState.idx > 0;
+
+    if (canGoBack) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/market", { replace: true });
+  };
+
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center gap-4">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
         <p className="text-[13px] font-black text-gray-300">
           클래스 상세 정보를 가져오는 중...
@@ -163,7 +171,7 @@ const MarketDetail = () => {
 
   if (loadError || !data || !tabData) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center p-10 gap-6">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center p-10 gap-6">
         <div className="w-16 h-16 rounded-[24px] bg-red-50 flex items-center justify-center">
           <svg
             width="28"
@@ -184,7 +192,7 @@ const MarketDetail = () => {
           {loadError || "클래스를 찾을 수 없습니다."}
         </p>
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBackClick}
           className="px-8 py-3 bg-gray-900 text-white font-black text-[13px] rounded-2xl"
         >
           뒤로 가기
@@ -194,7 +202,7 @@ const MarketDetail = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative pb-32">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative pb-32">
       {/* Immersive Image Banner */}
       <div className="relative w-full h-[380px] group">
         <div
@@ -206,6 +214,12 @@ const MarketDetail = () => {
               key={idx}
               src={img}
               alt={`${data.title}-${idx}`}
+              onError={(event) => {
+                if (event.currentTarget.dataset.fallbackApplied === "true")
+                  return;
+                event.currentTarget.dataset.fallbackApplied = "true";
+                event.currentTarget.src = PLACEHOLDER_IMAGE_URL;
+              }}
               className="w-full h-full object-cover flex-shrink-0 snap-center"
             />
           ))}
@@ -215,7 +229,8 @@ const MarketDetail = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBackClick}
+          aria-label="마켓으로 돌아가기"
           className="absolute top-12 left-5 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-all border border-white/30 z-30"
         >
           <svg
@@ -328,7 +343,7 @@ const MarketDetail = () => {
       </div>
 
       {/* Luxury Floating Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-4 pb-8 flex items-center justify-between border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))] flex items-center justify-between border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
             1-Class Pricing
@@ -345,7 +360,7 @@ const MarketDetail = () => {
         <div className="w-[180px]">
           <CommonButton
             label="지금 예약하기"
-            onClick={() => navigate(`/market/purchase/${data.classId}`)}
+            onClick={handleReservationClick}
             className="h-[60px] rounded-[22px] font-black text-[16px] shadow-xl shadow-main/20 active:scale-95 transition-all"
           />
         </div>

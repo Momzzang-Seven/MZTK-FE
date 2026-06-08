@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { MZTK_ABI } from "@abi";
-import { useUserStore } from "@store";
 import { getNetworkConfig } from "@utils";
 
 const ERC20_ABI = MZTK_ABI[0];
@@ -10,7 +9,6 @@ export const useTokenBalance = () => {
   const [balance, setBalance] = useState<string>("0");
   const [loading, setLoading] = useState(true);
 
-  const { selectedNetwork } = useUserStore();
   const { TOKEN_ADDRESS, RPC_URL } = getNetworkConfig();
   const USER_ADDRESS = localStorage.getItem("wallet_address");
 
@@ -50,7 +48,7 @@ export const useTokenBalance = () => {
     return () => {
       isMounted = false;
     };
-  }, [USER_ADDRESS, TOKEN_ADDRESS, RPC_URL, selectedNetwork]);
+  }, [USER_ADDRESS, TOKEN_ADDRESS, RPC_URL]);
 
   return { balance, loading, USER_ADDRESS };
 };

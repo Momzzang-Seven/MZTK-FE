@@ -23,7 +23,7 @@ const CommentInput = ({
   handleCommentSubmit,
 }: Props) => {
   const isActive = content.trim().length > 0;
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (parentNickname && inputRef.current) {
@@ -36,7 +36,9 @@ const CommentInput = ({
     setParentId(undefined);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     if (e.key === "Backspace" && content === "" && parentNickname) {
       e.preventDefault();
       handleRemoveReplyTarget();
@@ -45,7 +47,7 @@ const CommentInput = ({
 
   if (!isAnswerPost) {
     return (
-      <div className="z-[998] fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-[450px] px-6 animate-in slide-in-from-bottom-8 duration-700">
+      <div className="z-[998] fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-full max-w-[450px] px-6 animate-in slide-in-from-bottom-8 duration-700">
         <div className="bg-white/90 backdrop-blur-xl border border-white/50 shadow-[0_25px_60px_rgba(0,0,0,0.12)] rounded-[32px] p-2 flex flex-col gap-1 transition-all duration-300">
           {parentNickname && (
             <div className="flex items-center justify-between px-4 pt-2 animate-in fade-in slide-in-from-top-2">
@@ -69,7 +71,7 @@ const CommentInput = ({
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
               <input
-                ref={inputRef}
+                ref={inputRef as React.RefObject<HTMLInputElement>}
                 type="text"
                 placeholder={
                   parentNickname
@@ -77,8 +79,9 @@ const CommentInput = ({
                     : "댓글을 입력해주세요"
                 }
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => setContent(e.target.value.slice(0, maxLength))}
                 onKeyDown={handleKeyDown}
+                maxLength={maxLength}
                 className="w-full h-12 bg-transparent pl-4 pr-2 text-[14px] font-bold outline-none text-gray-900 placeholder:text-gray-300"
               />
             </div>
@@ -113,12 +116,37 @@ const CommentInput = ({
           </span>
         </div>
 
+        {parentNickname && (
+          <div className="flex items-center justify-between px-1 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-black text-main bg-main/5 px-2 py-0.5 rounded-full border border-main/10">
+                @{parentNickname}
+              </span>
+              <span className="text-[10px] font-bold text-gray-400">
+                님에게 답글
+              </span>
+            </div>
+            <button
+              onClick={handleRemoveReplyTarget}
+              className="text-gray-300 hover:text-gray-500 transition-colors"
+            >
+              <X size={14} strokeWidth={3} />
+            </button>
+          </div>
+        )}
+
         <div className="relative group">
           <textarea
+            ref={inputRef as React.RefObject<HTMLTextAreaElement>}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => setContent(e.target.value.slice(0, maxLength))}
+            onKeyDown={handleKeyDown}
             maxLength={maxLength}
-            placeholder="전문적이고 따뜻한 조언을 남겨주세요."
+            placeholder={
+              parentNickname
+                ? "따뜻한 답글을 남겨주세요"
+                : "전문적이고 따뜻한 조언을 남겨주세요."
+            }
             className="w-full resize-none rounded-[24px] border-2 border-transparent bg-white p-5 text-[15px] font-bold text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-main/10 shadow-sm transition-all"
             rows={4}
           />

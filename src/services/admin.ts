@@ -1,4 +1,5 @@
-import { api } from "./client";
+import axios from "axios";
+import { api, resolveApiBaseUrl } from "./client";
 import type {
   UserStatsResponse,
   PostStatsResponse,
@@ -11,10 +12,12 @@ import type {
   BanResponse,
   AdminPostQuery,
   AdminPostDto,
+  AdminWeb3TransactionDto,
+  AdminWeb3TransactionQuery,
   AdminCommentQuery,
   AdminCommentDto,
   AdminAccountDto,
-  CreateAdminAccountRequest,
+  CreateAdminAccountResponse,
   ListAdminAccountsResponse,
   QnARefundReviewResponse,
   QnASettlementReviewResponse,
@@ -22,6 +25,14 @@ import type {
   TreasuryKeyDto,
   ProvisionKeyRequest,
   ChangeAdminPasswordRequest,
+  ResetAdminPasswordResponse,
+  MarkTransactionSucceededRequest,
+  MarkTransactionSucceededResponse,
+  SponsorNonceSlotsResponse,
+  MarketplaceAdminEscrowReviewResponse,
+  MarketplaceAdminExecutionResponse,
+  MarketplaceAdminRefundRequest,
+  MarketplaceAdminSettlementRequest,
 } from "@types";
 
 interface BaseResponse<T> {
@@ -31,6 +42,23 @@ interface BaseResponse<T> {
   code: string;
   retryable: boolean;
 }
+
+export interface SystemHealthResponse {
+  status: string;
+  components?: Record<string, unknown>;
+}
+
+const getApiBaseUrl = () => {
+  return resolveApiBaseUrl();
+};
+
+export const fetchSystemHealth = async (): Promise<SystemHealthResponse> => {
+  const { data } = await axios.get<SystemHealthResponse>(
+    `${getApiBaseUrl()}/actuator/health`,
+    { withCredentials: true }
+  );
+  return data;
+};
 
 export const fetchUserStats = async (): Promise<UserStatsResponse> => {
   const { data } = await api.get<BaseResponse<UserStatsResponse>>(
@@ -99,12 +127,34 @@ export const banAdminPost = async (
   return res.data.data;
 };
 
+export const unblockAdminPost = async (
+  postId: number,
+  data: BanRequest
+): Promise<BanResponse> => {
+  const res = await api.post<BaseResponse<BanResponse>>(
+    `/admin/boards/posts/${postId}/unblock`,
+    data
+  );
+  return res.data.data;
+};
+
 export const banAdminComment = async (
   commentId: number,
   data: BanRequest
 ): Promise<BanResponse> => {
   const res = await api.post<BaseResponse<BanResponse>>(
     `/admin/boards/comments/${commentId}/ban`,
+    data
+  );
+  return res.data.data;
+};
+
+export const unblockAdminComment = async (
+  commentId: number,
+  data: BanRequest
+): Promise<BanResponse> => {
+  const res = await api.post<BaseResponse<BanResponse>>(
+    `/admin/boards/comments/${commentId}/unblock`,
     data
   );
   return res.data.data;
@@ -117,23 +167,56 @@ export const fetchAdminAccounts = async (): Promise<AdminAccountDto[]> => {
   return res.data.data.admins;
 };
 
-export const createAdminAccount = async (
-  data: CreateAdminAccountRequest
-): Promise<AdminAccountDto> => {
-  const res = await api.post<BaseResponse<AdminAccountDto>>(
-    "/admin/accounts",
+export const createAdminAccount =
+  async (): Promise<CreateAdminAccountResponse> => {
+    const res =
+      await api.post<BaseResponse<CreateAdminAccountResponse>>(
+        "/admin/accounts"
+      );
+    return res.data.data;
+  };
+
+export const resetAdminPassword = async (
+  userId: number
+): Promise<ResetAdminPasswordResponse> => {
+  const res = await api.post<BaseResponse<ResetAdminPasswordResponse>>(
+    `/admin/accounts/${userId}/password/reset`
+  );
+  return res.data.data;
+};
+
+// transaction-controller
+export const markTransactionSucceeded = async (
+  txId: number,
+  data: MarkTransactionSucceededRequest
+): Promise<MarkTransactionSucceededResponse> => {
+  const res = await api.post<BaseResponse<MarkTransactionSucceededResponse>>(
+    `/admin/web3/transactions/${txId}/mark-succeeded`,
     data
   );
   return res.data.data;
 };
 
-export const resetAdminPassword = async (userId: number): Promise<void> => {
-  await api.post(`/admin/accounts/${userId}/password/reset`);
+export const fetchWeb3Transactions = async (
+  params: AdminWeb3TransactionQuery = { page: 0, size: 10 }
+): Promise<PageResponse<AdminWeb3TransactionDto>> => {
+  const res = await api.get<
+    BaseResponse<PageResponse<AdminWeb3TransactionDto>>
+  >("/admin/web3/transactions", { params });
+  return res.data.data;
 };
 
-// transaction-controller
-export const markTransactionSucceeded = async (txId: number): Promise<void> => {
-  await api.post(`/admin/web3/transactions/${txId}/mark-succeeded`);
+export const fetchSponsorNonceSlots = async (params: {
+  chainId: number;
+  fromAddress: string;
+  page?: number;
+  size?: number;
+}): Promise<SponsorNonceSlotsResponse> => {
+  const res = await api.get<BaseResponse<SponsorNonceSlotsResponse>>(
+    "/admin/web3/nonce-slots",
+    { params }
+  );
+  return res.data.data;
 };
 
 // qna-admin-escrow-controller
@@ -175,11 +258,56 @@ export const processQnASettle = async (
   return res.data.data;
 };
 
+// marketplace-admin-escrow-controller
+export const fetchMarketplaceRefundReview = async (
+  reservationId: number
+): Promise<MarketplaceAdminEscrowReviewResponse> => {
+  const res = await api.get<BaseResponse<MarketplaceAdminEscrowReviewResponse>>(
+    `/admin/web3/marketplace/reservations/${reservationId}/refund-review`
+  );
+  return res.data.data;
+};
+
+export const fetchMarketplaceSettlementReview = async (
+  reservationId: number
+): Promise<MarketplaceAdminEscrowReviewResponse> => {
+  const res = await api.get<BaseResponse<MarketplaceAdminEscrowReviewResponse>>(
+    `/admin/web3/marketplace/reservations/${reservationId}/settlement-review`
+  );
+  return res.data.data;
+};
+
+export const processMarketplaceRefund = async (
+  reservationId: number,
+  data: MarketplaceAdminRefundRequest
+): Promise<MarketplaceAdminExecutionResponse> => {
+  const res = await api.post<BaseResponse<MarketplaceAdminExecutionResponse>>(
+    `/admin/web3/marketplace/reservations/${reservationId}/refund`,
+    data
+  );
+  return res.data.data;
+};
+
+export const processMarketplaceSettle = async (
+  reservationId: number,
+  data: MarketplaceAdminSettlementRequest
+): Promise<MarketplaceAdminExecutionResponse> => {
+  const res = await api.post<BaseResponse<MarketplaceAdminExecutionResponse>>(
+    `/admin/web3/marketplace/reservations/${reservationId}/settle`,
+    data
+  );
+  return res.data.data;
+};
+
 // treasury-key-controller
 export const provisionTreasuryKey = async (
   data: ProvisionKeyRequest
-): Promise<void> => {
-  await api.post("/admin/web3/treasury-keys/provision", data);
+): Promise<TreasuryKeyDto> => {
+  const res = await api.post<BaseResponse<TreasuryKeyDto>>(
+    "/admin/web3/treasury-keys/provision",
+    data
+  );
+  return res.data.data;
 };
 
 export const disableTreasuryKey = async (

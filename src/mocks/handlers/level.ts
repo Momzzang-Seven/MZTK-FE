@@ -8,6 +8,7 @@ export const levelHandlers = [
         level: 5,
         availableXp: 80,
         requiredXpForNext: 100,
+        rewardMztkForNext: 40,
       },
     })
   ),
@@ -16,11 +17,13 @@ export const levelHandlers = [
     HttpResponse.json({
       success: true,
       data: {
-        policies: [
-          { level: 1, requiredXp: 100 },
-          { level: 2, requiredXp: 200 },
-          { level: 3, requiredXp: 300 },
+        levelPolicies: [
+          { currentLevel: 1, toLevel: 2, requiredXp: 100, rewardMztk: 20 },
+          { currentLevel: 2, toLevel: 3, requiredXp: 200, rewardMztk: 25 },
+          { currentLevel: 3, toLevel: 4, requiredXp: 300, rewardMztk: 30 },
+          { currentLevel: 5, toLevel: 6, requiredXp: 100, rewardMztk: 40 },
         ],
+        xpPolicies: [],
       },
     })
   ),
@@ -29,8 +32,14 @@ export const levelHandlers = [
     HttpResponse.json({
       success: true,
       data: {
+        levelUpHistoryId: 1,
+        fromLevel: 5,
         toLevel: 6,
-        rewardMztk: 100,
+        spentXp: 100,
+        rewardMztk: 40,
+        rewardStatus: "SUCCESS",
+        rewardTxStatus: "SUCCEEDED",
+        rewardTxPhase: "SUCCESS",
       },
     })
   ),
@@ -67,6 +76,7 @@ export const levelReadyHandlers = [
         level: 5,
         availableXp: 100,
         requiredXpForNext: 100,
+        rewardMztkForNext: 40,
       },
     })
   ),

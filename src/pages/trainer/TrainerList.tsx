@@ -118,7 +118,7 @@ const TrainerList = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FA] font-pretendard">
+    <div className="flex flex-col min-h-dvh bg-[#F8F9FA] font-pretendard">
       <TrainerHeader title="내 클래스 목록" showBack backTo="/trainer" />
 
       <div className="flex-1 px-5 pt-8 pb-32 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

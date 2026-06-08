@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { ACCEPTED_IMAGE_INPUT_TYPES } from "@utils";
 
 interface PhotoUploaderProps {
   previewUrl: string | null;
@@ -7,6 +8,7 @@ interface PhotoUploaderProps {
   guideDesc: string;
   uploadNoImageText: string;
   uploadSizeHintText: string;
+  acceptedFileTypes?: string;
   height?: string;
 }
 
@@ -17,6 +19,7 @@ export const PhotoUploader = ({
   guideDesc,
   uploadNoImageText,
   uploadSizeHintText,
+  acceptedFileTypes = ACCEPTED_IMAGE_INPUT_TYPES,
 }: PhotoUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,15 +67,6 @@ export const PhotoUploader = ({
           padding: previewUrl ? 0 : undefined,
         }}
       >
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          onChange={onFileChange}
-          className="hidden"
-          data-testid="photo-input"
-        />
-
         {previewUrl ? (
           /* Preview */
           <div className="relative w-full" style={{ minHeight: "300px" }}>
@@ -151,6 +145,14 @@ export const PhotoUploader = ({
           </div>
         )}
       </button>
+      <input
+        type="file"
+        accept={acceptedFileTypes}
+        ref={fileInputRef}
+        onChange={onFileChange}
+        className="hidden"
+        data-testid="photo-input"
+      />
     </div>
   );
 };

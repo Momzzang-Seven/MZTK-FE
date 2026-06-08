@@ -2,6 +2,11 @@
  * 백엔드 ErrorCode → 사용자 친화적 한글 메시지 매핑
  * 서버에서 code 필드로 내려오는 문자열을 키로 사용
  */
+import {
+  getKnownKoreanErrorMessage,
+  isPlainEnglishServerMessage,
+} from "./serverMessageTranslations";
+
 export const ERROR_MESSAGES: Record<string, string> = {
   // ── 인증 (AUTH) ──────────────────────────────────
   AUTH_001: "사용자를 찾을 수 없습니다. 다시 로그인해 주세요.",
@@ -217,6 +222,28 @@ export const getKoreanErrorMessage = (
   serverMessage?: string | null
 ): string => {
   if (code && ERROR_MESSAGES[code]) return ERROR_MESSAGES[code];
+  const knownMessage = getKnownKoreanErrorMessage(code, serverMessage);
+  if (knownMessage) return knownMessage;
+  if (isPlainEnglishServerMessage(serverMessage)) {
+    return "요청을 처리하는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+  }
   if (serverMessage) return serverMessage;
   return "알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+};
+
+export const getKoreanErrorMessageFromError = (
+  error: unknown,
+  fallback = "요청을 처리하는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
+): string => {
+  const apiError = error as {
+    response?: { data?: { code?: string | null; message?: string | null } };
+    message?: string | null;
+  };
+  const code = apiError.response?.data?.code;
+  const message =
+    apiError.response?.data?.message ||
+    (error instanceof Error ? error.message : apiError.message);
+
+  if (!code && !message) return fallback;
+  return getKoreanErrorMessage(code, message) || fallback;
 };
