@@ -1,13 +1,52 @@
 import { api } from "@services/client";
+import type { Web3Execution } from "@types";
 
 export type MarketplaceReservationStatus =
+  | "HOLDING"
   | "PENDING"
   | "APPROVED"
   | "USER_CANCELLED"
   | "REJECTED"
   | "TIMEOUT_CANCELLED"
   | "SETTLED"
-  | "AUTO_SETTLED";
+  | "AUTO_SETTLED"
+  | "HOLD_EXPIRED"
+  | "PAYMENT_FAILED"
+  | "DEADLINE_REFUNDED"
+  | "MANUAL_SYNC_REQUIRED"
+  | "PURCHASE_PREPARING"
+  | "PURCHASE_PENDING"
+  | "CANCEL_PENDING"
+  | "REJECT_PENDING"
+  | "CONFIRM_PENDING"
+  | "ADMIN_REFUND_PENDING"
+  | "ADMIN_SETTLE_PENDING"
+  | "DEADLINE_REFUND_PENDING"
+  | "DEADLINE_REFUND_AVAILABLE"
+  | "DEADLINE_RECOVERY_REQUIRED"
+  | "DEADLINE_SYNC_REQUIRED";
+
+export type MarketplaceReservationEscrowStatus =
+  | "NONE"
+  | "PURCHASE_PREPARING"
+  | "PURCHASE_PENDING"
+  | "LOCKED"
+  | "CANCEL_PENDING"
+  | "REJECT_PENDING"
+  | "CONFIRM_PENDING"
+  | "ADMIN_REFUND_PENDING"
+  | "ADMIN_SETTLE_PENDING"
+  | "DEADLINE_REFUND_AVAILABLE"
+  | "DEADLINE_REFUND_PENDING"
+  | "REFUNDED"
+  | "SETTLED"
+  | "DEADLINE_REFUNDED"
+  | "DEADLINE_RECOVERY_REQUIRED"
+  | "DEADLINE_SYNC_REQUIRED"
+  | "MANUAL_SYNC_REQUIRED"
+  | "HOLD_EXPIRED"
+  | "PAYMENT_FAILED"
+  | "FAILED";
 
 export interface AvailableReservationTime {
   slotId: number;
@@ -35,14 +74,17 @@ export interface CreateReservationRequest {
   reservationDate: string;
   reservationTime: string;
   userRequest?: string;
-  signedAmount: number;
-  delegationSignature: string;
-  executionSignature: string;
+  idempotencyKey: string;
+  signedAmount: string;
 }
 
 export interface ReservationMutationResponse {
   reservationId: number;
   status: MarketplaceReservationStatus;
+  businessStatus?: MarketplaceReservationStatus;
+  escrowStatus?: MarketplaceReservationEscrowStatus | string;
+  orderKey?: string | null;
+  web3?: Web3Execution | null;
 }
 
 export interface ReservationTime {
@@ -61,17 +103,25 @@ export interface ReservationSummary {
   reservationTime: ReservationTime;
   durationMinutes: number;
   status: MarketplaceReservationStatus;
+  businessStatus?: MarketplaceReservationStatus;
+  escrowStatus?: MarketplaceReservationEscrowStatus | string;
   userRequest: string | null;
   classTitle: string;
   trainerNickname: string;
   userNickname: string;
   priceAmount: number;
   thumbnailFinalObjectKey: string | null;
+  web3Execution?: Web3Execution | null;
 }
 
 export interface ReservationDetail extends ReservationSummary {
   orderId: string | null;
+  orderKey?: string | null;
   txHash: string | null;
+  contractDeadlineAt?: string | null;
+  contractDeadlineEpochSeconds?: number | null;
+  viewerCanRecover?: boolean;
+  viewerCanClaimDeadlineRefund?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -144,6 +194,24 @@ export const completeMyReservation = async (
   return unwrap<ReservationMutationResponse>(response);
 };
 
+export const claimExpiredRefundMyReservation = async (
+  reservationId: number
+): Promise<ReservationMutationResponse> => {
+  const response = await api.patch(
+    `/marketplace/me/reservations/${reservationId}/deadline-refund`
+  );
+  return unwrap<ReservationMutationResponse>(response);
+};
+
+export const recoverMyReservationEscrow = async (
+  reservationId: number
+): Promise<ReservationMutationResponse> => {
+  const response = await api.post(
+    `/marketplace/me/reservations/${reservationId}/web3/recover`
+  );
+  return unwrap<ReservationMutationResponse>(response);
+};
+
 export const getTrainerReservations = async (
   status?: MarketplaceReservationStatus,
   cursor?: string,
@@ -180,6 +248,15 @@ export const rejectTrainerReservation = async (
   const response = await api.patch(
     `/marketplace/trainer/reservations/${reservationId}/reject`,
     request
+  );
+  return unwrap<ReservationMutationResponse>(response);
+};
+
+export const recoverTrainerReservationEscrow = async (
+  reservationId: number
+): Promise<ReservationMutationResponse> => {
+  const response = await api.post(
+    `/marketplace/trainer/reservations/${reservationId}/web3/recover`
   );
   return unwrap<ReservationMutationResponse>(response);
 };

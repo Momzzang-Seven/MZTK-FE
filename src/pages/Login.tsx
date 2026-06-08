@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/auth/useAuth";
 import { CommonButton } from "@components/common";
-import axios from "axios";
+import { getKoreanErrorMessageFromError } from "@constant";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -32,9 +32,6 @@ const Login = () => {
         email,
         password: localPassword,
       });
-      if (response?.userInfo.walletAddress) {
-        localStorage.setItem("wallet_address", response.userInfo.walletAddress);
-      }
 
       if (
         response &&
@@ -46,16 +43,24 @@ const Login = () => {
         return;
       }
 
-      navigate("/register");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setLocalError(
-          error.response?.data?.message ??
-            "로그인에 실패했습니다. 입력값을 다시 확인해 주세요."
-        );
-      } else {
-        setLocalError("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      if (response?.isNewUser) {
+        navigate("/register");
+        return;
       }
+
+      if (response?.userInfo.role === "TRAINER") {
+        navigate("/trainer");
+        return;
+      }
+
+      navigate("/");
+    } catch (error) {
+      setLocalError(
+        getKoreanErrorMessageFromError(
+          error,
+          "로그인에 실패했습니다. 입력값을 다시 확인해 주세요."
+        )
+      );
     } finally {
       setIsLocalSubmitting(false);
     }
@@ -236,7 +241,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white relative overflow-hidden">
+    <div className="flex flex-col min-h-dvh bg-white relative overflow-hidden">
       {/* ── Background Decoration ── */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-5%] left-[-5%] w-[100%] h-[40%] bg-main opacity-[0.03] blur-[100px] rounded-full" />

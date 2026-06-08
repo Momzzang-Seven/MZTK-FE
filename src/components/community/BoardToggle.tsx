@@ -19,9 +19,11 @@ const BoardToggle = () => {
       </div>
 
       {/* 자유게시판 */}
-      <div
+      <button
+        type="button"
         onClick={() => navigate("/community/free")}
-        className={`relative z-10 flex-1 flex items-center justify-center gap-2.5 text-[14px] tracking-tight transition-all duration-300 cursor-pointer active:scale-95
+        aria-pressed={isFree}
+        className={`relative z-10 flex-1 flex items-center justify-center gap-2.5 text-[14px] tracking-tight transition-all duration-300 cursor-pointer active:scale-95 border-0 bg-transparent appearance-none
         ${isFree ? "text-white font-black" : "text-gray-400 font-bold hover:text-gray-600"}`}
       >
         <MessageSquare
@@ -30,12 +32,14 @@ const BoardToggle = () => {
           className={isFree ? "animate-pulse" : ""}
         />
         <span>자유게시판</span>
-      </div>
+      </button>
 
       {/* 질문게시판 */}
-      <div
+      <button
+        type="button"
         onClick={() => navigate("/community/question")}
-        className={`relative z-10 flex-1 flex items-center justify-center gap-2.5 text-[14px] tracking-tight transition-all duration-300 cursor-pointer active:scale-95
+        aria-pressed={isQuestion}
+        className={`relative z-10 flex-1 flex items-center justify-center gap-2.5 text-[14px] tracking-tight transition-all duration-300 cursor-pointer active:scale-95 border-0 bg-transparent appearance-none
         ${isQuestion ? "text-white font-black" : "text-gray-400 font-bold hover:text-gray-600"}`}
       >
         <HelpCircle
@@ -44,7 +48,7 @@ const BoardToggle = () => {
           className={isQuestion ? "animate-pulse" : ""}
         />
         <span>질문게시판</span>
-      </div>
+      </button>
     </div>
   );
 };

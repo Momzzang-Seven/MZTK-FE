@@ -1,22 +1,25 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useUserStore } from "@store";
 
-const ProtectedRoute = () => {
-  // Check for authentication token in store
+interface ProtectedRouteProps {
+  allowedRoles?: string[];
+  redirectTo?: string;
+}
+
+const ProtectedRoute = ({
+  allowedRoles,
+  redirectTo = "/login",
+}: ProtectedRouteProps) => {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const accessToken = useUserStore((state) => state.accessToken);
+  const user = useUserStore((state) => state.user);
 
-  // Debug log
-  console.log("[ProtectedRoute] Check:", {
-    isAuthenticated,
-    hasToken: !!accessToken,
-    token: accessToken,
-  });
-
-  // Trust token existence as fallback if isAuthenticated is false
-  if (!isAuthenticated && !accessToken) {
-    console.log("[ProtectedRoute] No auth & no token. Redirecting...");
+  if (!isAuthenticated || !accessToken || !user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <Outlet />;

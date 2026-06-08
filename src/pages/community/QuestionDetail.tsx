@@ -26,25 +26,16 @@ const QuestionDetail = () => {
     question?.writer.userId !== undefined &&
     Number(question.writer.userId) === Number(userId);
   const isWeb3Done =
-    question?.publicationStatus === "VISIBLE" ||
-    question?.publicationStatus === "FAILED";
+    question?.question.web3Execution.resource.status === "COMPLETED";
 
-  useEffect(() => {
-    if (question) {
-      console.log("[QuestionDetail] Current User ID:", userId);
-      console.log(
-        "[QuestionDetail] Question Writer ID:",
-        question.writer.userId
-      );
-      console.log("[QuestionDetail] isMine:", isMine);
-    }
-  }, [userId, question, isMine]);
-
-  const isWeb3Executable =
+  const isWeb3Executable = // web3 실행 가능한 상태인지 (질문 등록/수정/삭제 중인지 판단)
     isMine &&
     !isWeb3Done &&
     question?.question.web3Execution.executionIntent.status ===
       "AWAITING_SIGNATURE";
+  const isPublicated = // 게시글이 공개된 상태인지 (답변 채택 가능 여부 판단)
+    question?.publicationStatus === "VISIBLE" &&
+    question?.moderationStatus === "NORMAL";
   const isEditable = isMine && isWeb3Done && question?.commentCount === 0;
 
   useEffect(() => {
@@ -57,41 +48,17 @@ const QuestionDetail = () => {
         if (qData) setQuestion(qData as QuestionPost);
         if (aData) setAnswers(aData as AnswerPost[]);
         return { qData, aData };
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+      } catch {
         return { qData: null, aData: [] };
       }
     };
 
     fetchData();
-
-    // 5초마다 상태를 체크하여 자동 갱신
-    const interval = setInterval(async () => {
-      const { qData, aData } = await fetchData();
-
-      // 질문과 모든 답변이 최종 상태(완료 혹은 실패)에 도달했는지 확인
-      const isQuestionDone =
-        qData?.publicationStatus === "VISIBLE" ||
-        qData?.publicationStatus === "FAILED";
-
-      const areAnswersDone = (aData as AnswerPost[])?.every(
-        (a) =>
-          a.web3Execution.resource.status === "COMPLETED" ||
-          a.web3Execution.resource.status === "FAILED"
-      );
-
-      // 모든 작업이 완료되었다면 폴링 중단
-      if (isQuestionDone && areAnswersDone) {
-        clearInterval(interval);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
   }, [getPost, getAnswers, postId]);
 
   if (isPostLoading && !question) {
     return (
-      <div className="w-full h-full flex min-h-screen justify-center items-center bg-white">
+      <div className="w-full h-full flex min-h-dvh justify-center items-center bg-white">
         <LoadingSpinner size="lg" color="text-main" />
       </div>
     );
@@ -99,7 +66,7 @@ const QuestionDetail = () => {
 
   if (error) {
     return (
-      <div className="w-full h-full flex flex-col min-h-screen justify-center items-center py-10 px-6 text-center">
+      <div className="w-full h-full flex flex-col min-h-dvh justify-center items-center py-10 px-6 text-center">
         <div className="bg-red-50 p-6 rounded-[32px] border border-red-100">
           <p className="text-red-500 font-black mb-2">오류가 발생했습니다</p>
           <p className="text-red-400 text-sm whitespace-pre-line">{error}</p>
@@ -110,14 +77,14 @@ const QuestionDetail = () => {
 
   if (!question) {
     return (
-      <div className="w-full h-full flex flex-col min-h-screen justify-center items-center py-10">
+      <div className="w-full h-full flex flex-col min-h-dvh justify-center items-center py-10">
         <p className="text-gray-400 font-bold">게시물을 찾을 수 없습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-35">
+    <div className="min-h-dvh bg-gray-50/50 pb-35">
       <QuestionHeader
         isMine={isMine}
         type="QUESTION"
@@ -170,9 +137,7 @@ const QuestionDetail = () => {
                   <Answer
                     answer={answer}
                     parentId={postId}
-                    isSelectable={Boolean(
-                      isMine && isWeb3Done && !question.question.isSolved
-                    )}
+                    isSelectable={isMine && isPublicated && !answer.isAccepted}
                     isEditable={
                       answer.userId === userId
                         ? !answer.isAccepted &&

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   MessageCircle,
   CheckCircle2,
@@ -16,7 +16,7 @@ import {
   QnaContent,
 } from "@components/community";
 import { LoadingSpinner } from "@components/common";
-import { formatTimeAgo, replaceImageSrc } from "@utils";
+import { buildImageUrl, formatTimeAgo, replaceImageSrc } from "@utils";
 import { useCommentService, usePostService } from "@hooks";
 
 interface AnswerProps {
@@ -35,6 +35,7 @@ const Answer = ({
   isWeb3Executable,
 }: AnswerProps) => {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [hasLoadedComments, setHasLoadedComments] = useState(false);
   const [writingComment, setWritingComment] = useState("");
 
   const [parentCommentId, setParentCommentId] = useState<number | undefined>(
@@ -53,7 +54,14 @@ const Answer = ({
     loadMore,
     isLast,
     error,
-  } = useCommentService<Comment>(answer.answerId, true);
+  } = useCommentService<Comment>(
+    answer.answerId,
+    true,
+    {
+      autoFetch: false,
+    },
+    5
+  );
 
   const { likePost, unlikePost } = usePostService();
   const [liked, setLiked] = useState(answer.isLiked);
@@ -73,7 +81,13 @@ const Answer = ({
   };
 
   const processedContent = answer.content
-    ? replaceImageSrc(answer.content, answer.images)
+    ? replaceImageSrc(
+        answer.content,
+        answer.images.map((image) => ({
+          imageId: image.imageId,
+          imageUrl: buildImageUrl(image.imageUrl),
+        }))
+      )
     : "";
 
   const getStatusConfig = (resStatus: string, intentStatus: string) => {
@@ -106,17 +120,14 @@ const Answer = ({
       )
     : null;
 
-  useEffect(() => {
-    if (isCommentsOpen && comments.length === 0) {
-      fetchComments(true);
-    }
-  }, [isCommentsOpen, comments.length, fetchComments]);
-
-  const toggleComment = () => {
+  const toggleComment = async () => {
     const nextState = !isCommentsOpen;
     setIsCommentsOpen(nextState);
-    if (nextState && comments.length === 0) {
-      fetchComments(true);
+
+    if (nextState && !hasLoadedComments) {
+      setHasLoadedComments(true);
+      const isLoaded = await fetchComments(true);
+      if (!isLoaded) setHasLoadedComments(false);
     }
   };
 
@@ -202,7 +213,7 @@ const Answer = ({
       {answer.images && answer.images.length > 0 && (
         <div className="rounded-2xl overflow-hidden border border-gray-100">
           <img
-            src={answer.images[0].imageUrl}
+            src={buildImageUrl(answer.images[0].imageUrl)}
             alt="answer"
             className="w-full object-cover max-h-[300px]"
           />

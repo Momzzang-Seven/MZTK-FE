@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
 import { TOKEN_MESSAGES } from "@constant/token";
-import { getNetworkConfig } from "@utils";
+import {
+  getNetworkConfig,
+  isValidTokenAmount,
+  normalizeNonZeroAddress,
+} from "@utils";
 
 export const useTokenTransfer = () => {
   const [step, setStep] = useState<
@@ -17,24 +21,11 @@ export const useTokenTransfer = () => {
   const { RPC_URL, TOKEN_ADDRESS: MZT_ADDR } = getNetworkConfig();
 
   const isAmountValid = useMemo(() => {
-    const numericAmount = Number(amount);
-    return Boolean(
-      amount &&
-      !Number.isNaN(numericAmount) &&
-      numericAmount > 0 &&
-      numericAmount <= balance
-    );
+    return isValidTokenAmount(amount, balance);
   }, [amount, balance]);
 
   const isAddressValid = useMemo(() => {
-    if (!address) return false;
-    try {
-      return ethers.isAddress(
-        address.startsWith("0x") ? address : `0x${address}`
-      );
-    } catch {
-      return false;
-    }
+    return normalizeNonZeroAddress(address) !== null;
   }, [address]);
 
   const fetchBalance = useCallback(async () => {
@@ -65,6 +56,11 @@ export const useTokenTransfer = () => {
     async (pin: string) => {
       setStep("SENDING");
       try {
+        const recipient = normalizeNonZeroAddress(address);
+        if (!recipient || !isValidTokenAmount(amount, balance)) {
+          throw new Error(TOKEN_MESSAGES.ERROR.TRANSFER_FAILED);
+        }
+
         const encryptedJson = localStorage.getItem("encrypted_wallet");
         if (!encryptedJson)
           throw new Error(TOKEN_MESSAGES.ERROR.WALLET_NOT_FOUND);
@@ -84,7 +80,7 @@ export const useTokenTransfer = () => {
         );
 
         const tx = await contract.transfer(
-          address.startsWith("0x") ? address : `0x${address}`,
+          recipient,
           ethers.parseUnits(amount, 18)
         );
         setTxHash(tx.hash);
@@ -97,7 +93,7 @@ export const useTokenTransfer = () => {
         setInputPin("");
       }
     },
-    [address, amount, RPC_URL, MZT_ADDR]
+    [address, amount, balance, RPC_URL, MZT_ADDR]
   );
 
   const resetForm = () => {

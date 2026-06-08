@@ -25,7 +25,7 @@ const CreatePostButton = ({ postId }: CreatePostButtonProps) => {
   // 답변 쓰기 (Premium Floating Bar 스타일)
   if (postId !== undefined) {
     return (
-      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-[450px] px-5 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300 fill-mode-both">
+      <div className="fixed bottom-[calc(2.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-full max-w-[450px] px-5 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300 fill-mode-both">
         <button
           onClick={handleCreatePost}
           className="w-full h-[72px] bg-white/90 backdrop-blur-xl border border-white/50 shadow-[0_25px_60px_rgba(0,0,0,0.15)] rounded-[32px] flex items-center justify-between px-6 group active:scale-[0.98] transition-all overflow-hidden"
@@ -53,7 +53,7 @@ const CreatePostButton = ({ postId }: CreatePostButtonProps) => {
 
   // free/question (Premium FAB)
   return (
-    <div className="fixed bottom-[110px] right-6 sm:right-[calc(50%-225px+24px)] z-50">
+    <div className="fixed bottom-[calc(6.875rem+env(safe-area-inset-bottom))] right-6 sm:right-[calc(50%-225px+24px)] z-50">
       <button
         onClick={handleCreatePost}
         className="h-16 w-16 bg-main rounded-[24px] shadow-[0_20px_40px_rgba(250,177,47,0.3)] flex items-center justify-center text-white active:scale-90 transition-all hover:scale-105 group relative overflow-hidden"

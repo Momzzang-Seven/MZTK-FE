@@ -179,18 +179,10 @@ export interface MarketplaceClassDetailResponse {
 /**
  * 트레이너 이의 요청
  */
-export const postTrainerAppeal = async (content: string) => {
-  const { data } = await api.post("/trainer/appeal", { content });
-  return data;
-};
 
 /**
  * 트레이너 상태 조회
  */
-export const getTrainerStatus = async () => {
-  const { data } = await api.get("/trainer/status");
-  return data;
-};
 
 export const getTrainerStore = async (): Promise<TrainerStoreResponse> => {
   const response = await api.get("/marketplace/trainer/store", {

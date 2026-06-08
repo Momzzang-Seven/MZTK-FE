@@ -9,6 +9,7 @@ import {
   getClassReservationInfo,
   getMarketplaceClassDetail,
 } from "@services";
+import { parseAmount } from "@utils";
 import type {
   AvailableReservationDate,
   AvailableReservationTime,
@@ -26,13 +27,17 @@ const getMonthDateLabel = (date: string) => {
 
 const formatTime = (time: string) => time.slice(0, 5);
 
-const DEV_SIGNATURE_STUB = `0x${"0".repeat(130)}`;
-
-const getReservationSignatures = () => {
-  return {
-    delegationSignature: DEV_SIGNATURE_STUB,
-    executionSignature: DEV_SIGNATURE_STUB,
-  };
+const createReservationIdempotencyKey = (
+  classId: number,
+  slotId: number,
+  reservationDate: string,
+  reservationTime: string
+) => {
+  const nonce =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `reservation:${classId}:${slotId}:${reservationDate}:${reservationTime}:${nonce}`;
 };
 
 const MarketPurchase = () => {
@@ -62,7 +67,6 @@ const MarketPurchase = () => {
     title: "",
     desc: "",
   });
-
   useEffect(() => {
     const classId = Number(id);
     if (!Number.isFinite(classId)) {
@@ -129,16 +133,36 @@ const MarketPurchase = () => {
 
     try {
       setIsSubmitting(true);
-      const signatures = getReservationSignatures();
 
-      await createClassReservation(classId, {
+      const response = await createClassReservation(classId, {
         slotId: selectedTime.slotId,
         reservationDate: selectedDate.date,
         reservationTime: selectedTime.startTime,
         userRequest: requestMsg.trim() || undefined,
-        signedAmount: reservationInfo.priceAmount,
-        ...signatures,
+        idempotencyKey: createReservationIdempotencyKey(
+          classId,
+          selectedTime.slotId,
+          selectedDate.date,
+          selectedTime.startTime
+        ),
+        signedAmount: parseAmount(
+          String(reservationInfo.priceAmount)
+        ).toString(),
       });
+
+      if (response.web3) {
+        navigate(
+          `/verify-wallet/${response.web3.resource.type}/${response.reservationId}`,
+          {
+            state: {
+              intent: response.web3,
+              recoveryScope: "member",
+              returnTo: "/market/reservations",
+            },
+          }
+        );
+        return;
+      }
 
       // Show success modal
       setModalState({
@@ -167,7 +191,7 @@ const MarketPurchase = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen items-center justify-center gap-4">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-main/20 border-t-main rounded-full animate-spin" />
         <p className="text-[13px] font-black text-gray-300">
           결제 정보를 준비 중입니다...
@@ -179,7 +203,7 @@ const MarketPurchase = () => {
   // 데이터가 없을 때의 기본 빈 상태 (모달이 띄워질 것임)
   if (!data || !reservationInfo) {
     return (
-      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative">
+      <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative">
         <button
           onClick={() => navigate(-1)}
           className="fixed top-6 left-6 z-[100] w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100/50"
@@ -202,7 +226,7 @@ const MarketPurchase = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen relative">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh relative">
       {/* Floating Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -367,7 +391,7 @@ const MarketPurchase = () => {
       </div>
 
       {/* Floating Checkout Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-8 flex flex-col gap-4 border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-[calc(2rem+env(safe-area-inset-bottom))] flex flex-col gap-4 border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
         <CommonButton
           label={
             isSubmitting

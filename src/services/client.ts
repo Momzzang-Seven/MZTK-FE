@@ -11,18 +11,26 @@ declare module "axios" {
 }
 
 const BASE_ENV = import.meta.env.VITE_API_BASE_URL;
-let BASE = BASE_ENV && BASE_ENV !== "undefined" ? (BASE_ENV as string) : "";
+const LOCAL_API_BASE_URL_PATTERN =
+  /^https?:\/\/(?:localhost|127(?:\.\d{1,3}){3}|\[::1\])(?::\d+)?(?:\/|$)/i;
 
-// if (import.meta.env.DEV && BASE && BASE.includes("localhost:8080")) {
-//   console.warn("Detected localhost:8080 in VITE_API_BASE_URL during DEV. Forcing proxy usage.");
-//   BASE = "";
-// }
+export const resolveApiBaseUrl = (
+  rawBaseUrl = BASE_ENV,
+  env: Pick<ImportMetaEnv, "DEV" | "PROD"> = import.meta.env
+) => {
+  const value =
+    rawBaseUrl && rawBaseUrl !== "undefined" ? String(rawBaseUrl).trim() : "";
+  if (!value || env.DEV) return "";
 
-if (import.meta.env.DEV) {
-  BASE = "";
-}
+  if (env.PROD && LOCAL_API_BASE_URL_PATTERN.test(value)) {
+    console.warn("Ignoring local VITE_API_BASE_URL in production build.");
+    return "";
+  }
 
-console.log("Current API BASE URL:", BASE); // Debugging
+  return value.replace(/\/+$/, "");
+};
+
+const BASE = resolveApiBaseUrl();
 
 type RetriableRequestConfig = {
   _retry?: boolean;
@@ -35,8 +43,12 @@ const isAuthRequest = (url?: string) =>
   Boolean(
     url === "/login" ||
     url === "/reissue" ||
+    url === "/stepup" ||
+    url === "/withdrawal" ||
     url?.includes("/auth/login") ||
-    url?.includes("/auth/reissue")
+    url?.includes("/auth/reissue") ||
+    url?.includes("/auth/stepup") ||
+    url?.includes("/auth/withdrawal")
   );
 
 const isAdminRequest = (url?: string) => url?.startsWith("/admin");

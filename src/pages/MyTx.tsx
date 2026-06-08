@@ -25,7 +25,7 @@ const MyToken = () => {
   } = state;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] font-pretendard relative">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] font-pretendard relative">
       {/* Sticky Back Button Wrapper */}
       <div className="sticky top-12 z-[100] px-6 h-0 pointer-events-none">
         <button

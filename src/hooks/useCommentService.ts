@@ -1,29 +1,49 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { Comment, CommentPayload } from "@types";
 import { commentService } from "@services";
 import { useUserStore } from "@store";
+import { containsUnsafeMarkup, TEXT_LIMITS } from "@utils";
+import { getKoreanErrorMessageFromError } from "@constant";
 
 const PAGE_SIZE = 10;
 
+interface UseCommentServiceOptions {
+  autoFetch?: boolean;
+}
+
 export const useCommentService = <T extends Comment>(
   targetId: number,
-  isAnswer: boolean = false
+  isAnswer: boolean = false,
+  options: UseCommentServiceOptions = {},
+  size?: number
 ) => {
+  const { autoFetch = true } = options;
   const { user } = useUserStore();
   const [comments, setComments] = useState<T[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLast, setIsLast] = useState(true); // 초기에는 더 불러올 데이터가 없다고 가정 (첫 로드 전 차단)
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const activeFetchKeyRef = useRef<string | null>(null);
 
   const createComment = useCallback(
     async (payload: CommentPayload) => {
+      const content = payload.content.trim();
+      if (!content || content.length > TEXT_LIMITS.comment) {
+        setError(`댓글은 ${TEXT_LIMITS.comment}자 이하로 작성해 주세요.`);
+        return;
+      }
+      if (containsUnsafeMarkup(content)) {
+        setError("스크립트 형태의 댓글은 작성할 수 없습니다.");
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       try {
         const newComment = await commentService.createComment(
           targetId,
-          payload,
+          { ...payload, content },
           isAnswer
         );
         if (!payload.parentId) {
@@ -50,12 +70,9 @@ export const useCommentService = <T extends Comment>(
         }
         return newComment;
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 작성에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 작성에 실패했습니다.")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -65,14 +82,19 @@ export const useCommentService = <T extends Comment>(
 
   const fetchComments = useCallback(
     async (isRefresh: boolean) => {
+      const cursor = isRefresh ? null : nextCursor;
+      const fetchKey = `${targetId}:${isAnswer}:${isRefresh ? "refresh" : (cursor ?? "first")}`;
+
+      if (activeFetchKeyRef.current === fetchKey) return true;
+
+      activeFetchKeyRef.current = fetchKey;
       setIsLoading(true);
       setError(null);
       try {
-        const cursor = isRefresh ? null : nextCursor;
         const data = await commentService.getComments(
           targetId,
           cursor,
-          PAGE_SIZE,
+          size ?? PAGE_SIZE,
           isAnswer
         );
         const newComments = data.comments as T[];
@@ -89,14 +111,16 @@ export const useCommentService = <T extends Comment>(
         });
         setIsLast(!data.hasNext);
         setNextCursor(data.nextCursor);
+        return true;
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 조회에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 조회에 실패했습니다.")
+        );
+        return false;
       } finally {
+        if (activeFetchKeyRef.current === fetchKey) {
+          activeFetchKeyRef.current = null;
+        }
         setIsLoading(false);
       }
     },
@@ -114,22 +138,29 @@ export const useCommentService = <T extends Comment>(
 
   const updateComment = useCallback(
     async (commentId: number, content: string) => {
+      const nextContent = content.trim();
+      if (!nextContent || nextContent.length > TEXT_LIMITS.comment) {
+        setError(`댓글은 ${TEXT_LIMITS.comment}자 이하로 작성해 주세요.`);
+        return;
+      }
+      if (containsUnsafeMarkup(nextContent)) {
+        setError("스크립트 형태의 댓글은 작성할 수 없습니다.");
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       try {
         await commentService.updateComment(
           commentId,
-          content,
+          nextContent,
           targetId,
           isAnswer
         );
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 수정에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 수정에 실패했습니다.")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -144,12 +175,9 @@ export const useCommentService = <T extends Comment>(
       try {
         await commentService.deleteComment(commentId, targetId, isAnswer);
       } catch (error) {
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const message =
-          errorResponse.response?.data?.message || "댓글 삭제에 실패했습니다.";
-        setError(message);
+        setError(
+          getKoreanErrorMessageFromError(error, "댓글 삭제에 실패했습니다.")
+        );
       } finally {
         setIsLoading(false);
       }
@@ -159,10 +187,10 @@ export const useCommentService = <T extends Comment>(
 
   // 초기 데이터 로드
   useEffect(() => {
-    if (targetId) {
+    if (autoFetch && targetId) {
       fetchComments(true);
     }
-  }, [targetId, isAnswer]);
+  }, [autoFetch, targetId, isAnswer]);
 
   return {
     comments,

@@ -58,6 +58,7 @@ test.describe("로그인 및 로그아웃 흐름", () => {
     const logoutBtn = page.getByRole("button", { name: /로그아웃/ });
     await expect(logoutBtn).toBeVisible();
     await logoutBtn.click();
+    await page.getByRole("button", { name: "로그아웃" }).last().click();
 
     await expect(page).toHaveURL(/\/login/);
   });
@@ -79,9 +80,14 @@ test.describe("로그인 및 로그아웃 흐름", () => {
 
     await page.goto("/callback?code=blocked-code&state=kakao");
 
-    await expect(page.getByText("제재된 계정입니다")).toBeVisible();
-    const appealLink = page.getByRole("link", { name: "이의 제기 문의하기" });
+    await expect(
+      page.getByRole("heading", { name: /계정.*제재/ })
+    ).toBeVisible();
+    const appealLink = page.getByRole("link", { name: /이의 제기 문의하기/ });
     await expect(appealLink).toBeVisible();
-    await expect(appealLink).toHaveAttribute("href", /forms\.google\.com/);
+    await expect(appealLink).toHaveAttribute(
+      "href",
+      /forms\.(gle|google\.com)/
+    );
   });
 });

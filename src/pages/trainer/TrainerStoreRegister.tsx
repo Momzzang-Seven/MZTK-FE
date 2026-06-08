@@ -13,6 +13,7 @@ import {
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonButton, CommonModal } from "@components/common";
 import { getTrainerStore, upsertTrainerStore } from "@services";
+import { isValidKoreanPhoneNumber, normalizeOptionalHttpUrl } from "@utils";
 
 type Coordinates = {
   latitude: number;
@@ -43,16 +44,17 @@ const toMapPosition = (
 // Helper: Auto-format phone number with hyphens
 const formatPhoneNumber = (value: string) => {
   const nums = value.replace(/[^0-9]/g, "");
+  if (nums.startsWith("02")) {
+    if (nums.length <= 2) return nums;
+    if (nums.length <= 5) return `${nums.slice(0, 2)}-${nums.slice(2)}`;
+    if (nums.length <= 9) {
+      return `${nums.slice(0, 2)}-${nums.slice(2, 5)}-${nums.slice(5, 9)}`;
+    }
+    return `${nums.slice(0, 2)}-${nums.slice(2, 6)}-${nums.slice(6, 10)}`;
+  }
   if (nums.length <= 3) return nums;
   if (nums.length <= 7) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
   return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7, 11)}`;
-};
-
-// Helper: Ensure URL has protocol
-const ensureProtocol = (url: string) => {
-  if (!url.trim()) return null;
-  if (!/^https?:\/\//i.test(url)) return `https://${url.trim()}`;
-  return url.trim();
 };
 
 const StoreMapController = ({ coordinates }: { coordinates: Coordinates }) => {
@@ -220,6 +222,32 @@ const TrainerStoreRegister = () => {
     if (!storeName.trim() || !address.trim() || !coordinates || !phone.trim())
       return;
 
+    if (!isValidKoreanPhoneNumber(phone)) {
+      setErrorModal({
+        title: "Invalid phone number",
+        desc: "Please enter a complete Korean phone number.",
+      });
+      return;
+    }
+
+    let homepageUrl: string | null;
+    let instagramUrl: string | null;
+    let xProfileUrl: string | null;
+    try {
+      homepageUrl = normalizeOptionalHttpUrl(sns.home);
+      instagramUrl = normalizeOptionalHttpUrl(sns.insta);
+      xProfileUrl = normalizeOptionalHttpUrl(sns.x);
+    } catch (error) {
+      setErrorModal({
+        title: "Invalid URL",
+        desc:
+          error instanceof Error
+            ? error.message
+            : "Only safe http and https URLs are allowed.",
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
       await upsertTrainerStore({
@@ -229,9 +257,9 @@ const TrainerStoreRegister = () => {
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         phoneNumber: phone.trim(),
-        homepageUrl: ensureProtocol(sns.home),
-        instagramUrl: ensureProtocol(sns.insta),
-        xProfileUrl: ensureProtocol(sns.x),
+        homepageUrl,
+        instagramUrl,
+        xProfileUrl,
       });
       setIsSuccessModalOpen(true);
     } catch (error) {
@@ -258,10 +286,12 @@ const TrainerStoreRegister = () => {
     address.trim() &&
     detailAddress.trim() &&
     phone.trim() &&
+    isValidKoreanPhoneNumber(phone) &&
     coordinates;
+  const isPhoneInvalid = phone.trim() && !isValidKoreanPhoneNumber(phone);
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-[#F9FAFB]">
+    <div className="relative flex min-h-dvh flex-col bg-[#F9FAFB]">
       <TrainerHeader
         title={hasExistingStore ? "매장 정보 관리" : "신규 매장 등록"}
         desc={
@@ -312,6 +342,11 @@ const TrainerStoreRegister = () => {
                   maxLength={13}
                   className="w-full h-[56px] rounded-2xl bg-white border border-gray-100 px-5 text-[15px] font-bold text-gray-900 outline-none focus:border-main focus:ring-4 focus:ring-main/5 transition-all shadow-sm"
                 />
+                {isPhoneInvalid ? (
+                  <p className="text-[11px] text-red-400 font-bold ml-1 leading-tight">
+                    Please enter a complete Korean phone number.
+                  </p>
+                ) : null}
               </div>
             </section>
 
@@ -452,7 +487,7 @@ const TrainerStoreRegister = () => {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] p-5 bg-white/90 backdrop-blur-md border-t border-gray-100 z-50">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] px-5 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] bg-white/90 backdrop-blur-md border-t border-gray-100 z-50">
         <CommonButton
           label={
             isSaving

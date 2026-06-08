@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CommonModal } from "@components/common";
 import { usePostStore } from "@store";
+import { useTokenBalance } from "@hooks";
 import {
   TiptapEditor,
   QuestionPostTitle,
@@ -24,6 +25,19 @@ const QuestionPostForm = ({
   const setContent = usePostStore((s) => s.setContent);
   const setTags = usePostStore((s) => s.setTags);
   const setReward = usePostStore((s) => s.setReward);
+  const { balance, loading: isBalanceLoading } = useTokenBalance();
+  const balanceNumber = Number(balance);
+  const hasKnownBalance = Number.isFinite(balanceNumber);
+  const hasInsufficientBalance =
+    !isBalanceLoading &&
+    hasKnownBalance &&
+    reward > 0 &&
+    reward > balanceNumber;
+  const rewardHint = isBalanceLoading
+    ? "보유 잔액 확인 중"
+    : hasInsufficientBalance
+      ? `보유 ${balanceNumber.toLocaleString()} MZTK`
+      : "답변 채택 시 지급될 토큰";
 
   const [rewardModalOpen, setRewardModalOpen] = useState(false);
   const [tempReward, setTempReward] = useState(reward);
@@ -39,7 +53,7 @@ const QuestionPostForm = ({
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-80px)] bg-white animate-in fade-in duration-700">
+    <div className="flex flex-col min-h-[calc(100dvh-80px)] bg-white animate-in fade-in duration-700">
       <QuestionPostTitle onChange={setTitle} initialValue={initialTitle} />
 
       <div className="border-b border-gray-50 py-1">
@@ -58,11 +72,13 @@ const QuestionPostForm = ({
       <div className="pb-32" />
 
       {/* Fixed Footer Reward Card */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-white via-white to-transparent pt-10 pb-8 px-6 flex justify-center pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-white via-white to-transparent pt-10 pb-[calc(2rem+env(safe-area-inset-bottom))] px-6 flex justify-center pointer-events-none">
         <div className="w-full max-w-[450px] pointer-events-auto">
           <QuestionPostRewardToken
             rewardToken={reward}
             onClick={handleOpenRewardModal}
+            hint={rewardHint}
+            tone={hasInsufficientBalance ? "warning" : "default"}
           />
         </div>
       </div>

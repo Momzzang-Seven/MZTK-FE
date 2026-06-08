@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ethers, HDNodeWallet } from "ethers";
 import { MnemonicDisplay } from "../components/auth/MnemonicDisplay";
@@ -8,6 +8,7 @@ import { CommonModal } from "../components/common";
 import { FullScreenPage } from "@components/layout";
 import { WalletSuccessSection } from "@components/wallet/WalletSuccessSection";
 import { useUserStore } from "@store";
+import { isWeakPin } from "@utils";
 
 type Step =
   | "AUTH_PIN"
@@ -33,6 +34,7 @@ const CreateWallet = () => {
   const [modal, setModal] = useState<{ title: string; desc: string } | null>(
     null
   );
+  const finalizingRef = useRef(false);
 
   const emptyIndices = useMemo(() => [1, 4, 7, 10], []);
 
@@ -59,8 +61,9 @@ const CreateWallet = () => {
   };
 
   const finalize = useCallback(async () => {
-    if (!wallet) return;
+    if (!wallet || finalizingRef.current) return;
     try {
+      finalizingRef.current = true;
       // HDNodeWallet.encrypt는 니모닉 구문을 포함하여 암호화합니다.
       const encrypted = await wallet.encrypt(pin);
       localStorage.setItem("encrypted_wallet", encrypted);
@@ -69,6 +72,8 @@ const CreateWallet = () => {
       setStep("SUCCESS");
     } catch {
       alert("보안 저장 중 오류가 발생했습니다.");
+    } finally {
+      finalizingRef.current = false;
     }
   }, [wallet, pin, setWalletAddress]);
 
@@ -95,7 +100,17 @@ const CreateWallet = () => {
     };
     void verifyPin();
 
-    if (pin.length === 6 && step === "PIN_SET") setStep("PIN_CONFIRM");
+    if (pin.length === 6 && step === "PIN_SET") {
+      if (isWeakPin(pin)) {
+        setModal({
+          title: "Weak PIN",
+          desc: "Sequential PINs are not allowed.",
+        });
+        setPin("");
+        return;
+      }
+      setStep("PIN_CONFIRM");
+    }
     if (confirmPin.length === 6 && step === "PIN_CONFIRM") {
       if (pin === confirmPin) void finalize();
       else {

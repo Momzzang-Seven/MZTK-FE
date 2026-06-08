@@ -61,7 +61,7 @@ const ReviewWrite = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh">
       <TrainerHeader
         title="수강평 작성"
         desc="수업에 대한 솔직한 후기를 남겨주세요."
@@ -153,7 +153,7 @@ const ReviewWrite = () => {
       </div>
 
       {/* Luxury Sticky Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-8 border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[450px] w-full bg-white/90 backdrop-blur-xl px-6 pt-5 pb-[calc(2rem+env(safe-area-inset-bottom))] border-t border-gray-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.06)] z-50 rounded-t-[32px]">
         <CommonButton
           label="후기 등록 완료"
           onClick={handleSubmit}

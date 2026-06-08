@@ -9,12 +9,21 @@ vi.mock("react-router-dom", () => ({
 }));
 
 vi.mock("@utils", () => ({
+  buildImageUrl: vi.fn((value: string) => value),
   formatTimeAgo: vi.fn(),
 }));
 
 vi.mock("@components/community", () => ({
   ActionList: () => <div data-testid="mock-action-list" />,
-  SharePost: () => <div data-testid="mock-share-post" />,
+  SharePost: ({ type, postId }: { type: string; postId: number }) => (
+    <button
+      type="button"
+      data-testid="share-button"
+      onClick={(event) => event.stopPropagation()}
+    >
+      {type}:{postId}
+    </button>
+  ),
 }));
 
 vi.mock("@hooks", () => ({
@@ -156,6 +165,19 @@ describe("FreePostCard", () => {
       fireEvent.click(commentButton);
 
       expect(mockNavigate).toHaveBeenCalledWith("/community/free/1");
+    });
+  });
+
+  describe("공유 클릭", () => {
+    it("SharePost를 사용하고 클릭 시 카드 상세 이동으로 버블링하지 않는다", () => {
+      render(<FreePostCard post={defaultPost} />);
+
+      const shareButton = screen.getByTestId("share-button");
+      expect(shareButton).toHaveTextContent("FREE:1");
+
+      fireEvent.click(shareButton);
+
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 

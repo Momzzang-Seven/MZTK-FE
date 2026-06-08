@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store/userStore";
 import { CommonModal } from "@components/common";
 import { Trophy, Sparkles } from "lucide-react";
+import { getKstDateString } from "@utils/time";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -24,8 +25,15 @@ const Home = () => {
   const clearAttendanceResult = useUserStore(
     (state) => state.clearAttendanceResult
   );
+  const hasAttendedToday = useUserStore((state) => state.hasAttendedToday);
+  const lastExerciseDate = useUserStore((state) => state.lastExerciseDate);
+  const analysisStatus = useUserStore((state) => state.analysisStatus);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const today = getKstDateString();
+  const pendingMissionCount =
+    (hasAttendedToday ? 0 : 1) +
+    (lastExerciseDate === today || analysisStatus === "analyzing" ? 0 : 1);
 
   useEffect(() => {
     initAttendance();
@@ -35,7 +43,7 @@ const Home = () => {
   }, [initAttendance, initLevel, initLocation, initWorkoutCompletion]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] overflow-y-auto pb-28">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] overflow-y-auto pb-28">
       {/* ── Attendance Success Modal ── */}
       {attendanceResult && (
         <CommonModal onCancelClick={clearAttendanceResult}>
@@ -201,7 +209,7 @@ const Home = () => {
                 <polyline points="12 6 12 12 16 14" />
               </svg>
               <span className="text-[10px] text-gray-500 font-black uppercase">
-                2 To-do
+                {pendingMissionCount} To-do
               </span>
             </div>
           </div>

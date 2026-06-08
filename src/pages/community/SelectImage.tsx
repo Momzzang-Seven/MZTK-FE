@@ -45,7 +45,7 @@ const SelectImage = () => {
 
   if (isFetching) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-dvh">
         <span className="text-sm text-gray-400">불러오는 중...</span>
       </div>
     );

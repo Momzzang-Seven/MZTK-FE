@@ -30,7 +30,7 @@ const QuestionHeader = ({
     <div className="fixed top-0 w-full max-w-[450px] h-[88px] bg-white/80 backdrop-blur-2xl z-[100] px-5 flex items-center justify-between border-b border-gray-100/50 animate-in fade-in slide-in-from-top-4 duration-700">
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/community/question")}
           className="group flex items-center justify-center w-11 h-11 rounded-full bg-gray-50/50 hover:bg-gray-100 transition-all active:scale-90 border border-gray-100/30"
         >
           <ChevronLeft

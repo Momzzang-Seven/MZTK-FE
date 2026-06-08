@@ -1,4 +1,5 @@
 import type { PostType } from "@types";
+import { useUserStore } from "@store";
 
 interface SharePostProps {
   type: PostType;
@@ -6,6 +7,7 @@ interface SharePostProps {
 }
 
 const SharePost = ({ type, postId }: SharePostProps) => {
+  const { showSnackbar } = useUserStore((s) => s);
   const BASE_URL = window.location.origin;
   const COMMUNITY_BASE = `${BASE_URL}/community`;
 
@@ -16,27 +18,33 @@ const SharePost = ({ type, postId }: SharePostProps) => {
 
   const url = basePathByType[type] + postId;
 
-  const handleShareClick = () => {
+  const handleShareClick = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+
     if (!navigator.share) {
-      console.log("Web Share API를 지원하지 않는 환경입니다.");
+      await navigator.clipboard?.writeText(url);
       return;
     }
 
-    navigator
-      .share({
+    try {
+      await navigator.share({
         title: "몸짱코인 게시물 공유하기",
         url,
-      })
-      .catch((error) => console.log("공유 실패:", error));
+      });
+    } catch (error) {
+      showSnackbar("공유에 실패했습니다. URL이 클립보드에 복사되었습니다.");
+      await navigator.clipboard?.writeText(url);
+    }
   };
 
   return (
-    <div
-      className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+    <button
+      type="button"
+      className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer border-none bg-transparent"
       onClick={handleShareClick}
     >
       <img src="/icon/share.svg" alt="공유" className="w-5 h-5" />
-    </div>
+    </button>
   );
 };
 

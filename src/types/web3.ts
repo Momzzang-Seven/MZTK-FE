@@ -1,3 +1,11 @@
+export type ResourceType =
+  | "FREE"
+  | "QUESTION"
+  | "ANSWER"
+  | "ORDER"
+  | "MARKETPLACE_RESERVATION"
+  | "WALLET_REGISTRATION";
+
 export type ActionType =
   | "QNA_QUESTION_CREATE"
   | "QNA_QUESTION_UPDATE"
@@ -5,7 +13,19 @@ export type ActionType =
   | "QNA_ANSWER_CREATE"
   | "QNA_ANSWER_UPDATE"
   | "QNA_ANSWER_DELETE"
-  | "QNA_ANSWER_ACCEPT";
+  | "QNA_ANSWER_ACCEPT"
+  | "MARKETPLACE_CLASS_PURCHASE"
+  | "MARKETPLACE_CLASS_CANCEL"
+  | "MARKETPLACE_CLASS_CONFIRM"
+  | "MARKETPLACE_CLASS_EXPIRED_REFUND"
+  | "MARKETPLACE_ADMIN_REFUND"
+  | "MARKETPLACE_ADMIN_SETTLE"
+  | "MARKETPLACE_RESERVATION_CANCEL"
+  | "MARKETPLACE_RESERVATION_COMPLETE"
+  | "MARKETPLACE_DEADLINE_REFUND"
+  | "MARKETPLACE_TRAINER_REJECT"
+  | "MARKETPLACE_SETTLEMENT"
+  | "WALLET_ESCROW_APPROVE";
 
 export type Web3IntentStatus =
   | "AWAITING_SIGNATURE"
@@ -16,6 +36,30 @@ export type Web3IntentStatus =
   | "EXPIRED"
   | "CANCELED"
   | "NONCE_STALE";
+
+export type SignRequestUnavailableReason =
+  | "AUTH_EXPIRED"
+  | "EIP7702_DEADLINE_TOO_CLOSE";
+
+export type Web3RecoveryStatus = "ONCHAIN_UNCERTAIN";
+
+export type Web3RecoveryReason = "RECEIPT_TIMEOUT";
+
+export type Web3TransactionStatus =
+  | "PENDING"
+  | "UNCONFIRMED"
+  | "SUCCEEDED"
+  | "FAILED";
+
+export type Web3ViewerAction =
+  | "EXECUTE"
+  | "RECOVER"
+  | "CANCEL"
+  | "COMPLETE"
+  | "TRAINER_REJECT"
+  | "CLAIM_DEADLINE_REFUND"
+  | "REFUND"
+  | "SETTLE";
 
 export interface SignRequest {
   // EIP7702: authorization, submit
@@ -41,14 +85,13 @@ export interface SignRequest {
     maxPriorityFeePerGasHex: string;
     maxFeePerGasHex: string;
     expectedNonce: number;
-  };
+  } | null;
 }
 
-// 백엔드 -> 프론트
 export interface Web3Execution {
   resource: {
-    type: "QUESTION" | "ANSWER";
-    id: string; // 질문/답변 id
+    type: ResourceType;
+    id: string; // 질문/답변/registration id
     status: "PENDING_EXECUTION" | "COMPLETED" | "FAILED"; // 리소스 관점 상태
   };
   actionType: ActionType; // 현재 어떤 web3 액션인가
@@ -56,24 +99,30 @@ export interface Web3Execution {
     id: string; // 후속 조회, 실행 폴링 기준 ID
     status: Web3IntentStatus; // 현재 실행 intent 상태
     expiresAt: string; // 서명 유효시간 종료시점
+    expiresAtEpochSeconds?: number; // 서명 가능 만료 epoch seconds (wallet registration 응답에서 사용)
   };
   execution: {
     mode: "EIP7702" | "EIP1559"; // 서명방식 분기 기준
     signCount: number; // 사용자가 몇 번 사용해야 하는지
   };
-  signRequest: SignRequest; // 실제 서명 대상 데이터
+  signRequest: SignRequest | null; // 실제 서명 대상 데이터. 서명 노출이 닫혔을 때 null
+  signRequestUnavailableReason?: SignRequestUnavailableReason | null; // signRequest가 null인 이유
+  existing?: boolean; // 기존 active intent를 재사용한 응답인지
   transaction?: {
-    txHash: string;
-  };
+    id?: number;
+    status?: Web3TransactionStatus;
+    txHash: string | null;
+  } | null;
+  recoveryStatus?: Web3RecoveryStatus | null;
+  recoveryReason?: Web3RecoveryReason | null;
+  retryAllowed?: boolean | null;
+  viewerAction?: Web3ViewerAction | null;
+  viewerCanExecute?: boolean;
+  viewerCanRecover?: boolean;
 }
 
-// 프론트 -> 백엔드
 export interface ExecuteWeb3TransactionRequest {
   authorizationSignature?: string;
   submitSignature?: string;
   signedRawTransaction?: string;
-}
-
-export interface StoredWeb3Action extends Web3Execution {
-  summary: string;
 }

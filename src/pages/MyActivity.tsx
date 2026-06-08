@@ -44,13 +44,17 @@ const EMPTY_MESSAGES: Record<MyPostTab, { title: string; desc: string }> = {
   },
 };
 
-const isValidTab = (tab: string | undefined): tab is MyPostTab =>
-  tab === "written" || tab === "liked" || tab === "commented";
+const resolveTab = (tab: string | undefined): MyPostTab | null => {
+  if (tab === "written") return "written";
+  if (tab === "liked" || tab === "likes") return "liked";
+  if (tab === "commented" || tab === "comments") return "commented";
+  return null;
+};
 
 const MyActivity = () => {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
-  const resolvedTab: MyPostTab = isValidTab(tab) ? tab : "written";
+  const resolvedTab: MyPostTab = resolveTab(tab) ?? "written";
 
   const {
     activeTab,
@@ -67,9 +71,14 @@ const MyActivity = () => {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (tab !== resolvedTab) {
+      navigate(`/my/activity/${resolvedTab}`, { replace: true });
+      return;
+    }
+
     switchTab(resolvedTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [tab, resolvedTab, navigate]);
 
   useEffect(() => {
     const el = bottomRef.current;
@@ -86,11 +95,10 @@ const MyActivity = () => {
 
   const handleTabSwitch = (t: MyPostTab) => {
     navigate(`/my/activity/${t}`, { replace: true });
-    switchTab(t);
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] font-pretendard relative">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] font-pretendard relative">
       {/* Immersive Floating Header Background */}
       <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-main/5 via-transparent to-transparent pointer-events-none" />
 

@@ -13,6 +13,7 @@ const {
   mockStartAnalysis,
   mockUploadFileToPresignedUrl,
   mockSubmitWorkoutRecord,
+  mockGetVerificationDetail,
 } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
   mockApplyWorkoutVerificationSuccess: vi.fn(),
@@ -22,6 +23,7 @@ const {
   mockStartAnalysis: vi.fn(),
   mockUploadFileToPresignedUrl: vi.fn(),
   mockSubmitWorkoutRecord: vi.fn(),
+  mockGetVerificationDetail: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -53,6 +55,7 @@ vi.mock("@services/verification", () => ({
     submitWorkoutPhoto: vi.fn(),
     submitWorkoutRecord: mockSubmitWorkoutRecord,
     getTodayWorkoutCompletion: vi.fn(),
+    getVerificationDetail: mockGetVerificationDetail,
   },
 }));
 
@@ -60,6 +63,30 @@ describe("RecordAuth Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.URL.createObjectURL = vi.fn(() => "mock-url");
+    mockGetVerificationDetail.mockImplementation((verificationId: string) => {
+      if (verificationId === "verification-4") {
+        return Promise.resolve({
+          verificationId,
+          verificationKind: "WORKOUT_RECORD",
+          verificationStatus: "REJECTED",
+          rewardStatus: "NOT_REQUESTED",
+          exerciseDate: null,
+          rejectionReasonCode: "DATE_MISMATCH",
+          rejectionReasonDetail: "visible date is not today",
+          failureCode: null,
+        });
+      }
+      return Promise.resolve({
+        verificationId,
+        verificationKind: "WORKOUT_RECORD",
+        verificationStatus: "VERIFIED",
+        rewardStatus: "SUCCEEDED",
+        exerciseDate: "2026-04-25",
+        rejectionReasonCode: null,
+        rejectionReasonDetail: null,
+        failureCode: null,
+      });
+    });
   });
 
   it("기록 이미지를 선택하면 업로드 버튼이 활성화된다", () => {

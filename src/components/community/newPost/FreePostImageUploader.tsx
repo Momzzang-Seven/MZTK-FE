@@ -41,15 +41,16 @@ const FreePostImageUploader = ({ maxImages = 5 }: MultiImageUploaderProps) => {
       }
 
       const remaining = maxImages - images.length;
-      const selected = selectedFiles.slice(0, remaining);
 
       if (selectedFiles.length > remaining) {
         showSnackbar(`이미지는 최대 ${maxImages}장까지 등록할 수 있어요.`, {
-          variant: "info",
+          variant: "error",
         });
+        if (inputRef.current) inputRef.current.value = "";
+        return;
       }
 
-      await uploadImages(selected);
+      await uploadImages(selectedFiles);
 
       if (inputRef.current) inputRef.current.value = "";
     },

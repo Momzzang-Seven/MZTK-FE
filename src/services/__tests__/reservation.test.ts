@@ -3,6 +3,7 @@ import { api } from "@services/client";
 import {
   approveTrainerReservation,
   cancelMyReservation,
+  claimExpiredRefundMyReservation,
   completeMyReservation,
   createClassReservation,
   getClassReservationInfo,
@@ -11,6 +12,8 @@ import {
   getTrainerReservationDetail,
   getTrainerReservations,
   rejectTrainerReservation,
+  recoverMyReservationEscrow,
+  recoverTrainerReservationEscrow,
 } from "@services/reservation";
 
 const apiResponse = <T>(data: T) => ({ data: { data } });
@@ -46,10 +49,9 @@ describe("reservation service", () => {
       slotId: 1,
       reservationDate: "2026-05-04",
       reservationTime: "10:00:00",
+      idempotencyKey: "reservation:101:1:2026-05-04:10:00:00:test",
+      signedAmount: "300",
       userRequest: "허리 통증이 있습니다.",
-      signedAmount: 300,
-      delegationSignature: `0x${"1".repeat(130)}`,
-      executionSignature: `0x${"2".repeat(130)}`,
     };
     const response = { reservationId: 10, status: "PENDING" as const };
     vi.mocked(api.post).mockResolvedValueOnce(apiResponse(response));
@@ -77,11 +79,19 @@ describe("reservation service", () => {
     vi.mocked(api.patch).mockResolvedValueOnce(
       apiResponse({ reservationId: 10, status: "SETTLED" })
     );
+    vi.mocked(api.patch).mockResolvedValueOnce(
+      apiResponse({ reservationId: 10, status: "DEADLINE_REFUND_PENDING" })
+    );
+    vi.mocked(api.post).mockResolvedValueOnce(
+      apiResponse({ reservationId: 10, status: "PURCHASE_PENDING" })
+    );
 
     await getMyReservations("PENDING");
     await getReservationDetail(10);
     await cancelMyReservation(10);
     await completeMyReservation(10);
+    await claimExpiredRefundMyReservation(10);
+    await recoverMyReservationEscrow(10);
 
     expect(api.get).toHaveBeenNthCalledWith(1, "/marketplace/me/reservations", {
       params: { status: "PENDING", cursor: undefined, size: 10 },
@@ -94,6 +104,14 @@ describe("reservation service", () => {
     expect(api.patch).toHaveBeenNthCalledWith(
       2,
       "/marketplace/me/reservations/10/complete"
+    );
+    expect(api.patch).toHaveBeenNthCalledWith(
+      3,
+      "/marketplace/me/reservations/10/deadline-refund"
+    );
+    expect(api.post).toHaveBeenNthCalledWith(
+      1,
+      "/marketplace/me/reservations/10/web3/recover"
     );
   });
 
@@ -110,11 +128,15 @@ describe("reservation service", () => {
     vi.mocked(api.patch).mockResolvedValueOnce(
       apiResponse({ reservationId: 10, status: "REJECTED" })
     );
+    vi.mocked(api.post).mockResolvedValueOnce(
+      apiResponse({ reservationId: 10, status: "REJECT_PENDING" })
+    );
 
     await getTrainerReservations("PENDING");
     await getTrainerReservationDetail(10);
     await approveTrainerReservation(10);
     await rejectTrainerReservation(10, { rejectionReason: "일정 불가" });
+    await recoverTrainerReservationEscrow(10);
 
     expect(api.get).toHaveBeenNthCalledWith(
       1,
@@ -133,6 +155,10 @@ describe("reservation service", () => {
       2,
       "/marketplace/trainer/reservations/10/reject",
       { rejectionReason: "일정 불가" }
+    );
+    expect(api.post).toHaveBeenNthCalledWith(
+      1,
+      "/marketplace/trainer/reservations/10/web3/recover"
     );
   });
 });

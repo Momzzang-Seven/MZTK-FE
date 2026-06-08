@@ -8,6 +8,7 @@ export interface GetMarketClassesParams {
   trainerId?: number;
   startTime?: string;
   endTime?: string;
+  search?: string;
   page?: number;
 }
 

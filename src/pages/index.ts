@@ -39,7 +39,6 @@ export { default as MarketReservation } from "./market/MarketReservation";
 export { default as ReviewWrite } from "./market/ReviewWrite";
 export { default as MyTknHistory } from "./MyTknHistory";
 export { default as VerifyWallet } from "./VerifyWallet";
-export { default as VerifyApprove } from "./VerifyApprove";
 
 // admin page
 export { default as AdminDashboard } from "./admin/Dashboard";

@@ -2,7 +2,7 @@ import TrainerHeader from "@components/trainer/TrainerHeader";
 
 const TrainerReviews = () => {
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh">
       <TrainerHeader title="후기 보기" showBack />
 
       <div className="flex-1 flex flex-col items-center justify-center px-8 pb-32 animate-in zoom-in-95 duration-700">

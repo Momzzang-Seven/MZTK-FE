@@ -5,6 +5,11 @@ import { formatTimeAgo } from "@utils";
 import { useCommentService, usePostService } from "@hooks";
 
 vi.mock("@utils", () => ({
+  buildImageUrl: vi.fn((value: string) =>
+    value.startsWith("http") || value.startsWith("/")
+      ? value
+      : `https://cdn.example/${value}`
+  ),
   formatTimeAgo: vi.fn(),
   replaceImageSrc: vi.fn((content: string) => content),
 }));
@@ -283,5 +288,25 @@ describe("Answer 컴포넌트", () => {
     await waitFor(() => {
       expect(input).toHaveValue("");
     });
+  });
+
+  it("본문 inline 이미지가 없어도 첨부 이미지를 렌더링한다", () => {
+    render(
+      <Answer
+        answer={
+          {
+            ...mockAnswer,
+            content: "첨부 이미지 답변입니다.",
+            images: [{ imageId: 7, imageUrl: "answers/7.png" }],
+          } as unknown as Parameters<typeof Answer>[0]["answer"]
+        }
+        {...defaultProps}
+      />
+    );
+
+    expect(screen.getByAltText("answer")).toHaveAttribute(
+      "src",
+      "https://cdn.example/answers/7.png"
+    );
   });
 });

@@ -2,6 +2,7 @@ import {
   CREATE_TICKET_TEXT,
   EDIT_TICKET_TEXT,
   EXERCISE_CATEGORIES,
+  getKoreanErrorMessageFromError,
 } from "@constant";
 import TrainerHeader from "@components/trainer/TrainerHeader";
 import { CommonButton, CommonModal } from "@components/common";
@@ -143,17 +144,13 @@ const TicketForm = ({
     try {
       await onSubmit();
     } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
       setModalState({
         isOpen: true,
         title: mode === "create" ? "등록 실패" : "수정 실패",
-        desc:
-          err?.response?.data?.message ||
-          err?.message ||
-          "서버 요청 중 오류가 발생했습니다.",
+        desc: getKoreanErrorMessageFromError(
+          error,
+          "서버 요청 중 오류가 발생했습니다."
+        ),
         variant: "error",
       });
     }
@@ -175,7 +172,7 @@ const TicketForm = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-screen font-pretendard">
+    <div className="flex flex-col h-full bg-[#FDFDFD] min-h-dvh font-pretendard">
       <TrainerHeader
         title="클래스 수정"
         desc="수정된 정보는 수강생들에게 즉시 반영됩니다."
@@ -196,6 +193,7 @@ const TicketForm = ({
           <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 px-1">
             <button
               onClick={triggerFileInput}
+              type="button"
               className="w-28 h-28 rounded-[32px] bg-white border-2 border-dashed border-gray-100 flex flex-col items-center justify-center shrink-0 active:scale-95 transition-all group hover:border-main/30 shadow-sm"
             >
               <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-amber-50 transition-colors">
@@ -207,15 +205,15 @@ const TicketForm = ({
               <span className="text-[11px] font-black text-gray-400">
                 {imagePreviews.length} / 5
               </span>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={onImageChangeWrapper}
-                accept="image/*"
-                multiple
-                className="hidden"
-              />
             </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={onImageChangeWrapper}
+              accept="image/*"
+              multiple
+              className="hidden"
+            />
 
             {imagePreviews.map((preview, idx) => (
               <div
@@ -598,7 +596,7 @@ const TicketForm = ({
       </div>
 
       {/* Fixed Footer */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] p-6 bg-white/95 backdrop-blur-xl border-t border-gray-100 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-white/95 backdrop-blur-xl border-t border-gray-100 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <CommonButton
           label={isSubmitting ? "저장 중..." : texts.SUBMIT}
           onClick={handleSubmit}

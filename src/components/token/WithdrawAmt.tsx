@@ -7,6 +7,12 @@ interface WithdrawAmtProps {
 export const WithdrawAmt = ({ amt, value, onChange }: WithdrawAmtProps) => {
   const percentageList = [25, 50, 75, 100];
 
+  const handleAmountChange = (nextValue: string) => {
+    if (nextValue === "" || /^\d*(?:\.\d*)?$/.test(nextValue)) {
+      onChange(nextValue);
+    }
+  };
+
   const handlePercentageClick = (percentage: number) => {
     if (amt <= 0) return;
 
@@ -34,9 +40,10 @@ export const WithdrawAmt = ({ amt, value, onChange }: WithdrawAmtProps) => {
         <div className="w-full flex flex-row gap-x-2 items-end justify-end">
           <input
             className="text-[30px] font-bold flex-1 w-full text-right outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-grey-pale"
-            type="number"
+            type="text"
+            inputMode="decimal"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => handleAmountChange(e.target.value)}
             placeholder="0"
           />
           <div className="body shrink-0 pb-2 text-black font-medium">MZTK</div>

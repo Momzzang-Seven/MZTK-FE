@@ -14,6 +14,7 @@ interface CommonModalProps {
   children?: React.ReactNode;
   /** If true, ignores the mobile max-width constraint for the overlay background */
   fullWidth?: boolean;
+  placement?: "center" | "bottom";
 }
 
 const VARIANT_CONFIG = {
@@ -57,6 +58,7 @@ export const CommonModal = ({
   variant = "warning",
   children,
   fullWidth: providedFullWidth,
+  placement,
 }: CommonModalProps) => {
   const config = VARIANT_CONFIG[variant];
 
@@ -65,12 +67,13 @@ export const CommonModal = ({
 
   const portalTarget = document.getElementById("app-root") ?? document.body;
 
-  // If we have children but no title, treat as a Bottom Sheet
-  const isBottomSheet = !!children && !title;
+  const isBottomSheet = placement
+    ? placement === "bottom"
+    : !!children && !title;
 
   return createPortal(
     <div
-      className={`z-[9990] fixed top-0 left-1/2 -translate-x-1/2 w-full h-full bg-black/40 backdrop-blur-xl flex flex-col items-center px-6 transition-all duration-500 animate-in fade-in ${
+      className={`z-[9990] fixed top-0 left-1/2 -translate-x-1/2 w-full h-dvh bg-black/40 backdrop-blur-xl flex flex-col items-center px-6 transition-all duration-500 animate-in fade-in ${
         isBottomSheet ? "justify-end pb-0 px-0" : "justify-center"
       } ${fullWidth ? "" : "max-w-[450px]"}`}
       onClick={onCancelClick}

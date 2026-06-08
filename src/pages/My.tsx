@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CurrentTkn,
   LevelProgress,
@@ -9,7 +9,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@store";
 import { CommonModal } from "@components/common";
+import { getKoreanErrorMessageFromError } from "@constant";
 import { INQUIRY_FORM_URL } from "@constant/inquiry";
+import { PostWithdraw } from "@services/auth";
 
 const ACTIVITY_BUTTONS = [
   {
@@ -72,17 +74,23 @@ const ACTIVITY_BUTTONS = [
 const My = () => {
   const navigate = useNavigate();
   const user = useUserStore((state) => state.user);
+  const initLevel = useUserStore((state) => state.initLevel);
   const updateRole = useUserStore((state) => state.updateRole);
   const clearUser = useUserStore((state) => state.clearUser);
   const showSnackbar = useUserStore((state) => state.showSnackbar);
-  const selectedNetwork = useUserStore((state) => state.selectedNetwork);
-  const setSelectedNetwork = useUserStore((state) => state.setSelectedNetwork);
   const [isChangingRole, setIsChangingRole] = useState(false);
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const isTrainer = user?.role === "TRAINER";
   const targetRole = isTrainer ? "USER" : "TRAINER";
   const targetRoleLabel = isTrainer ? "일반 회원" : "트레이너";
+
+  useEffect(() => {
+    void initLevel();
+  }, [initLevel]);
 
   const handleRoleSwitch = async () => {
     if (isChangingRole) return;
@@ -102,8 +110,40 @@ const My = () => {
     navigate("/login", { replace: true });
   };
 
+  useEffect(() => {
+    initLevel();
+  }, [initLevel]);
+  const closeWithdrawModal = () => {
+    if (isWithdrawing) return;
+    setIsWithdrawModalOpen(false);
+    setWithdrawError("");
+  };
+
+  const handleWithdraw = async () => {
+    if (isWithdrawing) return;
+
+    setIsWithdrawing(true);
+    setWithdrawError("");
+
+    try {
+      await PostWithdraw();
+      clearUser();
+      showSnackbar("회원탈퇴가 완료되었습니다.", { variant: "success" });
+      navigate("/login", { replace: true });
+    } catch (error) {
+      setWithdrawError(
+        getKoreanErrorMessageFromError(
+          error,
+          "회원탈퇴에 실패했습니다. 다시 시도해 주세요."
+        )
+      );
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] pb-28">
+    <div className="flex flex-col min-h-dvh bg-[#FDFDFD] pb-28">
       {/* ── Header bg ── */}
       <div className="relative pt-12 pb-20 px-6 overflow-hidden">
         <div className="absolute -top-10 -right-10 w-56 h-56 bg-main opacity-[0.07] blur-[60px] rounded-full pointer-events-none" />
@@ -285,71 +325,6 @@ const My = () => {
           <LevelReward />
         </div>
 
-        {/* Network Settings */}
-        <div
-          className="bg-white rounded-[28px] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden animate-fade-slide-up"
-          style={{ animationDelay: "0.22s" }}
-        >
-          <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#FAB12F"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-[11px] text-gray-400 font-black uppercase tracking-wider">
-                  Network
-                </p>
-                <p className="text-gray-900 font-black text-[13px]">
-                  네트워크 설정
-                </p>
-              </div>
-            </div>
-            <div className="px-2.5 py-1 rounded-lg bg-gray-50 text-[10px] font-black text-gray-400 uppercase">
-              {selectedNetwork === "OPT" ? "Optimism" : "Base"}
-            </div>
-          </div>
-          <div className="p-4 flex gap-2">
-            {(["OPT", "BASE"] as const).map((net) => {
-              const isActive = selectedNetwork === net;
-              return (
-                <button
-                  key={net}
-                  onClick={() => setSelectedNetwork(net)}
-                  className={`btn-press flex-1 py-3.5 rounded-[18px] font-black text-[14px] transition-all border-none ${
-                    isActive
-                      ? "bg-main text-white shadow-lg shadow-main/25"
-                      : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    {isActive && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    )}
-                    {net === "OPT" ? "Optimism" : "Base"}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          <div className="px-5 pb-4">
-            <p className="text-[11px] text-gray-400 font-bold leading-relaxed">
-              * 선택한 네트워크의 토큰 주소로 서명 및 지갑 등록이 진행됩니다.
-            </p>
-          </div>
-        </div>
-
         {/* Community activity */}
         <div
           className="bg-white rounded-[28px] border border-gray-100 shadow-xl shadow-gray-100/50 overflow-hidden animate-fade-slide-up"
@@ -397,6 +372,55 @@ const My = () => {
           ))}
         </div>
 
+        {/* Account withdrawal */}
+        <div
+          className="bg-white rounded-[28px] border border-red-100 shadow-xl shadow-gray-100/50 overflow-hidden animate-fade-slide-up"
+          style={{ animationDelay: "0.3s" }}
+        >
+          <button
+            type="button"
+            onClick={() => setIsWithdrawModalOpen(true)}
+            className="btn-press w-full flex items-center justify-between px-5 py-4 hover:bg-red-50/40 transition-colors border-none bg-transparent"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center text-red-500">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-[11px] text-red-300 font-black uppercase tracking-wider">
+                  Account
+                </p>
+                <p className="text-red-500 font-black text-[13px]">회원탈퇴</p>
+              </div>
+            </div>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#F87171"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+
         {/* Support link */}
         <p className="text-center text-[12px] text-gray-400 font-bold pb-4">
           지급 오류 또는 지연 관련 문의는{" "}
@@ -417,6 +441,42 @@ const My = () => {
           confirmLabel="확인"
           onConfirmClick={handleConfirmLogout}
         />
+      )}
+
+      {isWithdrawModalOpen && (
+        <CommonModal
+          title="회원탈퇴"
+          desc="정말 탈퇴하시겠습니까?<br/>탈퇴 후 계정 정보는 복구할 수 없습니다."
+          variant="error"
+        >
+          <div className="mt-5 space-y-4">
+            {withdrawError && (
+              <p className="text-[12px] font-bold text-red-500 leading-relaxed">
+                {withdrawError}
+              </p>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={closeWithdrawModal}
+                disabled={isWithdrawing}
+                className="flex-1 py-4 rounded-[22px] bg-gray-50 text-gray-500 text-[14px] font-black disabled:opacity-60"
+              >
+                아니요
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleWithdraw();
+                }}
+                disabled={isWithdrawing}
+                className="flex-1 py-4 rounded-[22px] bg-red-500 text-white text-[14px] font-black shadow-lg shadow-red-100 disabled:opacity-60"
+              >
+                {isWithdrawing ? "처리 중..." : "네"}
+              </button>
+            </div>
+          </div>
+        </CommonModal>
       )}
     </div>
   );
