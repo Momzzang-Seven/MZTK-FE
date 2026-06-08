@@ -30,7 +30,7 @@ export class OnchainRateLimitError extends Error {
   readonly cause?: unknown;
 
   constructor(cause?: unknown) {
-    super("RPC rate limit exceeded while fetching token transfers");
+    super("토큰 전송 내역을 불러오는 중 RPC 요청 한도를 초과했습니다.");
     this.name = "OnchainRateLimitError";
     this.cause = cause;
   }
@@ -45,7 +45,7 @@ const addressFromTopic = (topic: string) =>
 const createProvider = () => {
   const { RPC_URL } = getNetworkConfig();
   if (!RPC_URL) {
-    throw new Error("RPC URL is not configured");
+    throw new Error("RPC URL이 설정되지 않았습니다.");
   }
   return new ethers.JsonRpcProvider(RPC_URL);
 };

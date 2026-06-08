@@ -228,8 +228,8 @@ const Web3Management = () => {
     }
 
     openConfirm({
-      title: "Manual Transaction Confirmation",
-      message: `DB transaction #${targetId} will be marked as succeeded.`,
+      title: "수동 트랜잭션 확인",
+      message: `DB 트랜잭션 #${targetId}를 성공 상태로 변경합니다.`,
       variant: "warning",
       onConfirm: async () => {
         setIsLoading(true);
@@ -251,7 +251,7 @@ const Web3Management = () => {
 
   const handleDisableKey = (alias: string) => {
     openConfirm({
-      title: "Disable Treasury Key",
+      title: "트레저리 키 비활성화",
       message: ADMIN_TEXT.WEB3.TREASURY.CONFIRM_DISABLE.replace(
         "%ALIAS%",
         alias
@@ -270,7 +270,7 @@ const Web3Management = () => {
 
   const handleArchiveKey = (alias: string) => {
     openConfirm({
-      title: "Archive Treasury Key",
+      title: "트레저리 키 보관",
       message: ADMIN_TEXT.WEB3.TREASURY.CONFIRM_ARCHIVE.replace(
         "%ALIAS%",
         alias
@@ -308,7 +308,7 @@ const Web3Management = () => {
   const loadMarketplaceReview = async (clearExecution = true) => {
     const reservationId = Number(marketplaceReservationId);
     if (!Number.isInteger(reservationId) || reservationId <= 0) {
-      showSnackbar("Enter a valid reservation ID.");
+      showSnackbar("올바른 예약 ID를 입력해 주세요.");
       return;
     }
 
@@ -331,7 +331,7 @@ const Web3Management = () => {
     } catch {
       setMarketplaceReview(null);
       setSelectedReasonCode("");
-      showSnackbar("Marketplace escrow review failed.");
+      showSnackbar("마켓플레이스 에스크로 검토 정보를 불러오지 못했습니다.");
     } finally {
       setIsMarketplaceReviewLoading(false);
     }
@@ -354,11 +354,10 @@ const Web3Management = () => {
       return;
     }
 
-    const actionLabel =
-      marketplaceAction === "refund" ? "refund" : "settlement";
+    const actionLabel = marketplaceAction === "refund" ? "환불" : "정산";
     openConfirm({
-      title: `Execute Marketplace ${actionLabel}`,
-      message: `Reservation #${reservationId} will be processed with reason ${selectedReason.reasonCode}.`,
+      title: `마켓플레이스 ${actionLabel} 실행`,
+      message: `예약 #${reservationId}을(를) ${selectedReason.reasonCode} 사유로 처리합니다.`,
       variant: selectedReason.requiresConfirmation ? "error" : "warning",
       onConfirm: async () => {
         setIsMarketplaceExecuting(true);
@@ -379,10 +378,10 @@ const Web3Management = () => {
                   confirmEarlySettle: selectedReason.requiresConfirmation,
                 });
           setMarketplaceExecution(result);
-          showSnackbar("Marketplace escrow action requested.");
+          showSnackbar("마켓플레이스 에스크로 작업을 요청했습니다.");
           await loadMarketplaceReview(false);
         } catch {
-          showSnackbar("Marketplace escrow action failed.");
+          showSnackbar("마켓플레이스 에스크로 작업 요청에 실패했습니다.");
         } finally {
           setIsMarketplaceExecuting(false);
         }
@@ -436,11 +435,10 @@ const Web3Management = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-1 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 h-fit">
           <h3 className="text-lg font-bold text-gray-800 mb-2">
-            Manual Transaction Confirmation
+            수동 트랜잭션 확인
           </h3>
           <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-            Enter the backend DB transaction ID and the on-chain transaction
-            evidence separately.
+            백엔드 DB 트랜잭션 ID와 온체인 트랜잭션 근거를 각각 입력해 주세요.
           </p>
 
           <div className="space-y-4">

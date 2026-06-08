@@ -16,7 +16,7 @@ export const useLevel = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { setLevel, setXp, setMaxXp } = useUserStore();
+  const { setLevel, setXp, setMaxXp, setRewardMztkForNext } = useUserStore();
 
   /**
    * 내 레벨 정보 조회 및 스토어 동기화
@@ -32,13 +32,14 @@ export const useLevel = () => {
       setLevel(data.level);
       setXp(data.availableXp);
       setMaxXp(data.requiredXpForNext); // Fix: use total requirement directly
+      setRewardMztkForNext(data.rewardMztkForNext);
     } catch (err) {
       console.error("레벨 정보 조회 실패:", err);
       setError("레벨 정보를 불러오는 데 실패했습니다.");
     } finally {
       setLoading(false);
     }
-  }, [setLevel, setXp, setMaxXp]);
+  }, [setLevel, setXp, setMaxXp, setRewardMztkForNext]);
 
   /**
    * 레벨업 수행

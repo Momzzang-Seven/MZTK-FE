@@ -1,8 +1,11 @@
 import { useUserStore } from "@store/userStore";
 
 export const LevelReward = () => {
-  const { level } = useUserStore();
-  const reward = 5; // 레벨업당 지급 MZTK
+  const { level, rewardMztkForNext } = useUserStore();
+  const rewardLabel =
+    rewardMztkForNext === null
+      ? "보상 확인 중"
+      : `+${rewardMztkForNext.toLocaleString()} MZTK`;
 
   return (
     <div
@@ -90,7 +93,7 @@ export const LevelReward = () => {
               <path d="M8.5 9.5A2.5 2.5 0 0 1 12 8a2.5 2.5 0 0 1 2.5 2.5c0 2-2.5 3-2.5 3s-2.5-1-2.5-3Z" />
             </svg>
             <span className="text-white font-black text-[16px]">
-              +{reward} MZTK
+              {rewardLabel}
             </span>
           </div>
         </div>

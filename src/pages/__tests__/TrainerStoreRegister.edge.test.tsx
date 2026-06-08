@@ -50,7 +50,7 @@ describe("TrainerStoreRegister edge validation", () => {
     renderPage();
 
     expect(
-      await screen.findByText("Please enter a complete Korean phone number.")
+      await screen.findByText("올바른 국내 전화번호를 끝까지 입력해 주세요.")
     ).toBeInTheDocument();
     expect(getSaveButton()).toBeDisabled();
     expect(mockUpsertTrainerStore).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe("TrainerStoreRegister edge validation", () => {
     });
     fireEvent.click(getSaveButton());
 
-    expect(await screen.findByText("Invalid URL")).toBeInTheDocument();
+    expect(await screen.findByText("URL 형식 오류")).toBeInTheDocument();
     await waitFor(() => {
       expect(mockUpsertTrainerStore).not.toHaveBeenCalled();
     });

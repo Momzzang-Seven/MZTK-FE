@@ -37,7 +37,7 @@ export const AdminHeader = () => {
 
   const handleLogout = () => {
     openConfirm({
-      title: "Logout",
+      title: "로그아웃",
       message: "로그아웃 하시겠습니까?",
       variant: "warning",
       onConfirm: () => {
@@ -97,9 +97,9 @@ export const AdminHeader = () => {
       {isComingSoonOpen && (
         <CommonModal
           variant="info"
-          title="Service Notice"
+          title="서비스 안내"
           desc="준비 중인 페이지입니다."
-          confirmLabel="OK"
+          confirmLabel="확인"
           onConfirmClick={() => setIsComingSoonOpen(false)}
         />
       )}
