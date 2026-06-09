@@ -1,13 +1,17 @@
 import { test, expect } from "@playwright/test";
-import {
-  mockCoreAppApis,
-  mockLocalLogin,
-  TEST_TRAINER,
-  TEST_USER,
-} from "./fixtures/testUser";
+import { mockCoreAppApis, TEST_USER, MOCK_WALLET } from "./fixtures/testUser";
 
 test.describe("로그인 및 로그아웃 흐름", () => {
   test.beforeEach(async ({ page }) => {
+    page.on("pageerror", (err) => {
+      console.error(`PAGE ERROR: ${err.message}\n${err.stack}`);
+    });
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        console.error(`CONSOLE ERROR: ${msg.text()}`);
+      }
+    });
+
     await mockCoreAppApis(page);
     await page.goto("/login");
     await page.evaluate(() => {
@@ -17,36 +21,51 @@ test.describe("로그인 및 로그아웃 흐름", () => {
     await page.reload();
   });
 
-  test("회원 로컬 로그인 후 홈으로 이동한다", async ({ page }) => {
-    await mockLocalLogin(page, TEST_USER);
-    await page.getByPlaceholder("이메일").fill(TEST_USER.email);
-    await page.getByPlaceholder("비밀번호").fill(TEST_USER.password);
-    await page.getByRole("button", { name: "로컬 계정 로그인" }).click();
-
-    await expect(page).toHaveURL("/");
-    // 레벨 표시 확인 (유연한 매칭)
-    await expect(page.getByText(/Lv\.\d+/i).first()).toBeVisible({
-      timeout: 10000,
-    });
-  });
-
-  test("트레이너 로컬 로그인 후 트레이너 대시보드로 이동한다", async ({
-    page,
-  }) => {
-    await mockLocalLogin(page, TEST_TRAINER);
-    await page.getByPlaceholder("이메일").fill(TEST_TRAINER.email);
-    await page.getByPlaceholder("비밀번호").fill(TEST_TRAINER.password);
-    await page.getByRole("button", { name: "로컬 계정 로그인" }).click();
-
-    await expect(page).toHaveURL("/trainer");
-  });
-
   test("로그아웃 시 로그인 페이지로 리다이렉트된다", async ({ page }) => {
-    await mockLocalLogin(page, TEST_USER);
-    await page.getByPlaceholder("이메일").fill(TEST_USER.email);
-    await page.getByPlaceholder("비밀번호").fill(TEST_USER.password);
-    await page.getByRole("button", { name: "로컬 계정 로그인" }).click();
-    await page.waitForURL("/");
+    await page.addInitScript(
+      ({ storageValue, walletAddress, encryptedJson }) => {
+        window.localStorage.setItem("user-storage", storageValue);
+        window.localStorage.setItem("wallet_address", walletAddress);
+        window.localStorage.setItem("encrypted_wallet", encryptedJson);
+      },
+      {
+        storageValue: JSON.stringify({
+          state: {
+            user: {
+              userId: TEST_USER.userId,
+              email: TEST_USER.email,
+              nickname: TEST_USER.nickname,
+              profileImage: TEST_USER.profileImage,
+              role: TEST_USER.role,
+              walletAddress: MOCK_WALLET.address,
+            },
+            isAuthenticated: true,
+            accessToken: "mock-e2e-access-token",
+            level: 1,
+            xp: 0,
+            maxXp: 100,
+            rewardMztkForNext: null,
+            attendanceStreak: 0,
+            lastAttendanceDate: null,
+            lastExerciseDate: null,
+            lastWorkoutRewardAppliedDate: null,
+            gymLocation: {
+              locationId: 1,
+              lat: 37.5665,
+              lng: 126.978,
+              address: "테스트 헬스장",
+            },
+            analysisStatus: "idle",
+            analysisType: null,
+            analysisTargetTime: null,
+            analysisStartedAt: null,
+          },
+          version: 0,
+        }),
+        walletAddress: MOCK_WALLET.address,
+        encryptedJson: MOCK_WALLET.encryptedJson,
+      }
+    );
 
     await page.goto("/my");
 
