@@ -1,70 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/auth/useAuth";
-import { CommonButton } from "@components/common";
-import { getKoreanErrorMessageFromError } from "@constant";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const [localEmail, setLocalEmail] = useState("");
-  const [localPassword, setLocalPassword] = useState("");
-  const [localError, setLocalError] = useState("");
-  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
-  const handleLocalLogin = async () => {
-    const email = localEmail.trim();
-
-    if (!email || !localPassword) {
-      setLocalError("이메일과 비밀번호를 입력해 주세요.");
-      return;
-    }
-
-    try {
-      setIsLocalSubmitting(true);
-      setLocalError("");
-
-      const response = await login({
-        provider: "LOCAL",
-        email,
-        password: localPassword,
-      });
-
-      if (
-        response &&
-        !response.isNewUser &&
-        response.userInfo.walletAddress &&
-        !localStorage.getItem("encrypted_wallet")
-      ) {
-        navigate("/restore-wallet");
-        return;
-      }
-
-      if (response?.isNewUser) {
-        navigate("/register");
-        return;
-      }
-
-      if (response?.userInfo.role === "TRAINER") {
-        navigate("/trainer");
-        return;
-      }
-
-      navigate("/");
-    } catch (error) {
-      setLocalError(
-        getKoreanErrorMessageFromError(
-          error,
-          "로그인에 실패했습니다. 입력값을 다시 확인해 주세요."
-        )
-      );
-    } finally {
-      setIsLocalSubmitting(false);
-    }
-  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -297,43 +240,6 @@ const Login = () => {
             구글로 로그인
           </span>
         </button>
-
-        <div className="mt-3 flex flex-col gap-2.5">
-          <input
-            type="email"
-            value={localEmail}
-            onChange={(event) => setLocalEmail(event.target.value)}
-            placeholder="이메일"
-            autoComplete="username"
-            className="h-11 rounded-xl border border-white bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#FAB12F]/40 focus:ring-2 focus:ring-[#FAB12F]/20"
-          />
-          <input
-            type="password"
-            value={localPassword}
-            onChange={(event) => setLocalPassword(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                void handleLocalLogin();
-              }
-            }}
-            placeholder="비밀번호"
-            autoComplete="current-password"
-            className="h-11 rounded-xl border border-white bg-white px-4 text-sm text-gray-900 outline-none focus:border-[#FAB12F]/40 focus:ring-2 focus:ring-[#FAB12F]/20"
-          />
-          {localError && (
-            <p className="px-1 text-[12px] font-medium text-red-500">
-              {localError}
-            </p>
-          )}
-          <CommonButton
-            label={isLocalSubmitting ? "로그인 중..." : "로컬 계정 로그인"}
-            bgColor="bg-[#FAB12F]"
-            textColor="text-white"
-            onClick={handleLocalLogin}
-            disabled={isLocalSubmitting}
-            className="h-[48px] rounded-xl text-sm font-bold shadow-sm"
-          />
-        </div>
       </div>
     </div>
   );

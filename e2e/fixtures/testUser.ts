@@ -112,6 +112,7 @@ export async function mockCoreAppApis(page: Page) {
         level: 5,
         availableXp: 50,
         requiredXpForNext: 100,
+        rewardMztkForNext: 50,
       }),
     });
   });
